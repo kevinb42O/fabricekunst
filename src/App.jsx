@@ -213,13 +213,21 @@ export default function App() {
     if (updated) setCatalog(updated);
   };
 
-  const handleUpdateInquiries = (updatedInquiries) => {
-    setInquiries(updatedInquiries);
+  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
+  const [inquiryTargetItem, setInquiryTargetItem] = useState(null);
+
+  const handleOpenConsultation = (item = null) => {
+    setInquiryTargetItem(item);
+    setInquiryModalOpen(true);
   };
 
   const refreshInquiries = async () => {
     const inqs = await fetchInquiriesAsync();
     if (inqs) setInquiries(inqs);
+  };
+
+  const handleUpdateInquiries = (updatedInquiries) => {
+    setInquiries(updatedInquiries);
   };
 
   return (
