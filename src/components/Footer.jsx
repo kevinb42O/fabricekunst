@@ -1,0 +1,117 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { KeyRound, ShieldCheck, Mail, MapPin, Phone } from 'lucide-react';
+
+export default function Footer({ onOpenAdmin, onNavigate }) {
+  return (
+    <footer id="contact" className="relative z-30 bg-white text-[#444444] border-t border-[#D8CEB8] pt-16 pb-12 overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-[#D8CEB8]">
+          
+          {/* Col 1: Brand & Philosophy */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center space-x-3">
+              <motion.div 
+                whileHover={{ rotate: 8, scale: 1.05 }}
+                className="w-9 h-9 rounded-xl bg-[#111111] flex items-center justify-center shadow-sm"
+              >
+                <span className="font-serif font-bold text-lg text-white">F</span>
+              </motion.div>
+              <div className="flex flex-col justify-center">
+                <span className="font-serif font-semibold text-xl text-[#111111] tracking-wide leading-tight">
+                  Fabrice Goffin
+                </span>
+                <span className="text-[9px] tracking-[0.2em] text-[#999999] uppercase font-sans font-medium leading-none mt-0.5">
+                  Antiquariaat & Kunst
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-[#555555] font-light max-w-md leading-relaxed font-serif">
+              Exclusieve digitale galerij voor zeldzame boeken, 18e-eeuwse kopergravures en unieke historische kunstobjecten met een bewezen herkomst.
+            </p>
+
+            <div className="flex items-center space-x-2 text-xs text-[#B8860B]">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="font-bold">Bezichtiging &amp; Consultatie Uitsluitend Op Afspraak</span>
+            </div>
+          </div>
+
+          {/* Col 2: Navigation */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#111111] font-serif">Navigatie</h4>
+            <ul className="space-y-2 text-xs font-semibold">
+              <li>
+                <button onClick={() => onNavigate('topstukken')} className="text-[#333333] hover:text-[#B8860B] transition-colors">
+                  Topstukken Collectie
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('catalogus')} className="text-[#333333] hover:text-[#B8860B] transition-colors">
+                  Gecureerde Collectie
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('herkomst')} className="text-[#333333] hover:text-[#B8860B] transition-colors">
+                  Herkomst &amp; Provenance
+                </button>
+              </li>
+              <li>
+                <motion.button 
+                  whileHover={{ scale: 1.05, x: 2 }}
+                  onClick={onOpenAdmin} 
+                  className="text-[#B8860B] hover:underline transition-colors flex items-center space-x-1 font-bold cursor-pointer"
+                >
+                  <KeyRound className="w-3 h-3" />
+                  <span>Beheerders Login (CMS)</span>
+                </motion.button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: Contact Details */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#111111] font-serif">Contact</h4>
+            <ul className="space-y-2.5 text-xs font-medium">
+              <li className="flex items-center space-x-2 text-[#333333]">
+                <MapPin className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
+                <span>België / Frankrijk • Op Afspraak</span>
+              </li>
+              <li className="flex items-center space-x-2 text-[#333333]">
+                <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
+                <a href="mailto:contact@fabricegoffin.be" className="hover:text-[#B8860B] transition-colors font-semibold">
+                  contact@fabricegoffin.be
+                </a>
+              </li>
+              <li className="flex items-center space-x-2 text-[#333333]">
+                <Phone className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
+                <a href="tel:+32484384530" className="hover:text-[#B8860B] transition-colors font-semibold">
+                  0484 38 45 30
+                </a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#666666] space-y-4 sm:space-y-0 font-serif">
+          <p>© {new Date().getFullYear()} Fabrice Goffin. Alle rechten voorbehouden.</p>
+          <div className="flex items-center space-x-4">
+            <span>Discreet &amp; Vertrouwelijk</span>
+            <span>•</span>
+            <span>High-End Antiquariaat</span>
+          </div>
+        </div>
+
+      </motion.div>
+    </footer>
+  );
+}

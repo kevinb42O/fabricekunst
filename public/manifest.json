@@ -1,0 +1,16 @@
+{
+  "short_name": "Fabrice Galerij",
+  "name": "Fabrice — Antiquariaat & Digitale Kunstgalerij",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0B0D12",
+  "theme_color": "#C5A059",
+  "display": "standalone",
+  "orientation": "portrait"
+}
