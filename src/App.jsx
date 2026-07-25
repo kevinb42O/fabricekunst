@@ -217,12 +217,9 @@ export default function App() {
     setInquiries(updatedInquiries);
   };
 
-  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
-  const [inquiryTargetItem, setInquiryTargetItem] = useState(null);
-
-  const handleOpenConsultation = (item = null) => {
-    setInquiryTargetItem(item);
-    setInquiryModalOpen(true);
+  const refreshInquiries = async () => {
+    const inqs = await fetchInquiriesAsync();
+    if (inqs) setInquiries(inqs);
   };
 
   return (
@@ -286,7 +283,7 @@ export default function App() {
             {/* Monumental Section 1: Voltaire 52-delige Reeks (1829-1833) */}
             <VoltaireSection
               item={catalog.find(i => i.id === 'voltaire-1829-52delig')}
-              onInquirySuccess={() => setInquiries(getInquiries())}
+              onInquirySuccess={refreshInquiries}
               onOpenItemDetail={handleOpenItemDetail}
               onRequestInquiry={(item) => handleOpenConsultation(item)}
             />
@@ -294,7 +291,7 @@ export default function App() {
             {/* Monumental Section 2: Scarron 1713 Edition */}
             <ScarronSection
               item={catalog.find(i => i.id === 'scarron-1713-oeuvres')}
-              onInquirySuccess={() => setInquiries(getInquiries())}
+              onInquirySuccess={refreshInquiries}
               onOpenItemDetail={handleOpenItemDetail}
               onRequestInquiry={(item) => handleOpenConsultation(item)}
             />
@@ -324,7 +321,7 @@ export default function App() {
           item={inquiryTargetItem}
           catalog={catalog}
           onClose={() => setInquiryModalOpen(false)}
-          onSuccess={() => setInquiries(getInquiries())}
+          onSuccess={refreshInquiries}
         />
       )}
 
@@ -335,6 +332,8 @@ export default function App() {
           onLoginSuccess={(user) => {
             setAdminUser(user);
             setAdminLoggedIn(true);
+            refreshInquiries();
+            fetchCatalogAsync().then(items => { if (items) setCatalog(items); });
           }}
         />
       )}
