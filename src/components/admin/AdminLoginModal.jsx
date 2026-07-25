@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShieldAlert, Lock, ArrowRight, Mail, Eye, EyeOff } from 'lucide-react';
+import { ShieldAlert, ArrowRight, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { authenticateAdminUserAsync } from '../../utils/storage';
 
 export default function AdminLoginModal({ onClose, onLoginSuccess }) {
@@ -14,7 +14,7 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
     setErrorMsg('');
 
     if (!email.trim() || !password) {
-      setErrorMsg('Vul a.u.b. zowel e-mailadres als wachtwoord in.');
+      setErrorMsg('Vul a.u.b. zowel uw e-mailadres als wachtwoord in.');
       return;
     }
 
@@ -25,57 +25,43 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
     if (result.success) {
       onLoginSuccess(result.user);
     } else {
-      setErrorMsg(result.message || 'Ongeldige inloggegevens.');
+      setErrorMsg(result.message || 'Ongeldig e-mailadres of wachtwoord.');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in font-sans text-stone-100 selection:bg-[#B8860B]/30 selection:text-[#D4AF37]">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 text-[#111111] font-sans selection:bg-[#B8860B]/20 selection:text-[#B8860B]">
       
-      {/* Ultra-Luxury Obsidian Gold Card Container */}
-      <div className="relative w-full max-w-md bg-[#0F0E0C] border border-[#332A1B] rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden">
-        
-        {/* Subtle Ambient Gold Glow Background Effect */}
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#B8860B]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Top Gold Hairline */}
-        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-80" />
-
-        {/* Close Button */}
+      {/* Top Back to Website Button */}
+      <div className="w-full max-w-md mb-6">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-[#181613] text-stone-400 hover:text-white hover:bg-[#25221C] transition-all border border-[#332A1B]"
+          className="inline-flex items-center space-x-2 text-xs font-mono text-[#666666] hover:text-[#111111] transition-colors"
         >
-          <X className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 text-[#B8860B]" />
+          <span>Terug naar website</span>
         </button>
+      </div>
 
-        {/* Header Section */}
-        <div className="text-center space-y-4 mb-8">
-          <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-b from-[#211E18] to-[#12110E] border border-[#52442B] flex items-center justify-center mx-auto shadow-lg">
-            <Lock className="w-6 h-6 text-[#D4AF37]" />
-            <div className="absolute inset-0 rounded-2xl border border-[#D4AF37]/20 pointer-events-none" />
-          </div>
-
-          <div className="space-y-1.5">
-            <span className="text-[9px] text-[#C5A059] uppercase tracking-[0.3em] font-mono font-bold block">
-              Curatorial Access • Private Atelier
-            </span>
-            <h2 className="text-2xl font-serif font-bold tracking-wide text-[#F3EAD8]">
-              Cabinet Privé
-            </h2>
-            <p className="text-[11px] text-[#A09582] font-serif leading-relaxed pt-1">
-              Beveiligd beheerportaal voor antiquarische boeken &amp; kunstvoorwerpen.
-            </p>
-          </div>
+      {/* Main Professional Login Card */}
+      <div className="w-full max-w-md bg-white border border-[#D8CEB8] rounded-3xl p-8 sm:p-10 shadow-md space-y-8">
+        
+        {/* Header */}
+        <div className="space-y-2 text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#111111] tracking-tight">
+            Inloggen
+          </h1>
+          <p className="text-xs text-[#666666] leading-relaxed">
+            Voer uw e-mailadres en wachtwoord in om toegang te krijgen tot het beheersysteem.
+          </p>
         </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           
           {/* Email Field */}
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-mono font-bold text-[#C5A059] uppercase tracking-[0.15em]">
+          <div>
+            <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
               E-mailadres
             </label>
             <div className="relative">
@@ -88,16 +74,16 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
                   setEmail(e.target.value);
                   setErrorMsg('');
                 }}
-                placeholder="naam@domein.com"
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-[#161411] border border-[#332A1B] text-sm text-[#F3EAD8] placeholder-[#5A5141] font-medium focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-all font-sans"
+                placeholder="naam@voorbeeld.be"
+                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-medium focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 transition-all"
               />
-              <Mail className="w-4 h-4 text-[#8E7956] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Mail className="w-4 h-4 text-[#888888] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
           {/* Password Field */}
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-mono font-bold text-[#C5A059] uppercase tracking-[0.15em]">
+          <div>
+            <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
               Wachtwoord
             </label>
             <div className="relative">
@@ -110,13 +96,13 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
                   setErrorMsg('');
                 }}
                 placeholder="••••••••••••"
-                className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-[#161411] border border-[#332A1B] text-sm text-[#F3EAD8] placeholder-[#5A5141] font-medium focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40 transition-all font-mono"
+                className="w-full pl-11 pr-11 py-3.5 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-medium focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 transition-all font-mono"
               />
-              <Lock className="w-4 h-4 text-[#8E7956] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Lock className="w-4 h-4 text-[#888888] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-[#8E7956] hover:text-[#D4AF37] transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-[#888888] hover:text-[#111111] transition-colors"
                 title={showPassword ? "Verberg wachtwoord" : "Toon wachtwoord"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -124,40 +110,39 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
             </div>
           </div>
 
-          {/* Error Banner */}
+          {/* Error Message */}
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-[#2C1414] border border-[#6B2424] text-[#F87171] text-xs font-medium flex items-center space-x-2.5 animate-fade-in">
-              <ShieldAlert className="w-4 h-4 shrink-0 text-[#EF4444]" />
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center space-x-2 animate-fade-in">
+              <ShieldAlert className="w-4 h-4 shrink-0 text-red-600" />
               <span>{errorMsg}</span>
             </div>
           )}
 
-          {/* Submit Action Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 mt-2 rounded-xl bg-gradient-to-r from-[#1E1B15] via-[#2A241A] to-[#1E1B15] hover:from-[#2A241A] hover:to-[#2A241A] border border-[#695637] hover:border-[#D4AF37] text-[#F3EAD8] font-bold text-xs uppercase tracking-[0.2em] shadow-lg transition-all flex items-center justify-center space-x-2 group disabled:opacity-50"
+            className="w-full py-4 rounded-xl bg-[#111111] hover:bg-stone-800 text-white font-bold text-xs uppercase tracking-widest shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50 mt-4"
           >
             {loading ? (
-              <span className="font-mono text-[#D4AF37]">Verifiëren in database...</span>
+              <span>Bezig met verifiëren...</span>
             ) : (
               <>
-                <span className="group-hover:text-white transition-colors">Aanmelden In Portaal</span>
-                <ArrowRight className="w-4 h-4 text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
+                <span>Inloggen</span>
+                <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
               </>
             )}
           </button>
 
         </form>
 
-        {/* Footer Security Badge */}
-        <div className="mt-8 pt-5 border-t border-[#231F18] text-center">
-          <span className="text-[10px] text-[#7A6F5C] font-mono tracking-widest uppercase">
-            256-Bit Encrypted Database Session
-          </span>
-        </div>
-
       </div>
+
+      {/* Footer copyright note */}
+      <div className="mt-8 text-center text-[11px] text-[#888888] font-mono">
+        Beveiligde beheerderstoegang
+      </div>
+
     </div>
   );
 }
