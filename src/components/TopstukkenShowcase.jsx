@@ -33,7 +33,7 @@ export default function TopstukkenShowcase({ onSelectItem }) {
             De Huidige Topstukken van de Collectie
           </h2>
           <p className="text-[#333333] font-serif font-light text-base sm:text-lg">
-            Ontdek twee van de meest zeldzame en esthetisch indrukwekkende meesterwerken uit de privéverzameling van Fabrice.
+            Ontdek twee van de meest zeldzame en esthetisch indrukwekkende meesterwerken uit de privéverzameling van Rare Art & Books.
           </p>
         </div>
 

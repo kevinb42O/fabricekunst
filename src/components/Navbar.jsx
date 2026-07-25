@@ -53,11 +53,11 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
               whileHover={{ rotate: 5, borderColor: '#B8860B' }}
               className="w-7 h-7 rounded-sm bg-white border border-[#111111] flex items-center justify-center shadow-xs transition-colors duration-300"
             >
-              <span className="font-serif font-bold text-base text-[#111111] group-hover:text-[#B8860B]">F</span>
+              <span className="font-serif font-bold text-base text-[#111111] group-hover:text-[#B8860B]">R</span>
             </motion.div>
             <div className="flex flex-col justify-center">
               <span className="font-serif font-semibold text-sm sm:text-base text-[#111111] tracking-wide block leading-tight">
-                Fabrice Goffin
+                Rare Art & Books
               </span>
               <span className="text-[8px] tracking-[0.2em] text-[#888888] uppercase font-sans font-medium block leading-none">
                 Antiquariaat & Kunst

@@ -22,11 +22,11 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
                 whileHover={{ rotate: 8, scale: 1.05 }}
                 className="w-9 h-9 rounded-xl bg-[#111111] flex items-center justify-center shadow-sm"
               >
-                <span className="font-serif font-bold text-lg text-white">F</span>
+                <span className="font-serif font-bold text-lg text-white">R</span>
               </motion.div>
               <div className="flex flex-col justify-center">
                 <span className="font-serif font-semibold text-xl text-[#111111] tracking-wide leading-tight">
-                  Fabrice Goffin
+                  Rare Art & Books
                 </span>
                 <span className="text-[9px] tracking-[0.2em] text-[#999999] uppercase font-sans font-medium leading-none mt-0.5">
                   Antiquariaat & Kunst
@@ -86,8 +86,8 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                <a href="mailto:contact@fabricegoffin.be" className="hover:text-[#B8860B] transition-colors font-semibold">
-                  contact@fabricegoffin.be
+                <a href="mailto:contact@rareartbooks.com" className="hover:text-[#B8860B] transition-colors font-semibold">
+                  contact@rareartbooks.com
                 </a>
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
@@ -103,7 +103,7 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#666666] space-y-4 sm:space-y-0 font-serif">
-          <p>© {new Date().getFullYear()} Fabrice Goffin. Alle rechten voorbehouden.</p>
+          <p>© {new Date().getFullYear()} Rare Art & Books. Alle rechten voorbehouden.</p>
           <div className="flex items-center space-x-4">
             <span>Discreet &amp; Vertrouwelijk</span>
             <span>•</span>

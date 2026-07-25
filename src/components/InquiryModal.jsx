@@ -75,7 +75,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
             </div>
             <h3 className="text-2xl font-serif font-bold text-[#111111]">Aanvraag Succesvol Ontvangen</h3>
             <p className="text-sm text-[#333333] max-w-md mx-auto leading-relaxed font-serif">
-              Hartelijk dank voor je bericht, <span className="text-[#B8860B] font-bold">{formData.name}</span>. Fabrice heeft je aanvraag in goede orde ontvangen en neemt zo spoedig mogelijk persoonlijk contact met je op.
+              Hartelijk dank voor je bericht, <span className="text-[#B8860B] font-bold">{formData.name}</span>. Rare Art & Books heeft je aanvraag in goede orde ontvangen en neemt zo spoedig mogelijk persoonlijk contact met je op.
             </p>
             <div className="pt-4">
               <button

@@ -197,7 +197,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                     Vrijblijvende Aanvraag
                   </h4>
                   <p className="text-xs text-stone-300 font-serif leading-relaxed">
-                    Neem rechtstreeks contact op met Fabrice Goffin voor bezichtiging of hoog-resolutie documentatie.
+                    Neem rechtstreeks contact op met Rare Art & Books voor bezichtiging of hoog-resolutie documentatie.
                   </p>
                 </div>
 
@@ -293,7 +293,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                   </p>
                 )}
                 <div>
-                  {(item.provenanceDetails || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Fabrice Antiquariaat grondig geanalyseerd op herkomstsporen.")
+                  {(item.provenanceDetails || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Rare Art & Books grondig geanalyseerd op herkomstsporen.")
                     .split('\n\n')
                     .map((paragraph, pIdx) => (
                       <p key={pIdx}>{paragraph}</p>
@@ -307,7 +307,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                     <span>Formeel Echtheidscertificaat Inbegrepen</span>
                   </div>
                   <p className="text-xs font-serif text-[#555555] leading-relaxed">
-                    Bij aankoop van dit werk ontvangt u een officieel, door Fabrice Goffin ondertekend provenance-dossier met de complete documentatie.
+                    Bij aankoop van dit werk ontvangt u een officieel provenance-dossier van Rare Art & Books met de complete documentatie.
                   </p>
                 </div>
               </div>

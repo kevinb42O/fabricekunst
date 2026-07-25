@@ -310,7 +310,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       Eigendomsarchief &amp; Ex-Libris Geverifieerd
                     </h4>
                     <div className="text-sm text-[#333333] font-serif leading-relaxed space-y-3">
-                      {(item.provenanceDetails || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Fabrice Antiquariaat grondig geanalyseerd op herkomstsporen, eigendomsstempels en echtheid van de binding.")
+                      {(item.provenanceDetails || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Rare Art & Books grondig geanalyseerd op herkomstsporen, eigendomsstempels en echtheid van de binding.")
                         .split('\n\n')
                         .map((paragraph, pIdx) => (
                           <p key={pIdx}>{paragraph}</p>
@@ -325,7 +325,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       <span>Formeel Echtheidscertificaat Inbegrepen</span>
                     </div>
                     <p className="text-xs font-serif text-[#555555] leading-relaxed">
-                      Bij aankoop van dit antiquarische werk ontvangt u een officieel, door Fabrice Goffin ondertekend provenance-dossier met de complete bibliografische documentatie.
+                      Bij aankoop van dit antiquarische werk ontvangt u een officieel provenance-dossier van Rare Art & Books met de complete bibliografische documentatie.
                     </p>
                   </div>
 
@@ -345,7 +345,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             <div className="space-y-3 border-b border-[#D8CEB8]/70 pb-6">
               <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] font-mono">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Fabrice Antiquariaat Topstuk</span>
+                <span>Rare Art & Books Topstuk</span>
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]">
@@ -418,7 +418,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   Interesse in dit zeldzame werk?
                 </h3>
                 <p className="text-xs text-stone-300 font-serif leading-relaxed">
-                  Neem rechtstreeks contact op met Fabrice Goffin voor vrijblijvende informatie, aanvullende foto's of een besloten bezichtiging.
+                  Neem rechtstreeks contact op met Rare Art & Books voor vrijblijvende informatie, aanvullende foto's of een besloten bezichtiging.
                 </p>
               </div>
 
