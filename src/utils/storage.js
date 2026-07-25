@@ -402,28 +402,52 @@ export const authenticateAdminUserAsync = async (email, password) => {
   }
 
   try {
-    const { data, error } = await supabase
+    // 1. Check admin_settings table (key: user_<email>)
+    const { data: settingsData } = await supabase
+      .from('admin_settings')
+      .select('*')
+      .eq('key', `user_${cleanEmail}`)
+      .maybeSingle();
+
+    if (settingsData && settingsData.value) {
+      try {
+        const parsed = typeof settingsData.value === 'string' ? JSON.parse(settingsData.value) : settingsData.value;
+        if (parsed.password === password) {
+          return {
+            success: true,
+            user: {
+              email: cleanEmail,
+              name: parsed.name || cleanEmail,
+              role: parsed.role || 'admin'
+            }
+          };
+        } else {
+          return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
+        }
+      } catch (e) {
+        console.error("Fout bij parsen van account uit admin_settings", e);
+      }
+    }
+
+    // 2. Check admin_users table if present
+    const { data: userData } = await supabase
       .from('admin_users')
       .select('*')
       .eq('email', cleanEmail)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
-    }
-
-    if (data.password === password) {
+    if (userData && userData.password === password) {
       return {
         success: true,
         user: {
-          email: data.email,
-          name: data.name,
-          role: data.role
+          email: userData.email,
+          name: userData.name,
+          role: userData.role
         }
       };
-    } else {
-      return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
     }
+
+    return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
   } catch (e) {
     console.error("Authenticatiefout:", e);
     return { success: false, message: 'Fout bij verifiëren van inloggegevens.' };
@@ -431,22 +455,33 @@ export const authenticateAdminUserAsync = async (email, password) => {
 };
 
 export const updateAdminPasswordAsync = async (email, currentPassword, newPassword) => {
-  const authResult = await authenticateAdminUserAsync(email, currentPassword);
+  const cleanEmail = email.trim().toLowerCase();
+  const authResult = await authenticateAdminUserAsync(cleanEmail, currentPassword);
   if (!authResult.success) {
     return { success: false, message: 'Huidige wachtwoord is onjuist.' };
   }
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .update({ password: newPassword, updated_at: new Date().toISOString() })
-        .eq('email', email.trim().toLowerCase());
+      // Upsert into admin_settings
+      const userPayload = JSON.stringify({
+        password: newPassword,
+        name: authResult.user?.name || cleanEmail,
+        role: authResult.user?.role || 'admin'
+      });
 
-      if (error) {
-        console.error("Supabase password update error:", error);
-        return { success: false, message: 'Fout bij opslaan van nieuw wachtwoord.' };
-      }
+      await supabase.from('admin_settings').upsert({
+        key: `user_${cleanEmail}`,
+        value: userPayload,
+        updated_at: new Date().toISOString()
+      });
+
+      // Try updating admin_users table if present
+      await supabase.from('admin_users').update({
+        password: newPassword,
+        updated_at: new Date().toISOString()
+      }).eq('email', cleanEmail);
+
       return { success: true, message: 'Wachtwoord succesvol gewijzigd!' };
     } catch (e) {
       console.error("Supabase password update exception:", e);
