@@ -20,9 +20,13 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
             <div className="flex items-center space-x-3">
               <motion.div 
                 whileHover={{ rotate: 8, scale: 1.05 }}
-                className="w-9 h-9 rounded-xl bg-[#111111] flex items-center justify-center shadow-sm"
+                className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-[#111111]/20 flex items-center justify-center shadow-sm shrink-0"
               >
-                <span className="font-serif font-bold text-lg text-white">R</span>
+                <img 
+                  src="/rblogo.png" 
+                  alt="Rare Art & Books Logo" 
+                  className="w-full h-full object-cover"
+                />
               </motion.div>
               <div className="flex flex-col justify-center">
                 <span className="font-serif font-semibold text-xl text-[#111111] tracking-wide leading-tight">

@@ -3,9 +3,9 @@
   "name": "Rare Art & Books — Antiquariaat & Digitale Kunstgalerij",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any"
+      "src": "/rblogo.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
   "start_url": "/",

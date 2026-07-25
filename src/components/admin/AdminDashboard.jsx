@@ -114,8 +114,12 @@ export default function AdminDashboard({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3.5">
               {/* Circular Gold Badge Logo */}
-              <div className="w-11 h-11 rounded-full bg-[#C5A059] border-2 border-[#E5C98B]/40 flex items-center justify-center shadow-md shrink-0">
-                <span className="font-serif font-bold text-xl text-[#1C1A18]">R</span>
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-white border-2 border-[#E5C98B]/40 flex items-center justify-center shadow-md shrink-0">
+                <img 
+                  src="/rblogo.png" 
+                  alt="Rare Art & Books Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               <div>
@@ -202,8 +206,12 @@ export default function AdminDashboard({
           {/* User Profile Snippet */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-[#23201D] border border-[#332F2B]">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-[#C5A059]/20 text-[#C5A059] border border-[#C5A059]/30 flex items-center justify-center font-serif font-bold text-sm shrink-0">
-                R
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-[#C5A059]/30 flex items-center justify-center shrink-0">
+                <img 
+                  src="/rblogo.png" 
+                  alt="Rare Art & Books Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-sans font-semibold text-stone-100 truncate">Rare Art & Books Admin</p>

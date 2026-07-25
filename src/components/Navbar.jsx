@@ -51,9 +51,13 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           >
             <motion.div 
               whileHover={{ rotate: 5, borderColor: '#B8860B' }}
-              className="w-7 h-7 rounded-sm bg-white border border-[#111111] flex items-center justify-center shadow-xs transition-colors duration-300"
+              className="w-8 h-8 rounded-md overflow-hidden bg-white border border-[#111111]/20 flex items-center justify-center shadow-xs transition-colors duration-300 shrink-0"
             >
-              <span className="font-serif font-bold text-base text-[#111111] group-hover:text-[#B8860B]">R</span>
+              <img 
+                src="/rblogo.png" 
+                alt="Rare Art & Books Logo" 
+                className="w-full h-full object-cover"
+              />
             </motion.div>
             <div className="flex flex-col justify-center">
               <span className="font-serif font-semibold text-sm sm:text-base text-[#111111] tracking-wide block leading-tight">
