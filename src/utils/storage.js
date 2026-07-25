@@ -1,9 +1,12 @@
 import { INITIAL_CATALOG } from '../data/initialCatalog';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
-const CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
-const INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
-const HERO_SLIDES_KEY = 'fabrice_boeken_kunst_hero_slides';
+const CATALOG_KEY = 'rare_art_books_catalog';
+const INQUIRIES_KEY = 'rare_art_books_inquiries';
+const HERO_SLIDES_KEY = 'rare_art_books_hero_slides';
+const OLD_CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
+const OLD_INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
+const OLD_HERO_SLIDES_KEY = 'fabrice_boeken_kunst_hero_slides';
 
 export const DEFAULT_HERO_SLIDES = [
   {
@@ -46,7 +49,7 @@ export const DEFAULT_HERO_SLIDES = [
 
 export const getHeroSlides = () => {
   try {
-    const saved = localStorage.getItem(HERO_SLIDES_KEY);
+    const saved = localStorage.getItem(HERO_SLIDES_KEY) || localStorage.getItem(OLD_HERO_SLIDES_KEY);
     if (!saved) return DEFAULT_HERO_SLIDES;
     const parsed = JSON.parse(saved);
     return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_HERO_SLIDES;
@@ -157,7 +160,7 @@ const mapFrontendInquiryToDb = (inq) => ({
 
 export const getCatalog = () => {
   try {
-    const saved = localStorage.getItem(CATALOG_KEY);
+    const saved = localStorage.getItem(CATALOG_KEY) || localStorage.getItem(OLD_CATALOG_KEY);
     if (!saved) {
       localStorage.setItem(CATALOG_KEY, JSON.stringify(INITIAL_CATALOG));
       return INITIAL_CATALOG;
@@ -298,7 +301,7 @@ export const uploadCatalogImage = async (file) => {
 
 export const getInquiries = () => {
   try {
-    const saved = localStorage.getItem(INQUIRIES_KEY);
+    const saved = localStorage.getItem(INQUIRIES_KEY) || localStorage.getItem(OLD_INQUIRIES_KEY);
     return saved ? JSON.parse(saved) : [
       {
         id: "inq-1",

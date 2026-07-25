@@ -31,7 +31,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
     }
   };
 
-  // Pre-built email response templates for Fabrice
+  // Pre-built email response templates for Rare Art & Books
   const getEmailTemplateText = (type, inq) => {
     if (!inq) return '';
     const name = inq.name || 'Geachte heer/mevrouw';
@@ -39,13 +39,13 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
 
     switch (type) {
       case 'invitation':
-        return `Beste ${name},\n\nHartelijk dank voor uw interesse in "${title}".\n\nIk nodig u van harte uit voor een privé-bezichtiging van dit exemplaar. Mocht u specifieke vragen hebben over de herkomst of staat van de band, lijk ik u deze graag persoonlijk toe.\n\nWanneer zou een afspraak voor u schikken?\n\nMet vriendelijke groet,\n\nFabrice\nFabrice Boeken & Kunst`;
+        return `Beste ${name},\n\nHartelijk dank voor uw interesse in "${title}".\n\nIk nodig u van harte uit voor een privé-bezichtiging van dit exemplaar. Mocht u specifieke vragen hebben over de herkomst of staat van de band, licht ik u deze graag toe.\n\nWanneer zou een afspraak voor u schikken?\n\nMet vriendelijke groet,\n\nRare Art & Books`;
       case 'accept_bid':
-        return `Beste ${name},\n\nHartelijk dank voor uw bod op "${title}".\n\nIk ga met genoegen akkoord met uw voorstel. Ik zorg voor een uiterst geconditioneerde en verzekerde verpakking van het werk.\n\nZullen we de logistieke afhandeling en betalingsdetails telefonisch of per e-mail verder afstemmen?\n\nMet vriendelijke groet,\n\nFabrice\nFabrice Boeken & Kunst`;
+        return `Beste ${name},\n\nHartelijk dank voor uw bod op "${title}".\n\nIk ga met genoegen akkoord met uw voorstel. Ik zorg voor een uiterst geconditioneerde en verzekerde verpakking van het werk.\n\nZullen we de logistieke afhandeling en betalingsdetails telefonisch of per e-mail verder afstemmen?\n\nMet vriendelijke groet,\n\nRare Art & Books`;
       case 'counter_offer':
-        return `Beste ${name},\n\nHartelijk dank voor uw bericht inzake "${title}".\n\nGezien de uitzonderlijke zeldzaamheid, de originele band en de bewezen provenance van dit exemplaar, kan ik uw bod niet geheel honoreren. Wel wil ik u graag een tegemoetkomend voorstel doen.\n\nLaat mij gerust weten of we hierover telefonisch van gedachten kunnen wisselen.\n\nMet vriendelijke groet,\n\nFabrice\nFabrice Boeken & Kunst`;
+        return `Beste ${name},\n\nHartelijk dank voor uw bericht inzake "${title}".\n\nGezien de uitzonderlijke zeldzaamheid, de originele band en de bewezen provenance van dit exemplaar, kan ik uw bod niet geheel honoreren. Wel wil ik u graag een tegemoetkomend voorstel doen.\n\nLaat mij gerust weten of we hierover telefonisch van gedachten kunnen wisselen.\n\nMet vriendelijke groet,\n\nRare Art & Books`;
       default:
-        return `Beste ${name},\n\nHartelijk dank voor uw aanvraag inzake "${title}".\n\nIk sta ter uwer beschikking voor alle bijkomende informatie omtrent de staat, illustraties en herkomst van dit werk.\n\nMet vriendelijke groet,\n\nFabrice\nFabrice Boeken & Kunst`;
+        return `Beste ${name},\n\nHartelijk dank voor uw aanvraag inzake "${title}".\n\nIk sta ter uwer beschikking voor alle bijkomende informatie omtrent de staat, illustraties en herkomst van dit werk.\n\nMet vriendelijke groet,\n\nRare Art & Books`;
     }
   };
 
@@ -208,7 +208,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
                     <div className="flex items-center justify-between text-xs font-mono font-bold text-[#666666]">
                       <span className="flex items-center space-x-1">
                         <StickyNote className="w-3.5 h-3.5 text-[#B8860B]" />
-                        <span>Interne Notitie Fabrice:</span>
+                        <span>Interne Notitie:</span>
                       </span>
                       <button
                         onClick={() => handleSaveNotes(inq.id)}

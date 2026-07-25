@@ -4,7 +4,7 @@ import { updateAdminPasswordAsync } from '../../utils/storage';
 
 export default function SecuritySettings({ currentUser, onShowToast }) {
   const userEmail = currentUser?.email || 'admin@rareartbooks.com';
-  const userName = currentUser?.name || 'Fabrice Goffin';
+  const userName = currentUser?.name || 'Admin';
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -61,7 +61,7 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
             </div>
             <div>
               <h2 className="text-xl font-serif font-bold text-[#111111]">Beveiliging & Wachtwoord Beheer</h2>
-              <p className="text-xs text-[#555555]">Beheer de inloggegevens voor het Fabrice CMS beheerderspaneel.</p>
+              <p className="text-xs text-[#555555]">Beheer de inloggegevens voor het Rare Art & Books CMS beheerderspaneel.</p>
             </div>
           </div>
 

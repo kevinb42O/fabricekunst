@@ -1,5 +1,5 @@
 -- ========================================================
--- Fabrice Antiquariaat — Supabase Setup Script
+-- Rare Art & Books — Supabase Setup Script
 -- Paste this script into Supabase SQL Editor and click RUN
 -- ========================================================
 
@@ -65,10 +65,10 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert Developer & Fabrice admin accounts
+-- Insert Developer & Admin accounts
 INSERT INTO public.admin_users (email, password, name, role) VALUES
 ('kevin@webaanzee.be', 'Pinakaaz420', 'Kevin (Developer)', 'developer'),
-('admin@rareartbooks.com', 'Fabrice5438', 'Fabrice Goffin', 'admin')
+('admin@rareartbooks.com', 'RareArt5438', 'Rare Art & Books Admin', 'admin')
 ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;
 
 -- Default Admin PIN ("5438")

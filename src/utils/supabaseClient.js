@@ -18,6 +18,6 @@ export const supabase = isSupabaseConfigured()
 
 if (!isSupabaseConfigured()) {
   console.warn(
-    'Fabrice Antiquariaat: Supabase is not configured yet. The application is running in local fallback mode. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable live persistence.'
+    'Rare Art & Books: Supabase is not configured yet. The application is running in local fallback mode. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable live persistence.'
   );
 }
