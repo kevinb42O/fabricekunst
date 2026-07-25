@@ -3,23 +3,6 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
 const INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
-const ADMIN_USERS_KEY = 'fabrice_admin_users_cache';
-
-// Hardcoded initial fallback accounts
-const INITIAL_ADMIN_USERS = [
-  {
-    email: 'kevin@webaanzee.be',
-    password: 'Pinakaaz420',
-    name: 'Kevin (Developer)',
-    role: 'developer'
-  },
-  {
-    email: 'admin@rareartbooks.com',
-    password: 'Fabrice5438',
-    name: 'Fabrice Goffin',
-    role: 'admin'
-  }
-];
 
 // Map database column names (snake_case) to frontend item object (camelCase)
 const mapDbItemToFrontend = (dbItem) => ({
@@ -264,7 +247,7 @@ export const getInquiries = () => {
         email: "d.limburg@heritage-collection.be",
         phone: "+32 475 88 12 34",
         type: "Privé-bezichtiging aanvragen",
-        message: "Goedendag Fabrice, ik zou graag een afspraak maken voor een privé-bezichtiging van de 52-delige Voltaire reeks met ex-libris Vacheron-Poinsot. Bent u aanstaande donderdag beschikbaar?",
+        message: "Goedendag, ik zou graag een afspraak maken voor een privé-bezichtiging van de 52-delige Voltaire reeks met ex-libris Vacheron-Poinsot. Bent u aanstaande donderdag beschikbaar?",
         status: "Nieuw"
       },
       {
@@ -276,7 +259,7 @@ export const getInquiries = () => {
         email: "jp.vacheron@antiquariat-paris.fr",
         phone: "+33 6 12 34 56 78",
         type: "Doe een bod",
-        message: "Beste Fabrice, hartelijke groeten uit Parijs. Ik bied € 2.600 voor de 3-delige Scarron uit 1713. Is verzending naar Frankrijk in een geconditioneerde verpakking mogelijk?",
+        message: "Beste, hartelijke groeten uit Parijs. Ik bied € 2.600 voor de 3-delige Scarron uit 1713. Is verzending naar Frankrijk in een geconditioneerde verpakking mogelijk?",
         status: "In behandeling"
       }
     ];
@@ -409,76 +392,42 @@ export const deleteInquiryAsync = async (id) => {
   return updated;
 };
 
-// --- AUTHENTICATION & ADMIN USERS ---
-
-export const getLocalAdminUsers = () => {
-  try {
-    const saved = localStorage.getItem(ADMIN_USERS_KEY);
-    return saved ? JSON.parse(saved) : INITIAL_ADMIN_USERS;
-  } catch (e) {
-    return INITIAL_ADMIN_USERS;
-  }
-};
-
-export const saveLocalAdminUsers = (users) => {
-  try {
-    localStorage.setItem(ADMIN_USERS_KEY, JSON.stringify(users));
-  } catch (e) {
-    console.error("Error saving local admin users", e);
-  }
-};
+// --- AUTHENTICATION & ADMIN USERS (SECURE DATABASE AUTH) ---
 
 export const authenticateAdminUserAsync = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
 
-  // Query Supabase if configured
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', cleanEmail)
-        .single();
-
-      if (!error && data) {
-        if (data.password === password) {
-          return {
-            success: true,
-            user: {
-              email: data.email,
-              name: data.name,
-              role: data.role
-            }
-          };
-        } else {
-          return { success: false, message: 'Wachtwoord is onjuist.' };
-        }
-      }
-    } catch (e) {
-      console.warn("Supabase auth check error, falling back to local storage accounts", e);
-    }
+  if (!isSupabaseConfigured() || !supabase) {
+    return { success: false, message: 'Authenticatiedienst is momenteel niet geconfigureerd.' };
   }
 
-  // Fallback to local accounts
-  const localUsers = getLocalAdminUsers();
-  const found = localUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  try {
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', cleanEmail)
+      .single();
 
-  if (found) {
-    if (found.password === password) {
+    if (error || !data) {
+      return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
+    }
+
+    if (data.password === password) {
       return {
         success: true,
         user: {
-          email: found.email,
-          name: found.name,
-          role: found.role
+          email: data.email,
+          name: data.name,
+          role: data.role
         }
       };
     } else {
-      return { success: false, message: 'Wachtwoord is onjuist.' };
+      return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
     }
+  } catch (e) {
+    console.error("Authenticatiefout:", e);
+    return { success: false, message: 'Fout bij verifiëren van inloggegevens.' };
   }
-
-  return { success: false, message: 'Geen beheerdersaccount gevonden voor dit e-mailadres.' };
 };
 
 export const updateAdminPasswordAsync = async (email, currentPassword, newPassword) => {
@@ -487,16 +436,6 @@ export const updateAdminPasswordAsync = async (email, currentPassword, newPasswo
     return { success: false, message: 'Huidige wachtwoord is onjuist.' };
   }
 
-  // Local fallback update
-  const localUsers = getLocalAdminUsers();
-  const updatedLocal = localUsers.map(u => 
-    u.email.toLowerCase() === email.trim().toLowerCase()
-      ? { ...u, password: newPassword }
-      : u
-  );
-  saveLocalAdminUsers(updatedLocal);
-
-  // Supabase update if configured
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase
@@ -506,13 +445,16 @@ export const updateAdminPasswordAsync = async (email, currentPassword, newPasswo
 
       if (error) {
         console.error("Supabase password update error:", error);
+        return { success: false, message: 'Fout bij opslaan van nieuw wachtwoord.' };
       }
+      return { success: true, message: 'Wachtwoord succesvol gewijzigd!' };
     } catch (e) {
       console.error("Supabase password update exception:", e);
+      return { success: false, message: 'Verbindingsfout bij bijwerken wachtwoord.' };
     }
   }
 
-  return { success: true, message: 'Wachtwoord succesvol gewijzigd!' };
+  return { success: false, message: 'Database niet beschikbaar.' };
 };
 
 export const exportDataJSON = () => {
@@ -527,7 +469,7 @@ export const exportDataJSON = () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `fabrice_boeken_kunst_backup_${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `antiquariaat_backup_${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -553,7 +495,6 @@ export const resetToInitialData = () => {
   try {
     localStorage.setItem(CATALOG_KEY, JSON.stringify(INITIAL_CATALOG));
     localStorage.removeItem(INQUIRIES_KEY);
-    localStorage.removeItem(ADMIN_USERS_KEY);
     return true;
   } catch (e) {
     console.error("Fout bij herstellen initiële data", e);
