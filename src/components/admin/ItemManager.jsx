@@ -142,19 +142,40 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     });
   };
 
+  // Add Topstuk filter toggle state & view mode ('table' | 'grid')
+  const [onlyTopstukken, setOnlyTopstukken] = useState(false);
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
+  const [selectedItemIds, setSelectedItemIds] = useState([]);
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedItemIds(filtered.map(i => i.id));
+    } else {
+      setSelectedItemIds([]);
+    }
+  };
+
+  const handleToggleSelectItem = (id) => {
+    setSelectedItemIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   // Filter Logic
   const filtered = items.filter(item => {
     const matchesSearch =
       item.title?.toLowerCase().includes(filterQuery.toLowerCase()) ||
       item.ref?.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      item.author?.toLowerCase().includes(filterQuery.toLowerCase());
+      item.author?.toLowerCase().includes(filterQuery.toLowerCase()) ||
+      item.category?.toLowerCase().includes(filterQuery.toLowerCase());
 
     const itemTypeVal = item.itemType || 'book';
     const matchesType = typeFilter === 'Alle' || itemTypeVal === typeFilter;
     const matchesStatus = statusFilter === 'Alle' || item.status === statusFilter;
     const matchesCategory = categoryFilter === 'Alle' || item.category === categoryFilter;
+    const matchesTopstuk = !onlyTopstukken || Boolean(item.featured);
 
-    return matchesSearch && matchesType && matchesStatus && matchesCategory;
+    return matchesSearch && matchesType && matchesStatus && matchesCategory && matchesTopstuk;
   });
 
   const availableCount = items.filter(i => i.status === 'Beschikbaar').length;
@@ -166,107 +187,312 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   return (
     <div className="space-y-6 text-[#111111] animate-fade-in">
       
-      {/* Museum Collection Control Header Bar */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#D8CEB8] shadow-xs space-y-5">
+      {/* Top Filter & Toolbar Bar (Screenshot Style) */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm flex flex-wrap items-center justify-between gap-3">
         
-        {/* Top Header Row: Title & Create New Action */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D8CEB8]/70 pb-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-tight">
-              Collectie &amp; Catalogus Beheer
-            </h2>
-            <p className="text-xs font-serif text-[#666666] italic mt-0.5">
-              Beheer antiquarische boeken, schilderijen en kunstwerken • {items.length} Objecten Totaal
-            </p>
-          </div>
+        {/* Left: Primary Action Button */}
+        <button
+          onClick={handleCreateNew}
+          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#111111] to-[#2A2825] hover:from-[#B8860B] hover:to-[#D4AF37] text-white text-xs font-serif font-bold transition-all shadow-md flex items-center space-x-2 shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 text-[#D4AF37]" />
+          <span>+ Nieuw Stuk Invoeren</span>
+        </button>
 
+        {/* Center: Search Box */}
+        <div className="relative flex-1 min-w-[240px] max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
+          <input
+            type="text"
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+            placeholder="Zoek in collectie (titel, auteur, ID...)"
+            className="w-full pl-10 pr-8 py-2 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] transition-all"
+          />
+          {filterQuery && (
+            <button 
+              onClick={() => setFilterQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#111111]"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Type Filter Buttons */}
+        <div className="flex items-center space-x-1 p-1 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-serif">
+          <span className="text-[10px] font-mono text-[#888888] px-1.5 hidden sm:inline">Type:</span>
           <button
-            onClick={handleCreateNew}
-            className="px-6 py-3.5 rounded-2xl bg-[#111111] hover:bg-[#B8860B] hover:text-[#111111] text-white font-bold text-xs uppercase tracking-widest shadow-md transition-all flex items-center justify-center space-x-2 shrink-0 cursor-pointer"
+            onClick={() => setTypeFilter('Alle')}
+            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              typeFilter === 'Alle' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+            }`}
           >
-            <Plus className="w-4 h-4 text-[#D4AF37]" />
-            <span>Nieuw Stuk Invoeren</span>
+            All
+          </button>
+          <button
+            onClick={() => setTypeFilter('book')}
+            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              typeFilter === 'book' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            Boek
+          </button>
+          <button
+            onClick={() => setTypeFilter('painting')}
+            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              typeFilter === 'painting' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            Kunst
           </button>
         </div>
 
-        {/* Bottom Row: Search Input, Type Filter Segments, Status Dropdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-          
-          {/* Search Input */}
-          <div className="lg:col-span-5 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8860B]" />
-            <input
-              type="text"
-              value={filterQuery}
-              onChange={(e) => setFilterQuery(e.target.value)}
-              placeholder="Zoek op auteur, titel, ref of trefwoord..."
-              className="w-full pl-11 pr-10 py-3 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-semibold text-[#111111] placeholder-[#777777] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 transition-all"
-            />
-            {filterQuery && (
-              <button
-                onClick={() => setFilterQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#111111]"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+        {/* Status Filter Buttons */}
+        <div className="flex items-center space-x-1 p-1 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-serif">
+          <span className="text-[10px] font-mono text-[#888888] px-1.5 hidden sm:inline">Status:</span>
+          <button
+            onClick={() => setStatusFilter('Alle')}
+            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              statusFilter === 'Alle' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setStatusFilter('Beschikbaar')}
+            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              statusFilter === 'Beschikbaar' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            Beschikbaar
+          </button>
+          <button
+            onClick={() => setStatusFilter('Gereserveerd')}
+            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+              statusFilter === 'Gereserveerd' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            Gereserveerd
+          </button>
+        </div>
 
-          {/* Object Type Switcher */}
-          <div className="lg:col-span-4 flex items-center p-1 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-mono">
-            <button
-              onClick={() => setTypeFilter('Alle')}
-              className={`flex-1 py-2.5 px-3 rounded-xl font-bold transition-all text-center cursor-pointer ${
-                typeFilter === 'Alle' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#555555] hover:text-[#111111]'
-              }`}
-            >
-              Alle ({items.length})
-            </button>
-            <button
-              onClick={() => setTypeFilter('book')}
-              className={`flex-1 py-2.5 px-3 rounded-xl font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                typeFilter === 'book' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#555555] hover:text-[#111111]'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>Boeken ({booksCount})</span>
-            </button>
-            <button
-              onClick={() => setTypeFilter('painting')}
-              className={`flex-1 py-2.5 px-3 rounded-xl font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                typeFilter === 'painting' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#555555] hover:text-[#111111]'
-              }`}
-            >
-              <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>Kunst ({paintingsCount})</span>
-            </button>
-          </div>
-
-          {/* Status Dropdown Filter */}
-          <div className="lg:col-span-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full py-3 px-4 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-semibold text-[#111111] focus:outline-none focus:border-[#111111] cursor-pointer"
-            >
-              <option value="Alle">Alle Status ({items.length})</option>
-              <option value="Beschikbaar">Beschikbaar ({availableCount})</option>
-              <option value="Gereserveerd">Gereserveerd ({reservedCount})</option>
-              <option value="Verkocht">Verkocht (Archief) ({soldCount})</option>
-            </select>
-          </div>
-
+        {/* Topstuk Toggle Switch */}
+        <div className="flex items-center space-x-2 border-l border-[#D8CEB8] pl-3 py-1">
+          <span className="text-xs font-serif font-bold text-[#111111]">Topstuk</span>
+          <button
+            onClick={() => setOnlyTopstukken(!onlyTopstukken)}
+            className={`w-9 h-5 rounded-full transition-colors relative p-0.5 ${
+              onlyTopstukken ? 'bg-[#B8860B]' : 'bg-stone-300'
+            }`}
+            title="Filter alleen topstukken"
+          >
+            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+              onlyTopstukken ? 'translate-x-4' : 'translate-x-0'
+            }`} />
+          </button>
         </div>
 
       </div>
 
-      {/* Catalog Cards Grid */}
+      {/* Collection Sub-header & Metrics Summary */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div>
+          <h2 className="text-xl font-serif font-bold text-[#111111]">
+            Collectie &amp; Catalogus Beheer
+          </h2>
+          <div className="flex items-center space-x-3 text-xs font-sans text-[#666666] mt-1">
+            <span>Totaal: <strong className="text-[#111111] font-mono">{items.length}</strong> objecten</span>
+            <span>•</span>
+            <span className="flex items-center space-x-1">
+              <BookOpen className="w-3.5 h-3.5 text-[#B8860B]" />
+              <span><strong className="text-[#111111] font-mono">{booksCount}</strong> Boeken</span>
+            </span>
+            <span>•</span>
+            <span className="flex items-center space-x-1">
+              <Palette className="w-3.5 h-3.5 text-[#4A6B5D]" />
+              <span><strong className="text-[#111111] font-mono">{paintingsCount}</strong> Kunst</span>
+            </span>
+          </div>
+        </div>
+
+        {/* View Mode Toggle (Table vs Grid) */}
+        <div className="flex items-center space-x-1 p-1 rounded-xl bg-white border border-[#D8CEB8] text-xs self-start sm:self-auto">
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-3 py-1.5 rounded-lg font-serif font-bold transition-all ${
+              viewMode === 'table' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            Tabel
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`px-3 py-1.5 rounded-lg font-serif font-bold transition-all ${
+              viewMode === 'grid' ? 'bg-[#111111] text-white shadow-sm' : 'text-[#555555] hover:text-[#111111]'
+            }`}
+          >
+            Raster
+          </button>
+        </div>
+      </div>
+
+      {/* Catalog Items Section */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-3xl border border-[#D8CEB8] shadow-sm space-y-2">
           <BookOpen className="w-10 h-10 text-[#B8860B] mx-auto" />
-          <p className="text-sm font-serif font-bold text-[#111111]">Geen items gevonden</p>
+          <p className="text-sm font-serif font-bold text-[#111111]">Geen items gevonden in collectie</p>
+          <p className="text-xs text-[#888888]">Pas uw zoekopdracht of filter-opties aan.</p>
+        </div>
+      ) : viewMode === 'table' ? (
+        /* Data Table Layout (Screenshot Style) */
+        <div className="bg-white rounded-3xl border border-[#D8CEB8] shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-[#FAF7F2] border-b border-[#D8CEB8] font-serif text-[#555555] font-bold">
+                  <th className="p-3.5 w-10 text-center">
+                    <input 
+                      type="checkbox" 
+                      onChange={handleSelectAll}
+                      checked={selectedItemIds.length === filtered.length && filtered.length > 0}
+                      className="rounded border-[#D8CEB8] text-[#111111] focus:ring-0 cursor-pointer"
+                    />
+                  </th>
+                  <th className="p-3.5 font-mono text-[11px]">ID</th>
+                  <th className="p-3.5">Afbeelding</th>
+                  <th className="p-3.5">Titel &amp; Auteur</th>
+                  <th className="p-3.5">Type</th>
+                  <th className="p-3.5">Periode</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5">Prijs</th>
+                  <th className="p-3.5 text-right">Acties</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EAE4D8]">
+                {filtered.map((item) => {
+                  const img = item.images?.[0]?.url || item.image || '/images/scarron-spines-white-bg.jpg';
+                  const isSelected = selectedItemIds.includes(item.id);
+
+                  return (
+                    <tr 
+                      key={item.id} 
+                      className={`hover:bg-[#FAF7F2]/80 transition-colors ${isSelected ? 'bg-amber-50/40' : ''}`}
+                    >
+                      <td className="p-3.5 text-center">
+                        <input 
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelectItem(item.id)}
+                          className="rounded border-[#D8CEB8] text-[#111111] focus:ring-0 cursor-pointer"
+                        />
+                      </td>
+
+                      <td className="p-3.5 font-mono font-bold text-[#111111] whitespace-nowrap">
+                        {item.ref || item.id}
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="w-11 h-11 rounded-xl bg-stone-100 border border-[#D8CEB8] overflow-hidden shrink-0">
+                          <img src={img} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                      </td>
+
+                      <td className="p-3.5 max-w-xs">
+                        <div className="font-serif font-bold text-[#111111] line-clamp-1">
+                          {item.title}
+                        </div>
+                        <div className="text-[11px] text-[#666666] line-clamp-1">
+                          {item.author || item.subtitle || 'Fabrice Atelier'}
+                        </div>
+                      </td>
+
+                      <td className="p-3.5 font-serif">
+                        {item.itemType === 'painting' ? 'Schilderij' : 'Boek'}
+                      </td>
+
+                      <td className="p-3.5 text-[#555555] font-serif">
+                        {item.century || item.year || 'Historisch'}
+                      </td>
+
+                      <td className="p-3.5 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-[11px] font-serif font-bold ${
+                          item.status === 'Beschikbaar' 
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                            : item.status === 'Gereserveerd'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                            : 'bg-stone-200 text-stone-700 border border-stone-300'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </td>
+
+                      <td className="p-3.5 font-serif font-bold text-[#111111] whitespace-nowrap">
+                        {item.price || 'Prijs op aanvraag'}
+                      </td>
+
+                      <td className="p-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end space-x-1.5">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
+                            title="Bewerken"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <a
+                            href={`/collectie/${item.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
+                            title="Bekijk op site"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5" />
+                          </a>
+
+                          <button
+                            onClick={() => onDeleteItem(item.id)}
+                            className="p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                            title="Verwijderen"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => handleToggleFeatured(item)}
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              item.featured
+                                ? 'bg-amber-100 border-amber-300 text-[#B8860B]'
+                                : 'bg-[#FAF7F2] border-[#D8CEB8] text-stone-400 hover:text-[#B8860B]'
+                            }`}
+                            title={item.featured ? 'Gemarkeerd als Topstuk' : 'Markeer als Topstuk'}
+                          >
+                            <Star className={`w-3.5 h-3.5 ${item.featured ? 'fill-current' : ''}`} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Batch Action Bar Footer */}
+          <div className="p-3.5 bg-[#FAF7F2] border-t border-[#D8CEB8] flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="text-[#666666]">
+                Geselecteerde items ({selectedItemIds.length})
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-[#888888]">
+              {filtered.length} resultaten weergegeven
+            </div>
+          </div>
         </div>
       ) : (
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((item) => (
             <div
