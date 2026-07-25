@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  LayoutDashboard, 
+  LayoutGrid, 
   BookOpen, 
   Mail, 
   Users, 
@@ -9,9 +9,6 @@ import {
   ExternalLink, 
   Menu, 
   X, 
-  Sparkles, 
-  Plus, 
-  ShieldCheck,
   ChevronRight
 } from 'lucide-react';
 import ItemManager from './ItemManager';
@@ -54,8 +51,8 @@ export default function AdminDashboard({
     { 
       id: 'dashboard', 
       label: 'Dashboard', 
-      icon: LayoutDashboard,
-      badge: 'Nieuw'
+      icon: LayoutGrid,
+      badge: 'NIEUW'
     },
     { 
       id: 'items', 
@@ -83,7 +80,7 @@ export default function AdminDashboard({
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#111111] font-sans flex selection:bg-[#B8860B]/20 selection:text-[#B8860B]">
+    <div className="min-h-screen bg-[#FDFBF7] text-[#1C1A18] font-sans flex selection:bg-[#C5A059]/20 selection:text-[#C5A059]">
       
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
@@ -94,29 +91,29 @@ export default function AdminDashboard({
       )}
 
       {/* ========================================== */}
-      {/* LEFT SIDEBAR NAVIGATION (Dark Luxury Theme) */}
+      {/* LEFT SIDEBAR NAVIGATION (Dark Charcoal Bronze) */}
       {/* ========================================== */}
       <aside className={`
-        fixed top-0 bottom-0 left-0 z-50 w-64 lg:w-72 bg-[#141414] text-white flex flex-col justify-between
-        transition-transform duration-300 ease-in-out border-r border-[#2A2825] shadow-2xl
+        fixed top-0 bottom-0 left-0 z-50 w-64 lg:w-72 bg-[#1C1A18] text-white flex flex-col justify-between
+        transition-transform duration-300 ease-in-out border-r border-[#2C2926] shadow-2xl
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         
-        {/* Sidebar Top Header */}
-        <div className="p-6 border-b border-[#262420]">
+        {/* Sidebar Top Brand Header */}
+        <div className="p-6 border-b border-[#2C2926]">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3.5">
-              {/* Brand Logo Avatar */}
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#1F1E1B] to-[#2E2C27] border border-[#B8860B]/40 flex items-center justify-center shadow-lg shrink-0">
-                <span className="font-serif font-bold text-2xl text-[#D4AF37]">F</span>
+              {/* Circular Gold Badge Logo */}
+              <div className="w-11 h-11 rounded-full bg-[#C5A059] border-2 border-[#E5C98B]/40 flex items-center justify-center shadow-md shrink-0">
+                <span className="font-serif font-bold text-xl text-[#1C1A18]">A</span>
               </div>
 
               <div>
-                <h1 className="text-lg font-serif font-bold text-white leading-tight tracking-tight">
-                  Admin Dashboard
+                <h1 className="text-base font-serif font-bold text-white leading-tight tracking-tight">
+                  Atelier Admin
                 </h1>
-                <span className="text-xs font-mono text-[#A09888] tracking-wider uppercase block mt-0.5">
-                  Collection Manager
+                <span className="text-[10px] font-sans font-bold text-[#A89F91] tracking-widest uppercase block mt-0.5">
+                  COLLECTION MANAGER
                 </span>
               </div>
             </div>
@@ -131,8 +128,8 @@ export default function AdminDashboard({
           </div>
         </div>
 
-        {/* Sidebar Navigation Items */}
-        <div className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+        {/* Sidebar Navigation Menu */}
+        <div className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -145,43 +142,43 @@ export default function AdminDashboard({
                   setMobileMenuOpen(false);
                 }}
                 className={`
-                  w-full px-4 py-3.5 rounded-2xl text-sm sm:text-base font-serif font-bold transition-all flex items-center justify-between group
+                  w-full px-4 py-3.5 rounded-xl text-sm font-sans font-medium transition-all flex items-center justify-between group relative
                   ${isActive 
-                    ? 'bg-[#24221E] text-white border border-[#B8860B]/60 shadow-md' 
-                    : 'text-[#BBB5A8] hover:bg-[#1C1A17] hover:text-white border border-transparent'
+                    ? 'bg-[#292622] text-white font-semibold border-l-4 border-[#C5A059] shadow-sm' 
+                    : 'text-[#B0A79A] hover:bg-[#25221F] hover:text-white border-l-4 border-transparent'
                   }
                 `}
               >
                 <div className="flex items-center space-x-3.5">
                   <Icon className={`w-5 h-5 transition-colors ${
-                    isActive ? 'text-[#D4AF37]' : 'text-[#888275] group-hover:text-stone-200'
+                    isActive ? 'text-[#C5A059]' : 'text-[#8C8478] group-hover:text-stone-200'
                   }`} />
-                  <span className="tracking-wide text-sm sm:text-[15px]">{item.label}</span>
+                  <span className="tracking-wide">{item.label}</span>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   {item.badge && (
-                    <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-[#B8860B] text-white">
+                    <span className="text-[10px] font-sans font-bold uppercase px-2 py-0.5 rounded-md bg-[#C5A059] text-[#1C1A18]">
                       {item.badge}
                     </span>
                   )}
 
                   {item.highlight && (
-                    <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#B8860B] text-white animate-pulse">
+                    <span className="text-xs font-sans font-bold px-2.5 py-0.5 rounded-full bg-[#C5A059] text-[#1C1A18] animate-pulse">
                       {item.highlight}
                     </span>
                   )}
 
                   {item.count !== undefined && !item.highlight && (
-                    <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full ${
-                      isActive ? 'bg-white/15 text-white' : 'bg-stone-800 text-stone-300'
+                    <span className={`text-xs font-sans font-bold px-2.5 py-0.5 rounded-full ${
+                      isActive ? 'bg-white/15 text-white' : 'bg-[#25221F] text-[#8C8478]'
                     }`}>
                       {item.count}
                     </span>
                   )}
 
-                  {isActive && (
-                    <div className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+                  {isActive && !item.badge && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
                   )}
                 </div>
               </button>
@@ -189,39 +186,39 @@ export default function AdminDashboard({
           })}
         </div>
 
-        {/* Sidebar Bottom Profile & Actions */}
-        <div className="p-4 border-t border-[#262420] space-y-3 bg-[#111110]">
+        {/* Sidebar Bottom Profile Snippet & Action Buttons */}
+        <div className="p-4 border-t border-[#2C2926] space-y-3 bg-[#161412]">
           
-          {/* Admin User Badge */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-[#1C1A17] border border-[#2E2C27]">
+          {/* User Profile Snippet */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-[#23201D] border border-[#332F2B]">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-[#B8860B]/20 text-[#D4AF37] border border-[#B8860B]/30 flex items-center justify-center font-serif font-bold text-sm shrink-0">
-                F
+              <div className="w-9 h-9 rounded-full bg-[#C5A059]/20 text-[#C5A059] border border-[#C5A059]/30 flex items-center justify-center font-serif font-bold text-sm shrink-0">
+                A
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-serif font-bold text-stone-200 truncate">Fabrice Atelier</p>
-                <p className="text-[11px] font-mono text-emerald-400 flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <p className="text-xs font-sans font-semibold text-stone-100 truncate">Atelier Admin</p>
+                <p className="text-[11px] font-sans text-emerald-400 flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Online</span>
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
+          {/* Action Buttons: Neutral Website & Crimson Logout */}
           <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={handleClose}
-              className="py-2.5 px-3 rounded-xl bg-[#1C1A17] border border-[#2E2C27] hover:border-stone-500 text-stone-200 hover:text-white text-xs font-serif font-bold transition-all flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-lg bg-[#23201D] border border-[#332F2B] hover:border-stone-500 text-stone-300 hover:text-white text-xs font-sans font-semibold transition-all flex items-center justify-center space-x-1.5"
               title="Bekijk de live website"
             >
-              <ExternalLink className="w-4 h-4 text-[#D4AF37]" />
+              <ExternalLink className="w-4 h-4 text-[#C5A059]" />
               <span className="truncate">Website</span>
             </button>
 
             <button
               onClick={onLogout}
-              className="py-2.5 px-3 rounded-xl bg-red-950/40 border border-red-900/50 hover:bg-red-900/60 text-red-300 hover:text-white text-xs font-serif font-bold transition-all flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-lg bg-[#3A181A] border border-[#5C2326] hover:bg-[#4D1F22] text-red-200 hover:text-white text-xs font-sans font-semibold transition-all flex items-center justify-center space-x-1.5 shadow-xs"
               title="Veilig uitloggen uit beheer"
             >
               <LogOut className="w-4 h-4 text-red-400" />
@@ -234,29 +231,32 @@ export default function AdminDashboard({
       </aside>
 
       {/* ========================================== */}
-      {/* MAIN CONTENT AREA */}
+      {/* RIGHT MAIN CONTENT AREA */}
       {/* ========================================== */}
       <div className="flex-1 md:pl-64 lg:pl-72 flex flex-col min-w-0">
         
-        {/* Sticky Top Header Bar */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#D8CEB8] py-3.5 px-4 sm:px-8 shadow-xs flex items-center justify-between gap-4">
+        {/* Top Bar Header */}
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#EBE7DF] py-4 px-4 sm:px-8 shadow-xs flex items-center justify-between gap-4">
           
           <div className="flex items-center space-x-3">
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] md:hidden"
+              className="p-2 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] text-[#1C1A18] md:hidden"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             <div>
-              <div className="flex items-center space-x-2 text-[11px] font-mono text-[#888888]">
+              {/* Breadcrumbs */}
+              <div className="flex items-center space-x-2 text-xs font-sans text-[#8C8478]">
                 <span>Beheer</span>
-                <ChevronRight className="w-3 h-3 text-[#B8860B]" />
-                <span className="text-[#111111] font-bold capitalize">{activeTab}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span className="text-[#1C1A18] font-semibold capitalize">{activeTab}</span>
               </div>
-              <h2 className="text-base font-serif font-bold text-[#111111]">
+
+              {/* Main Page Title (Serif) */}
+              <h2 className="text-xl font-serif font-bold text-[#1C1A18] tracking-tight mt-0.5">
                 {activeTab === 'dashboard' && 'Overzicht & Statistieken'}
                 {activeTab === 'items' && 'Collectie & Catalogus Beheer'}
                 {activeTab === 'inquiries' && 'Binnengekomen Aanvragen'}
@@ -266,20 +266,20 @@ export default function AdminDashboard({
             </div>
           </div>
 
-          {/* Quick Header Shortcuts */}
+          {/* Top-Right Action Button */}
           <div className="flex items-center space-x-2.5">
             <button
               onClick={handleClose}
-              className="hidden sm:flex px-3.5 py-2 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-stone-200 text-xs font-bold transition-all items-center space-x-1.5 shadow-xs"
+              className="hidden sm:flex px-4 py-2.5 rounded-xl bg-white border border-[#EBE7DF] text-[#1C1A18] hover:bg-[#FDFBF7] hover:border-[#C5A059] text-xs font-sans font-semibold transition-all items-center space-x-2 shadow-xs cursor-pointer"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-[#B8860B]" />
+              <ExternalLink className="w-4 h-4 text-[#C5A059]" />
               <span>Bekijk Live Site</span>
             </button>
           </div>
         </header>
 
-        {/* Dynamic Main Body Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        {/* Dynamic Main Body Content Container */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
           
           {activeTab === 'dashboard' && (
             <DashboardOverview
@@ -315,7 +315,7 @@ export default function AdminDashboard({
           )}
 
           {activeTab === 'settings' && (
-            <div className="max-w-2xl bg-white border border-[#D8CEB8] rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div className="max-w-2xl bg-white border border-[#EBE7DF] rounded-xl p-6 sm:p-8 shadow-sm">
               <SecuritySettings currentUser={currentUser} onShowToast={showToast} />
             </div>
           )}
