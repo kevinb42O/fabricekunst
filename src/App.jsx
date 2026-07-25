@@ -18,12 +18,15 @@ import {
   saveItemAsync, 
   deleteItemAsync, 
   getInquiries, 
-  fetchInquiriesAsync 
+  fetchInquiriesAsync,
+  getHeroSlides,
+  saveHeroSlidesAsync
 } from './utils/storage';
 
 export default function App() {
   const [catalog, setCatalog] = useState(getCatalog());
   const [inquiries, setInquiries] = useState(getInquiries());
+  const [heroSlides, setHeroSlides] = useState(getHeroSlides());
   
   const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'catalogus' | 'herkomst' | 'item-detail'
   const [selectedDetailItemId, setSelectedDetailItemId] = useState(null);
@@ -32,6 +35,11 @@ export default function App() {
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
+
+  const handleSaveHeroSlides = async (updatedSlides) => {
+    setHeroSlides(updatedSlides);
+    await saveHeroSlidesAsync(updatedSlides);
+  };
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -237,10 +245,12 @@ export default function App() {
         items={catalog}
         catalog={catalog}
         inquiries={inquiries}
+        heroSlides={heroSlides}
         currentUser={adminUser}
         onSaveItem={handleSaveItem}
         onDeleteItem={handleDeleteItem}
         onUpdateInquiries={handleUpdateInquiries}
+        onSaveHeroSlides={handleSaveHeroSlides}
         onLogout={handleLogoutAdmin}
         onCloseAdmin={handleCloseAdmin}
         onClose={handleCloseAdmin}
@@ -267,7 +277,7 @@ export default function App() {
       
       {/* High-End Scroll Progress Bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#8E7035] transform-origin-left z-[100] pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-[2px] bg-[#C5A059] transform-origin-left z-[100] pointer-events-none"
         style={{ scaleX }}
       />
 
@@ -316,6 +326,7 @@ export default function App() {
           <>
             {/* Full-Width Hero Entry */}
             <Hero
+              slides={heroSlides}
               onExploreCatalog={() => handleNavigate('catalogus')}
               onRequestConsultation={() => handleOpenConsultation(null)}
             />

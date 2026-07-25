@@ -18,14 +18,18 @@ import ToastNotification from './ToastNotification';
 import DashboardOverview from './DashboardOverview';
 import CustomersManager from './CustomersManager';
 
+import HeroSlidesManager from './HeroSlidesManager';
+
 export default function AdminDashboard({ 
   items = [], 
   catalog = [], 
   inquiries = [], 
+  heroSlides = [],
   currentUser = null,
   onSaveItem = () => {}, 
   onDeleteItem = () => {}, 
   onUpdateInquiries = () => {}, 
+  onSaveHeroSlides = () => {},
   onLogout = () => {}, 
   onCloseAdmin, 
   onClose 
@@ -34,7 +38,7 @@ export default function AdminDashboard({
   const activeInquiries = inquiries || [];
   const handleClose = onCloseAdmin || onClose || (() => {});
 
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'inquiries' | 'customers' | 'settings'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'hero' | 'inquiries' | 'customers' | 'settings'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -59,6 +63,11 @@ export default function AdminDashboard({
       label: 'Collectie', 
       icon: BookOpen,
       count: activeItems.length
+    },
+    {
+      id: 'hero',
+      label: 'Hero Visuals',
+      icon: Sparkles
     },
     { 
       id: 'inquiries', 
@@ -259,6 +268,7 @@ export default function AdminDashboard({
               <h2 className="text-xl font-serif font-bold text-[#1C1A18] tracking-tight mt-0.5">
                 {activeTab === 'dashboard' && 'Overzicht & Statistieken'}
                 {activeTab === 'items' && 'Collectie & Catalogus Beheer'}
+                {activeTab === 'hero' && 'Hero Visuals & Homepage Carrousel'}
                 {activeTab === 'inquiries' && 'Binnengekomen Aanvragen'}
                 {activeTab === 'customers' && 'Verzamelaars & Klanten Index'}
                 {activeTab === 'settings' && 'Beveiligingsinstellingen & PIN'}
@@ -296,6 +306,14 @@ export default function AdminDashboard({
               items={activeItems}
               onSaveItem={onSaveItem}
               onDeleteItem={onDeleteItem}
+              onShowToast={showToast}
+            />
+          )}
+
+          {activeTab === 'hero' && (
+            <HeroSlidesManager
+              slides={heroSlides}
+              onSaveSlides={onSaveHeroSlides}
               onShowToast={showToast}
             />
           )}

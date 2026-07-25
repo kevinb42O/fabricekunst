@@ -41,7 +41,8 @@ const HERO_SLIDES = [
   }
 ];
 
-export default function Hero({ onExploreCatalog, onRequestConsultation }) {
+export default function Hero({ slides = [], onExploreCatalog, onRequestConsultation }) {
+  const activeSlides = (slides && slides.length > 0) ? slides : HERO_SLIDES;
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const heroRef = useRef(null);
 
@@ -71,12 +72,12 @@ export default function Hero({ onExploreCatalog, onRequestConsultation }) {
   // Auto slide transition
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentSlideIndex((prev) => (prev + 1) % activeSlides.length);
     }, 11000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeSlides.length]);
 
-  const activeSlide = HERO_SLIDES[currentSlideIndex];
+  const activeSlide = activeSlides[currentSlideIndex] || activeSlides[0] || HERO_SLIDES[0];
 
   // Motion Variants
   const containerVariants = {

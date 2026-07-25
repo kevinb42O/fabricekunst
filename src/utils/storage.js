@@ -3,6 +3,68 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
 const INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
+const HERO_SLIDES_KEY = 'fabrice_boeken_kunst_hero_slides';
+
+export const DEFAULT_HERO_SLIDES = [
+  {
+    id: 'scarron-1713',
+    title: 'Les Œuvres de Monsieur Scarron',
+    year: 'Amsterdam 1713',
+    subtitle: 'Originele kopergravures & gemarmerde schutbladen in goudgestempeld leder.',
+    image: '/images/hero/hero-scarron-candlelight.jpg',
+    objectPosition: 'center 35%',
+    tag: 'I'
+  },
+  {
+    id: 'voltaire-theatre',
+    title: 'Théâtre de Voltaire',
+    year: 'Parijs 1829',
+    subtitle: 'Met zeldzame kopergravure en antieke messing leesbril.',
+    image: '/images/hero/hero-voltaire-glasses.jpg',
+    objectPosition: 'center center',
+    tag: 'II'
+  },
+  {
+    id: 'scarron-engraving',
+    title: '18e-Eeuwse Kopergravures',
+    year: 'Amsterdam 1713',
+    subtitle: 'Gedetailleerde koperetsing door meester-graveurs uit de Verlichting.',
+    image: '/images/hero/hero-scarron-engraving.jpg',
+    objectPosition: 'center top',
+    tag: 'III'
+  },
+  {
+    id: 'provenance-exlibris',
+    title: 'Ex-Libris & Provenance',
+    year: 'Historische Collectie',
+    subtitle: 'Verifieerbare adellijke herkomst met origineel Vacheron-Poinsot stempel.',
+    image: '/images/hero/hero-voltaire-exlibris.jpg',
+    objectPosition: 'center center',
+    tag: 'IV'
+  }
+];
+
+export const getHeroSlides = () => {
+  try {
+    const saved = localStorage.getItem(HERO_SLIDES_KEY);
+    if (!saved) return DEFAULT_HERO_SLIDES;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_HERO_SLIDES;
+  } catch (err) {
+    console.error("Fout bij ophalen hero slides:", err);
+    return DEFAULT_HERO_SLIDES;
+  }
+};
+
+export const saveHeroSlidesAsync = async (slides) => {
+  try {
+    localStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(slides));
+    return slides;
+  } catch (err) {
+    console.error("Fout bij opslaan hero slides:", err);
+    return slides;
+  }
+};
 
 // Map database column names (snake_case) to frontend item object (camelCase)
 const mapDbItemToFrontend = (dbItem) => ({
