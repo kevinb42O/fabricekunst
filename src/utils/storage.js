@@ -1,11 +1,99 @@
 import { INITIAL_CATALOG } from '../data/initialCatalog';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
 const INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
 const PASSCODE_KEY = 'fabrice_admin_pin';
-
-// Default Admin PIN Code: "5438"
 const DEFAULT_PASSCODE = "5438";
+
+// Map database column names (snake_case) to frontend item object (camelCase)
+const mapDbItemToFrontend = (dbItem) => ({
+  id: dbItem.id,
+  itemType: dbItem.item_type || 'book',
+  ref: dbItem.ref,
+  title: dbItem.title,
+  subtitle: dbItem.subtitle,
+  author: dbItem.author,
+  publisher: dbItem.publisher,
+  city: dbItem.city,
+  year: dbItem.year,
+  century: dbItem.century,
+  category: dbItem.category,
+  price: dbItem.price,
+  status: dbItem.status,
+  featured: dbItem.featured,
+  condition: dbItem.condition,
+  binding: dbItem.binding,
+  dimensions: dbItem.dimensions,
+  provenance: dbItem.provenance,
+  description: dbItem.description,
+  historicalContext: dbItem.historical_context,
+  conditionReport: dbItem.condition_report,
+  provenanceDetails: dbItem.provenance_details,
+  collationSpecs: dbItem.collation_specs,
+  images: dbItem.images || []
+});
+
+// Map frontend item object (camelCase) to database column names (snake_case)
+const mapFrontendItemToDb = (item) => ({
+  id: item.id,
+  item_type: item.itemType || 'book',
+  ref: item.ref,
+  title: item.title,
+  subtitle: item.subtitle,
+  author: item.author,
+  publisher: item.publisher,
+  city: item.city,
+  year: item.year,
+  century: item.century,
+  category: item.category,
+  price: item.price,
+  status: item.status,
+  featured: Boolean(item.featured),
+  condition: item.condition,
+  binding: item.binding,
+  dimensions: item.dimensions,
+  provenance: item.provenance,
+  description: item.description,
+  historical_context: item.historicalContext,
+  condition_report: item.conditionReport,
+  provenance_details: item.provenanceDetails,
+  collation_specs: item.collationSpecs,
+  images: item.images || [],
+  updated_at: new Date().toISOString()
+});
+
+// Map database inquiry (snake_case) to frontend inquiry object
+const mapDbInquiryToFrontend = (dbInq) => ({
+  id: dbInq.id,
+  date: dbInq.date,
+  itemTitle: dbInq.item_title,
+  itemRef: dbInq.item_ref,
+  name: dbInq.name,
+  email: dbInq.email,
+  phone: dbInq.phone,
+  type: dbInq.type,
+  message: dbInq.message,
+  status: dbInq.status,
+  notes: dbInq.notes
+});
+
+// Map frontend inquiry to database inquiry (snake_case)
+const mapFrontendInquiryToDb = (inq) => ({
+  id: inq.id,
+  date: inq.date || new Date().toISOString(),
+  item_title: inq.itemTitle,
+  item_ref: inq.itemRef,
+  name: inq.name,
+  email: inq.email,
+  phone: inq.phone,
+  type: inq.type,
+  message: inq.message,
+  status: inq.status || 'Nieuw',
+  notes: inq.notes
+});
+
+// --- CATALOG MANAGEMENT ---
 
 export const getCatalog = () => {
   try {
@@ -15,53 +103,139 @@ export const getCatalog = () => {
       return INITIAL_CATALOG;
     }
     const parsed = JSON.parse(saved);
-    let filtered = parsed.filter(item => item.id !== 'blaeu-atlas-1662');
-
-    // Ensure all items from INITIAL_CATALOG exist and have proper itemType
-    INITIAL_CATALOG.forEach(initialItem => {
-      const exists = filtered.some(i => i.id === initialItem.id);
-      if (!exists) {
-        filtered.push(initialItem);
-      }
-    });
-
-    filtered = filtered.map(item => {
-      const initial = INITIAL_CATALOG.find(i => i.id === item.id);
-      return {
-        itemType: item.itemType || initial?.itemType || 'book',
-        ...item,
-        historicalContext: item.historicalContext || initial?.historicalContext,
-        conditionReport: item.conditionReport || initial?.conditionReport,
-        provenanceDetails: item.provenanceDetails || initial?.provenanceDetails,
-        collationSpecs: item.collationSpecs || initial?.collationSpecs,
-      };
-    });
-
-    // Ensure Voltaire has /images/voltaire-theatre-bust-reading-glasses.jpg as primary image 0
-    const voltaire = filtered.find(item => item.id === 'voltaire-1829-52delig');
-    if (voltaire && voltaire.images && voltaire.images[0]?.url !== '/images/voltaire-theatre-bust-reading-glasses.jpg') {
-      const bustIdx = voltaire.images.findIndex(img => img.url === '/images/voltaire-theatre-bust-reading-glasses.jpg');
-      if (bustIdx !== -1) {
-        const bustImg = voltaire.images.splice(bustIdx, 1)[0];
-        voltaire.images.unshift(bustImg);
-      }
-    }
-
-    localStorage.setItem(CATALOG_KEY, JSON.stringify(filtered));
-    return filtered;
+    return parsed.length > 0 ? parsed : INITIAL_CATALOG;
   } catch (e) {
-    console.error("Fout bij ophalen catalogus uit LocalStorage", e);
+    console.error("Error reading catalog from localStorage", e);
     return INITIAL_CATALOG;
   }
+};
+
+export const fetchCatalogAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase.from('items').select('*').order('created_at', { ascending: true });
+      if (!error && data && data.length > 0) {
+        const mapped = data.map(mapDbItemToFrontend);
+        localStorage.setItem(CATALOG_KEY, JSON.stringify(mapped));
+        return mapped;
+      }
+    } catch (e) {
+      console.error("Supabase catalog fetch failed, falling back to local data", e);
+    }
+  }
+  return getCatalog();
 };
 
 export const saveCatalog = (items) => {
   try {
     localStorage.setItem(CATALOG_KEY, JSON.stringify(items));
   } catch (e) {
-    console.error("Fout bij opslaan catalogus", e);
+    console.error("Error saving catalog to localStorage", e);
   }
 };
+
+export const saveCatalogAsync = async (items) => {
+  saveCatalog(items);
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const dbItems = items.map(mapFrontendItemToDb);
+      const { error } = await supabase.from('items').upsert(dbItems, { onConflict: 'id' });
+      if (error) console.error("Error upserting catalog to Supabase", error);
+    } catch (e) {
+      console.error("Supabase catalog save failed", e);
+    }
+  }
+};
+
+export const saveItemAsync = async (item) => {
+  const currentCatalog = getCatalog();
+  const index = currentCatalog.findIndex(i => i.id === item.id);
+  let updatedCatalog;
+  if (index !== -1) {
+    updatedCatalog = [...currentCatalog];
+    updatedCatalog[index] = item;
+  } else {
+    updatedCatalog = [item, ...currentCatalog];
+  }
+  
+  saveCatalog(updatedCatalog);
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const dbItem = mapFrontendItemToDb(item);
+      const { error } = await supabase.from('items').upsert(dbItem, { onConflict: 'id' });
+      if (error) console.error("Supabase item save error:", error);
+    } catch (e) {
+      console.error("Supabase item save exception:", e);
+    }
+  }
+  return updatedCatalog;
+};
+
+export const deleteItemAsync = async (itemId) => {
+  const currentCatalog = getCatalog();
+  const updatedCatalog = currentCatalog.filter(i => i.id !== itemId);
+  saveCatalog(updatedCatalog);
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { error } = await supabase.from('items').delete().eq('id', itemId);
+      if (error) console.error("Supabase item delete error:", error);
+    } catch (e) {
+      console.error("Supabase item delete exception:", e);
+    }
+  }
+  return updatedCatalog;
+};
+
+// --- IMAGE UPLOAD HELPER ---
+
+export const uploadCatalogImage = async (file) => {
+  if (!file) return null;
+
+  if (!isSupabaseConfigured() || !supabase) {
+    // Local fallback: convert image to Base64 data URL
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+    const filePath = `catalog/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('catalog-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error("Supabase image upload error:", uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('catalog-images')
+      .getPublicUrl(filePath);
+
+    return data?.publicUrl || null;
+  } catch (e) {
+    console.error("Image upload exception, falling back to Data URL", e);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => resolve(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+};
+
+// --- INQUIRIES MANAGEMENT ---
 
 export const getInquiries = () => {
   try {
@@ -98,6 +272,22 @@ export const getInquiries = () => {
   }
 };
 
+export const fetchInquiriesAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase.from('inquiries').select('*').order('date', { ascending: false });
+      if (!error && data) {
+        const mapped = data.map(mapDbInquiryToFrontend);
+        localStorage.setItem(INQUIRIES_KEY, JSON.stringify(mapped));
+        return mapped;
+      }
+    } catch (e) {
+      console.error("Supabase inquiries fetch error", e);
+    }
+  }
+  return getInquiries();
+};
+
 export const saveInquiry = (inquiry) => {
   try {
     const current = getInquiries();
@@ -116,6 +306,20 @@ export const saveInquiry = (inquiry) => {
   }
 };
 
+export const saveInquiryAsync = async (inquiry) => {
+  const newInquiry = saveInquiry(inquiry);
+  if (newInquiry && isSupabaseConfigured() && supabase) {
+    try {
+      const dbInq = mapFrontendInquiryToDb(newInquiry);
+      const { error } = await supabase.from('inquiries').insert(dbInq);
+      if (error) console.error("Supabase inquiry insert error", error);
+    } catch (e) {
+      console.error("Supabase inquiry insert exception", e);
+    }
+  }
+  return newInquiry;
+};
+
 export const updateInquiryStatus = (id, newStatus) => {
   try {
     const current = getInquiries();
@@ -128,17 +332,17 @@ export const updateInquiryStatus = (id, newStatus) => {
   }
 };
 
-export const verifyAdminPasscode = (pin) => {
-  const currentPin = localStorage.getItem(PASSCODE_KEY) || DEFAULT_PASSCODE;
-  return pin === currentPin;
-};
-
-export const getCurrentPasscode = () => {
-  return localStorage.getItem(PASSCODE_KEY) || DEFAULT_PASSCODE;
-};
-
-export const updateAdminPasscode = (newPin) => {
-  localStorage.setItem(PASSCODE_KEY, newPin);
+export const updateInquiryStatusAsync = async (id, newStatus) => {
+  const updated = updateInquiryStatus(id, newStatus);
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { error } = await supabase.from('inquiries').update({ status: newStatus }).eq('id', id);
+      if (error) console.error("Supabase inquiry status update error", error);
+    } catch (e) {
+      console.error("Supabase inquiry status update exception", e);
+    }
+  }
+  return updated;
 };
 
 export const updateInquiryNotes = (id, notes) => {
@@ -153,6 +357,19 @@ export const updateInquiryNotes = (id, notes) => {
   }
 };
 
+export const updateInquiryNotesAsync = async (id, notes) => {
+  const updated = updateInquiryNotes(id, notes);
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { error } = await supabase.from('inquiries').update({ notes }).eq('id', id);
+      if (error) console.error("Supabase inquiry notes update error", error);
+    } catch (e) {
+      console.error("Supabase inquiry notes update exception", e);
+    }
+  }
+  return updated;
+};
+
 export const deleteInquiry = (id) => {
   try {
     const current = getInquiries();
@@ -162,6 +379,59 @@ export const deleteInquiry = (id) => {
   } catch (e) {
     console.error("Fout bij verwijderen aanvraag", e);
     return getInquiries();
+  }
+};
+
+export const deleteInquiryAsync = async (id) => {
+  const updated = deleteInquiry(id);
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { error } = await supabase.from('inquiries').delete().eq('id', id);
+      if (error) console.error("Supabase inquiry delete error", error);
+    } catch (e) {
+      console.error("Supabase inquiry delete exception", e);
+    }
+  }
+  return updated;
+};
+
+// --- SECURITY & PIN CODE ---
+
+export const verifyAdminPasscode = (pin) => {
+  const currentPin = localStorage.getItem(PASSCODE_KEY) || DEFAULT_PASSCODE;
+  return pin === currentPin;
+};
+
+export const verifyAdminPasscodeAsync = async (pin) => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data } = await supabase.from('admin_settings').select('value').eq('key', 'admin_pin').single();
+      if (data?.value) {
+        return pin === data.value;
+      }
+    } catch (e) {
+      console.warn("Supabase PIN verification fallback to local", e);
+    }
+  }
+  return verifyAdminPasscode(pin);
+};
+
+export const getCurrentPasscode = () => {
+  return localStorage.getItem(PASSCODE_KEY) || DEFAULT_PASSCODE;
+};
+
+export const updateAdminPasscode = (newPin) => {
+  localStorage.setItem(PASSCODE_KEY, newPin);
+};
+
+export const updateAdminPasscodeAsync = async (newPin) => {
+  updateAdminPasscode(newPin);
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      await supabase.from('admin_settings').upsert({ key: 'admin_pin', value: newPin });
+    } catch (e) {
+      console.error("Supabase PIN update error", e);
+    }
   }
 };
 
@@ -187,7 +457,7 @@ export const importDataJSON = (jsonString) => {
   try {
     const parsed = JSON.parse(jsonString);
     if (parsed.catalog && Array.isArray(parsed.catalog)) {
-      saveCatalog(parsed.catalog);
+      saveCatalogAsync(parsed.catalog);
     }
     if (parsed.inquiries && Array.isArray(parsed.inquiries)) {
       localStorage.setItem(INQUIRIES_KEY, JSON.stringify(parsed.inquiries));
@@ -210,4 +480,3 @@ export const resetToInitialData = () => {
     return false;
   }
 };
-

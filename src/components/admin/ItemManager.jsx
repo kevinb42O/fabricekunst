@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2 } from 'lucide-react';
+import { uploadCatalogImage } from '../../utils/storage';
 
 export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast }) {
   const [editingItem, setEditingItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Filtering State
   const [filterQuery, setFilterQuery] = useState('');
@@ -62,10 +64,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       title: `${item.title} (Kopie)`
     };
     onSaveItem(duplicatedItem);
-    if (onShowToast) onShowToast(`Item gedupliceerd als "${duplicatedItem.title}"`);
+    if (onShowToast) onShowToast(`Gedupliceerd: "${duplicatedItem.title}"`);
   };
 
-  const handleQuickStatusChange = (item, newStatus) => {
+  const handleStatusChange = (item, newStatus) => {
     const updated = { ...item, status: newStatus };
     onSaveItem(updated);
     if (onShowToast) onShowToast(`Status van "${item.title}" gewijzigd naar ${newStatus}`);
@@ -85,21 +87,28 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     setEditingItem(null);
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditingItem(prev => ({
-          ...prev,
-          images: [
-            ...prev.images,
-            { url: reader.result, caption: file.name }
-          ]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+    if (files.length === 0) return;
+    setIsUploading(true);
+
+    for (const file of files) {
+      try {
+        const publicUrl = await uploadCatalogImage(file);
+        if (publicUrl) {
+          setEditingItem(prev => ({
+            ...prev,
+            images: [
+              ...prev.images,
+              { url: publicUrl, caption: file.name }
+            ]
+          }));
+        }
+      } catch (err) {
+        console.error("Fout bij uploaden foto:", err);
+      }
+    }
+    setIsUploading(false);
   };
 
   const handleAddImageUrl = (e) => {

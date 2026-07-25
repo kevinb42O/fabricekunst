@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Phone, Calendar, MessageSquare, ExternalLink, Search, Check, Trash2, StickyNote, Send, Sparkles, X, Copy } from 'lucide-react';
-import { updateInquiryStatus, updateInquiryNotes, deleteInquiry } from '../../utils/storage';
+import { updateInquiryStatusAsync, updateInquiryNotesAsync, deleteInquiryAsync } from '../../utils/storage';
 
 export default function InquiriesManager({ inquiries, onStatusChange, onShowToast }) {
   const [filterQuery, setFilterQuery] = useState('');
@@ -10,22 +10,22 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
   const [selectedTemplate, setSelectedTemplate] = useState('invitation');
   const [customEmailBody, setCustomEmailBody] = useState('');
 
-  const handleStatusSelect = (id, newStatus) => {
-    const updated = updateInquiryStatus(id, newStatus);
+  const handleStatusSelect = async (id, newStatus) => {
+    const updated = await updateInquiryStatusAsync(id, newStatus);
     onStatusChange(updated);
     if (onShowToast) onShowToast(`Aanvraag status gewijzigd naar ${newStatus}`);
   };
 
-  const handleSaveNotes = (id) => {
+  const handleSaveNotes = async (id) => {
     const noteText = activeNotes[id] || '';
-    const updated = updateInquiryNotes(id, noteText);
+    const updated = await updateInquiryNotesAsync(id, noteText);
     onStatusChange(updated);
     if (onShowToast) onShowToast('Interne notitie opgeslagen');
   };
 
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     if (window.confirm(`Weet je zeker dat je de aanvraag van ${name} wilt verwijderen?`)) {
-      const updated = deleteInquiry(id);
+      const updated = await deleteInquiryAsync(id);
       onStatusChange(updated);
       if (onShowToast) onShowToast('Aanvraag verwijderd.');
     }

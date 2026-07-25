@@ -12,11 +12,18 @@ import Footer from './components/Footer';
 import InquiryModal from './components/InquiryModal';
 import AdminLoginModal from './components/admin/AdminLoginModal';
 import AdminDashboard from './components/admin/AdminDashboard';
-import { getCatalog, saveCatalog, getInquiries } from './utils/storage';
+import { 
+  getCatalog, 
+  fetchCatalogAsync, 
+  saveItemAsync, 
+  deleteItemAsync, 
+  getInquiries, 
+  fetchInquiriesAsync 
+} from './utils/storage';
 
 export default function App() {
-  const [catalog, setCatalog] = useState([]);
-  const [inquiries, setInquiries] = useState([]);
+  const [catalog, setCatalog] = useState(getCatalog());
+  const [inquiries, setInquiries] = useState(getInquiries());
   
   const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'catalogus' | 'herkomst' | 'item-detail'
   const [selectedDetailItemId, setSelectedDetailItemId] = useState(null);
@@ -33,9 +40,14 @@ export default function App() {
   });
 
   useEffect(() => {
-    const loadedCatalog = getCatalog();
-    setCatalog(loadedCatalog);
-    setInquiries(getInquiries());
+    // Initial fetch from Supabase (with fallback to local storage)
+    fetchCatalogAsync().then(items => {
+      if (items && items.length > 0) setCatalog(items);
+    });
+
+    fetchInquiriesAsync().then(inqs => {
+      if (inqs) setInquiries(inqs);
+    });
 
     const checkRoutes = () => {
       const path = window.location.pathname.toLowerCase();
@@ -190,22 +202,14 @@ export default function App() {
     }
   };
 
-  const handleSaveItem = (itemToSave) => {
-    const existingIndex = catalog.findIndex(i => i.id === itemToSave.id);
-    let updated;
-    if (existingIndex >= 0) {
-      updated = catalog.map(i => i.id === itemToSave.id ? itemToSave : i);
-    } else {
-      updated = [itemToSave, ...catalog];
-    }
-    setCatalog(updated);
-    saveCatalog(updated);
+  const handleSaveItem = async (itemToSave) => {
+    const updated = await saveItemAsync(itemToSave);
+    if (updated) setCatalog(updated);
   };
 
-  const handleDeleteItem = (idToDelete) => {
-    const updated = catalog.filter(i => i.id !== idToDelete);
-    setCatalog(updated);
-    saveCatalog(updated);
+  const handleDeleteItem = async (idToDelete) => {
+    const updated = await deleteItemAsync(idToDelete);
+    if (updated) setCatalog(updated);
   };
 
   const handleUpdateInquiries = (updatedInquiries) => {

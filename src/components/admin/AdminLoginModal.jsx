@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { X, ShieldAlert, Lock, ArrowRight } from 'lucide-react';
-import { verifyAdminPasscode } from '../../utils/storage';
+import { verifyAdminPasscodeAsync } from '../../utils/storage';
 
 export default function AdminLoginModal({ onClose, onLoginSuccess }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (verifyAdminPasscode(pin)) {
+    setLoading(true);
+    const valid = await verifyAdminPasscodeAsync(pin);
+    setLoading(false);
+    if (valid) {
       onLoginSuccess();
     } else {
       setError(true);

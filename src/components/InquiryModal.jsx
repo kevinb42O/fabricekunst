@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, ShieldCheck, CheckCircle2, Phone, Mail, User, ChevronDown, BookOpen } from 'lucide-react';
-import { saveInquiry } from '../utils/storage';
+import { saveInquiryAsync } from '../utils/storage';
 
 export default function InquiryModal({ item, catalog = [], onClose, onSuccess }) {
   const [selectedItemId, setSelectedItemId] = useState(item ? item.id : 'none');
@@ -36,7 +36,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
@@ -50,12 +50,10 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
       message: formData.message
     };
 
-    setTimeout(() => {
-      saveInquiry(payload);
-      setLoading(false);
-      setSubmitted(true);
-      if (onSuccess) onSuccess();
-    }, 600);
+    await saveInquiryAsync(payload);
+    setLoading(false);
+    setSubmitted(true);
+    if (onSuccess) onSuccess();
   };
 
   return (
