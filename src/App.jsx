@@ -230,6 +230,38 @@ export default function App() {
     setInquiries(updatedInquiries);
   };
 
+  // Dedicated Admin Screen Mode
+  if (adminLoggedIn) {
+    return (
+      <AdminDashboard
+        items={catalog}
+        catalog={catalog}
+        inquiries={inquiries}
+        currentUser={adminUser}
+        onSaveItem={handleSaveItem}
+        onDeleteItem={handleDeleteItem}
+        onUpdateInquiries={handleUpdateInquiries}
+        onLogout={handleLogoutAdmin}
+        onCloseAdmin={handleCloseAdmin}
+        onClose={handleCloseAdmin}
+      />
+    );
+  }
+
+  if (adminLoginOpen) {
+    return (
+      <AdminLoginModal
+        onClose={handleCloseAdmin}
+        onLoginSuccess={(user) => {
+          setAdminUser(user);
+          setAdminLoggedIn(true);
+          refreshInquiries();
+          fetchCatalogAsync().then(items => { if (items) setCatalog(items); });
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#111111] flex flex-col font-sans selection:bg-[#B8860B]/20 selection:text-[#B8860B]">
       
@@ -330,34 +362,6 @@ export default function App() {
           catalog={catalog}
           onClose={() => setInquiryModalOpen(false)}
           onSuccess={refreshInquiries}
-        />
-      )}
-
-      {/* CMS Admin Modals */}
-      {adminLoginOpen && !adminLoggedIn && (
-        <AdminLoginModal
-          onClose={handleCloseAdmin}
-          onLoginSuccess={(user) => {
-            setAdminUser(user);
-            setAdminLoggedIn(true);
-            refreshInquiries();
-            fetchCatalogAsync().then(items => { if (items) setCatalog(items); });
-          }}
-        />
-      )}
-
-      {adminLoggedIn && (
-        <AdminDashboard
-          items={catalog}
-          catalog={catalog}
-          inquiries={inquiries}
-          currentUser={adminUser}
-          onSaveItem={handleSaveItem}
-          onDeleteItem={handleDeleteItem}
-          onUpdateInquiries={handleUpdateInquiries}
-          onLogout={handleLogoutAdmin}
-          onCloseAdmin={handleCloseAdmin}
-          onClose={handleCloseAdmin}
         />
       )}
 
