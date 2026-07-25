@@ -105,17 +105,17 @@ export default function AdminDashboard({
         {/* Sidebar Top Header */}
         <div className="p-6 border-b border-[#262420]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3.5">
               {/* Brand Logo Avatar */}
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1F1E1B] to-[#2E2C27] border border-[#B8860B]/40 flex items-center justify-center shadow-lg">
-                <span className="font-serif font-bold text-xl text-[#D4AF37]">F</span>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#1F1E1B] to-[#2E2C27] border border-[#B8860B]/40 flex items-center justify-center shadow-lg shrink-0">
+                <span className="font-serif font-bold text-2xl text-[#D4AF37]">F</span>
               </div>
 
               <div>
-                <h1 className="text-base font-serif font-bold text-white leading-tight tracking-tight">
-                  Fabrice Atelier
+                <h1 className="text-lg font-serif font-bold text-white leading-tight tracking-tight">
+                  Admin Dashboard
                 </h1>
-                <span className="text-[10px] font-mono text-[#A09888] tracking-widest uppercase block mt-0.5">
+                <span className="text-xs font-mono text-[#A09888] tracking-wider uppercase block mt-0.5">
                   Collection Manager
                 </span>
               </div>
@@ -132,7 +132,7 @@ export default function AdminDashboard({
         </div>
 
         {/* Sidebar Navigation Items */}
-        <div className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
+        <div className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -145,43 +145,43 @@ export default function AdminDashboard({
                   setMobileMenuOpen(false);
                 }}
                 className={`
-                  w-full px-4 py-3 rounded-2xl text-xs font-serif font-bold transition-all flex items-center justify-between group
+                  w-full px-4 py-3.5 rounded-2xl text-sm sm:text-base font-serif font-bold transition-all flex items-center justify-between group
                   ${isActive 
-                    ? 'bg-[#24221E] text-white border border-[#B8860B]/50 shadow-md' 
-                    : 'text-[#999489] hover:bg-[#1C1A17] hover:text-white border border-transparent'
+                    ? 'bg-[#24221E] text-white border border-[#B8860B]/60 shadow-md' 
+                    : 'text-[#BBB5A8] hover:bg-[#1C1A17] hover:text-white border border-transparent'
                   }
                 `}
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className={`w-4 h-4 transition-colors ${
-                    isActive ? 'text-[#D4AF37]' : 'text-[#888275] group-hover:text-stone-300'
+                <div className="flex items-center space-x-3.5">
+                  <Icon className={`w-5 h-5 transition-colors ${
+                    isActive ? 'text-[#D4AF37]' : 'text-[#888275] group-hover:text-stone-200'
                   }`} />
-                  <span className="tracking-wide">{item.label}</span>
+                  <span className="tracking-wide text-sm sm:text-[15px]">{item.label}</span>
                 </div>
 
-                <div className="flex items-center space-x-1.5">
+                <div className="flex items-center space-x-2">
                   {item.badge && (
-                    <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#B8860B] text-white">
+                    <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-[#B8860B] text-white">
                       {item.badge}
                     </span>
                   )}
 
                   {item.highlight && (
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#B8860B] text-white animate-pulse">
+                    <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#B8860B] text-white animate-pulse">
                       {item.highlight}
                     </span>
                   )}
 
                   {item.count !== undefined && !item.highlight && (
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                      isActive ? 'bg-white/10 text-white' : 'bg-stone-800 text-stone-400'
+                    <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full ${
+                      isActive ? 'bg-white/15 text-white' : 'bg-stone-800 text-stone-300'
                     }`}>
                       {item.count}
                     </span>
                   )}
 
                   {isActive && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                    <div className="w-2 h-2 rounded-full bg-[#D4AF37]" />
                   )}
                 </div>
               </button>
@@ -193,14 +193,14 @@ export default function AdminDashboard({
         <div className="p-4 border-t border-[#262420] space-y-3 bg-[#111110]">
           
           {/* Admin User Badge */}
-          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#1C1A17] border border-[#2E2C27]">
-            <div className="flex items-center space-x-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-xl bg-[#B8860B]/20 text-[#D4AF37] border border-[#B8860B]/30 flex items-center justify-center font-serif font-bold text-xs shrink-0">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-[#1C1A17] border border-[#2E2C27]">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[#B8860B]/20 text-[#D4AF37] border border-[#B8860B]/30 flex items-center justify-center font-serif font-bold text-sm shrink-0">
                 F
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-serif font-bold text-stone-200 truncate">Fabrice Atelier</p>
-                <p className="text-[10px] font-mono text-emerald-400 flex items-center space-x-1">
+                <p className="text-[11px] font-mono text-emerald-400 flex items-center space-x-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Online</span>
                 </p>
@@ -209,22 +209,22 @@ export default function AdminDashboard({
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={handleClose}
-              className="py-2.5 px-3 rounded-xl bg-[#1C1A17] border border-[#2E2C27] hover:border-stone-500 text-stone-300 hover:text-white text-[11px] font-serif font-bold transition-all flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-xl bg-[#1C1A17] border border-[#2E2C27] hover:border-stone-500 text-stone-200 hover:text-white text-xs font-serif font-bold transition-all flex items-center justify-center space-x-1.5"
               title="Bekijk de live website"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <ExternalLink className="w-4 h-4 text-[#D4AF37]" />
               <span className="truncate">Website</span>
             </button>
 
             <button
               onClick={onLogout}
-              className="py-2.5 px-3 rounded-xl bg-red-950/40 border border-red-900/50 hover:bg-red-900/60 text-red-300 hover:text-white text-[11px] font-serif font-bold transition-all flex items-center justify-center space-x-1.5"
+              className="py-2.5 px-3 rounded-xl bg-red-950/40 border border-red-900/50 hover:bg-red-900/60 text-red-300 hover:text-white text-xs font-serif font-bold transition-all flex items-center justify-center space-x-1.5"
               title="Veilig uitloggen uit beheer"
             >
-              <LogOut className="w-3.5 h-3.5 text-red-400" />
+              <LogOut className="w-4 h-4 text-red-400" />
               <span>Uitloggen</span>
             </button>
           </div>
