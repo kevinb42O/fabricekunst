@@ -31,6 +31,7 @@ export default function App() {
   
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -331,7 +332,10 @@ export default function App() {
       {adminLoginOpen && !adminLoggedIn && (
         <AdminLoginModal
           onClose={handleCloseAdmin}
-          onLoginSuccess={() => setAdminLoggedIn(true)}
+          onLoginSuccess={(user) => {
+            setAdminUser(user);
+            setAdminLoggedIn(true);
+          }}
         />
       )}
 
@@ -340,6 +344,7 @@ export default function App() {
           items={catalog}
           catalog={catalog}
           inquiries={inquiries}
+          currentUser={adminUser}
           onSaveItem={handleSaveItem}
           onDeleteItem={handleDeleteItem}
           onUpdateInquiries={handleUpdateInquiries}

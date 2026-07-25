@@ -3,8 +3,23 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
 const INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
-const PASSCODE_KEY = 'fabrice_admin_pin';
-const DEFAULT_PASSCODE = "5438";
+const ADMIN_USERS_KEY = 'fabrice_admin_users_cache';
+
+// Hardcoded initial fallback accounts
+const INITIAL_ADMIN_USERS = [
+  {
+    email: 'kevin@webaanzee.be',
+    password: 'Pinakaaz420',
+    name: 'Kevin (Developer)',
+    role: 'developer'
+  },
+  {
+    email: 'admin@rareartbooks.com',
+    password: 'Fabrice5438',
+    name: 'Fabrice Goffin',
+    role: 'admin'
+  }
+];
 
 // Map database column names (snake_case) to frontend item object (camelCase)
 const mapDbItemToFrontend = (dbItem) => ({
@@ -194,7 +209,6 @@ export const uploadCatalogImage = async (file) => {
   if (!file) return null;
 
   if (!isSupabaseConfigured() || !supabase) {
-    // Local fallback: convert image to Base64 data URL
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
@@ -395,44 +409,110 @@ export const deleteInquiryAsync = async (id) => {
   return updated;
 };
 
-// --- SECURITY & PIN CODE ---
+// --- AUTHENTICATION & ADMIN USERS ---
 
-export const verifyAdminPasscode = (pin) => {
-  const currentPin = localStorage.getItem(PASSCODE_KEY) || DEFAULT_PASSCODE;
-  return pin === currentPin;
+export const getLocalAdminUsers = () => {
+  try {
+    const saved = localStorage.getItem(ADMIN_USERS_KEY);
+    return saved ? JSON.parse(saved) : INITIAL_ADMIN_USERS;
+  } catch (e) {
+    return INITIAL_ADMIN_USERS;
+  }
 };
 
-export const verifyAdminPasscodeAsync = async (pin) => {
+export const saveLocalAdminUsers = (users) => {
+  try {
+    localStorage.setItem(ADMIN_USERS_KEY, JSON.stringify(users));
+  } catch (e) {
+    console.error("Error saving local admin users", e);
+  }
+};
+
+export const authenticateAdminUserAsync = async (email, password) => {
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Query Supabase if configured
   if (isSupabaseConfigured() && supabase) {
     try {
-      const { data } = await supabase.from('admin_settings').select('value').eq('key', 'admin_pin').single();
-      if (data?.value) {
-        return pin === data.value;
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', cleanEmail)
+        .single();
+
+      if (!error && data) {
+        if (data.password === password) {
+          return {
+            success: true,
+            user: {
+              email: data.email,
+              name: data.name,
+              role: data.role
+            }
+          };
+        } else {
+          return { success: false, message: 'Wachtwoord is onjuist.' };
+        }
       }
     } catch (e) {
-      console.warn("Supabase PIN verification fallback to local", e);
+      console.warn("Supabase auth check error, falling back to local storage accounts", e);
     }
   }
-  return verifyAdminPasscode(pin);
+
+  // Fallback to local accounts
+  const localUsers = getLocalAdminUsers();
+  const found = localUsers.find(u => u.email.toLowerCase() === cleanEmail);
+
+  if (found) {
+    if (found.password === password) {
+      return {
+        success: true,
+        user: {
+          email: found.email,
+          name: found.name,
+          role: found.role
+        }
+      };
+    } else {
+      return { success: false, message: 'Wachtwoord is onjuist.' };
+    }
+  }
+
+  return { success: false, message: 'Geen beheerdersaccount gevonden voor dit e-mailadres.' };
 };
 
-export const getCurrentPasscode = () => {
-  return localStorage.getItem(PASSCODE_KEY) || DEFAULT_PASSCODE;
-};
+export const updateAdminPasswordAsync = async (email, currentPassword, newPassword) => {
+  const authResult = await authenticateAdminUserAsync(email, currentPassword);
+  if (!authResult.success) {
+    return { success: false, message: 'Huidige wachtwoord is onjuist.' };
+  }
 
-export const updateAdminPasscode = (newPin) => {
-  localStorage.setItem(PASSCODE_KEY, newPin);
-};
+  // Local fallback update
+  const localUsers = getLocalAdminUsers();
+  const updatedLocal = localUsers.map(u => 
+    u.email.toLowerCase() === email.trim().toLowerCase()
+      ? { ...u, password: newPassword }
+      : u
+  );
+  saveLocalAdminUsers(updatedLocal);
 
-export const updateAdminPasscodeAsync = async (newPin) => {
-  updateAdminPasscode(newPin);
+  // Supabase update if configured
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('admin_settings').upsert({ key: 'admin_pin', value: newPin });
+      const { error } = await supabase
+        .from('admin_users')
+        .update({ password: newPassword, updated_at: new Date().toISOString() })
+        .eq('email', email.trim().toLowerCase());
+
+      if (error) {
+        console.error("Supabase password update error:", error);
+      }
     } catch (e) {
-      console.error("Supabase PIN update error", e);
+      console.error("Supabase password update exception:", e);
     }
   }
+
+  return { success: true, message: 'Wachtwoord succesvol gewijzigd!' };
 };
 
 export const exportDataJSON = () => {
@@ -473,7 +553,7 @@ export const resetToInitialData = () => {
   try {
     localStorage.setItem(CATALOG_KEY, JSON.stringify(INITIAL_CATALOG));
     localStorage.removeItem(INQUIRIES_KEY);
-    localStorage.removeItem(PASSCODE_KEY);
+    localStorage.removeItem(ADMIN_USERS_KEY);
     return true;
   } catch (e) {
     console.error("Fout bij herstellen initiële data", e);

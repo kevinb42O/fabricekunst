@@ -9,6 +9,7 @@ export default function AdminDashboard({
   items = [], 
   catalog = [], 
   inquiries = [], 
+  currentUser = null,
   onSaveItem = () => {}, 
   onDeleteItem = () => {}, 
   onUpdateInquiries = () => {}, 
@@ -165,7 +166,7 @@ export default function AdminDashboard({
               </button>
             </div>
 
-            <SecuritySettings onShowToast={showToast} />
+            <SecuritySettings currentUser={currentUser} onShowToast={showToast} />
           </div>
         </div>
       )}

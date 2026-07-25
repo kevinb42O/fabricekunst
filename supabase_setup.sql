@@ -56,15 +56,31 @@ CREATE TABLE IF NOT EXISTS public.admin_settings (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 4. Create Admin Users Table (Email & Password accounts)
+CREATE TABLE IF NOT EXISTS public.admin_users (
+    email TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT DEFAULT 'admin',
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Insert Developer & Fabrice admin accounts
+INSERT INTO public.admin_users (email, password, name, role) VALUES
+('kevin@webaanzee.be', 'Pinakaaz420', 'Kevin (Developer)', 'developer'),
+('admin@rareartbooks.com', 'Fabrice5438', 'Fabrice Goffin', 'admin')
+ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;
+
 -- Default Admin PIN ("5438")
 INSERT INTO public.admin_settings (key, value)
 VALUES ('admin_pin', '5438')
 ON CONFLICT (key) DO NOTHING;
 
--- 4. Enable Row Level Security (RLS) & Set Permissive Policies for Web App
+-- 5. Enable Row Level Security (RLS) & Set Permissive Policies for Web App
 ALTER TABLE public.items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
 -- Items Policies
 DROP POLICY IF EXISTS "Public read items" ON public.items;
@@ -87,8 +103,14 @@ CREATE POLICY "Public read admin_settings" ON public.admin_settings FOR SELECT U
 DROP POLICY IF EXISTS "Allow write admin_settings" ON public.admin_settings;
 CREATE POLICY "Allow write admin_settings" ON public.admin_settings FOR ALL USING (true) WITH CHECK (true);
 
+-- Admin Users Policies
+DROP POLICY IF EXISTS "Public read admin_users" ON public.admin_users;
+CREATE POLICY "Public read admin_users" ON public.admin_users FOR SELECT USING (true);
 
--- 5. Setup Supabase Storage Bucket for High-Res Catalog Images
+DROP POLICY IF EXISTS "Allow write admin_users" ON public.admin_users;
+CREATE POLICY "Allow write admin_users" ON public.admin_users FOR ALL USING (true) WITH CHECK (true);
+
+-- 6. Setup Supabase Storage Bucket for High-Res Catalog Images
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('catalog-images', 'catalog-images', true)
 ON CONFLICT (id) DO NOTHING;
@@ -103,8 +125,7 @@ CREATE POLICY "Public Storage Insert" ON storage.objects FOR INSERT WITH CHECK (
 DROP POLICY IF EXISTS "Public Storage Delete" ON storage.objects;
 CREATE POLICY "Public Storage Delete" ON storage.objects FOR DELETE USING (bucket_id = 'catalog-images');
 
-
--- 6. Seed Initial Catalog Data
+-- 7. Seed Initial Catalog Data
 INSERT INTO public.items (
     id, item_type, ref, title, subtitle, author, publisher, city, year, century, category, price, status, featured, condition, binding, dimensions, provenance, description, historical_context, condition_report, provenance_details, collation_specs, images
 ) VALUES 
@@ -130,7 +151,7 @@ INSERT INTO public.items (
     'Een monumentale en complete verzameling van de werken van de Franse verlichtingsfilosoof Voltaire, uitgegeven te Parijs tussen 1829 en 1833. Deze 52-delige reeks omvat zijn filosofische geschriften, toneelstukken (Théâtre complet), historische verhandelingen en zijn voltallige briefwisseling met Europese vorsten. Elk deel is gebonden in prachtig rood Chagrin halfleer met goudgestempelde rugversiering. De schutbladen zijn voorzien van authentiek handgemaakt gemarmerd papier en het vermaarde ex-libris van Vacheron-Poinsot.',
     'François-Marie Arouet, wereldwijd vermaard onder zijn pseudoniem Voltaire (1694–1778), vormt het intellectuele en filosofische boegbeeld van de Franse Verlichting (le Siècle des Lumières). Zijn gigantische oeuvre van toneelstukken, satire, geschiedschrijving en filosofische essays vormde de fundamenten voor de Europese mensenrechten, de scheiding van kerk en staat en de vrijheid van meningsuiting.',
     'Deze 52 delen zijn uitgevoerd in een zeldzame en volkomen uniforme binderij-uitvoering van rood Chagrin-halfleer (chagrin rouge à grain fin). Chagrin—bereid uit fijn geitenleer met een karakteristieke natuurlijke korrel—was in de 19e eeuw gereserveerd voor de meest kostbare bibliotheek-edities omwille van zijn uitzonderlijke duurzaamheid en kleurvastheid.',
-    'Een van de meest waardevolle aspecten van deze verzameling is de gecertificeerde eigendomsgeschiedenis. Deel I t/m LII zijn op het voorste vaste schutblad voorzien van het originele 19e-eeuwse kopergegraveerde wapen-ex-libris van de Franse adellijke familie Vacheron-Poinsot te Parijs.',
+    'Een van de meest waardevolle aspecten van deze verzameling is de gecertificeerde eigendomsgeschiedenis. Deel I t/m LII zijn op het voorste vaste schutblad voorzien van het originele 19e-eeuwse kopergegraveerd wapen-ex-libris van de Franse adellijke familie Vacheron-Poinsot te Parijs.',
     '52 delen compleet. In-8° (21,5 x 13,5 cm). Totaal ca. 28.000 pagina''s inclusief gegraveerde portretten en facsimile-brieven op zwaar lompenpapier. Uniforme Franse Chagrin-binderij stempeling.',
     '[{"url":"/images/voltaire-theatre-bust-reading-glasses.jpg","caption":"Théâtre de Voltaire opengewerkt met marmeren buste en antieke leesbril."},{"url":"/images/voltaire-presentation-overlay.jpg","caption":"Gestileerde presentatie met geopend deel, portretgravure en het originele Vacheron-Poinsot ex-libris label."},{"url":"/images/voltaire-marbled-endpaper-exlibris.jpg","caption":"Macro close-up van de handgemaakte marmeren schutbladen en het Vacheron-Poinsot ex-libris bewijs."},{"url":"/images/voltaire-lit-bookcase-desk.jpg","caption":"De Voltaire-reeks gepresenteerd in een verlichte boekenkast met studie-accessoires."},{"url":"/images/voltaire-52-books-birds-eye.jpg","caption":"Totaaloverzicht van de complete 52-delige reeks liggend in vier keurige rijen."}]'::jsonb
 ),
