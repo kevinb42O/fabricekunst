@@ -124,7 +124,7 @@ export default function AdminDashboard({
               <img 
                 src="/images/Atelier Rembrandt.png" 
                 alt="Atelier Rembrandt" 
-                className="h-10 sm:h-12 w-auto object-contain brightness-200 contrast-125"
+                className="h-10 sm:h-12 w-auto object-contain filter invert brightness-200 contrast-125 drop-shadow-sm"
               />
               <span className="text-[10px] font-sans font-bold text-[#A89F91] tracking-widest uppercase block mt-0.5">
                 COLLECTION MANAGER
@@ -208,7 +208,7 @@ export default function AdminDashboard({
               <img 
                 src="/images/Atelier Rembrandt.png" 
                 alt="Atelier Rembrandt" 
-                className="h-8 w-auto object-contain shrink-0 brightness-200"
+                className="h-7 w-auto object-contain shrink-0 filter invert brightness-200"
               />
               <div className="min-w-0">
                 <p className="text-xs font-sans font-semibold text-stone-100 truncate">Admin Console</p>
