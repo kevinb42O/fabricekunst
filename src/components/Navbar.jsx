@@ -78,34 +78,23 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between min-h-[64px] sm:min-h-[72px] py-1.5">
+        <div className="flex items-center justify-between min-h-[72px] sm:min-h-[80px] py-2.5">
           
-          {/* Brand Logo - Standalone & Elegant */}
+          {/* Brand Image Header - Perfectly Balanced & Centered */}
           <motion.button 
             whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
             onClick={() => onNavigate('home')} 
-            className="flex items-center space-x-3.5 sm:space-x-4 group text-left focus:outline-none cursor-pointer py-1"
+            className="flex flex-col items-center justify-center group text-center focus:outline-none cursor-pointer my-auto"
           >
-            <motion.div 
-              whileHover={{ scale: 1.04 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="h-11 sm:h-13 md:h-14 w-auto shrink-0 flex items-center justify-center"
-            >
-              <img 
-                src="/rblogo.png" 
-                alt="Atelier Rembrandt Logo" 
-                className="h-full w-auto object-contain"
-              />
-            </motion.div>
-            <div className="flex flex-col justify-center select-none">
-              <span className="font-serif font-medium text-lg sm:text-xl md:text-2xl text-[#231A14] tracking-tight block leading-tight">
-                {t('nav.brandTitle')}
-              </span>
-              <span className="text-[9px] sm:text-[10px] md:text-[11px] tracking-[0.24em] text-[#8E7557] uppercase font-serif font-medium block leading-tight mt-0.5">
-                {t('nav.brandSubtitle')}
-              </span>
-            </div>
+            <img 
+              src="/images/Atelier Rembrandt.png" 
+              alt="Atelier Rembrandt" 
+              className="h-9 sm:h-11 md:h-12 w-auto object-contain filter contrast-[1.05] shrink-0"
+            />
+            <span className="text-[9.5px] sm:text-[10.5px] md:text-[11px] tracking-[0.38em] text-[#8E7035] uppercase font-serif font-semibold block leading-none mt-1.5 pl-[0.38em] text-center w-full">
+              {t('nav.brandSubtitle')}
+            </span>
           </motion.button>
 
           {/* Desktop Navigation Links */}

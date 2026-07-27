@@ -120,24 +120,15 @@ export default function AdminDashboard({
         {/* Sidebar Top Brand Header */}
         <div className="p-6 border-b border-[#2C2926]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3.5">
-              {/* Standalone Gold Emblem Logo */}
-              <div className="h-10 w-auto flex items-center justify-center shrink-0">
-                <img 
-                  src="/rblogo.png" 
-                  alt="Atelier Rembrandt Logo" 
-                  className="h-full w-auto object-contain drop-shadow-sm"
-                />
-              </div>
-
-              <div>
-                <h1 className="text-base font-serif font-bold text-white leading-tight tracking-tight">
-                  Atelier Rembrandt Admin
-                </h1>
-                <span className="text-[10px] font-sans font-bold text-[#A89F91] tracking-widest uppercase block mt-0.5">
-                  COLLECTION MANAGER
-                </span>
-              </div>
+            <div className="flex flex-col items-start space-y-1">
+              <img 
+                src="/images/Atelier Rembrandt.png" 
+                alt="Atelier Rembrandt" 
+                className="h-10 sm:h-12 w-auto object-contain brightness-200 contrast-125"
+              />
+              <span className="text-[10px] font-sans font-bold text-[#A89F91] tracking-widest uppercase block mt-0.5">
+                COLLECTION MANAGER
+              </span>
             </div>
 
             {/* Mobile close menu button */}
@@ -214,15 +205,13 @@ export default function AdminDashboard({
           {/* User Profile Snippet */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-[#23201D] border border-[#332F2B]">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="h-8 w-auto flex items-center justify-center shrink-0">
-                <img 
-                  src="/rblogo.png" 
-                  alt="Atelier Rembrandt Logo" 
-                  className="h-full w-auto object-contain"
-                />
-              </div>
+              <img 
+                src="/images/Atelier Rembrandt.png" 
+                alt="Atelier Rembrandt" 
+                className="h-8 w-auto object-contain shrink-0 brightness-200"
+              />
               <div className="min-w-0">
-                <p className="text-xs font-sans font-semibold text-stone-100 truncate">Atelier Rembrandt Admin</p>
+                <p className="text-xs font-sans font-semibold text-stone-100 truncate">Admin Console</p>
                 <p className="text-[11px] font-sans text-emerald-400 flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Online</span>

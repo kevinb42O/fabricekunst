@@ -20,25 +20,15 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
           
           {/* Col 1: Brand & Philosophy */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center space-x-3.5 sm:space-x-4">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="h-12 sm:h-14 w-auto shrink-0 flex items-center justify-center"
-              >
-                <img 
-                  src="/rblogo.png" 
-                  alt="Atelier Rembrandt Logo" 
-                  className="h-full w-auto object-contain"
-                />
-              </motion.div>
-              <div className="flex flex-col justify-center">
-                <span className="font-serif font-medium text-xl sm:text-2xl text-[#231A14] tracking-tight leading-tight">
-                  {t('nav.brandTitle')}
-                </span>
-                <span className="text-[10px] sm:text-[11px] tracking-[0.24em] text-[#8E7557] uppercase font-serif font-medium leading-tight mt-0.5">
-                  {t('nav.brandSubtitle')}
-                </span>
-              </div>
+            <div className="flex flex-col items-start space-y-1.5">
+              <img 
+                src="/images/Atelier Rembrandt.png" 
+                alt="Atelier Rembrandt" 
+                className="h-10 sm:h-12 md:h-13 w-auto object-contain filter contrast-[1.05]"
+              />
+              <span className="text-[9.5px] sm:text-[10.5px] md:text-[11px] tracking-[0.38em] text-[#8E7035] uppercase font-serif font-semibold leading-none pl-[0.38em]">
+                {t('nav.brandSubtitle')}
+              </span>
             </div>
             
             <p className="text-xs text-[#555555] font-light max-w-md leading-relaxed font-serif">
