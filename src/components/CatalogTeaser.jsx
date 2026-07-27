@@ -58,7 +58,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
               <Award className="w-3.5 h-3.5" />
               <span>{t('catalog.heroTagline')}</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-[#111111] tracking-tight">
               {t('catalog.title')}
             </h2>
             <p className="text-sm sm:text-base text-[#555555] font-serif italic max-w-xl">
@@ -70,7 +70,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={onOpenFullCatalog}
-            className="px-6 py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer"
+            className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer min-h-[48px] w-full sm:w-auto text-center"
           >
             <span>{t('catalog.viewItem')} ({items.length})</span>
           </motion.button>
@@ -82,7 +82,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-40px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8"
         >
           {teaserItems.map((item) => (
             <motion.div
@@ -148,7 +148,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
         {/* Footer CTA Bar */}
         <motion.div 
           whileHover={{ borderColor: "#B8860B" }}
-          className="bg-white rounded-lg p-6 sm:p-8 border border-[#D8CEB8] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left transition-colors duration-300"
+          className="bg-white rounded-lg p-5 sm:p-6 lg:p-8 border border-[#D8CEB8] shadow-sm flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center justify-between gap-4 sm:gap-6 transition-colors duration-300"
         >
           <div className="space-y-1">
             <h4 className="text-lg font-serif font-bold text-[#111111]">
@@ -163,7 +163,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={onOpenFullCatalog}
-            className="px-6 py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-mono font-semibold text-xs uppercase tracking-wider transition-colors duration-300 shrink-0 border border-[#B8860B]/40 cursor-pointer flex items-center space-x-2 group"
+            className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-mono font-semibold text-xs uppercase tracking-wider transition-colors duration-300 shrink-0 border border-[#B8860B]/40 cursor-pointer flex items-center space-x-2 group min-h-[48px] w-full sm:w-auto justify-center"
           >
             <span>{t('hero.exploreBtn')}</span>
             <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />

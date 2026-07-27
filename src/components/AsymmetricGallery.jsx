@@ -102,7 +102,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           whileHover={{ borderColor: 'rgba(184, 134, 11, 0.6)' }}
-          className={`bg-white/95 backdrop-blur-xl rounded-2xl p-6 sm:p-8 sm:p-10 border border-[#D8CEB8] shadow-[0_25px_60px_-15px_rgba(28,26,23,0.12),0_8px_24px_-8px_rgba(184,134,11,0.08)] space-y-6 transition-all duration-300 relative z-30 ${
+          className={`bg-white/95 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-10 border border-[#D8CEB8] shadow-[0_25px_60px_-15px_rgba(28,26,23,0.12),0_8px_24px_-8px_rgba(184,134,11,0.08)] space-y-4 sm:space-y-6 transition-all duration-300 relative z-30 ${
             hideHeader ? '-mt-24 sm:-mt-28 lg:-mt-36' : ''
           }`}
         >
@@ -156,7 +156,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
           </div>
 
           {/* Filter & Sort Controls Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 pt-2">
             
             {/* Century filter */}
             <div>
@@ -285,7 +285,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                     className="bg-white rounded-lg border-2 border-[#D8CEB8] shadow-card overflow-hidden transition-colors cursor-pointer group"
                   >
                     {/* Widescreen Top Row */}
-                    <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center">
                       
                       {/* Visual */}
                       <button
@@ -313,7 +313,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                           </span>
                         </div>
 
-                        <h3 className="text-2xl sm:text-4xl font-serif font-bold text-[#111111] group-hover:text-[#B8860B] transition-colors leading-snug">
+                        <h3 className="text-xl sm:text-2xl lg:text-4xl font-serif font-bold text-[#111111] group-hover:text-[#B8860B] transition-colors leading-snug">
                           {getItemField(item, 'title', language)}
                         </h3>
 
@@ -325,7 +325,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                           {getItemField(item, 'description', language)}
                         </p>
 
-                        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#D8CEB8]">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 pt-2 border-t border-[#D8CEB8]">
                           <div>
                             <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">Taxatie / Prijs</span>
                             <span className="text-xl font-serif font-bold text-[#B8860B]">{item.price}</span>
@@ -339,7 +339,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                                 e.stopPropagation();
                                 handleOpenDetail(item);
                               }}
-                              className="px-5 py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] border border-[#B8860B]/50 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 flex items-center space-x-2 cursor-pointer shadow-xs"
+                              className="px-4 sm:px-5 py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] border border-[#B8860B]/50 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 flex items-center space-x-2 cursor-pointer shadow-xs min-h-[44px]"
                             >
                               <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
                               <span>Bekijk Catalogusfiche</span>

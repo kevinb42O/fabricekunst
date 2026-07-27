@@ -155,7 +155,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
             onClick={handleZoomOut}
             disabled={zoomLevel <= 1}
             title="Uitzoomen"
-            className="p-2.5 rounded-md bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-3 sm:p-2.5 rounded-md bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -168,7 +168,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
             onClick={handleZoomIn}
             disabled={zoomLevel >= 4}
             title="Inzoomen"
-            className="p-2.5 rounded-md bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="p-3 sm:p-2.5 rounded-md bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
@@ -177,7 +177,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
             <button
               onClick={handleResetZoom}
               title="Herstel grootte"
-              className="p-2.5 rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-3 sm:p-2.5 rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               <Maximize2 className="w-4 h-4" />
             </button>
@@ -188,7 +188,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
           <button
             onClick={onClose}
             title="Sluiten (Esc)"
-            className="p-2.5 rounded-md bg-[#B8860B] hover:bg-[#8E7035] text-white transition-colors shadow-md"
+            className="p-3 sm:p-2.5 rounded-md bg-[#B8860B] hover:bg-[#8E7035] text-white transition-colors shadow-md min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
@@ -207,7 +207,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
             <button
               onClick={handlePrev}
               title="Vorige foto"
-              className="absolute left-4 z-40 p-3 rounded-full bg-black/60 hover:bg-[#B8860B] text-white border border-white/20 transition-all shadow-lg backdrop-blur-sm"
+              className="absolute left-2 sm:left-4 z-40 p-3 sm:p-3 rounded-full bg-black/60 hover:bg-[#B8860B] text-white border border-white/20 transition-all shadow-lg backdrop-blur-sm min-h-[48px] min-w-[48px] flex items-center justify-center"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -215,7 +215,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
             <button
               onClick={handleNext}
               title="Volgende foto"
-              className="absolute right-4 z-40 p-3 rounded-full bg-black/60 hover:bg-[#B8860B] text-white border border-white/20 transition-all shadow-lg backdrop-blur-sm"
+              className="absolute right-2 sm:right-4 z-40 p-3 sm:p-3 rounded-full bg-black/60 hover:bg-[#B8860B] text-white border border-white/20 transition-all shadow-lg backdrop-blur-sm min-h-[48px] min-w-[48px] flex items-center justify-center"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -257,12 +257,12 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
 
       {/* Bottom Thumbnail Strip */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 inset-x-0 flex items-center justify-center space-x-2 z-50 px-4 overflow-x-auto">
+        <div className="absolute bottom-4 inset-x-0 flex items-center justify-center space-x-2 sm:space-x-2 z-50 px-4 overflow-x-auto mobile-scroll-x">
           {images.map((img, idx) => (
             <button
               key={idx}
               onClick={() => resetToImage(idx)}
-              className={`w-14 h-10 rounded-md overflow-hidden border-2 transition-all shrink-0 ${
+              className={`w-16 h-12 sm:w-14 sm:h-10 rounded-md overflow-hidden border-2 transition-all shrink-0 ${
                 idx === currentIndex ? 'border-[#D4AF37] scale-110 shadow-lg' : 'border-white/20 opacity-50 hover:opacity-100'
               }`}
             >

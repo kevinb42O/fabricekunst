@@ -139,25 +139,10 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-3">
-            <div className="flex items-center space-x-2 text-[10px] font-mono text-[#8C827A]">
-              {languages.map((lang, idx) => (
-                <React.Fragment key={lang.code}>
-                  {idx > 0 && <span className="text-[#D8CEB8] select-none">•</span>}
-                  <button
-                    onClick={() => setLanguage(lang.code)}
-                    className={`transition-colors cursor-pointer ${
-                      language === lang.code ? 'text-[#231A14] font-bold border-b border-[#8E7557]' : 'text-[#8C827A]'
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
+          <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-sm text-[#231A14] hover:text-[#8E7557] focus:outline-none"
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-[#231A14] hover:text-[#8E7557] focus:outline-none"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -165,30 +150,76 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
         </div>
       </div>
 
+      {/* Mobile Backdrop Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 top-[72px] bg-black/30 backdrop-blur-sm z-30"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden bg-[#FAF7F2] border-b border-[#D8CEB8] px-5 pt-3 pb-6 space-y-3 shadow-md overflow-hidden"
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="md:hidden bg-[#FAF7F2] border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
           >
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => {
-                  handleNavClick(link.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`block w-full text-left px-3 py-2 text-sm font-serif tracking-wider uppercase transition-colors ${
-                  activeTab === link.id ? 'text-[#8E7557] font-semibold' : 'text-[#231A14] hover:text-[#8E7557]'
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
+            {/* Navigation links */}
+            <div className="space-y-1">
+              {navLinks.map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => {
+                    handleNavClick(link.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`block w-full text-left px-4 py-3 min-h-[48px] text-sm font-serif tracking-wider uppercase transition-colors rounded-lg ${
+                    activeTab === link.id 
+                      ? 'text-[#8E7557] font-semibold bg-[#EBE2D0]/40' 
+                      : 'text-[#231A14] hover:text-[#8E7557] active:bg-[#EBE2D0]'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-[#D8CEB8]/60 my-2" />
+
+            {/* Language Switcher in Mobile Drawer */}
+            <div className="px-4 py-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C827A] block mb-2">
+                {language === 'nl' ? 'Taal / Language' : language === 'fr' ? 'Langue / Language' : 'Language'}
+              </span>
+              <div className="flex items-center space-x-2">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                    }}
+                    className={`flex-1 py-2.5 rounded-md border text-center text-xs font-mono font-bold tracking-wider transition-all min-h-[44px] flex items-center justify-center cursor-pointer ${
+                      language === lang.code
+                        ? 'bg-[#1C1A17] text-[#D4AF37] border-[#B8860B] shadow-sm'
+                        : 'bg-white text-[#231A14] border-[#D8CEB8] hover:border-[#1C1A17]'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

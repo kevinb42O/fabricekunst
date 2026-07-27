@@ -166,7 +166,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             {/* Grand Headline Layout */}
             <motion.h1 
               variants={itemVariants}
-              className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
+              className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
             >
               <span className="block">{t('catalog.title')}</span>
             </motion.h1>
@@ -206,7 +206,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
             whileHover={{ borderColor: 'rgba(184, 134, 11, 0.65)' }}
-            className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 sm:p-8 sm:p-10 border border-[#D8CEB8] shadow-[0_25px_60px_-15px_rgba(28,26,23,0.14),0_8px_24px_-8px_rgba(184,134,11,0.08)] space-y-6 transition-all duration-300"
+            className="bg-white/95 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-10 border border-[#D8CEB8] shadow-[0_25px_60px_-15px_rgba(28,26,23,0.14),0_8px_24px_-8px_rgba(184,134,11,0.08)] space-y-4 sm:space-y-6 transition-all duration-300"
           >
             {/* Header row with reset option */}
             <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-[#D8CEB8]/70">
@@ -258,14 +258,14 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             </div>
 
             {/* Object Type Switcher Bar */}
-            <div className="flex items-center space-x-2 pt-1 border-b border-[#D8CEB8]/50 pb-4 font-mono text-xs">
+            <div className="flex items-center gap-2 overflow-x-auto mobile-scroll-x pt-1 border-b border-[#D8CEB8]/50 pb-4 font-mono text-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#666666] shrink-0 mr-1">
                 {t('catalog.typeFilter')}:
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedType('Alle')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
                   selectedType === 'Alle'
                     ? 'bg-[#111111] text-white shadow-sm'
                     : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
@@ -276,7 +276,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               <button
                 type="button"
                 onClick={() => setSelectedType('book')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 shrink-0 whitespace-nowrap min-h-[36px] ${
                   selectedType === 'book'
                     ? 'bg-[#111111] text-white shadow-sm'
                     : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
@@ -288,7 +288,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               <button
                 type="button"
                 onClick={() => setSelectedType('painting')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 shrink-0 whitespace-nowrap min-h-[36px] ${
                   selectedType === 'painting'
                     ? 'bg-[#111111] text-white shadow-sm'
                     : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
@@ -300,7 +300,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             </div>
 
             {/* Filter & Sort Controls Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 pt-2">
               
               {/* Century filter */}
               <div>

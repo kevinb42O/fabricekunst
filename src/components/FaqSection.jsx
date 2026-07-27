@@ -16,12 +16,12 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
   };
 
   return (
-    <section id="faq" className="py-24 bg-[#FAF7F2] relative border-b border-[#D8CEB8] overflow-hidden">
+    <section id="faq" className="py-16 sm:py-24 bg-[#FAF7F2] relative border-b border-[#D8CEB8] overflow-hidden">
       
       {/* Decorative ambient background accent */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#B8860B]/5 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8 sm:space-y-12">
         
         {/* Header */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
@@ -30,7 +30,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
             <span>{t('faq.badge')}</span>
           </div>
           
-          <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-[#111111] tracking-tight">
             {t('faq.title')}
           </h2>
 
@@ -61,9 +61,9 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
               >
                 <button
                   onClick={() => toggleAccordion(idx)}
-                  className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer"
+                  className="w-full p-4 sm:p-6 text-left flex items-center justify-between gap-3 sm:gap-4 cursor-pointer min-h-[56px]"
                 >
-                  <span className="font-serif font-bold text-base sm:text-lg text-[#111111] flex items-center gap-3">
+                  <span className="font-serif font-bold text-sm sm:text-base md:text-lg text-[#111111] flex items-center gap-2 sm:gap-3">
                     <span className="text-xs font-mono font-bold text-[#B8860B] px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
                       0{idx + 1}
                     </span>
@@ -85,8 +85,8 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      <div className="px-6 pb-6 pt-1 text-sm text-[#444444] font-serif leading-relaxed border-t border-[#FAF7F2]">
-                        <p className="pl-9 border-l-2 border-[#B8860B]/60 italic">
+                      <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-1 text-sm text-[#444444] font-serif leading-relaxed border-t border-[#FAF7F2]">
+                        <p className="pl-7 sm:pl-9 border-l-2 border-[#B8860B]/60 italic">
                           {answer}
                         </p>
                       </div>
@@ -99,7 +99,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
         </div>
 
         {/* Still have questions CTA */}
-        <div className="p-8 rounded-2xl bg-[#1C1A17] text-white flex flex-col sm:flex-row items-center justify-between gap-6 border border-[#332E27] shadow-xl">
+        <div className="p-5 sm:p-8 rounded-2xl bg-[#1C1A17] text-white flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center justify-between gap-4 sm:gap-6 border border-[#332E27] shadow-xl">
           <div className="space-y-1 text-center sm:text-left">
             <h4 className="text-xl font-serif font-bold text-white">Staat uw vraag er niet tussen?</h4>
             <p className="text-xs text-stone-300 font-serif">Neem rechtstreeks contact op met ons atelier voor persoonlijk advies.</p>
@@ -109,7 +109,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             onClick={onRequestConsultation}
-            className="px-6 py-3 rounded-sm bg-[#B8860B] hover:bg-white text-[#111111] font-mono text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 flex items-center space-x-2 shadow-md"
+            className="px-5 sm:px-6 py-3 rounded-sm bg-[#B8860B] hover:bg-white text-[#111111] font-mono text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 flex items-center space-x-2 shadow-md min-h-[48px] w-full sm:w-auto justify-center"
           >
             <Mail className="w-4 h-4" />
             <span>Stel Uw Vraag</span>

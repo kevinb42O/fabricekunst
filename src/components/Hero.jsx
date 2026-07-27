@@ -52,19 +52,6 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const heroRef = useRef(null);
 
-  // Mouse Parallax movement states (subtle micro-movement)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const springX = useSpring(mousePos.x, { stiffness: 40, damping: 25 });
-  const springY = useSpring(mousePos.y, { stiffness: 40, damping: 25 });
-
-  const handleMouseMove = (e) => {
-    if (!heroRef.current) return;
-    const rect = heroRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-    setMousePos({ x: x * 8, y: y * 8 });
-  };
-
   // Scroll Parallax Hooks (gentle vertical scroll translate without zooming)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -109,8 +96,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
   return (
     <section
       ref={heroRef}
-      onMouseMove={handleMouseMove}
-      className="relative w-full min-h-[90vh] lg:min-h-screen flex flex-col justify-center overflow-hidden bg-[#FAF7F2] pt-24 pb-12 select-none"
+      className="relative w-full min-h-[75vh] sm:min-h-[85vh] lg:min-h-screen flex flex-col justify-center overflow-hidden bg-[#FAF7F2] pt-20 sm:pt-24 pb-8 sm:pb-12 select-none"
     >
       {/* ------------------------------------------------------------- */}
       {/* FULLSCREEN PHOTOGRAPHY SHOWCASE WITH NATURAL POSITIONING      */}
@@ -121,32 +107,38 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
           style={{ y: bgY }}
           className="absolute inset-0 w-full h-full"
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             <motion.div
               key={activeSlide.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-full transform-gpu"
             >
-              <motion.img
+              <img
                 src={activeSlide.image}
                 alt={activeSlide.title}
                 style={{
-                  x: springX,
-                  y: springY,
                   objectPosition: activeSlide.objectPosition || 'center center'
                 }}
-                className="absolute top-0 right-0 w-full lg:w-[68%] h-full object-cover filter contrast-[1.02] brightness-[1.0]"
+                className="absolute top-0 right-0 w-full lg:w-[68%] h-full object-cover filter contrast-[1.02] brightness-[1.0] opacity-40 sm:opacity-60 lg:opacity-100 transform-gpu"
               />
             </motion.div>
           </AnimatePresence>
         </motion.div>
 
-        {/* Crisp text protection overlay on left side (FIXED to hero section) */}
+        {/* Crisp text protection overlay on left side (FIXED) */}
+        {/* Mobile: top-to-bottom fade for readability */}
         <div
-          className="absolute inset-y-0 left-0 w-full h-full z-10 pointer-events-none"
+          className="absolute inset-y-0 left-0 w-full h-full z-10 pointer-events-none block sm:hidden"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(250, 247, 242, 0.92) 0%, rgba(250, 247, 242, 0.75) 50%, rgba(250, 247, 242, 0.5) 100%)'
+          }}
+        />
+        {/* Desktop: left-to-right fade for side-by-side layout */}
+        <div
+          className="absolute inset-y-0 left-0 w-full h-full z-10 pointer-events-none hidden sm:block"
           style={{
             background: 'linear-gradient(to right, #FAF7F2 0%, #FAF7F2 38%, rgba(250, 247, 242, 0.65) 52%, transparent 70%)'
           }}
@@ -172,7 +164,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-2xl lg:max-w-3xl space-y-6 sm:space-y-8"
+          className="max-w-2xl lg:max-w-3xl space-y-5 sm:space-y-8"
         >
           
           {/* Authentic Gallery Subtitle */}
@@ -192,10 +184,10 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
           {/* Masterpiece Editorial Headline */}
           <motion.h1 
             variants={itemVariants}
-            className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
+            className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
           >
             <span className="block">{t('hero.headline1')}</span>
-            <span className="text-[#B8860B] italic font-normal block mt-2 text-3xl sm:text-4xl lg:text-5xl font-serif">
+            <span className="text-[#B8860B] italic font-normal block mt-1.5 sm:mt-2 text-2xl sm:text-4xl lg:text-5xl font-serif">
               {t('hero.headline2')}
             </span>
           </motion.h1>
@@ -211,13 +203,13 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
           {/* Clean Gallery Action Buttons with Micro-Animations */}
           <motion.div 
             variants={itemVariants}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2"
           >
             <motion.button
               whileHover={{ scale: 1.025, backgroundColor: "#B8860B", color: "#111111", borderColor: "#B8860B" }}
               whileTap={{ scale: 0.98 }}
               onClick={onExploreCatalog}
-              className="px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 shadow-sm rounded-sm border border-[#B8860B]/40 cursor-pointer flex items-center justify-center space-x-2 group"
+              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#1C1A17] text-[#FAF7F2] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 shadow-sm rounded-sm border border-[#B8860B]/40 cursor-pointer flex items-center justify-center space-x-2 group min-h-[48px]"
             >
               <span>{t('hero.exploreBtn')}</span>
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
@@ -227,7 +219,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
               whileHover={{ scale: 1.025, backgroundColor: "#1C1A17", color: "#FAF7F2", borderColor: "#1C1A17" }}
               whileTap={{ scale: 0.98 }}
               onClick={onRequestConsultation}
-              className="px-8 py-4 bg-[#FAF7F2]/90 backdrop-blur-sm border border-[#111111] text-[#111111] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 rounded-sm shadow-xs cursor-pointer flex items-center justify-center space-x-2"
+              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#FAF7F2]/90 backdrop-blur-sm border border-[#111111] text-[#111111] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 rounded-sm shadow-xs cursor-pointer flex items-center justify-center space-x-2 min-h-[48px]"
             >
               <Compass className="w-3.5 h-3.5 text-[#B8860B]" />
               <span>{t('hero.consultationBtn')}</span>
@@ -245,7 +237,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
                 key={slide.id}
                 onClick={() => setCurrentSlideIndex(idx)}
                 aria-label={`Ga naar slide ${idx + 1}`}
-                className="relative py-2 focus:outline-none cursor-pointer"
+                className="relative py-2 px-1 focus:outline-none cursor-pointer min-h-[40px] min-w-[24px] flex items-center justify-center"
               >
                 <motion.div
                   animate={{

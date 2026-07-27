@@ -59,13 +59,13 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-      <div className="relative w-full max-w-xl bg-white border-2 border-[#D8CEB8] rounded-3xl shadow-strong overflow-hidden my-auto p-6 sm:p-8 text-[#111111]">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+      <div className="relative w-full sm:max-w-xl bg-white border-t-2 sm:border-2 border-[#D8CEB8] rounded-t-2xl sm:rounded-3xl shadow-strong overflow-y-auto max-h-[92vh] sm:max-h-[90vh] my-auto p-5 sm:p-6 lg:p-8 text-[#111111]">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-[#FAF7F2] text-[#111111] hover:bg-stone-200 transition-colors border border-[#D8CEB8] cursor-pointer"
+          className="absolute top-4 right-4 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[#FAF7F2] text-[#111111] hover:bg-stone-200 transition-colors border border-[#D8CEB8] cursor-pointer z-10"
         >
           <X className="w-5 h-5" />
         </button>
@@ -181,7 +181,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Uw Naam"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-medium placeholder-[#888888] focus:outline-none focus:border-[#111111]"
+                      className="w-full pl-9 pr-3 py-3 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-medium placeholder-[#888888] focus:outline-none focus:border-[#111111] text-base sm:text-xs"
                     />
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="uw.naam@domein.be"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-medium placeholder-[#888888] focus:outline-none focus:border-[#111111]"
+                      className="w-full pl-9 pr-3 py-3 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-medium placeholder-[#888888] focus:outline-none focus:border-[#111111] text-base sm:text-xs"
                     />
                   </div>
                 </div>
@@ -216,7 +216,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+32 475 00 00 00"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-medium placeholder-[#888888] focus:outline-none focus:border-[#111111]"
+                    className="w-full pl-9 pr-3 py-3 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-medium placeholder-[#888888] focus:outline-none focus:border-[#111111] text-base sm:text-xs"
                   />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest border border-[#B8860B]/40 hover:border-[#B8860B] transition-all duration-300 shadow-xs cursor-pointer"
+                className="w-full py-4 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest border border-[#B8860B]/40 hover:border-[#B8860B] transition-all duration-300 shadow-xs cursor-pointer min-h-[48px]"
               >
                 <span>{loading ? "Verzenden..." : "Verstuur Aanvraag Vertrouwelijk"}</span>
               </button>

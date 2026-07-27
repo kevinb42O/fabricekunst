@@ -54,7 +54,7 @@ export default function TopstukkenShowcase({
       {/* Ambient Glow Accent */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-[#B8860B]/5 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8 sm:space-y-14">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#D8CEB8] pb-8">
@@ -63,7 +63,7 @@ export default function TopstukkenShowcase({
               <Award className="w-4 h-4 text-[#B8860B]" />
               <span>{t('topstukken.badge')}</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-[#111111] tracking-tight">
               {t('topstukken.title')}
             </h2>
             <p className="text-sm sm:text-base text-[#555555] font-serif italic max-w-2xl leading-relaxed">
@@ -75,7 +75,7 @@ export default function TopstukkenShowcase({
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={onOpenFullCatalog}
-            className="px-6 py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer flex items-center space-x-2"
+            className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer flex items-center space-x-2 min-h-[48px] w-full sm:w-auto justify-center"
           >
             <span>{t('catalog.viewAllCollection')} ({items.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -85,13 +85,13 @@ export default function TopstukkenShowcase({
         {/* ------------------------------------------------------------- */}
         {/* CATEGORY FILTER TABS FOR HOMEPAGE SHOWCASE                   */}
         {/* ------------------------------------------------------------- */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-[#D8CEB8]/60">
-          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-[#666666] uppercase">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-[#D8CEB8]/60">
+          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-[#666666] uppercase shrink-0">
             <Filter className="w-3.5 h-3.5 text-[#B8860B]" />
             <span>Filter Op Categorie:</span>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto mobile-scroll-x w-full sm:w-auto pb-1 sm:pb-0">
             {[
               { id: 'all', label: t('topstukken.filterAll') },
               { id: 'books', label: t('topstukken.filterBooks') },
@@ -101,7 +101,7 @@ export default function TopstukkenShowcase({
               <button
                 key={tab.id}
                 onClick={() => setActiveCategoryFilter(tab.id)}
-                className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] flex items-center ${
                   activeCategoryFilter === tab.id
                     ? 'bg-[#1C1A17] text-[#D4AF37] border border-[#B8860B] shadow-xs'
                     : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
@@ -116,14 +116,14 @@ export default function TopstukkenShowcase({
         {/* ------------------------------------------------------------- */}
         {/* LUXURY BUYER TRUST BAR                                       */}
         {/* ------------------------------------------------------------- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8]">
           <div className="flex items-start space-x-3.5 p-2">
             <div className="p-2.5 rounded-xl bg-white text-[#B8860B] border border-[#D8CEB8] shrink-0">
               <Truck className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
-              <h4 className="text-xs font-mono font-bold uppercase text-[#111111]">Verzekerde Koerier</h4>
-              <p className="text-xs text-[#666666] font-serif">Discreet &amp; 100% verzekerd transport.</p>
+              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Verzekerde Koerier</h4>
+              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Discreet &amp; 100% verzekerd transport.</p>
             </div>
           </div>
 
@@ -132,8 +132,8 @@ export default function TopstukkenShowcase({
               <FileCheck className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
-              <h4 className="text-xs font-mono font-bold uppercase text-[#111111]">Echtheidscertificaat</h4>
-              <p className="text-xs text-[#666666] font-serif">Formeel fysiek document van Atelier Rembrandt.</p>
+              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Echtheidscertificaat</h4>
+              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Formeel fysiek document van Atelier Rembrandt.</p>
             </div>
           </div>
 
@@ -142,8 +142,8 @@ export default function TopstukkenShowcase({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
-              <h4 className="text-xs font-mono font-bold uppercase text-[#111111]">Privé-Bezichtiging</h4>
-              <p className="text-xs text-[#666666] font-serif">Op afspraak in het atelier of op locatie.</p>
+              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Privé-Bezichtiging</h4>
+              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Op afspraak in het atelier of op locatie.</p>
             </div>
           </div>
 
@@ -152,8 +152,8 @@ export default function TopstukkenShowcase({
               <PhoneCall className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
-              <h4 className="text-xs font-mono font-bold uppercase text-[#111111]">Direct Contact</h4>
-              <p className="text-xs text-[#666666] font-serif">Persoonlijk advies en snelle optie-afhandeling.</p>
+              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Direct Contact</h4>
+              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Persoonlijk advies en snelle optie-afhandeling.</p>
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function TopstukkenShowcase({
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
             onClick={() => onOpenItemDetail(spotlightItem)}
-            className="bg-[#FAF7F2] text-[#111111] rounded-3xl p-6 sm:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-center group cursor-pointer hover:border-[#111111] transition-all"
+            className="bg-[#FAF7F2] text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-all"
           >
             {/* Spotlight Image Frame */}
             <div className="lg:col-span-7 space-y-3">
@@ -250,7 +250,7 @@ export default function TopstukkenShowcase({
                       e.stopPropagation();
                       onRequestInquiry(spotlightItem);
                     }}
-                    className="px-4 py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-mono text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center space-x-1.5 shadow-xs"
+                    className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-mono text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center space-x-1.5 shadow-xs min-h-[44px]"
                   >
                     <Mail className="w-4 h-4 text-[#D4AF37]" />
                     <span>{t('topstukken.buyInquire')}</span>
@@ -270,7 +270,7 @@ export default function TopstukkenShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8"
           >
             {gridItems.map((item) => {
               const itemTitle = getItemField(item, 'title', language);
@@ -348,7 +348,7 @@ export default function TopstukkenShowcase({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-2">
+                    <div className="pt-3 sm:pt-4 border-t border-[#D8CEB8]/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
                       <div>
                         <span className="text-[9px] uppercase font-bold text-[#888888] block font-mono">Prijs</span>
                         <span className="text-base font-serif font-bold text-[#B8860B]">
@@ -394,7 +394,7 @@ export default function TopstukkenShowcase({
         {/* Bottom Guarantee Banner */}
         <motion.div 
           whileHover={{ borderColor: "#B8860B" }}
-          className="p-8 sm:p-10 rounded-2xl bg-[#1C1A17] text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-[#332E27] shadow-xl"
+          className="p-5 sm:p-8 lg:p-10 rounded-2xl bg-[#1C1A17] text-white flex flex-col items-center text-center md:flex-row md:text-left md:items-center justify-between gap-5 sm:gap-6 border border-[#332E27] shadow-xl"
         >
           <div className="space-y-2 text-center md:text-left">
             <div className="inline-flex items-center space-x-2 text-[#D4AF37] text-xs font-mono font-bold uppercase tracking-widest">
@@ -413,7 +413,7 @@ export default function TopstukkenShowcase({
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             onClick={onOpenFullCatalog}
-            className="px-7 py-3.5 rounded-sm bg-[#B8860B] hover:bg-[#D4AF37] text-[#111111] font-bold text-xs uppercase tracking-widest shadow-md transition-colors cursor-pointer shrink-0 flex items-center space-x-2"
+            className="px-5 sm:px-7 py-3 sm:py-3.5 rounded-sm bg-[#B8860B] hover:bg-[#D4AF37] text-[#111111] font-bold text-xs uppercase tracking-widest shadow-md transition-colors cursor-pointer shrink-0 flex items-center space-x-2 min-h-[48px] w-full sm:w-auto justify-center"
           >
             <span>{t('catalog.viewAllCollection')} ({items.length})</span>
             <ChevronRight className="w-4 h-4" />

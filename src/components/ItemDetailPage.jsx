@@ -64,19 +64,19 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   };
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen text-[#111111] pt-28 pb-24 selection:bg-[#B8860B]/20">
+    <div className="bg-[#FAF7F2] min-h-screen text-[#111111] pt-22 sm:pt-28 pb-16 sm:pb-24 selection:bg-[#B8860B]/20">
       
       {/* ------------------------------------------------------------- */}
       {/* BREADCRUMB & HEADER CONTROL STRIP                             */}
       {/* ------------------------------------------------------------- */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4 sm:mb-8">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D8CEB8]/70 pb-4">
           
           {/* Back button & Breadcrumbs */}
           <div className="flex items-center space-x-3">
             <button
               onClick={onNavigateBack}
-              className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-[0.18em] text-[#111111] hover:text-[#B8860B] transition-colors group font-mono cursor-pointer"
+              className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-[0.18em] text-[#111111] hover:text-[#B8860B] transition-colors group font-mono cursor-pointer min-h-[44px]"
             >
               <ArrowLeft className="w-4 h-4 text-[#B8860B] group-hover:-translate-x-1 transition-transform" />
               <span>{t('item_detail.backToCatalog')}</span>
@@ -98,7 +98,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </span>
             <button
               onClick={handleCopyLink}
-              className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white border border-[#D8CEB8] text-[#111111] hover:border-[#B8860B] hover:text-[#B8860B] transition-colors cursor-pointer text-[11px]"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white border border-[#D8CEB8] text-[#111111] hover:border-[#B8860B] hover:text-[#B8860B] transition-colors cursor-pointer text-[11px] min-h-[36px]"
               title="Kopieer directe link naar dit meesterwerk"
             >
               <Share2 className="w-3.5 h-3.5 text-[#B8860B]" />
@@ -114,16 +114,16 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       {/* ------------------------------------------------------------- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
           
           {/* ========================================================= */}
           {/* LEFT COLUMN: PHOTOGRAPHY & CONTINUOUS EDITORIAL DOSSIER   */}
           {/* ========================================================= */}
-          <div className="lg:col-span-7 space-y-12">
+          <div className="lg:col-span-7 space-y-8 sm:space-y-12 order-2 lg:order-1">
             
             {/* Primary High-Res Gallery Frame */}
             <div className="space-y-4">
-              <div className="relative aspect-[4/3] rounded-2xl bg-white border border-[#D8CEB8] overflow-hidden group shadow-sm">
+              <div className="relative aspect-[4/3] sm:aspect-[4/3] rounded-xl sm:rounded-2xl bg-white border border-[#D8CEB8] overflow-hidden group shadow-sm">
                 <img
                   src={currentImage.url}
                   alt={currentImage.caption || item.title}
@@ -168,12 +168,12 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               {/* Thumbnail Gallery Strip */}
               {item.images && item.images.length > 1 && (
-                <div className="flex items-center space-x-3 overflow-x-auto pb-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto mobile-scroll-x pb-2 snap-x snap-mandatory">
                   {item.images.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImageIndex(idx)}
-                      className={`relative w-24 h-20 rounded-xl overflow-hidden shrink-0 border transition-all cursor-pointer ${
+                      className={`relative w-18 h-14 sm:w-24 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden shrink-0 border transition-all cursor-pointer snap-start ${
                         selectedImageIndex === idx ? 'border-[#B8860B] ring-2 ring-[#B8860B]/30 scale-105 shadow-sm' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
                       }`}
                     >
@@ -187,7 +187,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             {/* --------------------------------------------------------- */}
             {/* CONTINUOUS EDITORIAL DOSSIER (CLEAN, NO OVERLAPPING BARS) */}
             {/* --------------------------------------------------------- */}
-            <div className="space-y-14 text-[#111111]">
+            <div className="space-y-10 sm:space-y-14 text-[#111111]">
               
               {/* SECTION I: BESCHRIJVING */}
               <section className="space-y-3">
@@ -221,7 +221,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       </p>
                     ))}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-[#D8CEB8]/60 mt-6 font-sans">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-[#D8CEB8]/60 mt-4 sm:mt-6 font-sans">
                     <div>
                       <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
                         {item.itemType === 'painting' ? "Techniek & Medium" : "Drukker / Uitgeverij"}
@@ -253,7 +253,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 
                 <div className="border-t border-[#D8CEB8]/70 pt-4 space-y-6">
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 font-sans">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 font-sans">
                     <div className="border-l-2 border-[#B8860B] pl-4 space-y-1">
                       <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
                         {item.itemType === 'painting' ? "Lijst & Inlijsting" : "Boekband & Materialen"}
@@ -345,7 +345,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           {/* ========================================================= */}
           {/* RIGHT COLUMN: STICKY TITEL, METADATA & CONSULTATIE CARD    */}
           {/* ========================================================= */}
-          <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-28 lg:self-start">
+          <div className="lg:col-span-5 space-y-5 sm:space-y-8 lg:sticky lg:top-28 lg:self-start order-1 lg:order-2">
             
             {/* Header Titles */}
             <div className="space-y-3 border-b border-[#D8CEB8]/70 pb-6">
@@ -354,7 +354,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 <span>Atelier Rembrandt Topstuk</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]">
+              <h1 className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]">
                 {getItemField(item, 'title', language)}
               </h1>
 
@@ -393,7 +393,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </div>
 
             {/* Quick Bibliographic Specs Grid */}
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
                 <span className="text-[#666666] uppercase block text-[10px]">Formaat</span>
                 <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{item.dimensions || "In-8°"}</span>
@@ -414,7 +414,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </div>
 
             {/* Primary Action Consultation Block */}
-            <div className="p-6 rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border-2 border-[#B8860B]/40 shadow-xl space-y-4">
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border-2 border-[#B8860B]/40 shadow-xl space-y-3 sm:space-y-4">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase tracking-wider">
@@ -433,7 +433,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               <button
                 onClick={() => onRequestInquiry(item)}
                 disabled={item.status === 'Verkocht'}
-                className={`w-full py-4 rounded-xl text-xs font-mono font-bold uppercase tracking-widest shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                className={`w-full py-3.5 sm:py-4 rounded-lg sm:rounded-xl text-xs font-mono font-bold uppercase tracking-widest shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer min-h-[48px] ${
                   item.status === 'Verkocht'
                     ? 'bg-[#333333] text-stone-500 cursor-not-allowed border border-stone-600'
                     : 'bg-[#B8860B] hover:bg-white text-[#111111] border border-[#B8860B]'
@@ -484,7 +484,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
         {/* ------------------------------------------------------------- */}
         {/* ITEM-TO-ITEM PREVIOUS / NEXT FOOTER NAVIGATION                */}
         {/* ------------------------------------------------------------- */}
-        <div className="mt-20 pt-10 border-t-2 border-[#D8CEB8] space-y-6">
+        <div className="mt-12 sm:mt-20 pt-6 sm:pt-10 border-t-2 border-[#D8CEB8] space-y-4 sm:space-y-6">
           <div className="text-center space-y-1">
             <span className="text-xs font-mono text-[#B8860B] font-bold uppercase tracking-[0.2em]">
               Catalogus Navigatie
@@ -494,7 +494,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             
             {/* Previous Item Card */}
             {prevItem ? (

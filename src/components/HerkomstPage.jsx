@@ -48,7 +48,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
       {/* ------------------------------------------------------------- */}
       <section 
         ref={heroRef}
-        className="relative w-full min-h-[60vh] lg:min-h-[70vh] flex flex-col justify-center bg-[#FAF7F2] pt-28 pb-20 select-none"
+        className="relative w-full min-h-[50vh] sm:min-h-[60vh] lg:min-h-[70vh] flex flex-col justify-center bg-[#FAF7F2] pt-22 sm:pt-28 pb-12 sm:pb-20 select-none"
       >
         {/* Photography Background Showcase */}
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
@@ -117,7 +117,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
             {/* Headline */}
             <motion.h1 
               variants={itemVariants}
-              className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
+              className="text-3xl sm:text-4xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
             >
               {hero.title || t('provenance.heroTitle')}
             </motion.h1>
@@ -170,15 +170,15 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           {/* ------------------------------------------------------------- */}
           {/* 2. HET 4-STAPPEN PROTOCOL VAN AUTHENTICITEIT                  */}
           {/* ------------------------------------------------------------- */}
-          <section className="py-24 sm:py-32 select-none">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <section className="py-16 sm:py-24 lg:py-32 select-none">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-16">
               
               <div className="text-center max-w-3xl mx-auto space-y-4">
                 <span className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#B8860B] block">
                   {protocol.badge || "Gecertificeerd Verificatieprotocol"}
                 </span>
                 
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
+                <h2 className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
                   {protocol.title || "Het Protocol van Authenticiteit & Verificatie"}
                 </h2>
                 
@@ -250,7 +250,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
                   </svg>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 relative z-10">
                   {verificationSteps.map((v, i) => (
                     <motion.div
                       key={v.step || i}
@@ -259,7 +259,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
                       viewport={{ once: true }}
                       transition={{ duration: 0.6, delay: i * 0.1 }}
                       whileHover={{ y: -6, borderColor: '#B8860B' }}
-                      className="bg-white/95 backdrop-blur-md p-8 rounded-2xl border-2 border-[#D8CEB8] shadow-card hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group"
+                      className="bg-white/95 backdrop-blur-md p-5 sm:p-8 rounded-xl sm:rounded-2xl border-2 border-[#D8CEB8] shadow-card hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group"
                     >
                       <div className="space-y-5">
                         <div className="flex items-center justify-between pb-4 border-b border-[#D8CEB8]/70">
@@ -292,7 +292,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           {/* ------------------------------------------------------------- */}
           {/* 3. VISUELE BLIKVANGER & UITGELICHT TOPSTUK SHOWCASE           */}
           {/* ------------------------------------------------------------- */}
-          <section className="py-24 sm:py-32">
+          <section className="py-16 sm:py-24 lg:py-32">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
               
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
@@ -304,7 +304,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
                     whileInView={{ opacity: 1, scale: 1.0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative h-[420px] sm:h-[500px] w-full overflow-hidden rounded-xl border border-[#D8CEB8] shadow-2xl group bg-white"
+                    className="relative h-[280px] sm:h-[420px] lg:h-[500px] w-full overflow-hidden rounded-xl border border-[#D8CEB8] shadow-2xl group bg-white"
                   >
                     <img
                       src={story.image || "/images/voltaire-marbled-endpaper-exlibris.jpg"}
@@ -375,10 +375,10 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           {/* ------------------------------------------------------------- */}
           {/* 4. AFSLUITING & PRIVÉ CONSULTATIE CTA (STIJLVOLLE EINDCLIMAX)   */}
           {/* ------------------------------------------------------------- */}
-          <section className="py-24 sm:py-32">
+          <section className="py-16 sm:py-24 lg:py-32">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               
-              <div className="bg-[#1C1A17] text-[#FAF7F2] rounded-2xl p-8 sm:p-14 border border-[#B8860B]/50 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10">
+              <div className="bg-[#1C1A17] text-[#FAF7F2] rounded-2xl p-6 sm:p-10 lg:p-14 border border-[#B8860B]/50 shadow-2xl flex flex-col items-center text-center lg:flex-row lg:text-left lg:items-center justify-between gap-6 sm:gap-10">
                 <div className="space-y-4 text-center lg:text-left max-w-2xl">
                   <span className="text-xs font-mono text-[#D4AF37] uppercase font-bold tracking-[0.2em] block">
                     {cta.badge || "Particuliere Expertise & Consultatie"}
@@ -395,7 +395,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
                   whileHover={{ scale: 1.04, backgroundColor: '#D4AF37', color: '#0F0E0C' }}
                   whileTap={{ scale: 0.96 }}
                   onClick={onRequestConsultation}
-                  className="px-8 py-4 bg-[#B8860B] text-[#111111] font-serif font-semibold text-sm sm:text-base rounded-md tracking-wider uppercase transition-colors duration-300 shrink-0 cursor-pointer shadow-xl flex items-center space-x-3"
+                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#B8860B] text-[#111111] font-serif font-semibold text-sm sm:text-base rounded-md tracking-wider uppercase transition-colors duration-300 shrink-0 cursor-pointer shadow-xl flex items-center space-x-3 min-h-[48px] w-full sm:w-auto justify-center"
                 >
                   <span>{cta.buttonText || "Privé Consultatie Aanvragen"}</span>
                   <ArrowRight className="w-4 h-4" />

@@ -7,7 +7,7 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
   const { t } = useLanguage();
 
   return (
-    <footer id="contact" className="relative z-30 bg-white text-[#444444] border-t border-[#D8CEB8] pt-16 pb-12 overflow-hidden">
+    <footer id="contact" className="relative z-30 bg-white text-[#444444] border-t border-[#D8CEB8] pt-10 sm:pt-16 pb-8 sm:pb-12 overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -16,10 +16,10 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       >
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-[#D8CEB8]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 pb-8 sm:pb-12 border-b border-[#D8CEB8]">
           
           {/* Col 1: Brand & Philosophy */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="sm:col-span-2 md:col-span-2 space-y-4">
             <div className="flex flex-col items-start space-y-1.5">
               <img 
                 src="/images/Atelier Rembrandt.png" 
@@ -110,7 +110,7 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#666666] space-y-4 sm:space-y-0 font-serif">
+        <div className="pt-6 sm:pt-8 flex flex-col items-center justify-center text-center sm:flex-row sm:justify-between text-[11px] text-[#666666] space-y-3 sm:space-y-0 font-serif">
           <p>© {new Date().getFullYear()} Atelier Rembrandt. {t('footer.rights')}</p>
           <div className="flex items-center space-x-4">
             <span>{t('item_detail.provenanceGuaranteed')}</span>
