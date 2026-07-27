@@ -107,25 +107,28 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
           style={{ y: bgY }}
           className="absolute inset-0 w-full h-full"
         >
-          <AnimatePresence>
-            <motion.div
-              key={activeSlide.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 w-full h-full transform-gpu"
-            >
-              <img
-                src={activeSlide.image}
-                alt={activeSlide.title}
+          <div className="absolute inset-0 w-full h-full">
+            {activeSlides.map((slide, idx) => (
+              <div
+                key={slide.id}
+                className="absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out transform-gpu"
                 style={{
-                  objectPosition: activeSlide.objectPosition || 'center center'
+                  opacity: idx === currentSlideIndex ? 1 : 0,
+                  pointerEvents: idx === currentSlideIndex ? 'auto' : 'none',
+                  zIndex: idx === currentSlideIndex ? 1 : 0,
                 }}
-                className="absolute top-0 right-0 w-full lg:w-[68%] h-full object-cover filter contrast-[1.02] brightness-[1.0] opacity-40 sm:opacity-60 lg:opacity-100 transform-gpu"
-              />
-            </motion.div>
-          </AnimatePresence>
+              >
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  style={{
+                    objectPosition: slide.objectPosition || 'center center'
+                  }}
+                  className="absolute top-0 right-0 w-full lg:w-[68%] h-full object-cover filter contrast-[1.02] brightness-[1.0] opacity-40 sm:opacity-60 lg:opacity-100 transform-gpu"
+                />
+              </div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Crisp text protection overlay on left side (FIXED) */}
@@ -268,31 +271,17 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
         className="absolute bottom-12 right-6 lg:right-12 z-20 hidden md:block"
       >
         <div className="flex items-center space-x-3 bg-[#FAF7F2]/90 backdrop-blur-md px-5 py-3 border border-[#D8CEB8] rounded-sm shadow-lg hover:border-[#B8860B]/50 transition-colors">
-          <motion.div 
-            key={activeSlide.tag}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center space-x-2"
-          >
+          <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
             <span className="font-mono text-xs font-bold text-[#B8860B] uppercase tracking-wider">{activeSlide.tag}</span>
-          </motion.div>
+          </div>
           
           <span className="w-px h-4 bg-[#D8CEB8]" />
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSlide.id}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.4 }}
-              className="text-xs font-serif text-[#222222] tracking-wide"
-            >
-              <span className="font-semibold italic">{activeSlide.title}</span>{' '}
-              <span className="not-italic text-[#666666]">({activeSlide.year})</span>
-            </motion.div>
-          </AnimatePresence>
+          <div className="text-xs font-serif text-[#222222] tracking-wide">
+            <span className="font-semibold italic">{activeSlide.title}</span>{' '}
+            <span className="not-italic text-[#666666]">({activeSlide.year})</span>
+          </div>
         </div>
       </motion.div>
 

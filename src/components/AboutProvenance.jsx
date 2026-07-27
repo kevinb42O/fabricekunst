@@ -114,18 +114,25 @@ export default function AboutProvenance({ onRequestConsultation }) {
               style={{ y: imageY }}
               className="relative h-[440px] sm:h-[520px] w-full overflow-hidden shadow-2xl group rounded-sm border border-[#2A2620]"
             >
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={activeVisual.id}
-                  initial={{ opacity: 0.4, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1.0 }}
-                  exit={{ opacity: 0.3 }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                  src={activeVisual.image}
-                  alt={activeVisual.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 filter brightness-[0.92] contrast-[1.05]"
-                />
-              </AnimatePresence>
+              <div className="absolute inset-0 w-full h-full">
+                {PROVENANCE_VISUALS.map((vis, idx) => (
+                  <div
+                    key={vis.id}
+                    className="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out transform-gpu"
+                    style={{
+                      opacity: idx === activeVisualIndex ? 1 : 0,
+                      pointerEvents: idx === activeVisualIndex ? 'auto' : 'none',
+                      zIndex: idx === activeVisualIndex ? 1 : 0,
+                    }}
+                  >
+                    <img
+                      src={vis.image}
+                      alt={vis.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 filter brightness-[0.92] contrast-[1.05] transform-gpu"
+                    />
+                  </div>
+                ))}
+              </div>
               
               {/* Vignetting */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0F0E0C] via-transparent to-black/30" />

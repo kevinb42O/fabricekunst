@@ -35,16 +35,15 @@ export default function TopstukkenShowcase({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15 }
+      transition: { staggerChildren: 0.12 }
     }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+      transition: { duration: 0.7, ease: "easeOut" }
     }
   };
 
@@ -163,12 +162,12 @@ export default function TopstukkenShowcase({
         {/* ------------------------------------------------------------- */}
         {spotlightItem && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             onClick={() => onOpenItemDetail(spotlightItem)}
-            className="bg-[#FAF7F2] text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-all"
+            className="bg-[#FAF7F2] text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-all transform-gpu"
           >
             {/* Spotlight Image Frame */}
             <div className="lg:col-span-7 space-y-3">
@@ -270,7 +269,7 @@ export default function TopstukkenShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8 transform-gpu"
           >
             {gridItems.map((item) => {
               const itemTitle = getItemField(item, 'title', language);
@@ -285,7 +284,7 @@ export default function TopstukkenShowcase({
                   variants={cardVariants}
                   whileHover={{ y: -8, transition: { duration: 0.3 } }}
                   onClick={() => onOpenItemDetail(item)}
-                  className="bg-[#FAF7F2] rounded-2xl border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-all duration-300 cursor-pointer"
+                  className="bg-[#FAF7F2] rounded-2xl border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-all duration-300 cursor-pointer transform-gpu"
                 >
                   {/* Image Showcase */}
                   <div className="aspect-[4/3] bg-white overflow-hidden relative border-b border-[#D8CEB8]">
