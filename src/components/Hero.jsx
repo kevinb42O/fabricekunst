@@ -240,7 +240,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
             variants={itemVariants}
             className="flex items-center space-x-3 pt-4"
           >
-            {HERO_SLIDES.map((slide, idx) => (
+            {activeSlides.map((slide, idx) => (
               <button
                 key={slide.id}
                 onClick={() => setCurrentSlideIndex(idx)}
@@ -258,7 +258,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
               </button>
             ))}
             <span className="text-[11px] font-mono text-[#8E7035] ml-2 font-medium">
-              0{currentSlideIndex + 1} / 0{HERO_SLIDES.length}
+              0{currentSlideIndex + 1} / 0{activeSlides.length}
             </span>
           </motion.div>
 
