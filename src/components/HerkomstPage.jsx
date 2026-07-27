@@ -1,31 +1,10 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Compass, Feather, ArrowRight } from 'lucide-react';
-
-const VERIFICATION_STEPS = [
-  {
-    step: '01',
-    title: 'Papier- & Watermerkanalyse',
-    description: 'Kritisch onderzoek van schept- en lompenhoudend papier, vezelstructuur, watermerken en historische druktechnieken uit de 17e tot 19e eeuw.'
-  },
-  {
-    step: '02',
-    title: 'Boekband & Goudstempeling',
-    description: 'Grondige inspectie van marokijn- en kalfsleer, ribben, goudstempels op de rug en ambachtelijk gemarmerde schutbladen.'
-  },
-  {
-    step: '03',
-    title: 'Herkomst- & Archivaris Tracing',
-    description: 'Historische verificatie van ex-libris stempels, adellijke wapenschilden, eigendomsnotities en historische veilingcatalogi.'
-  },
-  {
-    step: '04',
-    title: 'Certificaat van Echtheid',
-    description: 'Elk meesterwerk wordt geleverd met een officieel, fysiek certificaat van authenticiteit inclusief volledige bibliografische beschrijving.'
-  }
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) {
+  const { t } = useLanguage();
   const heroRef = useRef(null);
 
   const { scrollYProgress } = useScroll({
@@ -108,7 +87,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                 className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-[0.18em] text-[#111111] hover:text-[#B8860B] transition-colors group font-mono cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 text-[#B8860B] group-hover:-translate-x-1 transition-transform" />
-                <span>Terug naar Homepage</span>
+                <span>{t('nav.backHome')}</span>
               </button>
             </motion.div>
 
@@ -123,7 +102,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="h-[1.5px] bg-[#B8860B] inline-block" 
               />
-              <span>HERKOMST, VERIFICATIE &amp; EXPERTISE</span>
+              <span>{t('provenance.heroBadge')}</span>
             </motion.div>
 
             {/* Headline */}
@@ -131,10 +110,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               variants={itemVariants}
               className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
             >
-              Historische Herkomst <br />
-              <span className="text-[#B8860B] italic font-normal block mt-2 text-3xl sm:text-4xl lg:text-5xl font-serif">
-                &amp; Onberispelijke Provenance
-              </span>
+              {t('provenance.heroTitle')}
             </motion.h1>
 
             {/* Lead Paragraph */}
@@ -142,7 +118,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               variants={itemVariants}
               className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
             >
-              Ontdek het rigoureuze protocol achter onze antiquarische selectie. Elk werk in de collectie van Atelier Rembrandt beschikt over een gecertificeerde eigendomsgeschiedenis en geverifieerde staat.
+              {t('provenance.heroSubtitle')}
             </motion.p>
 
             {/* Provenance Seals */}
@@ -152,16 +128,17 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
             >
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
-                <span>100% Geverifieerde Echtheid</span>
+                <span>{t('item_detail.provenanceGuaranteed')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Compass className="w-4 h-4 text-[#B8860B]" />
-                <span>Adellijke Bibliotheek Tracing</span>
+                <span>{t('provenance.pillar1_title')}</span>
               </div>
             </motion.div>
           </motion.div>
         </div>
       </section>
+
 
       {/* ------------------------------------------------------------- */}
       {/* CONTINUOUS BACKGROUND SHOWCASE (FROM HERO ALL THE WAY DOWN)   */}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar({ onNavigate, activeTab, onRequestConsultation }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,9 +17,15 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
   }, []);
 
   const navLinks = [
-    { id: 'topstukken', label: 'Topstukken' },
-    { id: 'catalogus', label: 'Collectie' },
-    { id: 'herkomst', label: 'Herkomst' }
+    { id: 'topstukken', label: t('nav.topstukken') },
+    { id: 'catalogus', label: t('nav.collectie') },
+    { id: 'herkomst', label: t('nav.herkomst') }
+  ];
+
+  const languages = [
+    { code: 'nl', label: 'NL' },
+    { code: 'en', label: 'EN' },
+    { code: 'fr', label: 'FR' }
   ];
 
   const handleConsultationClick = () => {
@@ -61,10 +69,10 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             </motion.div>
             <div className="flex flex-col justify-center">
               <span className="font-serif font-semibold text-sm sm:text-base text-[#111111] tracking-wide block leading-tight">
-                Atelier Rembrandt
+                {t('nav.brandTitle')}
               </span>
               <span className="text-[8px] tracking-[0.2em] text-[#888888] uppercase font-sans font-medium block leading-none">
-                Antiquariaat & Kunst
+                {t('nav.brandSubtitle')}
               </span>
             </div>
           </motion.button>
@@ -91,20 +99,53 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             ))}
           </div>
 
-          {/* Primary Action Button */}
-          <div className="hidden md:flex items-center space-x-3">
+          {/* Primary Action & Language Switcher */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Language Switcher */}
+            <div className="flex items-center space-x-1 bg-[#1C1A17]/5 p-0.5 rounded border border-[#D8CEB8]/70">
+              <Globe className="w-3.5 h-3.5 text-[#B8860B] ml-1.5 mr-0.5 shrink-0" />
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={`px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded-xs transition-colors cursor-pointer ${
+                    language === lang.code
+                      ? 'bg-[#1C1A17] text-[#B8860B] shadow-xs'
+                      : 'text-[#555555] hover:text-[#111111] hover:bg-[#D8CEB8]/40'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: '#B8860B', color: '#111111' }}
               whileTap={{ scale: 0.96 }}
               onClick={handleConsultationClick}
-              className="px-5 py-2 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-sans font-semibold text-[11px] tracking-[0.2em] uppercase transition-colors duration-300 border border-[#B8860B]/40 hover:border-[#B8860B] shadow-xs cursor-pointer"
+              className="px-4 py-2 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-sans font-semibold text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 border border-[#B8860B]/40 hover:border-[#B8860B] shadow-xs cursor-pointer"
             >
-              Privé Consultatie
+              {t('nav.consultation')}
             </motion.button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center space-x-2">
+            <div className="flex items-center space-x-0.5 bg-[#1C1A17]/5 p-0.5 rounded border border-[#D8CEB8]/70">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={`px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-wider rounded-xs transition-colors cursor-pointer ${
+                    language === lang.code
+                      ? 'bg-[#1C1A17] text-[#B8860B]'
+                      : 'text-[#666666]'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1.5 rounded-sm text-[#111111] hover:text-[#B8860B] focus:outline-none"
@@ -146,7 +187,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
                 }}
                 className="w-full text-center py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs tracking-[0.2em] uppercase border border-[#B8860B]/40 transition-all shadow-xs"
               >
-                Privé Consultatie
+                {t('nav.consultation')}
               </motion.button>
             </div>
           </motion.div>

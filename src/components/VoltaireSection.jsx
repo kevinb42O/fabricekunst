@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Award, Bookmark, ZoomIn } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
+  const { t } = useLanguage();
   const [activeImage, setActiveImage] = useState(0);
   const [zoomModalOpen, setZoomModalOpen] = useState(false);
 
@@ -26,11 +28,11 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
 
   const voltaireItem = item || {
     id: 'voltaire-1829-52delig',
-    title: 'Voltaire — Œuvres Complètes',
+    title: t('voltaire.title'),
     ref: 'FB-1829-VOL',
     author: 'Voltaire',
     year: '1829–1833',
-    price: 'Prijs op aanvraag',
+    price: t('voltaire.priceOnRequest'),
     images
   };
 
@@ -63,26 +65,26 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
               className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] mb-2 font-mono"
             >
               <Bookmark className="w-4 h-4 text-[#B8860B]" />
-              <span>Monumentaal Meesterwerk • 52 Delen Compleet</span>
+              <span>{t('voltaire.badge')}</span>
             </motion.div>
             
             <h2 className="text-4xl sm:text-6xl font-serif font-bold text-[#111111] tracking-tight">
-              Voltaire — Œuvres Complètes
+              {t('voltaire.title')}
             </h2>
             <p className="text-lg text-[#555555] font-serif italic mt-1">
-              Parijs (1829–1833) • Ex-Libris Vacheron-Poinsot • Rood Chagrin Halfleer
+              {t('voltaire.subtitle')}
             </p>
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
-            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">Prijs op aanvraag</span>
+            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{t('voltaire.priceOnRequest')}</span>
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
               whileTap={{ scale: 0.96 }}
               onClick={handleRequestInquiry}
               className="px-6 py-3.5 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-semibold text-xs uppercase tracking-[0.18em] border border-[#B8860B]/40 hover:border-[#B8860B] transition-colors duration-300 shadow-sm cursor-pointer font-mono whitespace-nowrap shrink-0"
             >
-              <span>Informatie of Bod Aanvragen</span>
+              <span>{t('voltaire.inquireBtn')}</span>
             </motion.button>
           </div>
         </div>
@@ -109,11 +111,11 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex items-center justify-between z-10">
               <span className="text-sm font-serif font-semibold text-white flex items-center space-x-2">
                 <span>{images[activeImage].caption}</span>
-                <span className="text-xs font-mono text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity">(Klik voor vergroting)</span>
+                <span className="text-xs font-mono text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity">{t('voltaire.clickEnlarge')}</span>
               </span>
               <span className="text-xs font-mono text-[#D4AF37] font-bold px-3 py-1 rounded bg-[#111111] flex items-center space-x-1.5 shadow-sm">
                 <ZoomIn className="w-3.5 h-3.5" />
-                <span>Foto {activeImage + 1} van {images.length}</span>
+                <span>{t('voltaire.photoOf', { current: activeImage + 1, total: images.length })}</span>
               </span>
             </div>
             </div>
@@ -153,13 +155,13 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
           {/* Detailed Storytelling Narrative */}
           <div className="lg:col-span-7 space-y-6 text-[#333333] font-serif leading-relaxed text-base sm:text-lg">
             <h3 className="text-2xl font-bold text-[#111111] leading-tight">
-              Het Monumentale Verlichtingserfgoed van François-Marie Arouet (Voltaire)
+              {t('voltaire.narrativeTitle')}
             </h3>
             <p>
-              Deze indrukwekkende 52-delige reeks vormt een van de meest complete en luxueuze uitgaven van de verzamelde werken van Voltaire, gedrukt te Parijs tussen 1829 en 1833 door Lecointe en Firmin Didot Frères.
+              {t('voltaire.narrativeP1')}
             </p>
             <p>
-              Elk deel is meesterlijk gebonden in een dieprode halflederen band van authentiek chagrin-leder (shagreen). De ruggen zijn verrijkt met verfijnde 19e-eeuwse goudstempels en dubbele titellabels.
+              {t('voltaire.narrativeP2')}
             </p>
 
             {/* Provenance Box */}
@@ -170,13 +172,13 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             >
               <div className="flex items-center space-x-2 text-[#B8860B] font-bold text-xs uppercase tracking-wider">
                 <Award className="w-5 h-5 text-[#B8860B]" />
-                <span>Bewezen Herkomst (Provenance)</span>
+                <span>{t('voltaire.provenanceBadge')}</span>
               </div>
               <p className="text-sm text-[#111111] italic font-serif leading-relaxed">
-                "Ex-Libris Vacheron-Poinsot: Origineel kopergegraveerd heraldiek vignet ingeplakt op het handgemaakte marmeren schutblad van elk deel."
+                {t('voltaire.provenanceQuote')}
               </p>
               <p className="text-xs text-[#555555]">
-                Aantoonbaar afkomstig uit de particuliere bibliotheek van de bekende Franse verzamelaarsfamilie Vacheron-Poinsot.
+                {t('voltaire.provenanceDesc')}
               </p>
             </motion.div>
           </div>
@@ -188,42 +190,42 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             className="lg:col-span-5 bg-white rounded-lg p-6 border-2 border-[#D8CEB8] shadow-card space-y-4 font-sans text-xs transition-colors"
           >
             <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3">
-              Bibliografische Specificaties
+              {t('voltaire.specTitle')}
             </h4>
 
             <div className="space-y-3">
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
-                <span className="text-[#666666] font-mono uppercase">Auteur</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.author')}</span>
                 <span className="font-bold text-[#111111] font-serif text-sm">Voltaire (1694–1778)</span>
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
-                <span className="text-[#666666] font-mono uppercase">Omvang</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.volumeCount')}</span>
                 <span className="font-bold text-[#111111] font-serif text-sm">52 Delen (Compleet)</span>
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
-                <span className="text-[#666666] font-mono uppercase">Drukker / Uitgever</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.publisher')}</span>
                 <span className="font-bold text-[#111111]">Lecointe / Didot, Parijs</span>
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
-                <span className="text-[#666666] font-mono uppercase">Jaartal</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.year')}</span>
                 <span className="font-bold text-[#111111]">1829–1833 (19e Eeuw)</span>
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
-                <span className="text-[#666666] font-mono uppercase">Boekband</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.binding')}</span>
                 <span className="font-bold text-[#111111]">Rood Chagrin Halfleer</span>
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
-                <span className="text-[#666666] font-mono uppercase">Formaat</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.format')}</span>
                 <span className="font-bold text-[#111111]">In-8° (21,5 x 13,5 cm)</span>
               </div>
 
               <div className="flex justify-between py-1.5">
-                <span className="text-[#666666] font-mono uppercase">Referentie Code</span>
+                <span className="text-[#666666] font-mono uppercase">{t('voltaire.refCode')}</span>
                 <span className="font-bold font-mono text-[#B8860B]">FB-1829-VOL</span>
               </div>
             </div>
@@ -236,7 +238,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                   onClick={() => onOpenItemDetail(item)}
                   className="w-full py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-wider border border-[#B8860B]/40 hover:border-[#B8860B] transition-colors duration-300 text-center block cursor-pointer font-mono"
                 >
-                  <span>Bekijk Volledige Catalogusfiche</span>
+                  <span>{t('voltaire.viewCatalogCard')}</span>
                 </motion.button>
               )}
 
@@ -246,7 +248,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 onClick={handleRequestInquiry}
                 className="w-full py-3 rounded-sm bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white font-semibold text-xs uppercase tracking-wider border border-[#D8CEB8] transition-colors duration-300 text-center block cursor-pointer font-mono"
               >
-                <span>Privé-Bezichtiging Aanvragen</span>
+                <span>{t('voltaire.requestPrivateViewing')}</span>
               </motion.button>
             </div>
           </motion.div>
@@ -257,3 +259,4 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
     </section>
   );
 }
+

@@ -6,11 +6,16 @@ import {
   ArrowRight, FileText
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
+import { useLanguage } from '../context/LanguageContext';
+import { getItemField } from '../utils/translationService';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
+  const { t, language } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const [zoomModalData, setZoomModalData] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -74,7 +79,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-[0.18em] text-[#111111] hover:text-[#B8860B] transition-colors group font-mono cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-[#B8860B] group-hover:-translate-x-1 transition-transform" />
-              <span>Collectie</span>
+              <span>{t('item_detail.backToCatalog')}</span>
             </button>
             <span className="text-[#D8CEB8] font-mono text-xs">/</span>
             <span className="text-xs font-mono text-[#B8860B] font-bold uppercase tracking-wider">
@@ -97,11 +102,12 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               title="Kopieer directe link naar dit meesterwerk"
             >
               <Share2 className="w-3.5 h-3.5 text-[#B8860B]" />
-              <span>{copiedLink ? "Link Gekopieerd!" : "Delen"}</span>
+              <span>{copiedLink ? t('item_detail.copied') : t('item_detail.shareWork')}</span>
             </button>
           </div>
         </div>
       </div>
+
 
       {/* ------------------------------------------------------------- */}
       {/* MAIN TWO-COLUMN UNBOXED GALLERY & DOSSIER LAYOUT              */}
@@ -241,7 +247,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 <div className="flex items-center space-x-3 text-[#B8860B]">
                   <Bookmark className="w-5 h-5" />
                   <h3 className="text-xl font-serif font-bold text-[#111111]">
-                    {item.itemType === 'painting' ? "Doek, Lijst & Restauratierapport" : "Bandanalyse & Conditierapport"}
+                    {item.itemType === 'painting' ? "Staat van het Doek & Restaurationele Details" : "Bandstijl & Conditierapport"}
                   </h3>
                 </div>
                 
@@ -265,7 +271,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       {item.itemType === 'painting' ? "Doek-, Paneel- & Restauratie Rapport" : "Gedetailleerd Papier- & Bindwerk Rapport"}
                     </h4>
                     <div className="text-sm text-[#333333] font-serif leading-relaxed space-y-3">
-                      {(item.conditionReport || "Het exemplaar bevindt zich in uitstekende staat. Het werk is geanalyseerd en geconserveerd volgens de hoogste museumstroomstandaarden.")
+                      {(getItemField(item, 'condition_report', language) || item.conditionReport || "Het exemplaar bevindt zich in uitstekende staat. Het werk is geanalyseerd en geconserveerd volgens de hoogste museumstroomstandaarden.")
                         .split('\n\n')
                         .map((paragraph, pIdx) => (
                           <p key={pIdx}>{paragraph}</p>
@@ -300,7 +306,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                     <div className="border-l-2 border-[#B8860B] pl-4 py-1 space-y-1">
                       <span className="text-[11px] font-mono font-bold text-[#B8860B] uppercase block">Geverifieerde Herkomst</span>
                       <p className="text-base font-serif italic text-[#111111] leading-relaxed">
-                        "{item.provenance}"
+                        "{getItemField(item, 'provenance', language)}"
                       </p>
                     </div>
                   )}
@@ -349,7 +355,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]">
-                {item.title}
+                {getItemField(item, 'title', language)}
               </h1>
 
               <div className="text-sm font-serif italic text-[#555555] space-y-1">
@@ -361,9 +367,9 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 </p>
               </div>
 
-              {item.subtitle && (
+              {(getItemField(item, 'subtitle', language) || item.subtitle) && (
                 <p className="text-xs font-serif text-[#666666] leading-relaxed border-l-2 border-[#B8860B] pl-3 italic pt-1">
-                  {item.subtitle}
+                  {getItemField(item, 'subtitle', language) || item.subtitle}
                 </p>
               )}
             </div>

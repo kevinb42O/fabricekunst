@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import { ArrowRight, Compass, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const HERO_SLIDES = [
   {
     id: 'scarron-1713',
     title: 'Les Œuvres de Monsieur Scarron',
     year: 'Amsterdam 1713',
+    subtitleKey: 'hero.slides.s1_sub',
     subtitle: 'Originele kopergravures & gemarmerde schutbladen in goudgestempeld leder.',
     image: '/images/hero/hero-scarron-candlelight.jpg',
     objectPosition: 'center 35%',
@@ -16,6 +18,7 @@ const HERO_SLIDES = [
     id: 'voltaire-theatre',
     title: 'Théâtre de Voltaire',
     year: 'Parijs 1829',
+    subtitleKey: 'hero.slides.s2_sub',
     subtitle: 'Met zeldzame kopergravure en antieke messing leesbril.',
     image: '/images/hero/hero-voltaire-glasses.jpg',
     objectPosition: 'center center',
@@ -25,6 +28,7 @@ const HERO_SLIDES = [
     id: 'scarron-engraving',
     title: '18e-Eeuwse Kopergravures',
     year: 'Amsterdam 1713',
+    subtitleKey: 'hero.slides.s3_sub',
     subtitle: 'Gedetailleerde koperetsing door meester-graveurs uit de Verlichting.',
     image: '/images/hero/hero-scarron-engraving.jpg',
     objectPosition: 'center top',
@@ -34,6 +38,7 @@ const HERO_SLIDES = [
     id: 'provenance-exlibris',
     title: 'Ex-Libris & Provenance',
     year: 'Historische Collectie',
+    subtitleKey: 'hero.slides.s4_sub',
     subtitle: 'Verifieerbare adellijke herkomst met origineel Vacheron-Poinsot stempel.',
     image: '/images/hero/hero-voltaire-exlibris.jpg',
     objectPosition: 'center center',
@@ -42,6 +47,7 @@ const HERO_SLIDES = [
 ];
 
 export default function Hero({ slides = [], onExploreCatalog, onRequestConsultation }) {
+  const { t } = useLanguage();
   const activeSlides = (slides && slides.length > 0) ? slides : HERO_SLIDES;
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const heroRef = useRef(null);
@@ -180,7 +186,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
               transition={{ duration: 0.8, delay: 0.3 }}
               className="h-[1.5px] bg-[#B8860B] inline-block" 
             />
-            <span>Boekenkunst • Provenance • Privé-Collectie</span>
+            <span>{t('hero.tagline')}</span>
           </motion.div>
 
           {/* Masterpiece Editorial Headline */}
@@ -188,9 +194,9 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
             variants={itemVariants}
             className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
           >
-            <span className="block">Zeldzame Boeken</span>
+            <span className="block">{t('hero.headline1')}</span>
             <span className="text-[#B8860B] italic font-normal block mt-2 text-3xl sm:text-4xl lg:text-5xl font-serif">
-              &amp; Historische Meesterwerken
+              {t('hero.headline2')}
             </span>
           </motion.h1>
 
@@ -199,7 +205,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
             variants={itemVariants}
             className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
           >
-            Een gecureerde digitale galerij van unieke historische kunstobjecten, 18e-eeuwse kopergravures en authentieke shagreen banden met een bewezen herkomst.
+            {t('hero.description')}
           </motion.p>
 
           {/* Clean Gallery Action Buttons with Micro-Animations */}
@@ -213,7 +219,7 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
               onClick={onExploreCatalog}
               className="px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 shadow-sm rounded-sm border border-[#B8860B]/40 cursor-pointer flex items-center justify-center space-x-2 group"
             >
-              <span>Doorblader De Collectie</span>
+              <span>{t('hero.exploreBtn')}</span>
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
             </motion.button>
 
@@ -224,9 +230,10 @@ export default function Hero({ slides = [], onExploreCatalog, onRequestConsultat
               className="px-8 py-4 bg-[#FAF7F2]/90 backdrop-blur-sm border border-[#111111] text-[#111111] font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 rounded-sm shadow-xs cursor-pointer flex items-center justify-center space-x-2"
             >
               <Compass className="w-3.5 h-3.5 text-[#B8860B]" />
-              <span>Privé-Consultatie Aanvragen</span>
+              <span>{t('hero.consultationBtn')}</span>
             </motion.button>
           </motion.div>
+
 
           {/* Interactive Slide Dots Indicator */}
           <motion.div 

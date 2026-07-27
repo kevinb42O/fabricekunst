@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Award, Compass, ShieldCheck, Feather, Sparkles, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const PROVENANCE_VISUALS = [
   {
@@ -27,6 +28,7 @@ const PROVENANCE_VISUALS = [
 ];
 
 export default function AboutProvenance({ onRequestConsultation }) {
+  const { t } = useLanguage();
   const [activeVisualIndex, setActiveVisualIndex] = useState(0);
   const activeVisual = PROVENANCE_VISUALS[activeVisualIndex];
 
@@ -87,16 +89,14 @@ export default function AboutProvenance({ onRequestConsultation }) {
             >
               <span className="w-8 h-px bg-[#D4AF37]" />
               <Award className="w-4 h-4 text-[#D4AF37]" />
-              <span>02 — HISTORISCHE HERKOMST &amp; EXPERTISE</span>
+              <span>{t('provenance.heroBadge')}</span>
             </motion.div>
             
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.1]">
-              Passie voor Historische Perfectie <br />
-              <span className="text-[#D4AF37] italic font-normal text-3xl sm:text-4xl lg:text-5xl">
-                &amp; Aantoonbare Provenance
-              </span>
+              {t('provenance.heroTitle')}
             </h2>
           </div>
+
 
           <p className="text-[#C5BBAA] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed lg:pb-1">
             Elk stuk in de collectie van Atelier Rembrandt wordt geselecteerd op basis van drie onberispelijke criteria: historische zeldzaamheid, esthetische staat van de band, en een aantoonbare herkomst.

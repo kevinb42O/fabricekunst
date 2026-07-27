@@ -97,7 +97,20 @@ const mapDbItemToFrontend = (dbItem) => ({
   conditionReport: dbItem.condition_report,
   provenanceDetails: dbItem.provenance_details,
   collationSpecs: dbItem.collation_specs,
-  images: dbItem.images || []
+  images: dbItem.images || [],
+  // Multi-Language Fields
+  title_en: dbItem.title_en || '',
+  title_fr: dbItem.title_fr || '',
+  subtitle_en: dbItem.subtitle_en || '',
+  subtitle_fr: dbItem.subtitle_fr || '',
+  description_en: dbItem.description_en || '',
+  description_fr: dbItem.description_fr || '',
+  provenance_en: dbItem.provenance_en || '',
+  provenance_fr: dbItem.provenance_fr || '',
+  condition_report_en: dbItem.condition_report_en || '',
+  condition_report_fr: dbItem.condition_report_fr || '',
+  historical_context_en: dbItem.historical_context_en || '',
+  historical_context_fr: dbItem.historical_context_fr || ''
 });
 
 // Map frontend item object (camelCase) to database column names (snake_case)
@@ -126,6 +139,19 @@ const mapFrontendItemToDb = (item) => ({
   provenance_details: item.provenanceDetails,
   collation_specs: item.collationSpecs,
   images: item.images || [],
+  // Multi-Language Fields
+  title_en: item.title_en || '',
+  title_fr: item.title_fr || '',
+  subtitle_en: item.subtitle_en || '',
+  subtitle_fr: item.subtitle_fr || '',
+  description_en: item.description_en || '',
+  description_fr: item.description_fr || '',
+  provenance_en: item.provenance_en || '',
+  provenance_fr: item.provenance_fr || '',
+  condition_report_en: item.condition_report_en || item.conditionReport_en || '',
+  condition_report_fr: item.condition_report_fr || item.conditionReport_fr || '',
+  historical_context_en: item.historical_context_en || item.historicalContext_en || '',
+  historical_context_fr: item.historical_context_fr || item.historicalContext_fr || '',
   updated_at: new Date().toISOString()
 });
 

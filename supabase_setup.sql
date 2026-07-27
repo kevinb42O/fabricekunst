@@ -234,3 +234,21 @@ INSERT INTO public.items (
     '[{"url":"/images/voltaire-lit-bookcase-desk.jpg","caption":"Vanitas Stilleven gepresenteerd in een sfeervol verlichte klassieke bibliotheek-setting."}]'::jsonb
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- ========================================================
+-- Multi-Language Migration for Items (EN & FR Columns)
+-- Run this in Supabase SQL Editor if table already exists
+-- ========================================================
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS title_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS title_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS subtitle_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS subtitle_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS description_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS description_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS provenance_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS provenance_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS condition_report_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS condition_report_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS historical_context_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS historical_context_fr TEXT;
+

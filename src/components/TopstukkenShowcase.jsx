@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Eye, BookOpen, Sparkles, CheckCircle2, Bookmark } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function TopstukkenShowcase({ onSelectItem }) {
+  const { t } = useLanguage();
   const [activeVoltaireImage, setActiveVoltaireImage] = useState(0);
   const [activeScarronImage, setActiveScarronImage] = useState(0);
 
@@ -27,15 +29,16 @@ export default function TopstukkenShowcase({ onSelectItem }) {
         <div className="text-center max-w-3xl mx-auto mb-20">
           <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] mb-3 px-4 py-1.5 rounded-full bg-[#FAF7F2] border border-[#B8860B]/30 shadow-sm font-mono">
             <Sparkles className="w-4 h-4 text-[#B8860B]" />
-            <span>Exclusieve Uitlichtingen</span>
+            <span>{t('topstukken.badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight mb-4">
-            De Huidige Topstukken van de Collectie
+            {t('topstukken.title')}
           </h2>
           <p className="text-[#333333] font-serif font-light text-base sm:text-lg">
-            Ontdek twee van de meest zeldzame en esthetisch indrukwekkende meesterwerken uit de privéverzameling van Atelier Rembrandt.
+            {t('topstukken.subtitle')}
           </p>
         </div>
+
 
         {/* TOPSTUK 1: VOLTAIRE COMPLETE WERKEN */}
         <div className="mb-20 bg-[#FAF7F2] rounded-3xl p-6 sm:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">

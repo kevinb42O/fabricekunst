@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Award, BookOpen } from 'lucide-react';
 import ItemDetailModal from './ItemDetailModal';
+import { useLanguage } from '../context/LanguageContext';
+import { getItemField, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 
 export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDetail, onRequestInquiry }) {
+  const { t, language } = useLanguage();
   const [detailModalItem, setDetailModalItem] = useState(null);
 
   const handleOpenDetail = (item) => {
@@ -53,13 +56,13 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
           <div className="space-y-2">
             <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] font-mono">
               <Award className="w-3.5 h-3.5" />
-              <span>Gecureerde Privé-Collectie</span>
+              <span>{t('catalog.heroTagline')}</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight">
-              Schatten uit de <span className="text-[#B8860B] italic font-normal">Catalogus</span>
+              {t('catalog.title')}
             </h2>
             <p className="text-sm sm:text-base text-[#555555] font-serif italic max-w-xl">
-              Een selectie van zeldzame 17e-, 18e- en 19e-eeuwse meesterwerken. Bekijk alle werken en doorzoek de bibliografie op onze cataloguspagina.
+              {t('catalog.subtitle')}
             </p>
           </div>
 
@@ -69,7 +72,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
             onClick={onOpenFullCatalog}
             className="px-6 py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer"
           >
-            <span>Bekijk De Volledige Collectie ({items.length})</span>
+            <span>{t('catalog.viewItem')} ({items.length})</span>
           </motion.button>
         </div>
 
@@ -93,14 +96,14 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
               <div className="aspect-[4/3] bg-[#FAF7F2] overflow-hidden relative border-b border-[#D8CEB8]">
                 <img
                   src={item.images[0]?.url}
-                  alt={item.title}
+                  alt={getItemField(item, 'title', language)}
                   className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                 />
                 <div className="absolute top-3 left-3 bg-[#111111] text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-sm">
                   {item.ref}
                 </div>
                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-[#B8860B] text-[10px] font-mono font-bold px-2.5 py-1 rounded-sm border border-[#D8CEB8]">
-                  {item.century}
+                  {getLocalizedCentury(item.century, language)}
                 </div>
               </div>
 
@@ -108,10 +111,10 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
               <div className="p-6 space-y-3 flex-grow flex flex-col justify-between">
                 <div>
                   <span className="text-[10px] font-bold text-[#8E7035] uppercase tracking-wider font-mono block mb-1">
-                    {item.category}
+                    {getLocalizedCategory(item.category, language)}
                   </span>
                   <h3 className="text-xl font-serif font-bold text-[#111111] line-clamp-2 leading-snug group-hover:text-[#B8860B] transition-colors">
-                    {item.title}
+                    {getItemField(item, 'title', language)}
                   </h3>
                   <p className="text-xs text-[#555555] font-serif italic mt-1">
                     {item.author} ({item.year})
@@ -120,7 +123,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
 
                 <div className="pt-4 border-t border-[#FAF7F2] flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-[#888888] block font-mono">Taxatie / Prijs</span>
+                    <span className="text-[9px] uppercase font-bold text-[#888888] block font-mono">{t('item_detail.labels.price')}</span>
                     <span className="text-base font-serif font-bold text-[#B8860B]">{item.price}</span>
                   </div>
 
@@ -134,7 +137,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
                     className="px-4 py-2 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] border border-[#B8860B]/40 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 cursor-pointer flex items-center space-x-1.5"
                   >
                     <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>Catalogusfiche</span>
+                    <span>{t('topstukken.viewItem')}</span>
                   </motion.button>
                 </div>
               </div>
@@ -149,10 +152,10 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
         >
           <div className="space-y-1">
             <h4 className="text-lg font-serif font-bold text-[#111111]">
-              Zoekt u een specifiek historisch werk of zeldzame eerste druk?
+              {t('catalog.title')}
             </h4>
             <p className="text-xs text-[#666666] font-serif">
-              Onze volledige catalogus bevat gedetailleerde bibliografieën, zoekfilters op auteur en eigendomsstempels.
+              {t('catalog.subtitle')}
             </p>
           </div>
 
@@ -162,7 +165,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
             onClick={onOpenFullCatalog}
             className="px-6 py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-mono font-semibold text-xs uppercase tracking-wider transition-colors duration-300 shrink-0 border border-[#B8860B]/40 cursor-pointer flex items-center space-x-2 group"
           >
-            <span>Open Volledige Catalogus</span>
+            <span>{t('hero.exploreBtn')}</span>
             <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
           </motion.button>
         </motion.div>
@@ -184,3 +187,4 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
     </section>
   );
 }
+

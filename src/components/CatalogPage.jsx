@@ -2,9 +2,13 @@ import React, { useRef, useState, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Award, Search, ChevronDown, SlidersHorizontal, ArrowUpDown, RotateCcw, BookOpen, Palette } from 'lucide-react';
 import AsymmetricGallery from './AsymmetricGallery';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 
 export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, onRequestInquiry }) {
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
+
   const [selectedType, setSelectedType] = useState('Alle'); // 'Alle' | 'book' | 'painting'
   const [selectedCentury, setSelectedCentury] = useState('Alle');
   const [selectedCategory, setSelectedCategory] = useState('Alle');
@@ -140,9 +144,10 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-[0.18em] text-[#111111] hover:text-[#B8860B] transition-colors group font-mono cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 text-[#B8860B] group-hover:-translate-x-1 transition-transform" />
-                <span>Terug naar Homepage</span>
+                <span>{t('nav.backHome')}</span>
               </button>
             </motion.div>
+
 
             {/* Authentic Subtitle & Divider */}
             <motion.div 
@@ -155,7 +160,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="h-[1.5px] bg-[#B8860B] inline-block" 
               />
-              <span>Volledige Privé-Bibliotheek • Gecureerde Archieven</span>
+              <span>{t('catalog.heroTagline')}</span>
             </motion.div>
 
             {/* Grand Headline Layout */}
@@ -163,10 +168,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               variants={itemVariants}
               className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
             >
-              <span className="block">De Antiquarische</span>
-              <span className="text-[#B8860B] italic font-normal block mt-2 text-3xl sm:text-4xl lg:text-5xl font-serif">
-                Catalogus &amp; Collectie
-              </span>
+              <span className="block">{t('catalog.title')}</span>
             </motion.h1>
 
             {/* Subtitle Paragraph */}
@@ -174,7 +176,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               variants={itemVariants}
               className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
             >
-              Doorzoek onze volledige gecureerde verzameling zeldzame 17e- en 18e-eeuwse boeken, authentieke kopergravures en goudgestempelde banden met geverifieerde herkomst.
+              {t('catalog.subtitle')}
             </motion.p>
 
             {/* Provenance & Quality Badges */}
@@ -184,11 +186,11 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             >
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
-                <span>100% Geverifieerde Herkomst</span>
+                <span>{t('item_detail.provenanceGuaranteed')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Award className="w-4 h-4 text-[#B8860B]" />
-                <span>Particuliere Exclusieve Collectie</span>
+                <span>{t('topstukken.badge')}</span>
               </div>
             </motion.div>
 
@@ -214,10 +216,10 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 </div>
                 <div>
                   <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#111111] block">
-                    Collectie Doorzoeken &amp; Sorteren
+                    {t('nav.search')} &amp; {t('catalog.sortLabel')}
                   </span>
                   <span className="text-[11px] font-serif text-[#666666] italic">
-                    Filter op tijdperk, categorie of sorteer op kenmerk
+                    {t('catalog.subtitle')}
                   </span>
                 </div>
               </div>
@@ -230,7 +232,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                   className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#111111] text-[#B8860B] hover:text-white border border-[#D8CEB8] text-xs font-mono font-semibold transition-all duration-300 cursor-pointer shadow-xs"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Wis Filters</span>
+                  <span>{t('catalog.resetFilters')}</span>
                 </motion.button>
               )}
             </div>
@@ -242,7 +244,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Zoek op auteur, titel, kopergravure of herkomst (bijv. Voltaire, Scarron, Ex-Libris)..."
+                placeholder={t('catalog.searchPlaceholder')}
                 className="w-full pl-12 pr-12 py-3.5 sm:py-4 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] placeholder-[#777777] focus:outline-none focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20 text-sm font-medium shadow-inner transition-all duration-300"
               />
               {searchQuery && (
@@ -250,7 +252,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                   onClick={() => setSearchQuery('')}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-[#B8860B] hover:text-[#111111] hover:underline font-bold cursor-pointer bg-white px-2 py-1 rounded border border-[#D8CEB8]"
                 >
-                  Wis
+                  {t('catalog.clearSearch')}
                 </button>
               )}
             </div>
@@ -258,7 +260,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             {/* Object Type Switcher Bar */}
             <div className="flex items-center space-x-2 pt-1 border-b border-[#D8CEB8]/50 pb-4 font-mono text-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#666666] shrink-0 mr-1">
-                Collectie Type:
+                {t('catalog.typeFilter')}:
               </span>
               <button
                 type="button"
@@ -269,7 +271,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                     : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
                 }`}
               >
-                Alle Stukken
+                {t('catalog.all')}
               </button>
               <button
                 type="button"
@@ -281,7 +283,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 }`}
               >
                 <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>Antiquarische Boeken</span>
+                <span>{t('catalog.books')}</span>
               </button>
               <button
                 type="button"
@@ -293,7 +295,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 }`}
               >
                 <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>Schilderijen &amp; Kunst</span>
+                <span>{t('catalog.paintings')}</span>
               </button>
             </div>
 
@@ -303,7 +305,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               {/* Century filter */}
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono">
-                  Eeuw &amp; Tijdperk
+                  {t('catalog.centuryFilter')}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {centuries.map(c => (
@@ -318,7 +320,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                           : 'bg-[#FAF7F2] text-[#333333] hover:text-black border border-[#D8CEB8]'
                       }`}
                     >
-                      {c}
+                      {c === 'Alle' ? t('catalog.all') : getLocalizedCentury(c, language)}
                     </motion.button>
                   ))}
                 </div>
@@ -327,7 +329,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               {/* Category filter */}
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono">
-                  Categorie
+                  {t('catalog.categoryFilter')}
                 </span>
                 <div className="relative">
                   <select
@@ -337,7 +339,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                   >
                     {categories.map(cat => (
                       <option key={cat} value={cat} className="bg-white text-[#111111]">
-                        {cat}
+                        {cat === 'Alle' ? t('catalog.all') : getLocalizedCategory(cat, language)}
                       </option>
                     ))}
                   </select>
@@ -348,7 +350,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               {/* Sort Order */}
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono flex items-center justify-between">
-                  <span>Sorteer Op</span>
+                  <span>{t('catalog.sortLabel')}</span>
                   <ArrowUpDown className="w-3 h-3 text-[#B8860B]" />
                 </span>
                 <div className="relative">
@@ -357,11 +359,11 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                     onChange={(e) => setSortBy(e.target.value)}
                     className="w-full py-2.5 px-3.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] text-xs font-semibold focus:outline-none focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20 cursor-pointer appearance-none pr-8"
                   >
-                    <option value="standaard" className="bg-white text-[#111111]">Standaard Volgorde</option>
-                    <option value="jaar-asc" className="bg-white text-[#111111]">Jaar (Oudste Eerst)</option>
-                    <option value="jaar-desc" className="bg-white text-[#111111]">Jaar (Nieuwste Eerst)</option>
-                    <option value="auteur-asc" className="bg-white text-[#111111]">Auteur (A — Z)</option>
-                    <option value="titel-asc" className="bg-white text-[#111111]">Titel (A — Z)</option>
+                    <option value="standaard" className="bg-white text-[#111111]">{t('catalog.sortStandard')}</option>
+                    <option value="jaar-asc" className="bg-white text-[#111111]">{t('catalog.sortYearAsc')}</option>
+                    <option value="jaar-desc" className="bg-white text-[#111111]">{t('catalog.sortYearDesc')}</option>
+                    <option value="auteur-asc" className="bg-white text-[#111111]">{t('catalog.sortAuthorAsc')}</option>
+                    <option value="titel-asc" className="bg-white text-[#111111]">{t('catalog.sortTitleAsc')}</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-[#B8860B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -374,17 +376,18 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
               <div className="flex items-center space-x-2">
                 <span className="w-2 h-2 rounded-full bg-[#B8860B] animate-pulse" />
                 <span>
-                  <strong className="text-[#111111] font-bold">{filteredItems.length}</strong> {filteredItems.length === 1 ? 'meesterwerk getoond' : 'meesterwerken getoond'}
+                  {t('catalog.itemsFound', { count: filteredItems.length })}
                 </span>
               </div>
               {hasActiveFilters && (
                 <span className="text-[11px] text-[#B8860B] italic font-serif">
-                  Actieve filters toegepast
+                  {t('catalog.resetFilters')}
                 </span>
               )}
             </div>
 
           </motion.div>
+
         </div>
 
       </section>

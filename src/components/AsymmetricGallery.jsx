@@ -3,15 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, BookOpen, Award, ChevronDown, ChevronUp, ZoomIn, ShieldCheck, SlidersHorizontal, ArrowUpDown, RotateCcw, Sparkles } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import ItemDetailModal from './ItemDetailModal';
+import { useLanguage } from '../context/LanguageContext';
+import { getItemField, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 
 export default function AsymmetricGallery({ items, filteredItems: overrideFilteredItems, onOpenItemDetail, onRequestInquiry, hideHeader = false, hideControls = false }) {
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
+
   const [selectedCentury, setSelectedCentury] = useState('Alle');
   const [selectedCategory, setSelectedCategory] = useState('Alle');
   const [sortBy, setSortBy] = useState('standaard');
   const [expandedItemId, setExpandedItemId] = useState(null);
   const [zoomModalData, setZoomModalData] = useState(null);
   const [detailModalItem, setDetailModalItem] = useState(null);
+
 
   const handleOpenDetail = (item) => {
     if (onOpenItemDetail) {
@@ -156,7 +161,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
             {/* Century filter */}
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono">
-                Eeuw &amp; Tijdperk
+                {t('catalog.centuryFilter')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {centuries.map(c => (
@@ -171,7 +176,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                         : 'bg-[#FAF7F2] text-[#333333] hover:text-black border border-[#D8CEB8]'
                     }`}
                   >
-                    {c}
+                    {c === 'Alle' ? t('catalog.all') : getLocalizedCentury(c, language)}
                   </motion.button>
                 ))}
               </div>
@@ -180,7 +185,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
             {/* Category filter */}
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono">
-                Categorie
+                {t('catalog.categoryFilter')}
               </span>
               <div className="relative">
                 <select
@@ -190,7 +195,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat} className="bg-white text-[#111111]">
-                      {cat}
+                      {cat === 'Alle' ? t('catalog.all') : getLocalizedCategory(cat, language)}
                     </option>
                   ))}
                 </select>
@@ -201,7 +206,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
             {/* Sort Order */}
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono flex items-center justify-between">
-                <span>Sorteer Op</span>
+                <span>{t('catalog.sortLabel')}</span>
                 <ArrowUpDown className="w-3 h-3 text-[#B8860B]" />
               </span>
               <div className="relative">
@@ -210,11 +215,11 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full py-2.5 px-3.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] text-xs font-semibold focus:outline-none focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20 cursor-pointer appearance-none pr-8"
                 >
-                  <option value="standaard" className="bg-white text-[#111111]">Standaard Volgorde</option>
-                  <option value="jaar-asc" className="bg-white text-[#111111]">Jaar (Oudste Eerst)</option>
-                  <option value="jaar-desc" className="bg-white text-[#111111]">Jaar (Nieuwste Eerst)</option>
-                  <option value="auteur-asc" className="bg-white text-[#111111]">Auteur (A — Z)</option>
-                  <option value="titel-asc" className="bg-white text-[#111111]">Titel (A — Z)</option>
+                  <option value="standaard" className="bg-white text-[#111111]">{t('catalog.sortStandard')}</option>
+                  <option value="jaar-asc" className="bg-white text-[#111111]">{t('catalog.sortYearAsc')}</option>
+                  <option value="jaar-desc" className="bg-white text-[#111111]">{t('catalog.sortYearDesc')}</option>
+                  <option value="auteur-asc" className="bg-white text-[#111111]">{t('catalog.sortAuthorAsc')}</option>
+                  <option value="titel-asc" className="bg-white text-[#111111]">{t('catalog.sortTitleAsc')}</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-[#B8860B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -304,12 +309,12 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                             {item.ref}
                           </span>
                           <span className="text-xs font-bold text-[#B8860B] uppercase tracking-wider font-mono">
-                            {item.century} • {item.category}
+                            {getLocalizedCentury(item.century, language)} • {getLocalizedCategory(item.category, language)}
                           </span>
                         </div>
 
                         <h3 className="text-2xl sm:text-4xl font-serif font-bold text-[#111111] group-hover:text-[#B8860B] transition-colors leading-snug">
-                          {item.title}
+                          {getItemField(item, 'title', language)}
                         </h3>
 
                         <p className="text-sm text-[#555555] font-serif italic">
@@ -317,7 +322,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                         </p>
 
                         <p className="text-sm text-[#333333] leading-relaxed font-light font-sans line-clamp-3">
-                          {item.description}
+                          {getItemField(item, 'description', language)}
                         </p>
 
                         <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#D8CEB8]">

@@ -5,10 +5,16 @@ import {
   ArrowRight, BookOpen, ScrollText, CheckCircle2, History, PhoneCall, Sparkles
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
+import { useLanguage } from '../context/LanguageContext';
+import { getItemField, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 
 export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
+  const { t, language } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+
   const [zoomModalData, setZoomModalData] = useState(null);
+
 
   if (!item) return null;
 
@@ -49,7 +55,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               {item.ref}
             </span>
             <span className="text-xs text-[#B8860B] font-bold uppercase tracking-widest font-mono hidden sm:inline">
-              {item.century} • {item.category}
+              {getLocalizedCentury(item.century, language)} • {getLocalizedCategory(item.category, language)}
             </span>
           </div>
 
@@ -61,7 +67,6 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
             }`}>
               {item.status}
             </span>
-
             <button
               onClick={onClose}
               className="p-2 rounded-full bg-[#FAF7F2] hover:bg-[#111111] hover:text-white text-[#111111] transition-colors border border-[#D8CEB8] cursor-pointer"
@@ -146,7 +151,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                   <span>Antiquariaat Topstuk</span>
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#111111] leading-tight">
-                  {item.title}
+                  {getItemField(item, 'title', language)}
                 </h2>
                 <p className="text-sm font-serif italic text-[#555555]">
                   {item.author} ({item.year}) • {item.publisher}
@@ -178,7 +183,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 </div>
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8]">
                   <span className="text-[#666666] uppercase block text-[10px]">Eeuw</span>
-                  <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{item.century}</span>
+                  <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{getLocalizedCentury(item.century, language)}</span>
                 </div>
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8] col-span-2">
                   <span className="text-[#666666] uppercase block text-[10px]">Boekband</span>

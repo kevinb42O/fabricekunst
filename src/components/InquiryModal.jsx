@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, ShieldCheck, CheckCircle2, Phone, Mail, User, ChevronDown, BookOpen } from 'lucide-react';
 import { saveInquiryAsync } from '../utils/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function InquiryModal({ item, catalog = [], onClose, onSuccess }) {
+  const { t } = useLanguage();
   const [selectedItemId, setSelectedItemId] = useState(item ? item.id : 'none');
   const [selectedItem, setSelectedItem] = useState(item || null);
 
@@ -10,8 +12,8 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
     name: '',
     email: '',
     phone: '',
-    type: 'Privé-bezichtiging aanvragen',
-    message: '' // Empty by default! User must type or select.
+    type: t('inquiry.modalTitle'),
+    message: ''
   });
 
   const [submitted, setSubmitted] = useState(false);
@@ -73,16 +75,16 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
             <div className="w-16 h-16 rounded-full bg-[#FAF7F2] border-2 border-[#B8860B] text-[#B8860B] flex items-center justify-center mx-auto shadow-sm">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h3 className="text-2xl font-serif font-bold text-[#111111]">Aanvraag Succesvol Ontvangen</h3>
+            <h3 className="text-2xl font-serif font-bold text-[#111111]">{t('inquiry.successTitle')}</h3>
             <p className="text-sm text-[#333333] max-w-md mx-auto leading-relaxed font-serif">
-              Hartelijk dank voor je bericht, <span className="text-[#B8860B] font-bold">{formData.name}</span>. Atelier Rembrandt heeft je aanvraag in goede orde ontvangen en neemt zo spoedig mogelijk persoonlijk contact met je op.
+              {t('inquiry.successDesc')}
             </p>
             <div className="pt-4">
               <button
                 onClick={onClose}
                 className="px-8 py-3 rounded-xl bg-[#111111] hover:bg-[#B8860B] hover:text-[#111111] text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer"
               >
-                Sluiten
+                {t('inquiry.close')}
               </button>
             </div>
           </div>
@@ -93,12 +95,13 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
             <div>
               <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-wider mb-2 font-mono">
                 <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
-                <span>Privé Consultatie & Informatie</span>
+                <span>{t('inquiry.modalTitle')}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">
-                Vraag Informatie of Afspraak
+                {t('inquiry.subtitle')}
               </h2>
             </div>
+
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">

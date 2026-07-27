@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { KeyRound, ShieldCheck, Mail, MapPin, Phone } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer({ onOpenAdmin, onNavigate }) {
+  const { t } = useLanguage();
+
   return (
     <footer id="contact" className="relative z-30 bg-white text-[#444444] border-t border-[#D8CEB8] pt-16 pb-12 overflow-hidden">
       <motion.div 
@@ -30,41 +33,41 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
               </motion.div>
               <div className="flex flex-col justify-center">
                 <span className="font-serif font-semibold text-xl text-[#111111] tracking-wide leading-tight">
-                  Atelier Rembrandt
+                  {t('nav.brandTitle')}
                 </span>
                 <span className="text-[9px] tracking-[0.2em] text-[#999999] uppercase font-sans font-medium leading-none mt-0.5">
-                  Antiquariaat & Kunst
+                  {t('nav.brandSubtitle')}
                 </span>
               </div>
             </div>
             
             <p className="text-xs text-[#555555] font-light max-w-md leading-relaxed font-serif">
-              Exclusieve digitale galerij voor zeldzame boeken, 18e-eeuwse kopergravures en unieke historische kunstobjecten met een bewezen herkomst.
+              {t('hero.description')}
             </p>
 
             <div className="flex items-center space-x-2 text-xs text-[#B8860B]">
               <ShieldCheck className="w-4 h-4" />
-              <span className="font-bold">Bezichtiging &amp; Consultatie Uitsluitend Op Afspraak</span>
+              <span className="font-bold">{t('footer.addressText')}</span>
             </div>
           </div>
 
           {/* Col 2: Navigation */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-[#111111] font-serif">Navigatie</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#111111] font-serif">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2 text-xs font-semibold">
               <li>
                 <button onClick={() => onNavigate('topstukken')} className="text-[#333333] hover:text-[#B8860B] transition-colors">
-                  Topstukken Collectie
+                  {t('nav.topstukken')}
                 </button>
               </li>
               <li>
                 <button onClick={() => onNavigate('catalogus')} className="text-[#333333] hover:text-[#B8860B] transition-colors">
-                  Gecureerde Collectie
+                  {t('nav.collectie')}
                 </button>
               </li>
               <li>
                 <button onClick={() => onNavigate('herkomst')} className="text-[#333333] hover:text-[#B8860B] transition-colors">
-                  Herkomst &amp; Provenance
+                  {t('nav.herkomst')}
                 </button>
               </li>
               <li>
@@ -74,7 +77,7 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
                   className="text-[#B8860B] hover:underline transition-colors flex items-center space-x-1 font-bold cursor-pointer"
                 >
                   <KeyRound className="w-3 h-3" />
-                  <span>Beheerders Login (CMS)</span>
+                  <span>{t('footer.adminLink')}</span>
                 </motion.button>
               </li>
             </ul>
@@ -82,11 +85,11 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
 
           {/* Col 3: Contact Details */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-[#111111] font-serif">Contact</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#111111] font-serif">{t('footer.contactHeader')}</h4>
             <ul className="space-y-2.5 text-xs font-medium">
               <li className="flex items-center space-x-2 text-[#333333]">
                 <MapPin className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                <span>België / Frankrijk • Op Afspraak</span>
+                <span>{t('footer.addressText')}</span>
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
@@ -107,11 +110,11 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#666666] space-y-4 sm:space-y-0 font-serif">
-          <p>© {new Date().getFullYear()} Atelier Rembrandt. Alle rechten voorbehouden.</p>
+          <p>© {new Date().getFullYear()} Atelier Rembrandt. {t('footer.rights')}</p>
           <div className="flex items-center space-x-4">
-            <span>Discreet &amp; Vertrouwelijk</span>
+            <span>{t('item_detail.provenanceGuaranteed')}</span>
             <span>•</span>
-            <span>High-End Antiquariaat</span>
+            <span>{t('topstukken.badge')}</span>
           </div>
         </div>
 
@@ -119,3 +122,4 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
     </footer>
   );
 }
+
