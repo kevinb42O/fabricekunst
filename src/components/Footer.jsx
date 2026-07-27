@@ -61,6 +61,17 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
                 </button>
               </li>
               <li>
+                <button 
+                  onClick={() => {
+                    const el = document.getElementById('faq');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }} 
+                  className="text-[#333333] hover:text-[#B8860B] transition-colors"
+                >
+                  {t('faq.badge') || 'Veelgestelde Vragen'}
+                </button>
+              </li>
+              <li>
                 <motion.button 
                   whileHover={{ scale: 1.05, x: 2 }}
                   onClick={onOpenAdmin} 

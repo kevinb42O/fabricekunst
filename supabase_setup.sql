@@ -260,4 +260,28 @@ ALTER TABLE public.items ADD COLUMN IF NOT EXISTS historical_context_fr TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS collation_specs_en TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS collation_specs_fr TEXT;
 
+-- ========================================================
+-- FAQ Table Migration Script (Optional - Run in Supabase SQL Editor)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS public.faq_items (
+    id TEXT PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    question_en TEXT,
+    answer_en TEXT,
+    question_fr TEXT,
+    answer_fr TEXT,
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS & Set Public Policies
+ALTER TABLE public.faq_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read faq_items" ON public.faq_items;
+CREATE POLICY "Public read faq_items" ON public.faq_items FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow write faq_items" ON public.faq_items;
+CREATE POLICY "Allow write faq_items" ON public.faq_items FOR ALL USING (true) WITH CHECK (true);
+
 

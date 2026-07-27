@@ -918,14 +918,18 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 </div>
 
                 <div className="pt-2">
-                  <label className="cursor-pointer inline-flex items-center space-x-2 text-xs font-bold text-[#111111] p-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8]">
+                  <label className={`cursor-pointer inline-flex items-center space-x-2.5 text-xs font-bold p-3.5 rounded-xl border transition-all ${
+                    editingItem.featured 
+                      ? 'bg-[#B8860B]/10 border-[#B8860B] text-[#B8860B]' 
+                      : 'bg-[#FAF7F2] border-[#D8CEB8] text-[#111111] hover:border-[#111111]'
+                  }`}>
                     <input
                       type="checkbox"
                       checked={editingItem.featured || false}
                       onChange={(e) => setEditingItem({ ...editingItem, featured: e.target.checked })}
-                      className="w-4 h-4 rounded border-[#D8CEB8] text-[#111111] focus:ring-[#B8860B]"
+                      className="w-4 h-4 rounded border-[#D8CEB8] text-[#B8860B] focus:ring-[#B8860B]"
                     />
-                    <span>Markeer als Topstuk op Homepage</span>
+                    <span>⭐ Op Homepage Tonen (Recent Aanwinst / Topstuk)</span>
                   </label>
                 </div>
               </div>

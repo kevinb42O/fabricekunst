@@ -11,7 +11,8 @@ import {
   X, 
   Image as ImageIcon,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  HelpCircle
 } from 'lucide-react';
 import ItemManager from './ItemManager';
 import InquiriesManager from './InquiriesManager';
@@ -21,19 +22,21 @@ import DashboardOverview from './DashboardOverview';
 import CustomersManager from './CustomersManager';
 import HeroSlidesManager from './HeroSlidesManager';
 import ProvenanceManager from './ProvenanceManager';
+import FaqManager from './FaqManager';
 
 export default function AdminDashboard({ 
   items = [], 
   catalog = [], 
   inquiries = [], 
   heroSlides = [],
-  provenanceData = null,
+  faqItems = [],
   currentUser = null,
   onSaveItem = () => {}, 
   onDeleteItem = () => {}, 
   onUpdateInquiries = () => {}, 
   onSaveHeroSlides = () => {},
   onSaveProvenance = () => {},
+  onSaveFaqItems = () => {},
   onLogout = () => {}, 
   onCloseAdmin, 
   onClose 
@@ -42,7 +45,7 @@ export default function AdminDashboard({
   const activeInquiries = inquiries || [];
   const handleClose = onCloseAdmin || onClose || (() => {});
 
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'hero' | 'provenance' | 'inquiries' | 'customers' | 'settings'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'hero' | 'provenance' | 'faq' | 'inquiries' | 'customers' | 'settings'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -77,6 +80,11 @@ export default function AdminDashboard({
       id: 'provenance',
       label: 'Herkomst Page',
       icon: ShieldCheck
+    },
+    {
+      id: 'faq',
+      label: 'FAQ Beheer',
+      icon: HelpCircle
     },
     { 
       id: 'inquiries', 
@@ -276,6 +284,7 @@ export default function AdminDashboard({
                 {activeTab === 'items' && 'Collectie & Catalogus Beheer'}
                 {activeTab === 'hero' && 'Hero Visuals & Homepage Carrousel'}
                 {activeTab === 'provenance' && 'Herkomst & Provenance Pagina Beheer'}
+                {activeTab === 'faq' && 'Veelgestelde Vragen (FAQ) Beheer'}
                 {activeTab === 'inquiries' && 'Binnengekomen Aanvragen'}
                 {activeTab === 'customers' && 'Verzamelaars & Klanten Index'}
                 {activeTab === 'settings' && 'Beveiligingsinstellingen & PIN'}
@@ -330,6 +339,14 @@ export default function AdminDashboard({
               provenanceData={provenanceData}
               onSaveProvenance={onSaveProvenance}
               showToast={showToast}
+            />
+          )}
+
+          {activeTab === 'faq' && (
+            <FaqManager
+              faqItems={faqItems}
+              onSaveFaqItems={onSaveFaqItems}
+              onShowToast={showToast}
             />
           )}
 

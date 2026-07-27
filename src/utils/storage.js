@@ -786,3 +786,131 @@ export const saveProvenanceDataAsync = async (data) => {
   return data;
 };
 
+// ==========================================
+// FAQ ITEMS STORAGE & SUPABASE SYNC
+// ==========================================
+const FAQ_ITEMS_KEY = 'atelier_rembrandt_faq_items';
+
+export const DEFAULT_FAQ_ITEMS = [
+  {
+    id: 'faq-1',
+    question: 'Hoe wordt de echtheid en herkomst van elk werk gegarandeerd?',
+    answer: 'Elk werk in onze collectie wordt grondig onderzocht op papier-watermerken, bandstijl en ex-libris eigendomsstempels. Bij aankoop ontvangt u een fysiek, door Atelier Rembrandt ondertekend Certificaat van Echtheid met het volledige bibliografische dossier.',
+    question_en: 'How is the authenticity and provenance of each work guaranteed?',
+    answer_en: 'Every work in our collection is thoroughly inspected for watermarks, binding style, and armorial bookplates. Upon purchase, you receive a physical Certificate of Authenticity signed by Atelier Rembrandt alongside the full bibliographical dossier.',
+    question_fr: 'Comment la provenance et l’authenticité de chaque œuvre sont-elles garanties ?',
+    answer_fr: 'Chaque ouvrage est rigoureusement analysé : filigranes, style de reliure et marques d’ex-libris. Lors de l’achat, vous recevez un Certificat d’Authenticité physique signé par l’Atelier Rembrandt avec le dossier bibliographique complet.',
+    displayOrder: 1
+  },
+  {
+    id: 'faq-2',
+    question: 'Hoe werkt de verzending van kwetsbare historische boeken of kunst?',
+    answer: 'Onze werken worden geconditioneerd en discreet verpakt in maatwerk zuurvrij materiaal. Verzending vindt altijd plaats via een gespecialiseerde koeriersdienst met 100% volledige verzekering van de waarde.',
+    question_en: 'How are fragile historical books or artworks shipped and packaged?',
+    answer_en: 'Our items are climate-controlled and custom-packaged using archival acid-free materials. Shipping is always conducted via specialized courier services with 100% full value insurance.',
+    question_fr: 'Comment s’effectue l’emballage et le transport d’ouvrages précieux et fragiles ?',
+    answer_fr: 'Nos œuvres sont conditionnées dans des matériaux neutres et sans acide. L’expédition est confiée à un transporteur spécialisé avec assurance à 100 % de la valeur.',
+    displayOrder: 2
+  },
+  {
+    id: 'faq-3',
+    question: 'Is een besloten privé-bezichtiging mogelijk vóór aankoop?',
+    answer: 'Jazeker. U bent van harte welkom voor een besloten bezichtiging op afspraak in ons atelier. Bij hoogwaardige topstukken is een persoonlijke presentatie bij u op locatie (Europa) eveneens mogelijk.',
+    question_en: 'Is a private viewing possible prior to purchase?',
+    answer_en: 'Yes. You are welcome for a private viewing by appointment at our atelier. For high-value masterworks, personal presentations at your location (within Europe) can also be arranged.',
+    question_fr: 'Est-il possible d’organiser une présentation privée avant l’achat ?',
+    answer_fr: 'Absolument. Nous vous accueillons sur rendez-vous dans notre atelier pour une présentation privée. Pour les pièces maîtresses, une présentation à votre domicile (en Europe) est également envisageable.',
+    displayOrder: 3
+  },
+  {
+    id: 'faq-4',
+    question: 'Hoe werkt het aanvragen van een optie of aankoop?',
+    answer: 'Wanneer u een aanvraag indient via de knop op de pagina, wordt het werk direct 48 uur voor u in optie gehouden. U ontvangt binnen 2 uur persoonlijk bericht met de specificaties en factuur.',
+    question_en: 'How does requesting a purchase or hold work?',
+    answer_en: 'When you submit an inquiry via the page, the item is immediately placed on hold for you for 48 hours. You will receive a personal response within 2 hours with full specifications and invoice details.',
+    question_fr: 'Comment fonctionne la réservation ou l’option d’achat ?',
+    answer_fr: 'Dès l’envoi de votre demande via le site, l’œuvre est réservée pour vous pendant 48 heures. Vous recevrez une réponse personnelle sous 2 heures avec la facture et les modalités.',
+    displayOrder: 4
+  },
+  {
+    id: 'faq-5',
+    question: 'Zijn er meer foto’s of conditierapporten beschikbaar op verzoek?',
+    answer: 'Absoluut. Wij leveren graag aanvullende hoge-resolutie detailfoto’s, UV-licht opnames van de binding of een uitgebreid collatierapport per e-mail of WhatsApp.',
+    question_en: 'Are additional photographs or condition reports available upon request?',
+    answer_en: 'Absolutely. We are pleased to provide supplementary high-resolution photographs, UV light inspection images of bindings, or collation reports via email or WhatsApp.',
+    question_fr: 'Est-il possible d’obtenir des photos supplémentaires ou un rapport de condition ?',
+    answer_fr: 'Tout à fait. Nous fournissons volontiers des visuels haute définition complémentaires, des clichés sous lumière UV ou un rapport de collation détaillé par e-mail ou WhatsApp.',
+    displayOrder: 5
+  },
+  {
+    id: 'faq-6',
+    question: 'Kunt u helpen bij het zoeken naar een specifiek historisch zeldzaam boek?',
+    answer: 'Ja. Via ons internationale netwerk van adellijke bibliotheken, veilinghuizen en privé-verzamelaars voeren wij gerichte zoekopdrachten uit voor bibliofielen en kunstverzamelaars.',
+    question_en: 'Can you assist in sourcing a specific rare historical book?',
+    answer_en: 'Yes. Through our international network of noble libraries, auction houses, and private collectors, we conduct targeted search assignments for bibliophiles and art collectors.',
+    question_fr: 'Pouvez-vous nous aider à rechercher un ouvrage historique spécifique ?',
+    answer_fr: 'Oui. Grâce à notre réseau international de bibliothèques privées, maisons de ventes et collectionneurs, nous réalisons des recherches ciblées pour les bibliophiles.',
+    displayOrder: 6
+  }
+];
+
+export const getFaqItems = () => {
+  try {
+    const saved = localStorage.getItem(FAQ_ITEMS_KEY);
+    if (!saved) return DEFAULT_FAQ_ITEMS;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_FAQ_ITEMS;
+  } catch (err) {
+    console.error("Fout bij ophalen FAQ items:", err);
+    return DEFAULT_FAQ_ITEMS;
+  }
+};
+
+export const fetchFaqItemsAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .eq('key', 'faq_items')
+        .maybeSingle();
+
+      if (!error && data && data.value) {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localStorage.setItem(FAQ_ITEMS_KEY, JSON.stringify(parsed));
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.error("Supabase FAQ fetch error:", err);
+    }
+  }
+  return getFaqItems();
+};
+
+export const saveFaqItemsAsync = async (faqItems) => {
+  try {
+    localStorage.setItem(FAQ_ITEMS_KEY, JSON.stringify(faqItems));
+  } catch (err) {
+    console.error("Fout bij lokaal opslaan FAQ items:", err);
+  }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const payload = JSON.stringify(faqItems);
+      const { error } = await supabase
+        .from('admin_settings')
+        .upsert({
+          key: 'faq_items',
+          value: payload,
+          updated_at: new Date().toISOString()
+        });
+      if (error) console.error("Supabase FAQ save error:", error);
+    } catch (err) {
+      console.error("Supabase FAQ save exception:", err);
+    }
+  }
+  return faqItems;
+};
+

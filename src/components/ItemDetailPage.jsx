@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField } from '../utils/translationService';
+import { getItemField, getLocalizedStatus } from '../utils/translationService';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
   const { t, language } = useLanguage();
@@ -387,7 +387,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
                   'bg-stone-100 text-stone-700 border-stone-300'
                 }`}>
-                  {item.status}
+                  {getLocalizedStatus(item.status, language)}
                 </span>
               </div>
             </div>
@@ -416,15 +416,17 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             {/* Primary Action Consultation Block */}
             <div className="p-6 rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border-2 border-[#B8860B]/40 shadow-xl space-y-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase tracking-wider">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Exclusieve Privé Consultatie</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase tracking-wider">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Direct Beschikbaar voor Aankoop</span>
+                  </div>
                 </div>
                 <h3 className="text-xl font-serif font-bold text-white">
-                  Interesse in dit zeldzame werk?
+                  Dit meesterwerk toevoegen aan uw collectie?
                 </h3>
                 <p className="text-xs text-stone-300 font-serif leading-relaxed">
-                  Neem rechtstreeks contact op met Atelier Rembrandt voor vrijblijvende informatie, aanvullende foto's of een besloten bezichtiging.
+                  Neem rechtstreeks contact op met Atelier Rembrandt voor directe aankoopoptie, facturatie of een besloten bezichtiging.
                 </p>
               </div>
 
@@ -438,17 +440,39 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 }`}
               >
                 <PhoneCall className="w-4 h-4" />
-                <span>{item.status === 'Verkocht' ? 'Verkocht (Archief)' : 'Aanvraag / Doe Een Bod'}</span>
+                <span>{item.status === 'Verkocht' ? 'Verkocht (Archief)' : 'Direct Aankoop Aanvragen / Bod Doen'}</span>
               </button>
 
               <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 pt-2 border-t border-stone-800">
                 <div className="flex items-center space-x-1">
                   <CheckCircle2 className="w-3 h-3 text-[#B8860B]" />
-                  <span>100% Echtheid</span>
+                  <span>Officieel Echtheidscertificaat</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <CheckCircle2 className="w-3 h-3 text-[#B8860B]" />
-                  <span>Discreet Transport</span>
+                  <span>Verzekerde Koerier</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Buyer Process Card: How Purchasing Works */}
+            <div className="p-5 rounded-2xl bg-white border border-[#D8CEB8] space-y-3 shadow-xs">
+              <h4 className="text-xs font-mono font-bold text-[#111111] uppercase tracking-wider border-b border-[#D8CEB8]/60 pb-2">
+                Hoe werkt een aankoop bij Atelier Rembrandt?
+              </h4>
+              
+              <div className="space-y-2.5 text-xs font-serif text-[#444444]">
+                <div className="flex items-start space-x-2.5">
+                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#B8860B] text-[#B8860B] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+                  <p><strong className="text-[#111111]">Aanvraag of Bod:</strong> Verstuur je aanvraag vrijblijvend via het formulier of bel rechtstreeks.</p>
+                </div>
+                <div className="flex items-start space-x-2.5">
+                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#B8860B] text-[#B8860B] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+                  <p><strong className="text-[#111111]">Persoonlijke Bevestiging:</strong> U ontvangt binnen 2 uur persoonlijk bericht met de optievoorwaarden &amp; factuur.</p>
+                </div>
+                <div className="flex items-start space-x-2.5">
+                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#B8860B] text-[#B8860B] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+                  <p><strong className="text-[#111111]">Verzekerde Levering:</strong> Na akkoord wordt het werk discreet verpakt, verzekerd en bij u bezorgd.</p>
                 </div>
               </div>
             </div>

@@ -120,6 +120,19 @@ export const CATEGORY_TRANSLATIONS = {
   }
 };
 
+export const STATUS_TRANSLATIONS = {
+  en: {
+    'Beschikbaar': 'Available',
+    'Verkocht': 'Sold',
+    'Gereserveerd': 'Reserved'
+  },
+  fr: {
+    'Beschikbaar': 'Disponible',
+    'Verkocht': 'Vendu',
+    'Gereserveerd': 'Réservé'
+  }
+};
+
 export function getLocalizedCentury(century, language = 'nl') {
   if (!century) return '';
   if (language === 'nl') return century;
@@ -130,6 +143,12 @@ export function getLocalizedCategory(category, language = 'nl') {
   if (!category) return '';
   if (language === 'nl') return category;
   return CATEGORY_TRANSLATIONS[language]?.[category] || category;
+}
+
+export function getLocalizedStatus(status, language = 'nl') {
+  if (!status) return '';
+  if (language === 'nl') return status;
+  return STATUS_TRANSLATIONS[language]?.[status] || status;
 }
 
 /**

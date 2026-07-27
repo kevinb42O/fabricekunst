@@ -3,8 +3,9 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Compass, Feather, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PROVENANCE_DATA } from '../utils/storage';
+import FaqSection from './FaqSection';
 
-export default function HerkomstPage({ provenanceData, onNavigateHome, onRequestConsultation }) {
+export default function HerkomstPage({ provenanceData, faqItems = [], onNavigateHome, onRequestConsultation }) {
   const { t } = useLanguage();
   const heroRef = useRef(null);
 
@@ -403,6 +404,9 @@ export default function HerkomstPage({ provenanceData, onNavigateHome, onRequest
 
             </div>
           </section>
+
+          {/* Interactive FAQ Section */}
+          <FaqSection items={faqItems} onRequestConsultation={onRequestConsultation} />
 
         </div>
       </div>

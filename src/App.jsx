@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import VoltaireSection from './components/VoltaireSection';
-import ScarronSection from './components/ScarronSection';
-import CatalogTeaser from './components/CatalogTeaser';
+import TopstukkenShowcase from './components/TopstukkenShowcase';
+import AboutProvenance from './components/AboutProvenance';
+import FaqSection from './components/FaqSection';
 import CatalogPage from './components/CatalogPage';
 import HerkomstPage from './components/HerkomstPage';
 import ItemDetailPage from './components/ItemDetailPage';
@@ -23,7 +23,10 @@ import {
   saveHeroSlidesAsync,
   getProvenanceData,
   fetchProvenanceDataAsync,
-  saveProvenanceDataAsync
+  saveProvenanceDataAsync,
+  getFaqItems,
+  fetchFaqItemsAsync,
+  saveFaqItemsAsync
 } from './utils/storage';
 
 export default function App() {
@@ -31,6 +34,7 @@ export default function App() {
   const [inquiries, setInquiries] = useState(getInquiries());
   const [heroSlides, setHeroSlides] = useState(getHeroSlides());
   const [provenanceData, setProvenanceData] = useState(getProvenanceData());
+  const [faqItems, setFaqItems] = useState(getFaqItems());
   
   const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'catalogus' | 'herkomst' | 'item-detail'
   const [selectedDetailItemId, setSelectedDetailItemId] = useState(null);
@@ -48,6 +52,11 @@ export default function App() {
   const handleSaveProvenance = async (updatedData) => {
     setProvenanceData(updatedData);
     await saveProvenanceDataAsync(updatedData);
+  };
+
+  const handleSaveFaqItems = async (updatedItems) => {
+    setFaqItems(updatedItems);
+    await saveFaqItemsAsync(updatedItems);
   };
 
   const { scrollYProgress } = useScroll();
@@ -69,6 +78,10 @@ export default function App() {
 
     fetchProvenanceDataAsync().then(pData => {
       if (pData) setProvenanceData(pData);
+    });
+
+    fetchFaqItemsAsync().then(faqs => {
+      if (faqs) setFaqItems(faqs);
     });
 
     const checkRoutes = () => {
@@ -260,12 +273,14 @@ export default function App() {
         inquiries={inquiries}
         heroSlides={heroSlides}
         provenanceData={provenanceData}
+        faqItems={faqItems}
         currentUser={adminUser}
         onSaveItem={handleSaveItem}
         onDeleteItem={handleDeleteItem}
         onUpdateInquiries={handleUpdateInquiries}
         onSaveHeroSlides={handleSaveHeroSlides}
         onSaveProvenance={handleSaveProvenance}
+        onSaveFaqItems={handleSaveFaqItems}
         onLogout={handleLogoutAdmin}
         onCloseAdmin={handleCloseAdmin}
         onClose={handleCloseAdmin}
@@ -334,6 +349,7 @@ export default function App() {
           /* Dedicated Luxury Herkomst & Provenance Page (/herkomst) */
           <HerkomstPage
             provenanceData={provenanceData}
+            faqItems={faqItems}
             onNavigateHome={() => handleNavigate('home')}
             onRequestConsultation={() => handleOpenConsultation(null)}
           />
@@ -347,28 +363,23 @@ export default function App() {
               onRequestConsultation={() => handleOpenConsultation(null)}
             />
 
-            {/* Monumental Section 1: Voltaire 52-delige Reeks (1829-1833) */}
-            <VoltaireSection
-              item={catalog.find(i => i.id === 'voltaire-1829-52delig')}
-              onInquirySuccess={refreshInquiries}
-              onOpenItemDetail={handleOpenItemDetail}
-              onRequestInquiry={(item) => handleOpenConsultation(item)}
-            />
-
-            {/* Monumental Section 2: Scarron 1713 Edition */}
-            <ScarronSection
-              item={catalog.find(i => i.id === 'scarron-1713-oeuvres')}
-              onInquirySuccess={refreshInquiries}
-              onOpenItemDetail={handleOpenItemDetail}
-              onRequestInquiry={(item) => handleOpenConsultation(item)}
-            />
-
-            {/* Clean Editorial Homepage Teaser */}
-            <CatalogTeaser
+            {/* Dynamic Recent Aanwinsten & Topstukken Showcase (CMS Controlled via 'featured' toggle) */}
+            <TopstukkenShowcase
               items={catalog}
               onOpenFullCatalog={() => handleNavigate('catalogus')}
               onOpenItemDetail={handleOpenItemDetail}
               onRequestInquiry={(item) => handleOpenConsultation(item)}
+            />
+
+            {/* Museum Herkomst & Provenance Showcase */}
+            <AboutProvenance
+              onRequestConsultation={() => handleOpenConsultation(null)}
+            />
+
+            {/* Interactive Collector FAQ Section */}
+            <FaqSection
+              items={faqItems}
+              onRequestConsultation={() => handleOpenConsultation(null)}
             />
           </>
         )}
