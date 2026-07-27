@@ -65,15 +65,17 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
             </motion.div>
             
             <h2 className="text-4xl sm:text-6xl font-serif font-bold text-[#111111] tracking-tight">
-              {t('scarron.title')}
+              {item?.title || t('scarron.title')}
             </h2>
             <p className="text-lg text-[#555555] font-serif italic mt-1">
-              {t('scarron.subtitle')}
+              {item?.subtitle || t('scarron.subtitle')}
             </p>
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
-            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{t('voltaire.priceOnRequest')}</span>
+            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">
+              {item?.price || t('voltaire.priceOnRequest')}
+            </span>
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
               whileTap={{ scale: 0.96 }}
@@ -98,14 +100,14 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
                 animate={{ opacity: 1, scale: 1.0 }}
                 exit={{ opacity: 0.3 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                src={images[activeImage].url}
-                alt={images[activeImage].caption}
+                src={typeof images[activeImage] === 'string' ? images[activeImage] : (images[activeImage]?.url || images[activeImage])}
+                alt={images[activeImage]?.caption || item?.title || "Scarron Showcase"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
             </AnimatePresence>
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex items-center justify-between z-10">
               <span className="text-sm font-serif font-semibold text-white">
-                {images[activeImage].caption}
+                {images[activeImage]?.caption || item?.title}
               </span>
               <span className="text-xs font-mono text-[#D4AF37] font-bold px-3 py-1 rounded bg-[#111111] shadow-sm">
                 {t('voltaire.photoOf', { current: activeImage + 1, total: images.length })}
@@ -125,7 +127,7 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
                   activeImage === idx ? 'border-[#111111] ring-2 ring-[#B8860B]/60 shadow-md' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
                 }`}
               >
-                <img src={img.url} alt="" className="w-full h-full object-cover" />
+                <img src={typeof img === 'string' ? img : img.url} alt="" className="w-full h-full object-cover" />
               </motion.button>
             ))}
           </div>
@@ -137,10 +139,10 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
           {/* Narrative */}
           <div className="lg:col-span-7 space-y-6 text-[#333333] font-serif leading-relaxed text-base sm:text-lg">
             <h3 className="text-2xl font-bold text-[#111111] leading-tight">
-              De Geestige Satire en Toneelkunst van Paul Scarron (1610–1660)
+              {item?.title || "Paul Scarron — Œuvres (1713)"}
             </h3>
             <p>
-              {t('scarron.description')}
+              {item?.description || t('scarron.description')}
             </p>
 
             <motion.div 
@@ -153,8 +155,11 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
                 <span>Exemplaar met Zeldzame Kopergravures</span>
               </div>
               <p className="text-sm text-[#111111] italic font-serif leading-relaxed">
-                {t('scarron.detailBinding')}
+                {item?.binding || t('scarron.detailBinding')}
               </p>
+              {item?.provenance && (
+                <p className="text-xs text-[#555555]">{item.provenance}</p>
+              )}
             </motion.div>
           </div>
 
@@ -171,7 +176,12 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
             <div className="space-y-3">
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.author')}</span>
-                <span className="font-bold text-[#111111] font-serif text-sm">Paul Scarron (1610–1660)</span>
+                <span className="font-bold text-[#111111] font-serif text-sm">{item?.author || 'Paul Scarron'}</span>
+              </div>
+
+              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+                <span className="text-[#666666] font-mono uppercase">Jaar / Periode</span>
+                <span className="font-bold text-[#111111] font-serif text-sm">{item?.year || '1713'}</span>
               </div>
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">

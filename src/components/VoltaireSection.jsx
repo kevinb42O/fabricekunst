@@ -69,15 +69,17 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             </motion.div>
             
             <h2 className="text-4xl sm:text-6xl font-serif font-bold text-[#111111] tracking-tight">
-              {t('voltaire.title')}
+              {item?.title || t('voltaire.title')}
             </h2>
             <p className="text-lg text-[#555555] font-serif italic mt-1">
-              {t('voltaire.subtitle')}
+              {item?.subtitle || t('voltaire.subtitle')}
             </p>
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
-            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{t('voltaire.priceOnRequest')}</span>
+            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">
+              {item?.price || t('voltaire.priceOnRequest')}
+            </span>
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
               whileTap={{ scale: 0.96 }}
@@ -103,14 +105,14 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 animate={{ opacity: 1, scale: 1.0 }}
                 exit={{ opacity: 0.3 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                src={images[activeImage].url}
-                alt={images[activeImage].caption}
+                src={typeof images[activeImage] === 'string' ? images[activeImage] : (images[activeImage]?.url || images[activeImage])}
+                alt={images[activeImage]?.caption || item?.title || "Voltaire Showcase"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
             </AnimatePresence>
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex items-center justify-between z-10">
               <span className="text-sm font-serif font-semibold text-white flex items-center space-x-2">
-                <span>{images[activeImage].caption}</span>
+                <span>{images[activeImage]?.caption || item?.title}</span>
                 <span className="text-xs font-mono text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity">{t('voltaire.clickEnlarge')}</span>
               </span>
               <span className="text-xs font-mono text-[#D4AF37] font-bold px-3 py-1 rounded bg-[#111111] flex items-center space-x-1.5 shadow-sm">
@@ -133,7 +135,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                   activeImage === idx ? 'border-[#111111] ring-2 ring-[#B8860B]/60 shadow-md' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
                 }`}
               >
-                <img src={img.url} alt="" className="w-full h-full object-cover" />
+                <img src={typeof img === 'string' ? img : img.url} alt="" className="w-full h-full object-cover" />
               </motion.button>
             ))}
           </div>
@@ -142,9 +144,9 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
         {/* Image Zoom Lightbox */}
         {zoomModalOpen && (
           <ImageZoomModal
-            images={images}
+            images={images.map(img => typeof img === 'string' ? { url: img, caption: item?.title || '' } : img)}
             initialIndex={activeImage}
-            title="Voltaire — Œuvres Complètes (Parijs, 1829)"
+            title={item?.title || "Voltaire Showcase"}
             onClose={() => setZoomModalOpen(false)}
           />
         )}
@@ -155,14 +157,14 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
           {/* Detailed Storytelling Narrative */}
           <div className="lg:col-span-7 space-y-6 text-[#333333] font-serif leading-relaxed text-base sm:text-lg">
             <h3 className="text-2xl font-bold text-[#111111] leading-tight">
-              {t('voltaire.narrativeTitle')}
+              {item?.title || t('voltaire.narrativeTitle')}
             </h3>
             <p>
-              {t('voltaire.narrativeP1')}
+              {item?.description || t('voltaire.narrativeP1')}
             </p>
-            <p>
-              {t('voltaire.narrativeP2')}
-            </p>
+            {item?.historicalContext && (
+              <p>{item.historicalContext}</p>
+            )}
 
             {/* Provenance Box */}
             <motion.div 
@@ -175,11 +177,13 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 <span>{t('voltaire.provenanceBadge')}</span>
               </div>
               <p className="text-sm text-[#111111] italic font-serif leading-relaxed">
-                {t('voltaire.provenanceQuote')}
+                {item?.provenance || t('voltaire.provenanceQuote')}
               </p>
-              <p className="text-xs text-[#555555]">
-                {t('voltaire.provenanceDesc')}
-              </p>
+              {item?.provenanceDetails && (
+                <p className="text-xs text-[#555555]">
+                  {item.provenanceDetails}
+                </p>
+              )}
             </motion.div>
           </div>
 
@@ -196,8 +200,27 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             <div className="space-y-3">
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.author')}</span>
-                <span className="font-bold text-[#111111] font-serif text-sm">Voltaire (1694–1778)</span>
+                <span className="font-bold text-[#111111] font-serif text-sm">{item?.author || 'Voltaire'}</span>
               </div>
+
+              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+                <span className="text-[#666666] font-mono uppercase">Jaar / Periode</span>
+                <span className="font-bold text-[#111111] font-serif text-sm">{item?.year || '1829–1833'}</span>
+              </div>
+
+              {item?.publisher && (
+                <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+                  <span className="text-[#666666] font-mono uppercase">Uitgever</span>
+                  <span className="font-bold text-[#111111] font-serif text-sm">{item.publisher}</span>
+                </div>
+              )}
+
+              {item?.binding && (
+                <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+                  <span className="text-[#666666] font-mono uppercase">Binding</span>
+                  <span className="font-bold text-[#111111] font-serif text-sm">{item.binding}</span>
+                </div>
+              )}
 
               <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.volumeCount')}</span>
