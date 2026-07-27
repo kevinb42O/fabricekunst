@@ -20,22 +20,22 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
           
           {/* Col 1: Brand & Philosophy */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3.5 sm:space-x-4">
               <motion.div 
-                whileHover={{ rotate: 8, scale: 1.05 }}
-                className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-[#111111]/20 flex items-center justify-center shadow-sm shrink-0"
+                whileHover={{ scale: 1.05 }}
+                className="h-12 sm:h-14 w-auto shrink-0 flex items-center justify-center"
               >
                 <img 
                   src="/rblogo.png" 
                   alt="Atelier Rembrandt Logo" 
-                  className="w-full h-full object-cover"
+                  className="h-full w-auto object-contain"
                 />
               </motion.div>
               <div className="flex flex-col justify-center">
-                <span className="font-serif font-semibold text-xl text-[#111111] tracking-wide leading-tight">
+                <span className="font-serif font-medium text-xl sm:text-2xl text-[#231A14] tracking-tight leading-tight">
                   {t('nav.brandTitle')}
                 </span>
-                <span className="text-[9px] tracking-[0.2em] text-[#999999] uppercase font-sans font-medium leading-none mt-0.5">
+                <span className="text-[10px] sm:text-[11px] tracking-[0.24em] text-[#8E7557] uppercase font-serif font-medium leading-tight mt-0.5">
                   {t('nav.brandSubtitle')}
                 </span>
               </div>

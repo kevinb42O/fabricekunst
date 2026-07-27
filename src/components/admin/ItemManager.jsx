@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Sparkles, Globe } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
 import { autoTranslateItemFields } from '../../utils/translationService';
 

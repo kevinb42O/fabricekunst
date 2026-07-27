@@ -2,10 +2,18 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Compass, Feather, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { DEFAULT_PROVENANCE_DATA } from '../utils/storage';
 
-export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) {
+export default function HerkomstPage({ provenanceData, onNavigateHome, onRequestConsultation }) {
   const { t } = useLanguage();
   const heroRef = useRef(null);
+
+  const data = provenanceData || DEFAULT_PROVENANCE_DATA;
+  const hero = data.hero || DEFAULT_PROVENANCE_DATA.hero;
+  const protocol = data.protocol || DEFAULT_PROVENANCE_DATA.protocol;
+  const story = data.story || DEFAULT_PROVENANCE_DATA.story;
+  const cta = data.cta || DEFAULT_PROVENANCE_DATA.cta;
+  const verificationSteps = protocol.steps || DEFAULT_PROVENANCE_DATA.protocol.steps;
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -46,7 +54,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
           {/* Parallax Image */}
           <motion.div style={{ y: bgY }} className="w-full h-full absolute inset-0">
             <img
-              src="/images/hero/hero-voltaire-exlibris.jpg"
+              src={hero.bgImage || "/images/hero/hero-voltaire-exlibris.jpg"}
               alt="Atelier Rembrandt Herkomst & Expertise"
               className="absolute top-0 right-0 w-full lg:w-[65%] h-full object-cover filter contrast-[1.02] brightness-[0.97] opacity-35 lg:opacity-60"
             />
@@ -91,7 +99,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               </button>
             </motion.div>
 
-            {/* Subtitle */}
+            {/* Subtitle / Badge */}
             <motion.div 
               variants={itemVariants}
               className="flex items-center space-x-3 text-xs font-serif font-medium tracking-[0.25em] text-[#8E7035] uppercase pt-2"
@@ -102,7 +110,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="h-[1.5px] bg-[#B8860B] inline-block" 
               />
-              <span>{t('provenance.heroBadge')}</span>
+              <span>{hero.badge || t('provenance.heroBadge')}</span>
             </motion.div>
 
             {/* Headline */}
@@ -110,7 +118,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               variants={itemVariants}
               className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
             >
-              {t('provenance.heroTitle')}
+              {hero.title || t('provenance.heroTitle')}
             </motion.h1>
 
             {/* Lead Paragraph */}
@@ -118,7 +126,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               variants={itemVariants}
               className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
             >
-              {t('provenance.heroSubtitle')}
+              {hero.subtitle || t('provenance.heroSubtitle')}
             </motion.p>
 
             {/* Provenance Seals */}
@@ -166,15 +174,15 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               
               <div className="text-center max-w-3xl mx-auto space-y-4">
                 <span className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#B8860B] block">
-                  Gecertificeerd Verificatieprotocol
+                  {protocol.badge || "Gecertificeerd Verificatieprotocol"}
                 </span>
                 
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
-                  Het Protocol van Authenticiteit &amp; Verificatie
+                  {protocol.title || "Het Protocol van Authenticiteit & Verificatie"}
                 </h2>
                 
                 <p className="text-[#333333] font-serif font-light text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-                  Voordat een antiquarisch meesterwerk in onze gecureerde collectie wordt opgenomen, doorloopt het ons vierstappen-onderzoeksprotocol.
+                  {protocol.subtitle || "Voordat een antiquarisch meesterwerk in onze gecureerde collectie wordt opgenomen, doorloopt het ons vierstappen-onderzoeksprotocol."}
                 </p>
               </div>
 
@@ -242,9 +250,9 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-                  {VERIFICATION_STEPS.map((v, i) => (
+                  {verificationSteps.map((v, i) => (
                     <motion.div
-                      key={v.step}
+                      key={v.step || i}
                       initial={{ opacity: 0, y: 25 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
@@ -255,7 +263,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                       <div className="space-y-5">
                         <div className="flex items-center justify-between pb-4 border-b border-[#D8CEB8]/70">
                           <span className="text-3xl font-serif font-bold text-[#B8860B] tracking-tight">
-                            {v.step}
+                            {v.step || `0${i + 1}`}
                           </span>
                           <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#666666]">
                             Fase 0{i + 1}
@@ -298,7 +306,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                     className="relative h-[420px] sm:h-[500px] w-full overflow-hidden rounded-xl border border-[#D8CEB8] shadow-2xl group bg-white"
                   >
                     <img
-                      src="/images/voltaire-marbled-endpaper-exlibris.jpg"
+                      src={story.image || "/images/voltaire-marbled-endpaper-exlibris.jpg"}
                       alt="Ex-Libris Vacheron-Poinsot en gemarmerd papier"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 filter contrast-[1.04]"
                     />
@@ -311,7 +319,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                         Authenticiteitsvoorbeeld
                       </span>
                       <p className="text-xs sm:text-sm font-serif italic text-[#222222]">
-                        Ex-Libris Vacheron-Poinsot op handgemaakt gemarmerd schutblad (1829).
+                        {story.imageCaption || "Ex-Libris Vacheron-Poinsot op handgemaakt gemarmerd schutblad (1829)."}
                       </p>
                     </div>
                   </motion.div>
@@ -321,39 +329,41 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                 <div className="lg:col-span-5 space-y-8">
                   <div className="space-y-3">
                     <span className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#B8860B] block">
-                      Ex-Libris &amp; Eigendomssporen
+                      {story.badge || "Ex-Libris & Eigendomssporen"}
                     </span>
                     
                     <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
-                      Aantoonbare Historie van Franse Topverzamelaars
+                      {story.title || "Aantoonbare Historie van Franse Topverzamelaars"}
                     </h2>
                   </div>
 
                   {/* Quote Block */}
-                  <div className="border-l-2 border-[#B8860B] pl-6 py-2 bg-white/90 backdrop-blur-md p-6 rounded-r-xl border-y border-r border-[#D8CEB8]/70 shadow-xs">
-                    <Feather className="w-5 h-5 text-[#B8860B] mb-2" />
-                    <p className="text-sm sm:text-base font-serif italic text-[#222222] leading-relaxed">
-                      "Een antiek boek ontleent zijn ultieme waarde aan de tastbare bewijzen van zijn reis door de eeuwen heen."
-                    </p>
-                    <span className="block text-[10px] font-mono uppercase font-bold text-[#8E7035] tracking-widest mt-3">
-                      — Atelier Rembrandt
-                    </span>
-                  </div>
+                  {story.quote && (
+                    <div className="border-l-2 border-[#B8860B] pl-6 py-2 bg-white/90 backdrop-blur-md p-6 rounded-r-xl border-y border-r border-[#D8CEB8]/70 shadow-xs">
+                      <Feather className="w-5 h-5 text-[#B8860B] mb-2" />
+                      <p className="text-sm sm:text-base font-serif italic text-[#222222] leading-relaxed">
+                        "{story.quote}"
+                      </p>
+                      <span className="block text-[10px] font-mono uppercase font-bold text-[#8E7035] tracking-widest mt-3">
+                        — {story.quoteAuthor || "Atelier Rembrandt"}
+                      </span>
+                    </div>
+                  )}
 
                   <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
-                    Zeldzame stukken uit onze privé-bibliotheek worden niet alleen geanalyseerd op fysieke staat, maar ook op provenance. Heraldieke stempels, ex-libris afbeeldingen en marginalia vormen de ononderbroken keten van eigenaarskap sinds de eerste druk.
+                    {story.narrative}
                   </p>
 
-                  <div className="pt-2 flex flex-col space-y-3 text-xs font-mono text-[#333333]">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 rounded-full bg-[#B8860B]" />
-                      <span>Adellijk Heraldiek Stempel (Vacheron-Poinsot)</span>
+                  {Array.isArray(story.bullets) && story.bullets.length > 0 && (
+                    <div className="pt-2 flex flex-col space-y-3 text-xs font-mono text-[#333333]">
+                      {story.bullets.map((bullet, idx) => (
+                        <div key={idx} className="flex items-center space-x-3">
+                          <div className="w-2 h-2 rounded-full bg-[#B8860B]" />
+                          <span>{bullet}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 rounded-full bg-[#B8860B]" />
-                      <span>Ongebroken Eigendomsreeks (1829 – Heden)</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
               </div>
@@ -370,13 +380,13 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               <div className="bg-[#1C1A17] text-[#FAF7F2] rounded-2xl p-8 sm:p-14 border border-[#B8860B]/50 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10">
                 <div className="space-y-4 text-center lg:text-left max-w-2xl">
                   <span className="text-xs font-mono text-[#D4AF37] uppercase font-bold tracking-[0.2em] block">
-                    Particuliere Expertise &amp; Consultatie
+                    {cta.badge || "Particuliere Expertise & Consultatie"}
                   </span>
                   <h3 className="text-2xl sm:text-4xl font-serif font-bold text-white leading-tight">
-                    Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?
+                    {cta.title || "Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?"}
                   </h3>
                   <p className="text-sm sm:text-base text-[#C5BBAA] font-serif font-light leading-relaxed">
-                    Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.
+                    {cta.subtitle || "Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken."}
                   </p>
                 </div>
 
@@ -386,7 +396,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                   onClick={onRequestConsultation}
                   className="px-8 py-4 bg-[#B8860B] text-[#111111] font-serif font-semibold text-sm sm:text-base rounded-md tracking-wider uppercase transition-colors duration-300 shrink-0 cursor-pointer shadow-xl flex items-center space-x-3"
                 >
-                  <span>Privé Consultatie Aanvragen</span>
+                  <span>{cta.buttonText || "Privé Consultatie Aanvragen"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </div>
@@ -400,3 +410,4 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
     </div>
   );
 }
+

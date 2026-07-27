@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Sparkles, Bookmark } from 'lucide-react';
+import { Award, Bookmark } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
@@ -60,7 +60,7 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
               transition={{ duration: 0.6, delay: 0.2 }}
               className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] mb-2 font-mono"
             >
-              <Sparkles className="w-4 h-4 text-[#B8860B]" />
+              <Award className="w-4 h-4 text-[#B8860B]" />
               <span>{t('scarron.badge')}</span>
             </motion.div>
             

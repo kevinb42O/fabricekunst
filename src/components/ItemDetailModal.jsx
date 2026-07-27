@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   X, ShieldCheck, Maximize2, ChevronLeft, ChevronRight, Award, Bookmark, 
-  ArrowRight, BookOpen, ScrollText, CheckCircle2, History, PhoneCall, Sparkles
+  ArrowRight, BookOpen, ScrollText, CheckCircle2, History, PhoneCall
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import { useLanguage } from '../context/LanguageContext';
@@ -147,7 +147,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               
               <div className="space-y-2 border-b border-[#D8CEB8]/70 pb-4">
                 <span className="text-xs font-mono font-bold text-[#B8860B] uppercase tracking-wider flex items-center space-x-1">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Award className="w-3.5 h-3.5" />
                   <span>Antiquariaat Topstuk</span>
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#111111] leading-tight">

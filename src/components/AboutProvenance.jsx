@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Award, Compass, ShieldCheck, Feather, Sparkles, ArrowRight } from 'lucide-react';
+import { Award, Compass, ShieldCheck, Feather, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const PROVENANCE_VISUALS = [
@@ -242,7 +242,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
                 </span>
                 <span className="h-px w-6 bg-[#2A2620]" />
                 <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4" />
+                  <Feather className="w-4 h-4" />
                   <span>Persoonlijke Begeleiding</span>
                 </div>
               </div>

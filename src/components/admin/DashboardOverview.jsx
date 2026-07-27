@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Mail, Sparkles, Plus, ArrowRight, Users, Star, Inbox } from 'lucide-react';
+import { BookOpen, Mail, Award, Plus, ArrowRight, Users, Star, Inbox } from 'lucide-react';
 
 export default function DashboardOverview({
   items = [],
@@ -34,7 +34,7 @@ export default function DashboardOverview({
           <div>
             {/* Subtle Gold Badge */}
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 text-[#C5A059] text-xs font-sans font-semibold mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Award className="w-3.5 h-3.5" />
               <span>Atelier Rembrandt Beheersysteem</span>
             </div>
             

@@ -58,7 +58,7 @@ export default function FluidMarbledPaper({ imageUrl, alt = "Marmeren schutblad"
 
       {/* Indicator Badge */}
       <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-charcoal/90 backdrop-blur-md border border-gold/30 text-[10px] font-mono text-gold-light uppercase tracking-wider opacity-90 transition-all group-hover:border-gold">
-        {isHovered ? '✨ Marmering Vloeit (Hovering)' : '✦ Handgemaakt Marmerpapier'}
+        {isHovered ? '✦ Marmering Vloeit (Hovering)' : '✦ Handgemaakt Marmerpapier'}
       </div>
     </div>
   );

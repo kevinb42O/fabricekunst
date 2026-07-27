@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Sparkles, BookOpen, ChevronRight, Eye, ShieldCheck } from 'lucide-react';
+import { Search, Filter, BookOpen, ChevronRight, Eye, ShieldCheck } from 'lucide-react';
 
 export default function Catalog({ items, onSelectItem, onRequestInquiry }) {
   const [searchQuery, setSearchQuery] = useState('');

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, ShieldCheck, Award, Maximize2, ChevronLeft, ChevronRight, 
-  Bookmark, History, BookOpen, Share2, CheckCircle2, PhoneCall, Sparkles,
+  Bookmark, History, BookOpen, Share2, CheckCircle2, PhoneCall,
   ArrowRight, FileText
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
@@ -350,7 +350,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             {/* Header Titles */}
             <div className="space-y-3 border-b border-[#D8CEB8]/70 pb-6">
               <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] font-mono">
-                <Sparkles className="w-3.5 h-3.5" />
+                <Award className="w-3.5 h-3.5" />
                 <span>Atelier Rembrandt Topstuk</span>
               </div>
 

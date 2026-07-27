@@ -9,8 +9,9 @@ import {
   ExternalLink, 
   Menu, 
   X, 
-  Sparkles,
-  ChevronRight
+  Image as ImageIcon,
+  ChevronRight,
+  ShieldCheck
 } from 'lucide-react';
 import ItemManager from './ItemManager';
 import InquiriesManager from './InquiriesManager';
@@ -18,19 +19,21 @@ import SecuritySettings from './SecuritySettings';
 import ToastNotification from './ToastNotification';
 import DashboardOverview from './DashboardOverview';
 import CustomersManager from './CustomersManager';
-
 import HeroSlidesManager from './HeroSlidesManager';
+import ProvenanceManager from './ProvenanceManager';
 
 export default function AdminDashboard({ 
   items = [], 
   catalog = [], 
   inquiries = [], 
   heroSlides = [],
+  provenanceData = null,
   currentUser = null,
   onSaveItem = () => {}, 
   onDeleteItem = () => {}, 
   onUpdateInquiries = () => {}, 
   onSaveHeroSlides = () => {},
+  onSaveProvenance = () => {},
   onLogout = () => {}, 
   onCloseAdmin, 
   onClose 
@@ -39,7 +42,7 @@ export default function AdminDashboard({
   const activeInquiries = inquiries || [];
   const handleClose = onCloseAdmin || onClose || (() => {});
 
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'hero' | 'inquiries' | 'customers' | 'settings'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'hero' | 'provenance' | 'inquiries' | 'customers' | 'settings'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -68,7 +71,12 @@ export default function AdminDashboard({
     {
       id: 'hero',
       label: 'Hero Visuals',
-      icon: Sparkles
+      icon: ImageIcon
+    },
+    {
+      id: 'provenance',
+      label: 'Herkomst Page',
+      icon: ShieldCheck
     },
     { 
       id: 'inquiries', 
@@ -113,12 +121,12 @@ export default function AdminDashboard({
         <div className="p-6 border-b border-[#2C2926]">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3.5">
-              {/* Circular Gold Badge Logo */}
-              <div className="w-11 h-11 rounded-full overflow-hidden bg-white border-2 border-[#E5C98B]/40 flex items-center justify-center shadow-md shrink-0">
+              {/* Standalone Gold Emblem Logo */}
+              <div className="h-10 w-auto flex items-center justify-center shrink-0">
                 <img 
                   src="/rblogo.png" 
                   alt="Atelier Rembrandt Logo" 
-                  className="w-full h-full object-cover"
+                  className="h-full w-auto object-contain drop-shadow-sm"
                 />
               </div>
 
@@ -206,11 +214,11 @@ export default function AdminDashboard({
           {/* User Profile Snippet */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-[#23201D] border border-[#332F2B]">
             <div className="flex items-center space-x-3 min-w-0">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-[#C5A059]/30 flex items-center justify-center shrink-0">
+              <div className="h-8 w-auto flex items-center justify-center shrink-0">
                 <img 
                   src="/rblogo.png" 
                   alt="Atelier Rembrandt Logo" 
-                  className="w-full h-full object-cover"
+                  className="h-full w-auto object-contain"
                 />
               </div>
               <div className="min-w-0">
@@ -278,6 +286,7 @@ export default function AdminDashboard({
                 {activeTab === 'dashboard' && 'Overzicht & Statistieken'}
                 {activeTab === 'items' && 'Collectie & Catalogus Beheer'}
                 {activeTab === 'hero' && 'Hero Visuals & Homepage Carrousel'}
+                {activeTab === 'provenance' && 'Herkomst & Provenance Pagina Beheer'}
                 {activeTab === 'inquiries' && 'Binnengekomen Aanvragen'}
                 {activeTab === 'customers' && 'Verzamelaars & Klanten Index'}
                 {activeTab === 'settings' && 'Beveiligingsinstellingen & PIN'}
@@ -324,6 +333,14 @@ export default function AdminDashboard({
               slides={heroSlides}
               onSaveSlides={onSaveHeroSlides}
               onShowToast={showToast}
+            />
+          )}
+
+          {activeTab === 'provenance' && (
+            <ProvenanceManager
+              provenanceData={provenanceData}
+              onSaveProvenance={onSaveProvenance}
+              showToast={showToast}
             />
           )}
 

@@ -7,6 +7,7 @@ export const translations = {
       collectie: 'Collectie',
       herkomst: 'Herkomst',
       consultation: 'Privé Consultatie',
+      contact: 'Contact',
       backHome: 'Terug naar Homepage',
       search: 'Zoeken'
     },
@@ -170,6 +171,7 @@ export const translations = {
       collectie: 'Collection',
       herkomst: 'Provenance',
       consultation: 'Private Consultation',
+      contact: 'Contact',
       backHome: 'Back to Homepage',
       search: 'Search'
     },
@@ -333,6 +335,7 @@ export const translations = {
       collectie: 'Collection',
       herkomst: 'Provenance',
       consultation: 'Consultation Privée',
+      contact: 'Contact',
       backHome: 'Retour à l’Accueil',
       search: 'Rechercher'
     },

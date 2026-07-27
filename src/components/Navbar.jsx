@@ -1,25 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar({ onNavigate, activeTab, onRequestConsultation }) {
   const [scrolled, setScrolled] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
+
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      
+      // Update background styling state
+      setScrolled(currentScrollY > 20);
+
+      // Always show navbar near top of page (< 140px)
+      if (currentScrollY < 140) {
+        setVisible(true);
+      } else {
+        const delta = currentScrollY - lastScrollY;
+        // Require a distinct scroll down (> 22px) to trigger gentle hide
+        if (delta > 22) {
+          setVisible(false);
+        } else if (delta < -12) {
+          // Scroll up (> 12px) to reveal
+          setVisible(true);
+        }
+      }
+
+      lastScrollY = currentScrollY;
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
     { id: 'topstukken', label: t('nav.topstukken') },
     { id: 'catalogus', label: t('nav.collectie') },
-    { id: 'herkomst', label: t('nav.herkomst') }
+    { id: 'herkomst', label: t('nav.herkomst') },
+    { id: 'contact', label: t('nav.contact') || 'Contact' }
   ];
 
   const languages = [
@@ -28,63 +52,70 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
     { code: 'fr', label: 'FR' }
   ];
 
-  const handleConsultationClick = () => {
-    if (onRequestConsultation) {
-      onRequestConsultation();
+  const handleNavClick = (linkId) => {
+    if (linkId === 'contact') {
+      if (onRequestConsultation) {
+        onRequestConsultation();
+      } else {
+        onNavigate('contact');
+      }
     } else {
-      onNavigate('contact');
+      onNavigate(linkId);
     }
   };
 
   return (
     <motion.nav 
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+      initial={{ y: "0%" }}
+      animate={{ 
+        y: (visible || mobileMenuOpen) ? "0%" : "-100%"
+      }}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-500 ${
         scrolled 
-          ? 'bg-white/95 backdrop-blur-md border-b border-[#D8CEB8] py-2 shadow-sm' 
-          : 'bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#D8CEB8]/60 py-2.5'
+          ? 'bg-white/95 backdrop-blur-md border-b border-[#D8CEB8]/80 shadow-xs' 
+          : 'bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#D8CEB8]/50'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-11 sm:h-12">
+        <div className="flex items-center justify-between min-h-[64px] sm:min-h-[72px] py-1.5">
           
-          {/* Brand Logo - Slim & Elegant with Motion */}
+          {/* Brand Logo - Standalone & Elegant */}
           <motion.button 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.015 }}
+            whileTap={{ scale: 0.985 }}
             onClick={() => onNavigate('home')} 
-            className="flex items-center space-x-2.5 group text-left focus:outline-none cursor-pointer"
+            className="flex items-center space-x-3.5 sm:space-x-4 group text-left focus:outline-none cursor-pointer py-1"
           >
             <motion.div 
-              whileHover={{ rotate: 5, borderColor: '#B8860B' }}
-              className="w-8 h-8 rounded-md overflow-hidden bg-white border border-[#111111]/20 flex items-center justify-center shadow-xs transition-colors duration-300 shrink-0"
+              whileHover={{ scale: 1.04 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="h-11 sm:h-13 md:h-14 w-auto shrink-0 flex items-center justify-center"
             >
               <img 
                 src="/rblogo.png" 
                 alt="Atelier Rembrandt Logo" 
-                className="w-full h-full object-cover"
+                className="h-full w-auto object-contain"
               />
             </motion.div>
-            <div className="flex flex-col justify-center">
-              <span className="font-serif font-semibold text-sm sm:text-base text-[#111111] tracking-wide block leading-tight">
+            <div className="flex flex-col justify-center select-none">
+              <span className="font-serif font-medium text-lg sm:text-xl md:text-2xl text-[#231A14] tracking-tight block leading-tight">
                 {t('nav.brandTitle')}
               </span>
-              <span className="text-[8px] tracking-[0.2em] text-[#888888] uppercase font-sans font-medium block leading-none">
+              <span className="text-[9px] sm:text-[10px] md:text-[11px] tracking-[0.24em] text-[#8E7557] uppercase font-serif font-medium block leading-tight mt-0.5">
                 {t('nav.brandSubtitle')}
               </span>
             </div>
           </motion.button>
 
-          {/* Desktop Links with Framer Motion Spring Underline */}
-          <div className="hidden md:flex items-center space-x-7">
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <button
                 key={link.id}
-                onClick={() => onNavigate(link.id)}
-                className={`text-xs font-semibold uppercase tracking-wider transition-colors relative py-1 focus:outline-none cursor-pointer ${
-                  activeTab === link.id ? 'text-[#B8860B]' : 'text-[#222222] hover:text-[#B8860B]'
+                onClick={() => handleNavClick(link.id)}
+                className={`text-xs font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
+                  activeTab === link.id ? 'text-[#8E7557]' : 'text-[#231A14]/80 hover:text-[#8E7557]'
                 }`}
               >
                 {link.label}
@@ -92,63 +123,52 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
                   <motion.span 
                     layoutId="activeTabUnderline"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#B8860B] rounded-full" 
+                    className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#8E7557] rounded-full" 
                   />
                 )}
               </button>
             ))}
           </div>
 
-          {/* Primary Action & Language Switcher */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Language Switcher */}
-            <div className="flex items-center space-x-1 bg-[#1C1A17]/5 p-0.5 rounded border border-[#D8CEB8]/70">
-              <Globe className="w-3.5 h-3.5 text-[#B8860B] ml-1.5 mr-0.5 shrink-0" />
-              {languages.map((lang) => (
+          {/* Ultra-Sleek Language Switcher */}
+          <div className="hidden md:flex items-center space-x-2.5">
+            {languages.map((lang, idx) => (
+              <React.Fragment key={lang.code}>
+                {idx > 0 && <span className="text-[#D8CEB8] text-xs font-serif select-none">•</span>}
                 <button
-                  key={lang.code}
                   onClick={() => setLanguage(lang.code)}
-                  className={`px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded-xs transition-colors cursor-pointer ${
+                  className={`text-[11px] font-mono tracking-widest transition-colors cursor-pointer ${
                     language === lang.code
-                      ? 'bg-[#1C1A17] text-[#B8860B] shadow-xs'
-                      : 'text-[#555555] hover:text-[#111111] hover:bg-[#D8CEB8]/40'
+                      ? 'text-[#231A14] font-bold border-b border-[#8E7557] pb-0.5'
+                      : 'text-[#8C827A] hover:text-[#231A14]'
                   }`}
                 >
                   {lang.label}
                 </button>
-              ))}
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.04, backgroundColor: '#B8860B', color: '#111111' }}
-              whileTap={{ scale: 0.96 }}
-              onClick={handleConsultationClick}
-              className="px-4 py-2 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-sans font-semibold text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 border border-[#B8860B]/40 hover:border-[#B8860B] shadow-xs cursor-pointer"
-            >
-              {t('nav.consultation')}
-            </motion.button>
+              </React.Fragment>
+            ))}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
-            <div className="flex items-center space-x-0.5 bg-[#1C1A17]/5 p-0.5 rounded border border-[#D8CEB8]/70">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => setLanguage(lang.code)}
-                  className={`px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-wider rounded-xs transition-colors cursor-pointer ${
-                    language === lang.code
-                      ? 'bg-[#1C1A17] text-[#B8860B]'
-                      : 'text-[#666666]'
-                  }`}
-                >
-                  {lang.label}
-                </button>
+          <div className="md:hidden flex items-center space-x-3">
+            <div className="flex items-center space-x-2 text-[10px] font-mono text-[#8C827A]">
+              {languages.map((lang, idx) => (
+                <React.Fragment key={lang.code}>
+                  {idx > 0 && <span className="text-[#D8CEB8] select-none">•</span>}
+                  <button
+                    onClick={() => setLanguage(lang.code)}
+                    className={`transition-colors cursor-pointer ${
+                      language === lang.code ? 'text-[#231A14] font-bold border-b border-[#8E7557]' : 'text-[#8C827A]'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                </React.Fragment>
               ))}
             </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-sm text-[#111111] hover:text-[#B8860B] focus:outline-none"
+              className="p-1.5 rounded-sm text-[#231A14] hover:text-[#8E7557] focus:outline-none"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -156,7 +176,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
         </div>
       </div>
 
-      {/* Mobile Drawer with AnimatePresence */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
@@ -164,32 +184,22 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden bg-white border-b border-[#D8CEB8] px-4 pt-3 pb-5 space-y-2 shadow-md overflow-hidden"
+            className="md:hidden bg-[#FAF7F2] border-b border-[#D8CEB8] px-5 pt-3 pb-6 space-y-3 shadow-md overflow-hidden"
           >
             {navLinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => {
-                  onNavigate(link.id);
+                  handleNavClick(link.id);
                   setMobileMenuOpen(false);
                 }}
-                className="block w-full text-left px-3 py-1.5 rounded-md text-sm font-semibold text-[#111111] hover:bg-[#FAF7F2] hover:text-[#B8860B] transition-colors"
+                className={`block w-full text-left px-3 py-2 text-sm font-serif tracking-wider uppercase transition-colors ${
+                  activeTab === link.id ? 'text-[#8E7557] font-semibold' : 'text-[#231A14] hover:text-[#8E7557]'
+                }`}
               >
                 {link.label}
               </button>
             ))}
-            <div className="pt-2 border-t border-[#D8CEB8] flex flex-col space-y-2">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  handleConsultationClick();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-center py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs tracking-[0.2em] uppercase border border-[#B8860B]/40 transition-all shadow-xs"
-              >
-                {t('nav.consultation')}
-              </motion.button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

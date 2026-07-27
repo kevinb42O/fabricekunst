@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image as ImageIcon, Upload, Plus, Trash2, Save, MoveUp, MoveDown, Sparkles, Check, RefreshCw } from 'lucide-react';
+import { Image as ImageIcon, Upload, Plus, Trash2, Save, MoveUp, MoveDown, Layers, Check, RefreshCw } from 'lucide-react';
 import { uploadCatalogImage, DEFAULT_HERO_SLIDES } from '../../utils/storage';
 
 export default function HeroSlidesManager({ slides = [], onSaveSlides = () => {}, onShowToast = () => {} }) {
@@ -95,7 +95,7 @@ export default function HeroSlidesManager({ slides = [], onSaveSlides = () => {}
       <div className="p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#C5A059]/15 text-[#8E7035] text-xs font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Layers className="w-3.5 h-3.5" />
             <span>Homepage Visuals</span>
           </div>
           <h2 className="text-xl font-serif font-bold text-[#1C1A18]">

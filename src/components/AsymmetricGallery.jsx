@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, BookOpen, Award, ChevronDown, ChevronUp, ZoomIn, ShieldCheck, SlidersHorizontal, ArrowUpDown, RotateCcw, Sparkles } from 'lucide-react';
+import { Search, BookOpen, Award, ChevronDown, ChevronUp, ZoomIn, ShieldCheck, SlidersHorizontal, ArrowUpDown, RotateCcw } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import ItemDetailModal from './ItemDetailModal';
 import { useLanguage } from '../context/LanguageContext';

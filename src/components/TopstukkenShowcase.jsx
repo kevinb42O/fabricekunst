@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, BookOpen, Sparkles, CheckCircle2, Bookmark } from 'lucide-react';
+import { Eye, BookOpen, Award, CheckCircle2, Bookmark } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function TopstukkenShowcase({ onSelectItem }) {
@@ -28,7 +28,7 @@ export default function TopstukkenShowcase({ onSelectItem }) {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] mb-3 px-4 py-1.5 rounded-full bg-[#FAF7F2] border border-[#B8860B]/30 shadow-sm font-mono">
-            <Sparkles className="w-4 h-4 text-[#B8860B]" />
+            <Award className="w-4 h-4 text-[#B8860B]" />
             <span>{t('topstukken.badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight mb-4">
@@ -132,7 +132,7 @@ export default function TopstukkenShowcase({ onSelectItem }) {
           {/* Left Column: Text & Specifications */}
           <div className="lg:col-span-5 space-y-6 order-2 lg:order-1">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#B8860B]/10 border border-[#B8860B]/30 text-[#8E7035] text-xs font-bold tracking-wider uppercase font-mono">
-              <Sparkles className="w-3.5 h-3.5 text-[#B8860B]" />
+              <Award className="w-3.5 h-3.5 text-[#B8860B]" />
               <span>18e-Eeuwse Editie (Amsterdam, 1713)</span>
             </div>
 

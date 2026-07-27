@@ -20,13 +20,17 @@ import {
   getInquiries, 
   fetchInquiriesAsync,
   getHeroSlides,
-  saveHeroSlidesAsync
+  saveHeroSlidesAsync,
+  getProvenanceData,
+  fetchProvenanceDataAsync,
+  saveProvenanceDataAsync
 } from './utils/storage';
 
 export default function App() {
   const [catalog, setCatalog] = useState(getCatalog());
   const [inquiries, setInquiries] = useState(getInquiries());
   const [heroSlides, setHeroSlides] = useState(getHeroSlides());
+  const [provenanceData, setProvenanceData] = useState(getProvenanceData());
   
   const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'catalogus' | 'herkomst' | 'item-detail'
   const [selectedDetailItemId, setSelectedDetailItemId] = useState(null);
@@ -39,6 +43,11 @@ export default function App() {
   const handleSaveHeroSlides = async (updatedSlides) => {
     setHeroSlides(updatedSlides);
     await saveHeroSlidesAsync(updatedSlides);
+  };
+
+  const handleSaveProvenance = async (updatedData) => {
+    setProvenanceData(updatedData);
+    await saveProvenanceDataAsync(updatedData);
   };
 
   const { scrollYProgress } = useScroll();
@@ -56,6 +65,10 @@ export default function App() {
 
     fetchInquiriesAsync().then(inqs => {
       if (inqs) setInquiries(inqs);
+    });
+
+    fetchProvenanceDataAsync().then(pData => {
+      if (pData) setProvenanceData(pData);
     });
 
     const checkRoutes = () => {
@@ -246,11 +259,13 @@ export default function App() {
         catalog={catalog}
         inquiries={inquiries}
         heroSlides={heroSlides}
+        provenanceData={provenanceData}
         currentUser={adminUser}
         onSaveItem={handleSaveItem}
         onDeleteItem={handleDeleteItem}
         onUpdateInquiries={handleUpdateInquiries}
         onSaveHeroSlides={handleSaveHeroSlides}
+        onSaveProvenance={handleSaveProvenance}
         onLogout={handleLogoutAdmin}
         onCloseAdmin={handleCloseAdmin}
         onClose={handleCloseAdmin}
@@ -318,6 +333,7 @@ export default function App() {
         ) : currentPage === 'herkomst' ? (
           /* Dedicated Luxury Herkomst & Provenance Page (/herkomst) */
           <HerkomstPage
+            provenanceData={provenanceData}
             onNavigateHome={() => handleNavigate('home')}
             onRequestConsultation={() => handleOpenConsultation(null)}
           />

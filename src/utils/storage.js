@@ -646,3 +646,143 @@ export const resetToInitialData = () => {
     return false;
   }
 };
+
+// --- HERKOMST & PROVENANCE PAGE CMS MANAGEMENT ---
+const PROVENANCE_PAGE_KEY = 'atelier_rembrandt_provenance_page';
+
+export const DEFAULT_PROVENANCE_DATA = {
+  hero: {
+    badge: 'Herkomst & Expertise',
+    title: 'Gecertificeerde Provenance & Wetenschappelijk Onderzoek',
+    subtitle: 'Elk zeldzaam meesterwerk in onze collectie wordt vergezeld van een aantoonbare herkomstgeschiedenis en een grondig bibliografisch verificatierapport.',
+    bgImage: '/images/hero/hero-voltaire-exlibris.jpg'
+  },
+  protocol: {
+    badge: 'Gecertificeerd Verificatieprotocol',
+    title: 'Het Protocol van Authenticiteit & Verificatie',
+    subtitle: 'Voordat een antiquarisch meesterwerk in onze gecureerde collectie wordt opgenomen, doorloopt het ons vierstappen-onderzoeksprotocol.',
+    steps: [
+      {
+        step: '01',
+        title: 'Fysiek & Materieel Onderzoek',
+        description: 'Nauwkeurige inspectie van papierstructuur, watermerken, binding, marmerpapier en 18e-eeuws rood roggevel shagreen leder.'
+      },
+      {
+        step: '02',
+        title: 'Archief & Provenance Check',
+        description: 'Verificatie van ex-libris stempels, eigenaarsinscripties en historische veilingcatalogi uit adellijke en bibliofiele privécollecties.'
+      },
+      {
+        step: '03',
+        title: 'Bibliografische Match',
+        description: 'Kruisverwijzing met standaard naslagwerken (Brunet, Cohen-de Ricci, Graesse) voor oplage, gravure-aantallen en zeldzaamheid.'
+      },
+      {
+        step: '04',
+        title: 'Certificaat van Echtheid',
+        description: 'Elk werk wordt geleverd met een officieel Atelier Rembrandt echtheidscertificaat met gedetailleerde conditiestatus en herkomst.'
+      }
+    ]
+  },
+  story: {
+    badge: 'Ex-Libris & Eigendomssporen',
+    title: 'Aantoonbare Historie van Franse Topverzamelaars',
+    quote: 'Een antiek boek ontleent zijn ultieme waarde aan de tastbare bewijzen van zijn reis door de eeuwen heen.',
+    quoteAuthor: 'Atelier Rembrandt',
+    narrative: 'Zeldzame stukken uit onze privé-bibliotheek worden niet alleen geanalyseerd op fysieke staat, maar ook op provenance. Heraldieke stempels, ex-libris afbeeldingen en marginalia vormen de ononderbroken keten van eigenaarskap sinds de eerste druk.',
+    image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
+    imageCaption: 'Ex-Libris Vacheron-Poinsot op handgemaakt gemarmerd schutblad (1829).',
+    bullets: [
+      'Adellijk Heraldiek Stempel (Vacheron-Poinsot)',
+      'Ongebroken Eigendomsreeks (1829 – Heden)'
+    ]
+  },
+  cta: {
+    badge: 'Particuliere Expertise & Consultatie',
+    title: 'Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?',
+    subtitle: 'Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.',
+    buttonText: 'Privé Consultatie Aanvragen'
+  }
+};
+
+export const getProvenanceData = () => {
+  try {
+    const saved = localStorage.getItem(PROVENANCE_PAGE_KEY);
+    if (!saved) return DEFAULT_PROVENANCE_DATA;
+    const parsed = JSON.parse(saved);
+    return {
+      hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
+      protocol: { 
+        ...DEFAULT_PROVENANCE_DATA.protocol, 
+        ...(parsed.protocol || {}),
+        steps: Array.isArray(parsed.protocol?.steps) && parsed.protocol.steps.length === 4 
+          ? parsed.protocol.steps 
+          : DEFAULT_PROVENANCE_DATA.protocol.steps
+      },
+      story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
+      cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) }
+    };
+  } catch (err) {
+    console.error("Fout bij ophalen herkomst pagina data:", err);
+    return DEFAULT_PROVENANCE_DATA;
+  }
+};
+
+export const fetchProvenanceDataAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .eq('key', 'herkomst_page_data')
+        .maybeSingle();
+
+      if (!error && data && data.value) {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        const merged = {
+          hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
+          protocol: { 
+            ...DEFAULT_PROVENANCE_DATA.protocol, 
+            ...(parsed.protocol || {}),
+            steps: Array.isArray(parsed.protocol?.steps) && parsed.protocol.steps.length === 4 
+              ? parsed.protocol.steps 
+              : DEFAULT_PROVENANCE_DATA.protocol.steps
+          },
+          story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
+          cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) }
+        };
+        localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
+    } catch (err) {
+      console.error("Supabase herkomst page fetch error:", err);
+    }
+  }
+  return getProvenanceData();
+};
+
+export const saveProvenanceDataAsync = async (data) => {
+  try {
+    localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(data));
+  } catch (err) {
+    console.error("Fout bij lokaal opslaan herkomst page data:", err);
+  }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const payload = JSON.stringify(data);
+      const { error } = await supabase
+        .from('admin_settings')
+        .upsert({
+          key: 'herkomst_page_data',
+          value: payload,
+          updated_at: new Date().toISOString()
+        });
+      if (error) console.error("Supabase herkomst page save error:", error);
+    } catch (err) {
+      console.error("Supabase herkomst page save exception:", err);
+    }
+  }
+  return data;
+};
+

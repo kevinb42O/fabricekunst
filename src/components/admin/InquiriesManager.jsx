@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, Calendar, MessageSquare, ExternalLink, Search, Check, Trash2, StickyNote, Send, Sparkles, X, Copy } from 'lucide-react';
+import { Mail, Phone, Calendar, MessageSquare, ExternalLink, Search, Check, Trash2, StickyNote, Send, X, Copy } from 'lucide-react';
 import { updateInquiryStatusAsync, updateInquiryNotesAsync, deleteInquiryAsync } from '../../utils/storage';
 
 export default function InquiriesManager({ inquiries, onStatusChange, onShowToast }) {
@@ -268,7 +268,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
             <div className="flex items-center justify-between border-b border-[#D8CEB8] pb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <Mail className="w-4 h-4 text-[#D4AF37]" />
                 </div>
                 <div>
                   <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase">Mail Assistent</span>
