@@ -61,21 +61,20 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     setFormLang('nl');
   };
 
-  const handleAutoTranslate = async () => {
-    if (!editingItem || !editingItem.title) {
-      if (onShowToast) onShowToast('Voer eerst een Nederlandse titel in.');
-      return;
-    }
-    setIsTranslating(true);
-    try {
-      const translated = await autoTranslateItemFields(editingItem);
-      setEditingItem(translated);
-      if (onShowToast) onShowToast('✨ Velden automatisch vertaald naar Engels & Frans!');
-    } catch (err) {
-      console.error('Fout bij automatisch vertalen:', err);
-      if (onShowToast) onShowToast('Vertaalservice tijdelijk niet beschikbaar.');
-    } finally {
-      setIsTranslating(false);
+  const getFormField = (field) => {
+    if (!editingItem) return '';
+    if (formLang === 'nl') return editingItem[field] || '';
+    const key = `${field}_${formLang}`;
+    return editingItem[key] || '';
+  };
+
+  const updateFormField = (field, value) => {
+    if (!editingItem) return;
+    if (formLang === 'nl') {
+      setEditingItem({ ...editingItem, [field]: value });
+    } else {
+      const key = `${field}_${formLang}`;
+      setEditingItem({ ...editingItem, [key]: value });
     }
   };
 
@@ -681,58 +680,43 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
             {/* Modal Body Form */}
             <form onSubmit={handleSaveForm} className="p-6 sm:p-8 overflow-y-auto space-y-8 flex-grow text-sm font-sans">
               
-              {/* AUTO-TRANSLATE & LANGUAGE BAR */}
-              <div className="p-4 rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border border-[#B8860B]/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+              {/* PURE MANUAL MULTI-LANGUAGE TAB BAR */}
+              <div className="p-4 rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border border-[#B8860B]/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
                 <div className="flex items-center space-x-3">
                   <Globe className="w-5 h-5 text-[#B8860B]" />
                   <div>
-                    <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                      Drietalig Beheer (NL / EN / FR)
+                    <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                      <span>Drietalig Handmatig Beheer</span>
+                      <span className="px-2 py-0.5 rounded bg-[#B8860B] text-black text-[10px]">
+                        Actieve taal: {formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}
+                      </span>
                     </h4>
                     <p className="text-[11px] text-stone-300 font-serif">
-                      Vertaal alle velden met 1 klik of bewerk per taal.
+                      Klik op een taaltabblad om de velden handmatig per taal in te voeren.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
-                  {/* Language Tab Switcher */}
-                  <div className="flex items-center space-x-1 bg-black/40 p-1 rounded-xl border border-stone-700 font-mono text-xs">
-                    {['nl', 'en', 'fr'].map((lang) => (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => setFormLang(lang)}
-                        className={`px-3 py-1 rounded-lg font-bold uppercase transition-all cursor-pointer ${
-                          formLang === lang
-                            ? 'bg-[#B8860B] text-black shadow-sm'
-                            : 'text-stone-300 hover:text-white'
-                        }`}
-                      >
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Auto-Translate Button */}
-                  <button
-                    type="button"
-                    disabled={isTranslating}
-                    onClick={handleAutoTranslate}
-                    className="px-4 py-2 rounded-xl bg-[#B8860B] hover:bg-[#8E7035] text-black font-mono text-xs font-bold transition-all shadow-md flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    {isTranslating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Bezig...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 text-black" />
-                        <span>✨ Auto-Vertaal (EN &amp; FR)</span>
-                      </>
-                    )}
-                  </button>
+                {/* Language Tab Switcher */}
+                <div className="flex items-center space-x-1 bg-black/60 p-1.5 rounded-xl border border-stone-700 font-mono text-xs w-full sm:w-auto justify-center">
+                  {[
+                    { id: 'nl', label: '🇳🇱 Nederlands' },
+                    { id: 'en', label: '🇬🇧 English' },
+                    { id: 'fr', label: '🇫🇷 Français' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setFormLang(tab.id)}
+                      className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                        formLang === tab.id
+                          ? 'bg-[#B8860B] text-black shadow-md scale-105'
+                          : 'text-stone-300 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -831,24 +815,33 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 <div>
                   <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
                     <span>{editingItem.itemType === 'painting' ? "Titel van het Schilderij / Kunstwerk *" : "Titel van het Boek *"}</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold">[{formLang.toUpperCase()}]</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
                   </label>
                   <input
                     type="text"
                     required
-                    value={
-                      formLang === 'nl' ? (editingItem.title || '') :
-                      formLang === 'en' ? (editingItem.title_en || '') :
-                      (editingItem.title_fr || '')
-                    }
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (formLang === 'nl') setEditingItem({ ...editingItem, title: val });
-                      else if (formLang === 'en') setEditingItem({ ...editingItem, title_en: val });
-                      else setEditingItem({ ...editingItem, title_fr: val });
-                    }}
+                    value={getFormField('title')}
+                    onChange={(e) => updateFormField('title', e.target.value)}
                     placeholder={editingItem.itemType === 'painting' ? "Bijv. Stilleven met Boeken en Ganzenveer" : "Bijv. Voltaire — Œuvres Complètes"}
                     className="w-full px-4 py-3.5 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-serif font-bold text-base focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Ondertitel / Korte Subtitel</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={getFormField('subtitle')}
+                    onChange={(e) => updateFormField('subtitle', e.target.value)}
+                    placeholder="Bijv. Parijs 1829 • 52 Delen Compleet"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111]"
                   />
                 </div>
 
@@ -937,35 +930,42 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 </div>
               </div>
 
-              {/* SECTION 2: TECHNIEK, LIJST & PROVENANCE (RUIME INPUTVELDEN) */}
+              {/* SECTION 2: TECHNIEK, LIJST & PROVENANCE */}
               <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#D8CEB8] space-y-6 shadow-xs">
-                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center space-x-2.5">
-                  <Bookmark className="w-5 h-5 text-[#B8860B]" />
-                  <span>2. {editingItem.itemType === 'painting' ? "Techniek, Lijst & Restauratie" : "Bandstijl, Conditie & Provenance"}</span>
+                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center justify-between">
+                  <div className="flex items-center space-x-2.5">
+                    <Bookmark className="w-5 h-5 text-[#B8860B]" />
+                    <span>2. {editingItem.itemType === 'painting' ? "Techniek, Lijst & Restauratie" : "Bandstijl, Conditie & Provenance"}</span>
+                  </div>
+                  <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                    INVOERTAAL: {formLang.toUpperCase()}
+                  </span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      {editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)"}
+                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>{editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)"}</span>
+                      <span className="text-[#B8860B] text-[10px]">[{formLang.toUpperCase()}]</span>
                     </label>
                     <textarea
                       rows={3}
-                      value={editingItem.binding || ''}
-                      onChange={(e) => setEditingItem({ ...editingItem, binding: e.target.value })}
-                      placeholder={editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst op eiken kern..." : "Volledige kalfslederen band met goudstempels op de rug..."}
+                      value={getFormField('binding')}
+                      onChange={(e) => updateFormField('binding', e.target.value)}
+                      placeholder={editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst..." : "Volledige kalfslederen band met goudstempels op de rug..."}
                       className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      Staat &amp; Conditie Summary
+                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>Staat &amp; Conditie Summary</span>
+                      <span className="text-[#B8860B] text-[10px]">[{formLang.toUpperCase()}]</span>
                     </label>
                     <textarea
                       rows={3}
-                      value={editingItem.condition || ''}
-                      onChange={(e) => setEditingItem({ ...editingItem, condition: e.target.value })}
+                      value={getFormField('condition')}
+                      onChange={(e) => updateFormField('condition', e.target.value)}
                       placeholder={editingItem.itemType === 'painting' ? "Bijv. Excellente museumstaat, authentiek craquelé..." : "Excellente antiquarische staat..."}
                       className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed"
                     />
@@ -987,13 +987,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      {editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties"}
+                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>{editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties"}</span>
+                      <span className="text-[#B8860B] text-[10px]">[{formLang.toUpperCase()}]</span>
                     </label>
                     <input
                       type="text"
-                      value={editingItem.collationSpecs || ''}
-                      onChange={(e) => setEditingItem({ ...editingItem, collationSpecs: e.target.value })}
+                      value={getFormField('collationSpecs')}
+                      onChange={(e) => updateFormField('collationSpecs', e.target.value)}
                       placeholder={editingItem.itemType === 'painting' ? "Bijv. Olieverf op paneel. Gesigneerd linksonder 1645." : "52 delen compleet. In-8°. Ca. 28.000 pp."}
                       className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-mono focus:outline-none focus:border-[#111111]"
                     />
@@ -1003,21 +1004,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 <div>
                   <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
                     <span>Provenance (Korte Herkomst Omschrijving)</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold">[{formLang.toUpperCase()}]</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
                   </label>
                   <input
                     type="text"
-                    value={
-                      formLang === 'nl' ? (editingItem.provenance || '') :
-                      formLang === 'en' ? (editingItem.provenance_en || '') :
-                      (editingItem.provenance_fr || '')
-                    }
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (formLang === 'nl') setEditingItem({ ...editingItem, provenance: val });
-                      else if (formLang === 'en') setEditingItem({ ...editingItem, provenance_en: val });
-                      else setEditingItem({ ...editingItem, provenance_fr: val });
-                    }}
+                    value={getFormField('provenance')}
+                    onChange={(e) => updateFormField('provenance', e.target.value)}
                     placeholder={editingItem.itemType === 'painting' ? "Bijv. Collectie Jonkheer van der Heyden • Christie's 1988..." : "Ex-Libris Vacheron-Poinsot..."}
                     className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111]"
                   />
@@ -1026,34 +1020,30 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 <div>
                   <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
                     <span>{editingItem.itemType === 'painting' ? "Restauratie & Conditierapport (Doek/Paneel Dossier)" : "Uitgebreid Conditierapport (Museum Dossier)"}</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold">[{formLang.toUpperCase()}]</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
                   </label>
                   <textarea
                     rows={4}
-                    value={
-                      formLang === 'nl' ? (editingItem.conditionReport || '') :
-                      formLang === 'en' ? (editingItem.condition_report_en || editingItem.conditionReport_en || '') :
-                      (editingItem.condition_report_fr || editingItem.conditionReport_fr || '')
-                    }
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (formLang === 'nl') setEditingItem({ ...editingItem, conditionReport: val });
-                      else if (formLang === 'en') setEditingItem({ ...editingItem, condition_report_en: val, conditionReport_en: val });
-                      else setEditingItem({ ...editingItem, condition_report_fr: val, conditionReport_fr: val });
-                    }}
+                    value={getFormField('conditionReport')}
+                    onChange={(e) => updateFormField('conditionReport', e.target.value)}
                     placeholder={editingItem.itemType === 'painting' ? "UV-inspectie toont authentiek craquelé-netwerk. Massieve eiken drager..." : "Banden in rood Chagrin-halfleer in uitzonderlijk stevige staat..."}
                     className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                    Uitgebreid Provenance Verhaal &amp; Veilinghistorie
+                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Uitgebreid Provenance Verhaal &amp; Veilinghistorie</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
                   </label>
                   <textarea
                     rows={4}
-                    value={editingItem.provenanceDetails || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, provenanceDetails: e.target.value })}
+                    value={getFormField('provenanceDetails')}
+                    onChange={(e) => updateFormField('provenanceDetails', e.target.value)}
                     placeholder={editingItem.itemType === 'painting' ? "Herkomst uit de adellijke verzameling..." : "Afkomstig uit het kasteelarchief van de adellijke familie..."}
                     className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
                   />
@@ -1062,42 +1052,43 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
               {/* SECTION 3: VERHAAL, HISTORISCHE CONTEXT & FOTO'S */}
               <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#D8CEB8] space-y-6 shadow-xs">
-                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center space-x-2.5">
-                  <History className="w-5 h-5 text-[#B8860B]" />
-                  <span>3. Verhaal, Historische Context &amp; Fotogalerij</span>
+                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center justify-between">
+                  <div className="flex items-center space-x-2.5">
+                    <History className="w-5 h-5 text-[#B8860B]" />
+                    <span>3. Verhaal, Historische Context &amp; Fotogalerij</span>
+                  </div>
+                  <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                    INVOERTAAL: {formLang.toUpperCase()}
+                  </span>
                 </h4>
 
                 <div>
                   <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
                     <span>Algemene Beschrijving &amp; Overzicht</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold">[{formLang.toUpperCase()}]</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
                   </label>
                   <textarea
                     rows={4}
-                    value={
-                      formLang === 'nl' ? (editingItem.description || '') :
-                      formLang === 'en' ? (editingItem.description_en || '') :
-                      (editingItem.description_fr || '')
-                    }
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (formLang === 'nl') setEditingItem({ ...editingItem, description: val });
-                      else if (formLang === 'en') setEditingItem({ ...editingItem, description_en: val });
-                      else setEditingItem({ ...editingItem, description_fr: val });
-                    }}
+                    value={getFormField('description')}
+                    onChange={(e) => updateFormField('description', e.target.value)}
                     placeholder="Schrijf hier het overzicht achter dit meesterwerk..."
                     className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                    Diepgaande Historische &amp; Kunsthistorische Context
+                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Diepgaande Historische &amp; Kunsthistorische Context</span>
+                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                      TAAL: {formLang.toUpperCase()}
+                    </span>
                   </label>
                   <textarea
                     rows={5}
-                    value={editingItem.historicalContext || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, historicalContext: e.target.value })}
+                    value={getFormField('historicalContext')}
+                    onChange={(e) => updateFormField('historicalContext', e.target.value)}
                     placeholder="Schrijf hier de uitgebreide historische of kunsthistorische context..."
                     className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
                   />

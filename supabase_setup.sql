@@ -245,10 +245,19 @@ ALTER TABLE public.items ADD COLUMN IF NOT EXISTS subtitle_en TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS subtitle_fr TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS description_en TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS description_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS binding_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS binding_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS condition_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS condition_fr TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS provenance_en TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS provenance_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS provenance_details_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS provenance_details_fr TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS condition_report_en TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS condition_report_fr TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS historical_context_en TEXT;
 ALTER TABLE public.items ADD COLUMN IF NOT EXISTS historical_context_fr TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS collation_specs_en TEXT;
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS collation_specs_fr TEXT;
+
 

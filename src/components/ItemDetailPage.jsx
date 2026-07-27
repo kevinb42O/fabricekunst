@@ -199,7 +199,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 </div>
                 <div className="border-t border-[#D8CEB8]/70 pt-4 space-y-4">
                   <p className="text-lg text-[#222222] font-serif leading-relaxed">
-                    {item.description}
+                    {getItemField(item, 'description', language)}
                   </p>
                 </div>
               </section>
@@ -213,7 +213,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   </h3>
                 </div>
                 <div className="border-t border-[#D8CEB8]/70 pt-4 space-y-4 text-base text-[#333333] font-serif leading-relaxed">
-                  {(item.historicalContext || item.description || "Dit historische meesterwerk vertegenwoordigt een zeldzaam tijdsdocument uit de Europese kunstgeschiedenis.")
+                  {(getItemField(item, 'historicalContext', language) || getItemField(item, 'description', language) || "Dit historische meesterwerk vertegenwoordigt een zeldzaam tijdsdocument uit de Europese kunstgeschiedenis.")
                     .split('\n\n')
                     .map((paragraph, pIdx) => (
                       <p key={pIdx}>
@@ -258,11 +258,11 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
                         {item.itemType === 'painting' ? "Lijst & Inlijsting" : "Boekband & Materialen"}
                       </span>
-                      <p className="text-sm font-serif font-bold text-[#111111]">{item.binding}</p>
+                      <p className="text-sm font-serif font-bold text-[#111111]">{getItemField(item, 'binding', language)}</p>
                     </div>
                     <div className="border-l-2 border-[#B8860B] pl-4 space-y-1">
                       <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">Staat van Conservering</span>
-                      <p className="text-sm font-serif font-bold text-[#111111]">{item.condition}</p>
+                      <p className="text-sm font-serif font-bold text-[#111111]">{getItemField(item, 'condition', language)}</p>
                     </div>
                   </div>
 
@@ -271,7 +271,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       {item.itemType === 'painting' ? "Doek-, Paneel- & Restauratie Rapport" : "Gedetailleerd Papier- & Bindwerk Rapport"}
                     </h4>
                     <div className="text-sm text-[#333333] font-serif leading-relaxed space-y-3">
-                      {(getItemField(item, 'condition_report', language) || item.conditionReport || "Het exemplaar bevindt zich in uitstekende staat. Het werk is geanalyseerd en geconserveerd volgens de hoogste museumstroomstandaarden.")
+                      {(getItemField(item, 'conditionReport', language) || getItemField(item, 'condition_report', language) || "Het exemplaar bevindt zich in uitstekende staat. Het werk is geanalyseerd en geconserveerd volgens de hoogste museumstroomstandaarden.")
                         .split('\n\n')
                         .map((paragraph, pIdx) => (
                           <p key={pIdx}>{paragraph}</p>
@@ -283,8 +283,8 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                     <FileText className="w-4 h-4 text-[#B8860B]" />
                     <span>
                       {item.itemType === 'painting' 
-                        ? `Specificaties & Medium: ${item.collationSpecs || `${item.dimensions || '48 x 38 cm'}. Inclusief authentieke lijst.`}`
-                        : `Collatie & Formaat: ${item.collationSpecs || `${item.dimensions || 'In-8°'}. Compleet met alle katernen.`}`}
+                        ? `Specificaties & Medium: ${getItemField(item, 'collationSpecs', language) || `${item.dimensions || '48 x 38 cm'}. Inclusief authentieke lijst.`}`
+                        : `Collatie & Formaat: ${getItemField(item, 'collationSpecs', language) || `${item.dimensions || 'In-8°'}. Compleet met alle katernen.`}`}
                     </span>
                   </div>
 
@@ -302,7 +302,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
                 <div className="border-t border-[#D8CEB8]/70 pt-4 space-y-6">
                   
-                  {item.provenance && (
+                  {getItemField(item, 'provenance', language) && (
                     <div className="border-l-2 border-[#B8860B] pl-4 py-1 space-y-1">
                       <span className="text-[11px] font-mono font-bold text-[#B8860B] uppercase block">Geverifieerde Herkomst</span>
                       <p className="text-base font-serif italic text-[#111111] leading-relaxed">
@@ -316,7 +316,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       Eigendomsarchief &amp; Ex-Libris Geverifieerd
                     </h4>
                     <div className="text-sm text-[#333333] font-serif leading-relaxed space-y-3">
-                      {(item.provenanceDetails || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Atelier Rembrandt grondig geanalyseerd op herkomstsporen, eigendomsstempels en echtheid van de binding.")
+                      {(getItemField(item, 'provenanceDetails', language) || getItemField(item, 'provenance_details', language) || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Atelier Rembrandt grondig geanalyseerd op herkomstsporen, eigendomsstempels en echtheid van de binding.")
                         .split('\n\n')
                         .map((paragraph, pIdx) => (
                           <p key={pIdx}>{paragraph}</p>
