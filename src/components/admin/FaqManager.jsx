@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, Plus, Edit2, Trash2, ArrowUp, ArrowDown, Save, X, Globe, Sparkles, CheckCircle2 } from 'lucide-react';
-import { autoTranslateText } from '../../utils/translationService';
+import { HelpCircle, Plus, Edit2, Trash2, ArrowUp, ArrowDown, Save, X, Globe } from 'lucide-react';
 
 export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, onShowToast = () => {} }) {
   const [items, setItems] = useState(faqItems);
@@ -54,38 +53,6 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
     setItems(reordered);
     onSaveFaqItems(reordered);
     onShowToast("FAQ volgorde bijgewerkt.");
-  };
-
-  const handleAutoTranslate = async () => {
-    if (!editingItem?.question || !editingItem?.answer) {
-      alert("Vul eerst de Nederlandse vraag en het antwoord in.");
-      return;
-    }
-
-    setIsTranslating(true);
-    try {
-      const [q_en, q_fr, a_en, a_fr] = await Promise.all([
-        autoTranslateText(editingItem.question, 'en'),
-        autoTranslateText(editingItem.question, 'fr'),
-        autoTranslateText(editingItem.answer, 'en'),
-        autoTranslateText(editingItem.answer, 'fr')
-      ]);
-
-      setEditingItem({
-        ...editingItem,
-        question_en: q_en,
-        question_fr: q_fr,
-        answer_en: a_en,
-        answer_fr: a_fr
-      });
-
-      onShowToast("Automatisch vertaald naar Engels en Frans!");
-    } catch (err) {
-      console.error("Auto translate error:", err);
-      alert("Vertaling mislukt. Vul de velden handmatig in.");
-    } finally {
-      setIsTranslating(false);
-    }
   };
 
   const handleSaveModal = () => {
@@ -231,8 +198,8 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
               </button>
             </div>
 
-            {/* Language Switcher Tabs & Auto Translate Button */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-[#D8CEB8]">
+            {/* Language Switcher Tabs */}
+            <div className="p-3 rounded-2xl bg-white border border-[#D8CEB8]">
               <div className="flex items-center space-x-2">
                 {[
                   { code: 'nl', label: '🇳🇱 Nederlands' },
@@ -252,15 +219,6 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
                   </button>
                 ))}
               </div>
-
-              <button
-                onClick={handleAutoTranslate}
-                disabled={isTranslating}
-                className="px-3 py-1.5 rounded-lg bg-[#B8860B]/10 hover:bg-[#B8860B] text-[#B8860B] hover:text-[#111111] border border-[#B8860B]/30 text-xs font-mono font-bold flex items-center space-x-1.5 transition-colors cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{isTranslating ? 'Bezig met vertalen...' : 'Vertaal naar EN & FR'}</span>
-              </button>
             </div>
 
             {/* Form Fields for Selected Language */}
