@@ -403,7 +403,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                           {item.title}
                         </div>
                         <div className="text-[11px] text-[#666666] line-clamp-1">
-                          {item.author || item.subtitle || 'Rare Art & Books'}
+                          {item.author || item.subtitle || 'Atelier Rembrandt'}
                         </div>
                       </td>
 

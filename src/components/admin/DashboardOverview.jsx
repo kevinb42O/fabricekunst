@@ -35,7 +35,7 @@ export default function DashboardOverview({
             {/* Subtle Gold Badge */}
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 text-[#C5A059] text-xs font-sans font-semibold mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Rare Art & Books Beheersysteem</span>
+              <span>Atelier Rembrandt Beheersysteem</span>
             </div>
             
             {/* Welcoming Serif Header */}
@@ -300,7 +300,7 @@ export default function DashboardOverview({
                         {item.title}
                       </h4>
                       <p className="text-[11px] text-[#6E675E] truncate mt-0.5 font-medium">
-                        {item.author || item.century || 'Rare Art & Books'}
+                        {item.author || item.century || 'Atelier Rembrandt'}
                       </p>
                     </div>
 

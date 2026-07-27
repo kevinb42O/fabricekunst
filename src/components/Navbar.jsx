@@ -55,13 +55,13 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             >
               <img 
                 src="/rblogo.png" 
-                alt="Rare Art & Books Logo" 
+                alt="Atelier Rembrandt Logo" 
                 className="w-full h-full object-cover"
               />
             </motion.div>
             <div className="flex flex-col justify-center">
               <span className="font-serif font-semibold text-sm sm:text-base text-[#111111] tracking-wide block leading-tight">
-                Rare Art & Books
+                Atelier Rembrandt
               </span>
               <span className="text-[8px] tracking-[0.2em] text-[#888888] uppercase font-sans font-medium block leading-none">
                 Antiquariaat & Kunst

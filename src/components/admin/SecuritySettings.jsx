@@ -3,7 +3,7 @@ import { Lock, ShieldCheck, Key, Eye, EyeOff, Check, AlertTriangle, UserCheck } 
 import { updateAdminPasswordAsync } from '../../utils/storage';
 
 export default function SecuritySettings({ currentUser, onShowToast }) {
-  const userEmail = currentUser?.email || 'admin@rareartbooks.com';
+  const userEmail = currentUser?.email || 'admin@atelierrembrandt.com';
   const userName = currentUser?.name || 'Admin';
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -61,7 +61,7 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
             </div>
             <div>
               <h2 className="text-xl font-serif font-bold text-[#111111]">Beveiliging & Wachtwoord Beheer</h2>
-              <p className="text-xs text-[#555555]">Beheer de inloggegevens voor het Rare Art & Books CMS beheerderspaneel.</p>
+              <p className="text-xs text-[#555555]">Beheer de inloggegevens voor het Atelier Rembrandt CMS beheerderspaneel.</p>
             </div>
           </div>
 

@@ -146,7 +146,7 @@ export default function CustomersManager({ inquiries = [] }) {
               {/* Action */}
               {cust.email && (
                 <a
-                  href={`mailto:${cust.email}?subject=Rare%20Art%20%26%20Books`}
+                  href={`mailto:${cust.email}?subject=Atelier%20Rembrandt`}
                   className="w-full py-2.5 rounded-lg bg-[#FDFBF7] border border-[#EBE7DF] text-[#1C1A18] hover:bg-[#1C1A18] hover:text-[#C5A059] text-xs font-sans font-bold transition-all text-center flex items-center justify-center space-x-2 mt-2"
                 >
                   <Mail className="w-3.5 h-3.5" />

@@ -24,13 +24,13 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
               >
                 <img 
                   src="/rblogo.png" 
-                  alt="Rare Art & Books Logo" 
+                  alt="Atelier Rembrandt Logo" 
                   className="w-full h-full object-cover"
                 />
               </motion.div>
               <div className="flex flex-col justify-center">
                 <span className="font-serif font-semibold text-xl text-[#111111] tracking-wide leading-tight">
-                  Rare Art & Books
+                  Atelier Rembrandt
                 </span>
                 <span className="text-[9px] tracking-[0.2em] text-[#999999] uppercase font-sans font-medium leading-none mt-0.5">
                   Antiquariaat & Kunst
@@ -90,8 +90,8 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                <a href="mailto:contact@rareartbooks.com" className="hover:text-[#B8860B] transition-colors font-semibold">
-                  contact@rareartbooks.com
+                <a href="mailto:contact@atelierrembrandt.com" className="hover:text-[#B8860B] transition-colors font-semibold">
+                  contact@atelierrembrandt.com
                 </a>
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
@@ -107,7 +107,7 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#666666] space-y-4 sm:space-y-0 font-serif">
-          <p>© {new Date().getFullYear()} Rare Art & Books. Alle rechten voorbehouden.</p>
+          <p>© {new Date().getFullYear()} Atelier Rembrandt. Alle rechten voorbehouden.</p>
           <div className="flex items-center space-x-4">
             <span>Discreet &amp; Vertrouwelijk</span>
             <span>•</span>

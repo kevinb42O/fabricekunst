@@ -99,7 +99,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
           </div>
 
           <p className="text-[#C5BBAA] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed lg:pb-1">
-            Elk stuk in de collectie van Rare Art & Books wordt geselecteerd op basis van drie onberispelijke criteria: historische zeldzaamheid, esthetische staat van de band, en een aantoonbare herkomst.
+            Elk stuk in de collectie van Atelier Rembrandt wordt geselecteerd op basis van drie onberispelijke criteria: historische zeldzaamheid, esthetische staat van de band, en een aantoonbare herkomst.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
                       {activeVisual.quote}
                     </p>
                     <span className="block text-[11px] text-[#D4AF37] font-bold uppercase tracking-widest font-mono mt-2">
-                      — Rare Art & Books
+                      — Atelier Rembrandt
                     </span>
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
               </h3>
 
               <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
-                Of u nu een particuliere bibliofiel bent of een institutionele verzameling uitbouwt: Rare Art & Books biedt persoonlijk advies bij aankoop, conservering en waardebepaling.
+                Of u nu een particuliere bibliofiel bent of een institutionele verzameling uitbouwt: Atelier Rembrandt biedt persoonlijk advies bij aankoop, conservering en waardebepaling.
               </p>
             </motion.div>
 
@@ -264,7 +264,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
                 onClick={onRequestConsultation}
                 className="inline-flex items-center justify-center space-x-3 px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-serif text-sm sm:text-base font-semibold tracking-wide border border-[#D4AF37]/60 hover:border-[#D4AF37] shadow-xl transition-all duration-300 cursor-pointer group"
               >
-                <span>Plan een Privé-Bezichtiging met Rare Art & Books</span>
+                <span>Plan een Privé-Bezichtiging met Atelier Rembrandt</span>
                 <ArrowRight className="w-4 h-4 text-[#D4AF37] group-hover:text-[#0F0E0C] group-hover:translate-x-1 transition-all duration-300" />
               </motion.button>
             </div>

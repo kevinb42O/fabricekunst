@@ -1,5 +1,5 @@
 -- ========================================================
--- Rare Art & Books — Supabase Setup Script
+-- Atelier Rembrandt — Supabase Setup Script
 -- Paste this script into Supabase SQL Editor and click RUN
 -- ========================================================
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
 -- Insert Developer & Admin accounts
 INSERT INTO public.admin_users (email, password, name, role) VALUES
 ('kevin@webaanzee.be', 'Pinakaaz420', 'Kevin (Developer)', 'developer'),
-('admin@rareartbooks.com', 'RareArt5438', 'Rare Art & Books Admin', 'admin')
+('admin@atelierrembrandt.com', 'Rembrandt5438', 'Atelier Rembrandt Admin', 'admin')
 ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;
 
 -- Default Admin PIN ("5438")

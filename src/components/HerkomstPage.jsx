@@ -68,7 +68,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
           <motion.div style={{ y: bgY }} className="w-full h-full absolute inset-0">
             <img
               src="/images/hero/hero-voltaire-exlibris.jpg"
-              alt="Rare Art & Books Herkomst & Expertise"
+              alt="Atelier Rembrandt Herkomst & Expertise"
               className="absolute top-0 right-0 w-full lg:w-[65%] h-full object-cover filter contrast-[1.02] brightness-[0.97] opacity-35 lg:opacity-60"
             />
           </motion.div>
@@ -142,7 +142,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
               variants={itemVariants}
               className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
             >
-              Ontdek het rigoureuze protocol achter onze antiquarische selectie. Elk werk in de collectie van Rare Art & Books beschikt over een gecertificeerde eigendomsgeschiedenis en geverifieerde staat.
+              Ontdek het rigoureuze protocol achter onze antiquarische selectie. Elk werk in de collectie van Atelier Rembrandt beschikt over een gecertificeerde eigendomsgeschiedenis en geverifieerde staat.
             </motion.p>
 
             {/* Provenance Seals */}
@@ -172,7 +172,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
           <img
             src="/images/scarron-candlelight-hero.jpg"
-            alt="Rare Art & Books Sfeerachtergrond"
+            alt="Atelier Rembrandt Sfeerachtergrond"
             className="w-full h-full object-cover filter contrast-[1.04] brightness-[0.98] opacity-15 lg:opacity-20"
           />
           {/* Top Fade from Hero */}
@@ -359,7 +359,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                       "Een antiek boek ontleent zijn ultieme waarde aan de tastbare bewijzen van zijn reis door de eeuwen heen."
                     </p>
                     <span className="block text-[10px] font-mono uppercase font-bold text-[#8E7035] tracking-widest mt-3">
-                      — Rare Art & Books
+                      — Atelier Rembrandt
                     </span>
                   </div>
 
@@ -399,7 +399,7 @@ export default function HerkomstPage({ onNavigateHome, onRequestConsultation }) 
                     Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?
                   </h3>
                   <p className="text-sm sm:text-base text-[#C5BBAA] font-serif font-light leading-relaxed">
-                    Rare Art & Books adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.
+                    Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.
                   </p>
                 </div>
 

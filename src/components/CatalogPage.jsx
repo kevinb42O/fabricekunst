@@ -101,7 +101,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
           >
             <img
               src="/images/hero/hero-voltaire-glasses.jpg"
-              alt="Rare Art & Books Collectie Overview"
+              alt="Atelier Rembrandt Collectie Overview"
               className="absolute top-0 right-0 w-full lg:w-[68%] h-full object-cover filter contrast-[1.02] brightness-[0.98]"
             />
           </motion.div>

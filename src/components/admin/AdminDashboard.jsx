@@ -117,14 +117,14 @@ export default function AdminDashboard({
               <div className="w-11 h-11 rounded-full overflow-hidden bg-white border-2 border-[#E5C98B]/40 flex items-center justify-center shadow-md shrink-0">
                 <img 
                   src="/rblogo.png" 
-                  alt="Rare Art & Books Logo" 
+                  alt="Atelier Rembrandt Logo" 
                   className="w-full h-full object-cover"
                 />
               </div>
 
               <div>
                 <h1 className="text-base font-serif font-bold text-white leading-tight tracking-tight">
-                  Rare Art & Books Admin
+                  Atelier Rembrandt Admin
                 </h1>
                 <span className="text-[10px] font-sans font-bold text-[#A89F91] tracking-widest uppercase block mt-0.5">
                   COLLECTION MANAGER
@@ -209,12 +209,12 @@ export default function AdminDashboard({
               <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-[#C5A059]/30 flex items-center justify-center shrink-0">
                 <img 
                   src="/rblogo.png" 
-                  alt="Rare Art & Books Logo" 
+                  alt="Atelier Rembrandt Logo" 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-sans font-semibold text-stone-100 truncate">Rare Art & Books Admin</p>
+                <p className="text-xs font-sans font-semibold text-stone-100 truncate">Atelier Rembrandt Admin</p>
                 <p className="text-[11px] font-sans text-emerald-400 flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Online</span>
