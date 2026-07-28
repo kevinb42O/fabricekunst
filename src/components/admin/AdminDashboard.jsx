@@ -32,6 +32,7 @@ export default function AdminDashboard({
   inquiries = [], 
   heroSlides = [],
   faqItems = [],
+  provenanceData = null,
   currentUser = null,
   onSaveItem = () => {}, 
   onDeleteItem = () => {}, 
