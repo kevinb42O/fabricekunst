@@ -16,7 +16,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
   };
 
   return (
-    <section id="faq" className="py-16 sm:py-24 bg-[#FAF7F2] relative border-b border-[#D8CEB8] overflow-hidden">
+    <section id="faq" className="py-16 sm:py-24 bg-transparent relative overflow-hidden">
       
       {/* Decorative ambient background accent */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#B8860B]/5 rounded-full blur-[140px] pointer-events-none" />

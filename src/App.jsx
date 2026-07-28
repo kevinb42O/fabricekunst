@@ -303,7 +303,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#111111] flex flex-col font-sans selection:bg-[#B8860B]/20 selection:text-[#B8860B]">
+    <div className="min-h-screen bg-transparent text-[#111111] flex flex-col font-sans selection:bg-[#B8860B]/20 selection:text-[#B8860B]">
       
       {/* High-End Scroll Progress Bar */}
       <motion.div

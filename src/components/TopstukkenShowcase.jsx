@@ -40,7 +40,7 @@ export default function TopstukkenShowcase({
   };
 
   return (
-    <section id="topstukken" className="py-24 bg-white relative border-b border-[#D8CEB8] overflow-hidden">
+    <section id="topstukken" className="py-24 bg-transparent relative overflow-hidden">
       
       {/* Ambient Glow Accent */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-[#B8860B]/5 rounded-full blur-[140px] pointer-events-none" />
@@ -133,7 +133,7 @@ export default function TopstukkenShowcase({
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             onClick={() => onOpenItemDetail(spotlightItem)}
-            className="bg-[#FAF7F2] text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-[border-color] duration-300 transform-gpu"
+            className="bg-white text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-[border-color] duration-300 transform-gpu"
           >
             {/* Spotlight Image Frame */}
             <div className="lg:col-span-7 space-y-3">
@@ -251,7 +251,7 @@ export default function TopstukkenShowcase({
                   variants={cardVariants}
                   whileHover={{ y: -8, transition: { duration: 0.3 } }}
                   onClick={() => onOpenItemDetail(item)}
-                  className="bg-[#FAF7F2] rounded-2xl border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-[border-color] duration-300 cursor-pointer transform-gpu"
+                  className="bg-white rounded-2xl border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-[border-color] duration-300 cursor-pointer transform-gpu"
                 >
                   {/* Image Showcase */}
                   <div className="aspect-[4/3] bg-white overflow-hidden relative border-b border-[#D8CEB8]">

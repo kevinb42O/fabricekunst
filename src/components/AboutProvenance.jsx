@@ -70,7 +70,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
     <section 
       ref={sectionRef} 
       id="herkomst" 
-      className="relative bg-[#F4F0E8] text-[#111111] py-24 sm:py-32 overflow-hidden border-t border-b border-[#D8CEB8]"
+      className="relative bg-transparent text-[#111111] py-24 sm:py-32 overflow-hidden"
     >
       {/* Ambient background glow with scroll motion */}
       <motion.div 
