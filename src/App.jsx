@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import InquiryModal from './components/InquiryModal';
 import AdminLoginModal from './components/admin/AdminLoginModal';
 import AdminDashboard from './components/admin/AdminDashboard';
+
 import { 
   getCatalog, 
   fetchCatalogAsync, 

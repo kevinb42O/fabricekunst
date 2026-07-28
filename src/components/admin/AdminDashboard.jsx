@@ -12,7 +12,8 @@ import {
   Image as ImageIcon,
   ChevronRight,
   ShieldCheck,
-  HelpCircle
+  HelpCircle,
+  Award
 } from 'lucide-react';
 import ItemManager from './ItemManager';
 import InquiriesManager from './InquiriesManager';
@@ -23,6 +24,7 @@ import CustomersManager from './CustomersManager';
 import HeroSlidesManager from './HeroSlidesManager';
 import ProvenanceManager from './ProvenanceManager';
 import FaqManager from './FaqManager';
+import CertificateModal from './CertificateModal';
 
 export default function AdminDashboard({ 
   items = [], 
@@ -70,6 +72,11 @@ export default function AdminDashboard({
       label: 'Collectie', 
       icon: BookOpen,
       count: activeItems.length
+    },
+    {
+      id: 'certificates',
+      label: 'Echtheidscertificaten',
+      icon: Award
     },
     {
       id: 'hero',
@@ -323,6 +330,13 @@ export default function AdminDashboard({
               onSaveItem={onSaveItem}
               onDeleteItem={onDeleteItem}
               onShowToast={showToast}
+            />
+          )}
+
+          {activeTab === 'certificates' && (
+            <CertificateModal
+              items={activeItems}
+              onClose={() => setActiveTab('items')}
             />
           )}
 

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
 import { autoTranslateItemFields } from '../../utils/translationService';
+import CertificateModal from './CertificateModal';
 
 export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast }) {
   const [editingItem, setEditingItem] = useState(null);
+  const [certificateItem, setCertificateItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -456,6 +458,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       <td className="p-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end space-x-1.5">
                           <button
+                            onClick={() => setCertificateItem(item)}
+                            className="p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
+                            title="Echtheidscertificaat (PDF) Genereren"
+                          >
+                            <Award className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
                             onClick={() => handleEdit(item)}
                             className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
                             title="Bewerken"
@@ -608,6 +618,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 </button>
 
                 <div className="flex items-center space-x-1.5">
+                  <button
+                    onClick={() => setCertificateItem(item)}
+                    className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
+                    title="Echtheidscertificaat (PDF) Genereren"
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                  </button>
+
                   <button
                     onClick={() => handleDuplicate(item)}
                     className="p-2 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-stone-200 transition-colors"
@@ -1138,27 +1156,49 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
               </div>
 
               {/* Form Bottom Actions */}
-              <div className="pt-6 flex items-center justify-end space-x-4 border-t border-[#D8CEB8] shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  className="px-6 py-3.5 rounded-xl bg-[#FAF7F2] text-[#111111] font-bold text-xs uppercase tracking-wider hover:bg-stone-200 border border-[#D8CEB8] transition-colors"
-                >
-                  Annuleren
-                </button>
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 rounded-xl bg-[#111111] hover:bg-[#B8860B] hover:text-[#111111] text-white font-bold text-xs uppercase tracking-widest shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
-                >
-                  <CheckCircle2 className="w-4.5 h-4.5 text-[#D4AF37]" />
-                  <span>Object Opslaan in Collectie</span>
-                </button>
+              <div className="pt-6 flex items-center justify-between border-t border-[#D8CEB8] shrink-0">
+                {!isNew && (
+                  <button
+                    type="button"
+                    onClick={() => setCertificateItem(editingItem)}
+                    className="px-5 py-3 rounded-xl bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white font-serif font-bold text-xs transition-all flex items-center space-x-2 shadow-sm"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>Echtheidscertificaat (PDF)</span>
+                  </button>
+                )}
+                
+                <div className="flex items-center space-x-4 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="px-6 py-3.5 rounded-xl bg-[#FAF7F2] text-[#111111] font-bold text-xs uppercase tracking-wider hover:bg-stone-200 border border-[#D8CEB8] transition-colors"
+                  >
+                    Annuleren
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-8 py-3.5 rounded-xl bg-[#111111] hover:bg-[#B8860B] hover:text-[#111111] text-white font-bold text-xs uppercase tracking-widest shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4.5 h-4.5 text-[#D4AF37]" />
+                    <span>Object Opslaan in Collectie</span>
+                  </button>
+                </div>
               </div>
 
             </form>
 
           </div>
         </div>
+      )}
+
+      {/* Certificate Modal */}
+      {certificateItem && (
+        <CertificateModal
+          item={certificateItem}
+          items={items}
+          onClose={() => setCertificateItem(null)}
+        />
       )}
 
     </div>
