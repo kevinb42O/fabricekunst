@@ -464,18 +464,18 @@ export default function CertificateManager({
                   </div>
 
                   {/* Meta row */}
-                  <div className="flex items-center justify-between text-[12px] font-sans pt-3 text-[#444444]">
-                    <div>
-                      <span className="font-bold uppercase tracking-wider text-[#8C6D2B] mr-1">{t.certNo}:</span>
-                      <span className="font-mono font-bold text-[#111111]">{certNumber}</span>
+                  <div className="flex items-start justify-between text-[12px] font-sans pt-3 gap-4">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8C6D2B] whitespace-nowrap">{t.certNo}</span>
+                      <span className="font-mono font-bold text-[#111111] whitespace-nowrap">{certNumber}</span>
                     </div>
-                    <div>
-                      <span className="font-bold uppercase tracking-wider text-[#8C6D2B] mr-1">{t.issuedFor}:</span>
-                      <span className="font-bold text-[#111111]">{issuedTo}</span>
+                    <div className="flex flex-col items-center min-w-0">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8C6D2B] whitespace-nowrap">{t.issuedFor}</span>
+                      <span className="font-bold text-[#111111] whitespace-nowrap">{issuedTo}</span>
                     </div>
-                    <div>
-                      <span className="font-bold uppercase tracking-wider text-[#8C6D2B] mr-1">{t.date}:</span>
-                      <span className="font-bold text-[#111111]">{certDate}</span>
+                    <div className="flex flex-col items-end min-w-0">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8C6D2B] whitespace-nowrap">{t.date}</span>
+                      <span className="font-bold text-[#111111] whitespace-nowrap">{certDate}</span>
                     </div>
                   </div>
                 </div>
