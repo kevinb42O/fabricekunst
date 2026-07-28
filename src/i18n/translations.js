@@ -33,7 +33,27 @@ export const translations = {
       buyInquire: 'Aankoop Aanvragen',
       viewDetails: 'Bekijk Details',
       viewItem: 'Bekijk Details',
-      inquire: 'Aanvragen'
+      inquire: 'Aanvragen',
+      filterLabel: 'Filter Op Categorie:',
+      provenanceBadge: 'Bewezen Herkomst',
+      priceValuation: 'Prijs / Taxatie',
+      price: 'Prijs',
+      priceOnRequest: 'Prijs op aanvraag',
+      trust: {
+        courier_title: 'Verzekerde Koerier',
+        courier_desc: 'Discreet & 100% verzekerd transport.',
+        cert_title: 'Echtheidscertificaat',
+        cert_desc: 'Formeel fysiek document van Atelier Rembrandt.',
+        viewing_title: 'Privé-Bezichtiging',
+        viewing_desc: 'Op afspraak in het atelier of op locatie.',
+        contact_title: 'Direct Contact',
+        contact_desc: 'Persoonlijk advies en snelle optie-afhandeling.'
+      },
+      guarantee: {
+        badge: 'Garantieregeling voor Verzamelaars',
+        title: 'Privé Aankoop of Besloten Bezichtiging Gewenst?',
+        desc: 'Onze experts staan u persoonlijk te woord. Elk werk wordt geleverd met een officieel Atelier Rembrandt echtheidsdossier.'
+      }
     },
     voltaire: {
       badge: 'Monumentaal Meesterwerk • 52 Delen Compleet',
@@ -124,7 +144,7 @@ export const translations = {
     provenance: {
       heroBadge: 'Historische Garanties',
       heroTitle: 'Provenance & Echtheidsgarantie',
-      heroSubtitle: 'Elk kunstwerk en zeldzaam boek in onze collectie wordt vergezeld van een gedocumenteerde herkomst en museumwaardig echtheidscertificaat.',
+      heroSubtitle: 'Elk kunstwerk en zeldzaam boek in onze collectie wordt vergezeld van een gedetailleerd certificaat van herkomst en museumwaardig echtheidscertificaat.',
       pillar1_title: '1. Herkomstonderzoek',
       pillar1_desc: 'Wij traceren de geschiedenis van elk werk aan de hand van historische ex-libris stempels, veilingcatalogi en adellijke eigendomssporen.',
       pillar2_title: '2. Materiaal- & Bindanalyse',
@@ -132,7 +152,30 @@ export const translations = {
       pillar3_title: '3. Certificaat van Echtheid',
       pillar3_desc: 'Elke aankoop wordt geleverd met een officieel ondertekend certificaat waarin de authenticiteit levenslang wordt gegarandeerd.',
       contactPrompt: 'Heeft u specifieke vragen over de herkomst van een werk?',
-      contactBtn: 'Neem Contact Met Ons Op'
+      contactBtn: 'Neem Contact Met Ons Op',
+      sectionDesc: 'Elk stuk in de collectie van Atelier Rembrandt wordt geselecteerd op basis van drie onberispelijke criteria: historische zeldzaamheid, esthetische staat van de band, en een aantoonbare herkomst.',
+      pillar1_sub: 'Certificering',
+      pillar1_title_home: 'Gegarandeerde Echtheid',
+      pillar1_desc_home: 'Bij elk topstuk wordt een gedetailleerd certificaat van herkomst geleverd, inclusief fysieke analyse van papierkwaliteit, watermerken, bindingstechniek en historische drukgegevens.',
+      pillar2_sub: 'Adellijke Herkomst',
+      pillar2_title_home: 'Ex-Libris & Eigendomssporen',
+      pillar2_desc_home: 'Zeldzame stukken zoals onze 52-delige Voltaire-reeks bevatten het befaamde Vacheron-Poinsot heraldiek ex-libris, waarmee de herkomst onafgebroken teruggaat tot 19e-eeuwse Franse topverzamelaars.',
+      pillar3_sub: 'Persoonlijke Begeleiding',
+      pillar3_title_home: 'Discreet Advies voor Verzamelaars',
+      pillar3_desc_home: 'Of u nu een particuliere bibliofiel bent of een institutionele verzameling uitbouwt: Atelier Rembrandt biedt persoonlijk advies bij aankoop, conservering en waardebepaling.',
+      btnHome: 'Plan een Privé-Bezichtiging met Atelier Rembrandt',
+      pijler: 'Pijler',
+      visuals: {
+        v1_title: 'De Antiquariaats-Bibliotheek',
+        v1_sub: 'Historische boekenkast met sfeerverlichting en zeldzame banden',
+        v1_quote: '"Een antiek boek is meer dan papier en goudstempels op shagreen; het is een tijdscapsule van ideeën met de menselijke ziel van haar vroegere bezitters."',
+        v2_title: 'Théâtre de Voltaire & Buste',
+        v2_sub: 'Originele uitgave uit 1829 met marmeren buste en antieke messing leesbril',
+        v2_quote: '"De combinatie van historische documenten en adellijke herkomst vormt de absolute top van bibliofilie."',
+        v3_title: 'Ex-Libris Vacheron-Poinsot',
+        v3_sub: 'Handgemaakt marmeren schutblad met authentiek heraldiek eigendomsstempel',
+        v3_quote: '"Eigendomssporen vertellen het ononderbroken verhaal van 19e-eeuwse Franse kunstverzamelaars."'
+      }
     },
     inquiry: {
       modalTitle: 'Aanvraag & Privé Consultatie',
@@ -166,11 +209,16 @@ export const translations = {
       q3: 'Is een besloten privé-bezichtiging mogelijk vóór aankoop?',
       a3: 'Jazeker. U bent van harte welkom voor een besloten bezichtiging op afspraak in ons atelier. Bij hoogwaardige topstukken is een persoonlijke presentatie bij u op locatie (Europa) eveneens mogelijk.',
       q4: 'Hoe werkt het aanvragen van een optie of aankoop?',
-      a4: 'Wanneer u een aanvraag indient via de knop op de pagina, wordt het werk direct 48 uur voor u in optie gehouden. U ontvangt binnen 2 uur persoonlijk bericht met de specificaties en factuur.',
+      a4: 'Wanneer u een aanvraag indient via de knop op de pagina, wordt het werk direct 48 uur voor u in option gehouden. U ontvangt binnen 2 uur persoonlijk bericht met de specificaties en factuur.',
       q5: 'Zijn er meer foto’s of conditierapporten beschikbaar op verzoek?',
       a5: 'Absoluut. Wij leveren graag aanvullende hoge-resolutie detailfoto’s, UV-licht opnames van de binding of een uitgebreid collatierapport per e-mail of WhatsApp.',
       q6: 'Kunt u helpen bij het zoeken naar een specifiek historisch zeldzaam boek?',
-      a6: 'Ja. Via ons internationale netwerk van adellijke bibliotheken, veilinghuizen en privé-verzamelaars voeren wij gerichte zoekopdrachten uit voor bibliofielen en kunstverzamelaars.'
+      a6: 'Ja. Via ons internationale netwerk van adellijke bibliotheken, veilinghuizen en privé-verzamelaars voeren wij gerichte zoekopdrachten uit voor bibliofielen en kunstverzamelaars.',
+      cta: {
+        title: 'Staat uw vraag er niet tussen?',
+        subtitle: 'Neem rechtstreeks contact op met ons atelier voor persoonlijk advies.',
+        btn: 'Stel Uw Vraag'
+      }
     },
     footer: {
       brandTag: 'Zeldzame Antiquarische Boeken & Historische Kunst',
@@ -224,7 +272,27 @@ export const translations = {
       buyInquire: 'Inquire for Purchase',
       viewDetails: 'View Details',
       viewItem: 'View Details',
-      inquire: 'Inquire'
+      inquire: 'Inquire',
+      filterLabel: 'Filter By Category:',
+      provenanceBadge: 'Verified Provenance',
+      priceValuation: 'Price / Valuation',
+      price: 'Price',
+      priceOnRequest: 'Price on request',
+      trust: {
+        courier_title: 'Insured Courier',
+        courier_desc: 'Discreet & 100% insured transport.',
+        cert_title: 'Certificate of Authenticity',
+        cert_desc: 'Official physical document from Atelier Rembrandt.',
+        viewing_title: 'Private Viewing',
+        viewing_desc: 'By appointment at the studio or on location.',
+        contact_title: 'Direct Contact',
+        contact_desc: 'Personal advice and quick hold/option processing.'
+      },
+      guarantee: {
+        badge: 'Collector Guarantee Scheme',
+        title: 'Interested in a Private Purchase or Private Viewing?',
+        desc: 'Our experts are at your service. Every work is delivered with an official Atelier Rembrandt authenticity dossier.'
+      }
     },
     voltaire: {
       badge: 'Monumental Masterwork • 52 Volumes Complete',
@@ -323,7 +391,30 @@ export const translations = {
       pillar3_title: '3. Certificate of Authenticity',
       pillar3_desc: 'Every acquisition includes an officially signed certificate guaranteeing lifetime authenticity.',
       contactPrompt: 'Do you have specific questions regarding the provenance of a piece?',
-      contactBtn: 'Contact Us'
+      contactBtn: 'Contact Us',
+      sectionDesc: 'Every piece in the Atelier Rembrandt collection is selected based on three flawless criteria: historical rarity, aesthetic condition of the binding, and a verified provenance.',
+      pillar1_sub: 'Certification',
+      pillar1_title_home: 'Guaranteed Authenticity',
+      pillar1_desc_home: 'Every masterpiece comes with a detailed certificate of provenance, including physical analysis of paper quality, watermarks, binding technique, and historical print details.',
+      pillar2_sub: 'Noble Provenance',
+      pillar2_title_home: 'Ex-Libris & Ownership Marks',
+      pillar2_desc_home: 'Rare pieces like our 52-volume Voltaire set contain the renowned Vacheron-Poinsot heraldic ex-libris, tracing ownership continuously back to 19th-century French art collectors.',
+      pillar3_sub: 'Personal Guidance',
+      pillar3_title_home: 'Discreet Advice for Collectors',
+      pillar3_desc_home: 'Whether you are a private bibliophile or building an institutional collection: Atelier Rembrandt offers personal advice on acquisition, preservation, and valuation.',
+      btnHome: 'Schedule a Private Viewing with Atelier Rembrandt',
+      pijler: 'Pillar',
+      visuals: {
+        v1_title: 'The Antiquarian Library',
+        v1_sub: 'Historic bookcase with ambient lighting and rare bindings',
+        v1_quote: '"An antique book is more than paper and gold tooling on shagreen; it is a time capsule of ideas with the human soul of its former owners."',
+        v2_title: 'Théâtre de Voltaire & Bust',
+        v2_sub: 'Original 1829 edition with marble bust and antique brass reading glasses',
+        v2_quote: '"The combination of historical documents and noble provenance represents the absolute pinnacle of bibliophilia."',
+        v3_title: 'Ex-Libris Vacheron-Poinsot',
+        v3_sub: 'Handmade marbled endpaper with authentic heraldic armorial bookplate',
+        v3_quote: '"Ownership marks tell the continuous story of 19th-century French art collectors."'
+      }
     },
     faq: {
       badge: 'Frequently Asked Questions',
@@ -340,7 +431,12 @@ export const translations = {
       q5: 'Are additional photographs or condition reports available upon request?',
       a5: 'Absolutely. We are pleased to provide supplementary high-resolution photographs, UV light inspection images of bindings, or collation reports via email or WhatsApp.',
       q6: 'Can you assist in sourcing a specific rare historical book?',
-      a6: 'Yes. Through our international network of noble libraries, auction houses, and private collectors, we conduct targeted search assignments for bibliophiles and art collectors.'
+      a6: 'Yes. Through our international network of noble libraries, auction houses, and private collectors, we conduct targeted search assignments for bibliophiles and art collectors.',
+      cta: {
+        title: 'Can’t find your question?',
+        subtitle: 'Contact our studio directly for personal assistance.',
+        btn: 'Ask Your Question'
+      }
     },
     inquiry: {
       modalTitle: 'Inquiry & Private Consultation',
@@ -415,7 +511,27 @@ export const translations = {
       buyInquire: 'Demander l’Achat',
       viewDetails: 'Voir les Détails',
       viewItem: 'Voir les Détails',
-      inquire: 'Demander'
+      inquire: 'Demander',
+      filterLabel: 'Filtrer par Catégorie :',
+      provenanceBadge: 'Provenance Vérifiée',
+      priceValuation: 'Prix / Estimation',
+      price: 'Prix',
+      priceOnRequest: 'Prix sur demande',
+      trust: {
+        courier_title: 'Transporteur Assuré',
+        courier_desc: 'Transport discret & assuré à 100 %.',
+        cert_title: 'Certificat d’Authenticité',
+        cert_desc: 'Document physique officiel d’Atelier Rembrandt.',
+        viewing_title: 'Présentation Privée',
+        viewing_desc: 'Sur rendez-vous à l’atelier ou à domicile.',
+        contact_title: 'Contact Direct',
+        contact_desc: 'Conseil personnalisé et réservation rapide.'
+      },
+      guarantee: {
+        badge: 'Garantie pour Collectionneurs',
+        title: 'Achat Privé ou Visite Particulière Souhaitée ?',
+        desc: 'Nos experts sont à votre disposition. Chaque œuvre est livrée avec un dossier d’authenticité officiel de l’Atelier Rembrandt.'
+      }
     },
     voltaire: {
       badge: 'Chef-d’œuvre Monumental • 52 Volumes Complets',
@@ -514,7 +630,30 @@ export const translations = {
       pillar3_title: '3. Certificat d’Authenticité',
       pillar3_desc: 'Chaque acquisition comprend un certificat officiel signé garantissant l’authenticité à vie.',
       contactPrompt: 'Avez-vous des questions spécifiques sur la provenance d’un ouvrage ?',
-      contactBtn: 'Contactez-nous'
+      contactBtn: 'Contactez-nous',
+      sectionDesc: 'Chaque pièce de la collection de l’Atelier Rembrandt est sélectionnée selon trois critères irréprochables : la rareté historique, l’état esthétique de la reliure et une provenance documentée.',
+      pillar1_sub: 'Certification',
+      pillar1_title_home: 'Authenticité Garantie',
+      pillar1_desc_home: 'Chaque chef-d’œuvre est livré avec un certificat détaillé de provenance, comprenant l’analyse physique de la qualité du papier, des filigranes, de la technique de reliure et des détails d’impression historiques.',
+      pillar2_sub: 'Provenance Noble',
+      pillar2_title_home: 'Ex-Libris & Marques de Propriété',
+      pillar2_desc_home: 'Des pièces rares comme notre ensemble de 52 volumes de Voltaire contiennent le célèbre ex-libris héraldique Vacheron-Poinsot, retraçant la propriété de manière continue jusqu’aux collectionneurs d’art français du XIXe siècle.',
+      pillar3_sub: 'Accompagnement Personnalisé',
+      pillar3_title_home: 'Conseil Discret pour Collectionneurs',
+      pillar3_desc_home: 'Que vous soyez un bibliophile privé ou que vous constituiez une collection institutionnelle : l’Atelier Rembrandt offre des conseils personnalisés sur l’acquisition, la conservation et l’estimation.',
+      btnHome: 'Planifier une Visite Privée avec l’Atelier Rembrandt',
+      pijler: 'Pilier',
+      visuals: {
+        v1_title: 'La Bibliothèque de Livres Anciens',
+        v1_sub: 'Bibliothèque historique avec éclairage d’ambiance et reliures rares',
+        v1_quote: '« Un livre ancien est plus que du papier et des dorures sur chagrin ; c’est une capsule temporelle d’idées renfermant l’âme humaine de ses anciens propriétaires. »',
+        v2_title: 'Théâtre de Voltaire & Buste',
+        v2_sub: 'Édition originale de 1829 avec buste en marbre et lunettes de lecture anciennes en laiton',
+        v2_quote: '« La combinaison de documents historiques et d’une provenance noble représente le summum absolu de la bibliophilie. »',
+        v3_title: 'Ex-Libris Vacheron-Poinsot',
+        v3_sub: 'Garde marbrée faite main avec vignette héraldique originale',
+        v3_quote: '« Les marques de propriété racontent l’histoire continue des collectionneurs d’art français du XIXe siècle. »'
+      }
     },
     faq: {
       badge: 'Foire Aux Questions',
@@ -531,7 +670,12 @@ export const translations = {
       q5: 'Est-il possible d’obtenir des photos supplémentaires ou un rapport de condition ?',
       a5: 'Tout à fait. Nous fournissons volontiers des visuels haute définition complémentaires, des clichés sous lumière UV ou un rapport de collation détaillé par e-mail ou WhatsApp.',
       q6: 'Pouvez-vous nous aider à rechercher un ouvrage historique spécifique ?',
-      a6: 'Oui. Grâce à notre réseau international de bibliothèques privées, maisons de ventes et collectionneurs, nous réalisons des recherches ciblées pour les bibliophiles.'
+      a6: 'Oui. Grâce à notre réseau international de bibliothèques privées, maisons de ventes et collectionneurs, nous réalisons des recherches ciblées pour les bibliophiles.',
+      cta: {
+        title: 'Vous ne trouvez pas votre question ?',
+        subtitle: 'Contactez directement notre atelier pour un conseil personnalisé.',
+        btn: 'Poser Votre Question'
+      }
     },
     inquiry: {
       modalTitle: 'Demande & Consultation Privée',

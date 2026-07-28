@@ -247,3 +247,33 @@ export function getItemField(item, field, language = 'nl') {
 
   return item[field] || '';
 }
+
+/**
+ * Localizes and converts price string from Euros to Dollars if language is English.
+ * Assumes the input price starts with the € symbol (e.g., "€ 2.850").
+ */
+export function getLocalizedPrice(priceStr, language = 'nl') {
+  if (!priceStr || typeof priceStr !== 'string') return '';
+  
+  if (language !== 'en' || !priceStr.includes('€')) {
+    return priceStr;
+  }
+  
+  // Parse the number from the string
+  const cleanStr = priceStr.replace('€', '').trim();
+  const numericStr = cleanStr.replace(/\./g, '');
+  const euros = parseFloat(numericStr);
+  
+  if (isNaN(euros)) {
+    return priceStr;
+  }
+  
+  // Exchange rate: 1 EUR = 1.09 USD (approximate current rate)
+  const rate = 1.09;
+  const dollars = Math.round(euros * rate);
+  
+  // Format with commas as thousand separators
+  const formattedDollars = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  
+  return `$ ${formattedDollars}`;
+}

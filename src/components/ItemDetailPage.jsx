@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedStatus } from '../utils/translationService';
+import { getItemField, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
   const { t, language } = useLanguage();
@@ -378,7 +378,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             <div className="flex items-center justify-between border-b border-[#D8CEB8]/70 pb-6">
               <div>
                 <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">Taxatie / Prijs</span>
-                <span className="text-3xl font-serif font-bold text-[#B8860B]">{item.price}</span>
+                <span className="text-3xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">Status</span>

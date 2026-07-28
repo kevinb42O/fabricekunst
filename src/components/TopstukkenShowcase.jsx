@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, BookOpen, Mail, ArrowRight, ShieldCheck, Truck, FileCheck, PhoneCall, ChevronRight, CheckCircle2, Star, Sparkles, Filter } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus } from '../utils/translationService';
+import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 
 export default function TopstukkenShowcase({ 
   items = [], 
@@ -11,22 +11,13 @@ export default function TopstukkenShowcase({
   onRequestInquiry = () => {} 
 }) {
   const { t, language } = useLanguage();
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
-
   // Filter items marked as featured (Op Homepage Tonen)
   const featuredItems = items.filter(item => item && item.featured);
   
   // Fallback: If no items are marked featured, take items from catalog
   const sourceItems = featuredItems.length > 0 ? featuredItems : items;
 
-  // Filter by category filter tab
-  const displayItems = sourceItems.filter(item => {
-    if (!item) return false;
-    if (activeCategoryFilter === 'books') return item.itemType === 'book' || item.category?.toLowerCase().includes('boek') || item.category?.toLowerCase().includes('literatuur');
-    if (activeCategoryFilter === 'art') return item.itemType === 'painting' || item.category?.toLowerCase().includes('kunst') || item.category?.toLowerCase().includes('grafiek');
-    if (activeCategoryFilter === '18th') return item.century === '18e Eeuw' || item.year?.startsWith('17');
-    return true;
-  });
+  const displayItems = sourceItems;
 
   const spotlightItem = displayItems[0];
   const gridItems = displayItems.slice(1, 4);
@@ -40,9 +31,10 @@ export default function TopstukkenShowcase({
   };
 
   const cardVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
+      y: 0,
       transition: { duration: 0.7, ease: "easeOut" }
     }
   };
@@ -82,77 +74,50 @@ export default function TopstukkenShowcase({
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* CATEGORY FILTER TABS FOR HOMEPAGE SHOWCASE                   */}
+        {/* LUXURY BUYER TRUST STRIP (HANDMADE / GALLERY STYLE)          */}
         {/* ------------------------------------------------------------- */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-[#D8CEB8]/60">
-          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-[#666666] uppercase shrink-0">
-            <Filter className="w-3.5 h-3.5 text-[#B8860B]" />
-            <span>Filter Op Categorie:</span>
-          </div>
+        <div className="border-y border-[#D8CEB8]/70 py-10 my-4 bg-[#FAF7F2]/40 backdrop-blur-xs relative select-none">
+          {/* Subtle design detail: tiny corner ornaments representing traditional blind tooling */}
+          <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-[#B8860B]/40" />
+          <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-[#B8860B]/40" />
+          <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-[#B8860B]/40" />
+          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#B8860B]/40" />
 
-          <div className="flex gap-2 overflow-x-auto mobile-scroll-x w-full sm:w-auto pb-1 sm:pb-0">
-            {[
-              { id: 'all', label: t('topstukken.filterAll') },
-              { id: 'books', label: t('topstukken.filterBooks') },
-              { id: 'art', label: t('topstukken.filterArt') },
-              { id: '18th', label: t('topstukken.filter18th') }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveCategoryFilter(tab.id)}
-                className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] flex items-center ${
-                  activeCategoryFilter === tab.id
-                    ? 'bg-[#1C1A17] text-[#D4AF37] border border-[#B8860B] shadow-xs'
-                    : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-4 divide-y sm:divide-y-0 lg:divide-x divide-[#D8CEB8]/50">
+            {/* Courier */}
+            <div className="flex flex-col items-center text-center px-4 space-y-3">
+              <Truck className="w-5 h-5 text-[#B8860B] stroke-[1.25]" />
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-serif font-bold uppercase tracking-[0.18em] text-[#111111]">{t('topstukken.trust.courier_title')}</h4>
+                <p className="text-xs text-[#555555] font-serif italic leading-relaxed">{t('topstukken.trust.courier_desc')}</p>
+              </div>
+            </div>
 
-        {/* ------------------------------------------------------------- */}
-        {/* LUXURY BUYER TRUST BAR                                       */}
-        {/* ------------------------------------------------------------- */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8]">
-          <div className="flex items-start space-x-3.5 p-2">
-            <div className="p-2.5 rounded-xl bg-white text-[#B8860B] border border-[#D8CEB8] shrink-0">
-              <Truck className="w-5 h-5" />
+            {/* Certificate */}
+            <div className="flex flex-col items-center text-center px-4 space-y-3 pt-6 sm:pt-0">
+              <FileCheck className="w-5 h-5 text-[#B8860B] stroke-[1.25]" />
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-serif font-bold uppercase tracking-[0.18em] text-[#111111]">{t('topstukken.trust.cert_title')}</h4>
+                <p className="text-xs text-[#555555] font-serif italic leading-relaxed">{t('topstukken.trust.cert_desc')}</p>
+              </div>
             </div>
-            <div className="space-y-0.5">
-              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Verzekerde Koerier</h4>
-              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Discreet &amp; 100% verzekerd transport.</p>
-            </div>
-          </div>
 
-          <div className="flex items-start space-x-3.5 p-2">
-            <div className="p-2.5 rounded-xl bg-white text-[#B8860B] border border-[#D8CEB8] shrink-0">
-              <FileCheck className="w-5 h-5" />
+            {/* Viewing */}
+            <div className="flex flex-col items-center text-center px-4 space-y-3 pt-6 lg:pt-0">
+              <ShieldCheck className="w-5 h-5 text-[#B8860B] stroke-[1.25]" />
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-serif font-bold uppercase tracking-[0.18em] text-[#111111]">{t('topstukken.trust.viewing_title')}</h4>
+                <p className="text-xs text-[#555555] font-serif italic leading-relaxed">{t('topstukken.trust.viewing_desc')}</p>
+              </div>
             </div>
-            <div className="space-y-0.5">
-              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Echtheidscertificaat</h4>
-              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Formeel fysiek document van Atelier Rembrandt.</p>
-            </div>
-          </div>
 
-          <div className="flex items-start space-x-3.5 p-2">
-            <div className="p-2.5 rounded-xl bg-white text-[#B8860B] border border-[#D8CEB8] shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div className="space-y-0.5">
-              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Privé-Bezichtiging</h4>
-              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Op afspraak in het atelier of op locatie.</p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3.5 p-2">
-            <div className="p-2.5 rounded-xl bg-white text-[#B8860B] border border-[#D8CEB8] shrink-0">
-              <PhoneCall className="w-5 h-5" />
-            </div>
-            <div className="space-y-0.5">
-              <h4 className="text-[10px] sm:text-xs font-mono font-bold uppercase text-[#111111]">Direct Contact</h4>
-              <p className="text-[10px] sm:text-xs text-[#666666] font-serif hidden sm:block">Persoonlijk advies en snelle optie-afhandeling.</p>
+            {/* Contact */}
+            <div className="flex flex-col items-center text-center px-4 space-y-3 pt-6 lg:pt-0">
+              <PhoneCall className="w-5 h-5 text-[#B8860B] stroke-[1.25]" />
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-serif font-bold uppercase tracking-[0.18em] text-[#111111]">{t('topstukken.trust.contact_title')}</h4>
+                <p className="text-xs text-[#555555] font-serif italic leading-relaxed">{t('topstukken.trust.contact_desc')}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -162,12 +127,13 @@ export default function TopstukkenShowcase({
         {/* ------------------------------------------------------------- */}
         {spotlightItem && (
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            key={spotlightItem.id}
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             onClick={() => onOpenItemDetail(spotlightItem)}
-            className="bg-[#FAF7F2] text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-all transform-gpu"
+            className="bg-[#FAF7F2] text-[#111111] rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#D8CEB8] shadow-card grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center group cursor-pointer hover:border-[#111111] transition-[border-color] duration-300 transform-gpu"
           >
             {/* Spotlight Image Frame */}
             <div className="lg:col-span-7 space-y-3">
@@ -230,15 +196,15 @@ export default function TopstukkenShowcase({
 
               {spotlightItem.provenance && (
                 <div className="p-4 rounded-xl bg-white border border-[#D8CEB8] space-y-1 shadow-2xs">
-                  <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase block">Bewezen Herkomst</span>
+                  <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase block">{t('topstukken.provenanceBadge')}</span>
                   <p className="text-xs font-serif italic text-[#111111]">"{spotlightItem.provenance}"</p>
                 </div>
               )}
 
               <div className="pt-4 border-t border-[#D8CEB8]/70 flex items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">Prijs / Taxatie</span>
-                  <span className="text-2xl font-serif font-bold text-[#B8860B]">{spotlightItem.price}</span>
+                  <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">{t('topstukken.priceValuation')}</span>
+                  <span className="text-2xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(spotlightItem.price, language)}</span>
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -265,6 +231,7 @@ export default function TopstukkenShowcase({
         {/* ------------------------------------------------------------- */}
         {gridItems.length > 0 && (
           <motion.div
+            key="homepage-grid"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -284,7 +251,7 @@ export default function TopstukkenShowcase({
                   variants={cardVariants}
                   whileHover={{ y: -8, transition: { duration: 0.3 } }}
                   onClick={() => onOpenItemDetail(item)}
-                  className="bg-[#FAF7F2] rounded-2xl border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-all duration-300 cursor-pointer transform-gpu"
+                  className="bg-[#FAF7F2] rounded-2xl border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-[border-color] duration-300 cursor-pointer transform-gpu"
                 >
                   {/* Image Showcase */}
                   <div className="aspect-[4/3] bg-white overflow-hidden relative border-b border-[#D8CEB8]">
@@ -349,9 +316,9 @@ export default function TopstukkenShowcase({
                     {/* Footer Actions */}
                     <div className="pt-3 sm:pt-4 border-t border-[#D8CEB8]/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
                       <div>
-                        <span className="text-[9px] uppercase font-bold text-[#888888] block font-mono">Prijs</span>
+                        <span className="text-[9px] uppercase font-bold text-[#888888] block font-mono">{t('topstukken.price')}</span>
                         <span className="text-base font-serif font-bold text-[#B8860B]">
-                          {item.price || 'Prijs op aanvraag'}
+                          {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                         </span>
                       </div>
 
@@ -398,13 +365,13 @@ export default function TopstukkenShowcase({
           <div className="space-y-2 text-center md:text-left">
             <div className="inline-flex items-center space-x-2 text-[#D4AF37] text-xs font-mono font-bold uppercase tracking-widest">
               <CheckCircle2 className="w-4 h-4 text-[#D4AF37]" />
-              <span>Garantieregeling voor Verzamelaars</span>
+              <span>{t('topstukken.guarantee.badge')}</span>
             </div>
             <h4 className="text-2xl font-serif font-bold text-white">
-              Privé Aankoop of Besloten Bezichtiging Gewenst?
+              {t('topstukken.guarantee.title')}
             </h4>
             <p className="text-sm text-[#A0988E] max-w-xl font-light">
-              Onze experts staan u persoonlijk te woord. Elk werk wordt geleverd met een officieel Atelier Rembrandt echtheidsdossier.
+              {t('topstukken.guarantee.desc')}
             </p>
           </div>
 

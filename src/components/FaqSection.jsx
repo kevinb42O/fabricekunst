@@ -101,8 +101,8 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
         {/* Still have questions CTA */}
         <div className="p-5 sm:p-8 rounded-2xl bg-[#1C1A17] text-white flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center justify-between gap-4 sm:gap-6 border border-[#332E27] shadow-xl">
           <div className="space-y-1 text-center sm:text-left">
-            <h4 className="text-xl font-serif font-bold text-white">Staat uw vraag er niet tussen?</h4>
-            <p className="text-xs text-stone-300 font-serif">Neem rechtstreeks contact op met ons atelier voor persoonlijk advies.</p>
+            <h4 className="text-xl font-serif font-bold text-white">{t('faq.cta.title')}</h4>
+            <p className="text-xs text-stone-300 font-serif">{t('faq.cta.subtitle')}</p>
           </div>
 
           <motion.button
@@ -112,7 +112,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
             className="px-5 sm:px-6 py-3 rounded-sm bg-[#B8860B] hover:bg-white text-[#111111] font-mono text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 flex items-center space-x-2 shadow-md min-h-[48px] w-full sm:w-auto justify-center"
           >
             <Mail className="w-4 h-4" />
-            <span>Stel Uw Vraag</span>
+            <span>{t('faq.cta.btn')}</span>
           </motion.button>
         </div>
 

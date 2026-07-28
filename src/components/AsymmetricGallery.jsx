@@ -4,7 +4,7 @@ import { Search, BookOpen, Award, ChevronDown, ChevronUp, ZoomIn, ShieldCheck, S
 import ImageZoomModal from './ImageZoomModal';
 import ItemDetailModal from './ItemDetailModal';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
+import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
 
 export default function AsymmetricGallery({ items, filteredItems: overrideFilteredItems, onOpenItemDetail, onRequestInquiry, hideHeader = false, hideControls = false }) {
   const { t, language } = useLanguage();
@@ -328,7 +328,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                         <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 pt-2 border-t border-[#D8CEB8]">
                           <div>
                             <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">Taxatie / Prijs</span>
-                            <span className="text-xl font-serif font-bold text-[#B8860B]">{item.price}</span>
+                            <span className="text-xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
                           </div>
 
                           <div className="flex items-center space-x-3">

@@ -30,7 +30,32 @@ const PROVENANCE_VISUALS = [
 export default function AboutProvenance({ onRequestConsultation }) {
   const { t } = useLanguage();
   const [activeVisualIndex, setActiveVisualIndex] = useState(0);
-  const activeVisual = PROVENANCE_VISUALS[activeVisualIndex];
+
+  const provenanceVisuals = [
+    {
+      id: 'bookcase',
+      title: t('provenance.visuals.v1_title'),
+      subtitle: t('provenance.visuals.v1_sub'),
+      image: '/images/voltaire-lit-bookcase-desk.jpg',
+      quote: t('provenance.visuals.v1_quote')
+    },
+    {
+      id: 'theatre',
+      title: t('provenance.visuals.v2_title'),
+      subtitle: t('provenance.visuals.v2_sub'),
+      image: '/images/voltaire-theatre-bust-reading-glasses.jpg',
+      quote: t('provenance.visuals.v2_quote')
+    },
+    {
+      id: 'exlibris',
+      title: t('provenance.visuals.v3_title'),
+      subtitle: t('provenance.visuals.v3_sub'),
+      image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
+      quote: t('provenance.visuals.v3_quote')
+    }
+  ];
+
+  const activeVisual = provenanceVisuals[activeVisualIndex] || provenanceVisuals[0];
 
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -99,7 +124,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
 
 
           <p className="text-[#C5BBAA] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed lg:pb-1">
-            Elk stuk in de collectie van Atelier Rembrandt wordt geselecteerd op basis van drie onberispelijke criteria: historische zeldzaamheid, esthetische staat van de band, en een aantoonbare herkomst.
+            {t('provenance.sectionDesc')}
           </p>
         </div>
 
@@ -115,7 +140,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
               className="relative h-[440px] sm:h-[520px] w-full overflow-hidden shadow-2xl group rounded-sm border border-[#2A2620]"
             >
               <div className="absolute inset-0 w-full h-full">
-                {PROVENANCE_VISUALS.map((vis, idx) => (
+                {provenanceVisuals.map((vis, idx) => (
                   <div
                     key={vis.id}
                     className="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out transform-gpu"
@@ -160,7 +185,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
 
             {/* Seamless Visual Switcher Tabs */}
             <div className="grid grid-cols-3 gap-3">
-              {PROVENANCE_VISUALS.map((vis, idx) => (
+              {provenanceVisuals.map((vis, idx) => (
                 <button
                   key={vis.id}
                   onClick={() => setActiveVisualIndex(idx)}
@@ -193,21 +218,21 @@ export default function AboutProvenance({ onRequestConsultation }) {
             >
               <div className="flex items-center space-x-3">
                 <span className="text-xs font-mono text-[#D4AF37] font-bold tracking-wider uppercase">
-                  Pijler 01
+                  {t('provenance.pijler')} 01
                 </span>
                 <span className="h-px w-6 bg-[#2A2620]" />
                 <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Certificering</span>
+                  <span>{t('provenance.pillar1_sub')}</span>
                 </div>
               </div>
 
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide group-hover:text-[#D4AF37] transition-colors">
-                Gegarandeerde Echtheid
+                {t('provenance.pillar1_title_home')}
               </h3>
 
               <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
-                Bij elk topstuk wordt een gedetailleerd certificaat van herkomst geleverd, inclusief fysieke analyse van papierkwaliteit, watermerken, bindingstechniek en historische drukgegevens.
+                {t('provenance.pillar1_desc_home')}
               </p>
             </motion.div>
 
@@ -219,21 +244,21 @@ export default function AboutProvenance({ onRequestConsultation }) {
             >
               <div className="flex items-center space-x-3">
                 <span className="text-xs font-mono text-[#D4AF37] font-bold tracking-wider uppercase">
-                  Pijler 02
+                  {t('provenance.pijler')} 02
                 </span>
                 <span className="h-px w-6 bg-[#2A2620]" />
                 <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
                   <Compass className="w-4 h-4" />
-                  <span>Adellijke Herkomst</span>
+                  <span>{t('provenance.pillar2_sub')}</span>
                 </div>
               </div>
 
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide group-hover:text-[#D4AF37] transition-colors">
-                Ex-Libris &amp; Eigendomssporen
+                {t('provenance.pillar2_title_home')}
               </h3>
 
               <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
-                Zeldzame stukken zoals onze 52-delige Voltaire-reeks bevatten het befaamde Vacheron-Poinsot heraldiek ex-libris, waarmee de herkomst onafgebroken teruggaat tot 19e-eeuwse Franse topverzamelaars.
+                {t('provenance.pillar2_desc_home')}
               </p>
             </motion.div>
 
@@ -245,21 +270,21 @@ export default function AboutProvenance({ onRequestConsultation }) {
             >
               <div className="flex items-center space-x-3">
                 <span className="text-xs font-mono text-[#D4AF37] font-bold tracking-wider uppercase">
-                  Pijler 03
+                  {t('provenance.pijler')} 03
                 </span>
                 <span className="h-px w-6 bg-[#2A2620]" />
                 <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
                   <Feather className="w-4 h-4" />
-                  <span>Persoonlijke Begeleiding</span>
+                  <span>{t('provenance.pillar3_sub')}</span>
                 </div>
               </div>
 
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide group-hover:text-[#D4AF37] transition-colors">
-                Discreet Advies voor Verzamelaars
+                {t('provenance.pillar3_title_home')}
               </h3>
 
               <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
-                Of u nu een particuliere bibliofiel bent of een institutionele verzameling uitbouwt: Atelier Rembrandt biedt persoonlijk advies bij aankoop, conservering en waardebepaling.
+                {t('provenance.pillar3_desc_home')}
               </p>
             </motion.div>
 
@@ -269,9 +294,9 @@ export default function AboutProvenance({ onRequestConsultation }) {
                 whileHover={{ scale: 1.025, backgroundColor: "#D4AF37", color: "#0F0E0C" }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onRequestConsultation}
-                className="inline-flex items-center justify-center space-x-3 px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-serif text-sm sm:text-base font-semibold tracking-wide border border-[#D4AF37]/60 hover:border-[#D4AF37] shadow-xl transition-all duration-300 cursor-pointer group"
+                className="inline-flex items-center justify-center space-x-3 px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-serif text-sm sm:text-base font-semibold tracking-wide border border-[#D4AF37]/60 hover:border-[#D4AF37] shadow-xl transition-[border-color] duration-300 cursor-pointer group"
               >
-                <span>Plan een Privé-Bezichtiging met Atelier Rembrandt</span>
+                <span>{t('provenance.btnHome')}</span>
                 <ArrowRight className="w-4 h-4 text-[#D4AF37] group-hover:text-[#0F0E0C] group-hover:translate-x-1 transition-all duration-300" />
               </motion.button>
             </div>
