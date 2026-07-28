@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
 import { autoTranslateItemFields } from '../../utils/translationService';
-import CertificateModal from './CertificateModal';
 
-export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast }) {
+
+export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast, onOpenCertificate }) {
   const [editingItem, setEditingItem] = useState(null);
-  const [certificateItem, setCertificateItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -458,7 +457,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       <td className="p-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end space-x-1.5">
                           <button
-                            onClick={() => setCertificateItem(item)}
+                            onClick={() => onOpenCertificate && onOpenCertificate(item)}
                             className="p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
                             title="Echtheidscertificaat (PDF) Genereren"
                           >
@@ -619,7 +618,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
                 <div className="flex items-center space-x-1.5">
                   <button
-                    onClick={() => setCertificateItem(item)}
+                    onClick={() => onOpenCertificate && onOpenCertificate(item)}
                     className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
                     title="Echtheidscertificaat (PDF) Genereren"
                   >
@@ -1160,7 +1159,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 {!isNew && (
                   <button
                     type="button"
-                    onClick={() => setCertificateItem(editingItem)}
+                    onClick={() => onOpenCertificate && onOpenCertificate(editingItem)}
                     className="px-5 py-3 rounded-xl bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white font-serif font-bold text-xs transition-all flex items-center space-x-2 shadow-sm"
                   >
                     <Award className="w-4 h-4" />
@@ -1192,14 +1191,6 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         </div>
       )}
 
-      {/* Certificate Modal */}
-      {certificateItem && (
-        <CertificateModal
-          item={certificateItem}
-          items={items}
-          onClose={() => setCertificateItem(null)}
-        />
-      )}
 
     </div>
   );

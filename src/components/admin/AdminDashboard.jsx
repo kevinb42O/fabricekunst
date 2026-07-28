@@ -24,7 +24,7 @@ import CustomersManager from './CustomersManager';
 import HeroSlidesManager from './HeroSlidesManager';
 import ProvenanceManager from './ProvenanceManager';
 import FaqManager from './FaqManager';
-import CertificateModal from './CertificateModal';
+import CertificateManager from './CertificateManager';
 
 export default function AdminDashboard({ 
   items = [], 
@@ -47,7 +47,9 @@ export default function AdminDashboard({
   const activeInquiries = inquiries || [];
   const handleClose = onCloseAdmin || onClose || (() => {});
 
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'items' | 'hero' | 'provenance' | 'faq' | 'inquiries' | 'customers' | 'settings'
+  const [activeTab, setActiveTab] = useState('dashboard');
+  // item to pre-select when jumping to certificates tab
+  const [certificateForItem, setCertificateForItem] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -330,13 +332,22 @@ export default function AdminDashboard({
               onSaveItem={onSaveItem}
               onDeleteItem={onDeleteItem}
               onShowToast={showToast}
+              onOpenCertificate={(item) => {
+                setCertificateForItem(item);
+                setActiveTab('certificates');
+              }}
             />
           )}
 
           {activeTab === 'certificates' && (
-            <CertificateModal
+            <CertificateManager
               items={activeItems}
-              onClose={() => setActiveTab('items')}
+              initialItem={certificateForItem}
+              onBackToItems={() => {
+                setCertificateForItem(null);
+                setActiveTab('items');
+              }}
+              onShowToast={showToast}
             />
           )}
 
