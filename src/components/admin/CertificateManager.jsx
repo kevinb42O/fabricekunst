@@ -589,10 +589,9 @@ export default function CertificateManager({
                   </div>
                 </div>
 
-                {/* Micro verification line */}
+                {/* Micro footer line */}
                 <div className="mt-5 pt-3 border-t border-[#111111]/8 flex items-center justify-between text-[9px] font-mono text-[#888888]">
-                  <span>REF: {selectedItem.ref}</span>
-                  <span>VERIFICATION: {selectedItem.id.toUpperCase()}-AR2026</span>
+                  <span>COA REF: {certNumber}</span>
                   <span>WWW.ATELIERREMBRANDT.COM</span>
                 </div>
 
