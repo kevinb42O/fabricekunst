@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   Download, 
@@ -14,7 +14,8 @@ import {
   Image as ImageIcon,
   Loader2,
   Upload,
-  RotateCcw
+  RotateCcw,
+  Edit3
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -28,20 +29,24 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
   // Language state: 'nl' | 'fr' | 'en'
   const [lang, setLang] = useState('nl');
 
-  // Certificate Form Fields
-  const [certNumber, setCertNumber] = useState(() => {
-    const refCode = selectedItem?.ref ? selectedItem.ref.replace('FB-', '') : `${new Date().getFullYear()}-1042`;
-    return `COA-FB-${refCode}`;
-  });
-
+  // Certificate Base Metadata Form Fields
+  const [certNumber, setCertNumber] = useState('');
   const [issuedTo, setIssuedTo] = useState('Particuliere Collectie');
-  
-  const [certDate, setCertDate] = useState(() => {
-    const today = new Date();
-    return today.toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' });
-  });
+  const [certDate, setCertDate] = useState('');
 
+  // 100% Fully Editable Item Specifications
+  const [customTitle, setCustomTitle] = useState('');
+  const [customSubtitle, setCustomSubtitle] = useState('');
+  const [customAuthor, setCustomAuthor] = useState('');
+  const [customPublisher, setCustomPublisher] = useState('');
+  const [customYear, setCustomYear] = useState('');
+  const [customBinding, setCustomBinding] = useState('');
+  const [customDimensions, setCustomDimensions] = useState('');
+  const [customProvenance, setCustomProvenance] = useState('');
   const [customNotes, setCustomNotes] = useState('');
+  const [customGuaranteeText, setCustomGuaranteeText] = useState('');
+
+  // Toggles
   const [showImage, setShowImage] = useState(true);
   const [showSeal, setShowSeal] = useState(true);
   const [showSignature, setShowSignature] = useState(true);
@@ -58,46 +63,6 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
 
   // Reference to certificate DOM node for canvas conversion
   const certRef = useRef(null);
-
-  // Update certificate defaults when selected item changes
-  const handleItemChange = (itemId) => {
-    const found = items.find(i => i.id === itemId);
-    if (found) {
-      setSelectedItem(found);
-      const refCode = found.ref ? found.ref.replace('FB-', '') : `${new Date().getFullYear()}-${Math.floor(1000 + Math.random()*9000)}`;
-      setCertNumber(`COA-FB-${refCode}`);
-    }
-  };
-
-  // Handle Custom Signature Upload File
-  const handleSignatureUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result;
-      if (dataUrl) {
-        setCustomSignature(dataUrl);
-        try {
-          localStorage.setItem('fabrice_signature_image', dataUrl);
-        } catch (err) {
-          console.warn("Could not save signature to localStorage", err);
-        }
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Clear Custom Signature
-  const handleClearSignature = () => {
-    setCustomSignature(null);
-    try {
-      localStorage.removeItem('fabrice_signature_image');
-    } catch (err) {
-      console.warn("Could not remove signature from localStorage", err);
-    }
-  };
 
   // Translations for COA content
   const texts = {
@@ -162,6 +127,65 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
 
   const t = texts[lang] || texts.nl;
 
+  // Initialize & populate editable fields whenever selectedItem or lang changes
+  useEffect(() => {
+    if (!selectedItem) return;
+
+    const refCode = selectedItem.ref ? selectedItem.ref.replace('FB-', '') : `${new Date().getFullYear()}-1042`;
+    setCertNumber(`COA-FB-${refCode}`);
+
+    const today = new Date();
+    setCertDate(today.toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' }));
+
+    setCustomTitle(selectedItem.title || '');
+    setCustomSubtitle(selectedItem.subtitle || '');
+    setCustomAuthor(selectedItem.author || '');
+    setCustomPublisher(selectedItem.publisher || '');
+    setCustomYear(selectedItem.year || selectedItem.century || '');
+    setCustomBinding(selectedItem.binding || '');
+    setCustomDimensions(selectedItem.dimensions || '');
+    setCustomProvenance(selectedItem.provenance || '');
+    setCustomGuaranteeText(t.guaranteeText);
+  }, [selectedItem, lang]);
+
+  // Handle item change from dropdown
+  const handleItemChange = (itemId) => {
+    const found = items.find(i => i.id === itemId);
+    if (found) {
+      setSelectedItem(found);
+    }
+  };
+
+  // Handle Custom Signature Upload File
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      if (dataUrl) {
+        setCustomSignature(dataUrl);
+        try {
+          localStorage.setItem('fabrice_signature_image', dataUrl);
+        } catch (err) {
+          console.warn("Could not save signature to localStorage", err);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Clear Custom Signature
+  const handleClearSignature = () => {
+    setCustomSignature(null);
+    try {
+      localStorage.removeItem('fabrice_signature_image');
+    } catch (err) {
+      console.warn("Could not remove signature from localStorage", err);
+    }
+  };
+
   // Handle PDF Export download
   const handleDownloadPdf = async () => {
     if (!certRef.current) return;
@@ -212,38 +236,41 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
   const primaryImage = selectedItem.images && selectedItem.images.length > 0 ? selectedItem.images[0].url : null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 print:p-0 print:bg-white print:static">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md p-2 sm:p-4 md:p-6 flex items-start justify-center min-h-screen print:p-0 print:bg-white print:static">
       
-      {/* Container Box */}
-      <div className="bg-[#1C1A18] border border-[#38332E] w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row max-h-[94vh] print:max-h-none print:shadow-none print:border-none print:w-full print:bg-white">
+      {/* ALWAYS VISIBLE FLOATING CLOSE BUTTON (Top Right) */}
+      <button 
+        onClick={onClose}
+        className="fixed top-4 right-4 z-[100] bg-stone-900/90 text-white p-3 rounded-full hover:bg-stone-800 hover:text-[#C5A059] shadow-2xl transition-all border border-[#C5A059]/40 flex items-center justify-center print:hidden cursor-pointer"
+        title="Sluit Venster"
+      >
+        <X className="w-6 h-6" />
+      </button>
+
+      {/* Main Modal Container Box */}
+      <div className="relative w-full max-w-6xl my-auto bg-[#1C1A18] border border-[#38332E] rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row print:max-h-none print:shadow-none print:border-none print:w-full print:bg-white">
         
         {/* ======================================================== */}
-        {/* LEFT CONTROLS SIDEBAR (Hidden on print) */}
+        {/* LEFT CONTROLS SIDEBAR (Fully Editable Input Panel)       */}
         {/* ======================================================== */}
-        <div className="w-full lg:w-80 bg-[#24211D] border-b lg:border-b-0 lg:border-r border-[#38332E] p-5 flex flex-col justify-between space-y-6 overflow-y-auto print:hidden">
+        <div className="w-full lg:w-96 bg-[#24211D] border-b lg:border-b-0 lg:border-r border-[#38332E] p-5 flex flex-col justify-between space-y-6 max-h-[85vh] lg:max-h-[90vh] overflow-y-auto print:hidden">
           
           <div className="space-y-5">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-y-1">
-                <div className="p-2 rounded-lg bg-[#C5A059]/10 text-[#C5A059] mr-2.5">
+            
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between border-b border-[#38332E] pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-lg bg-[#C5A059]/10 text-[#C5A059]">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-white tracking-wide">Certificaat Opties</h3>
-                  <p className="text-xs text-[#A0988C]">Strak &amp; Authentiek</p>
+                  <h3 className="font-serif text-base font-bold text-white tracking-wide">Certificaat Bewerken</h3>
+                  <p className="text-[11px] text-[#A0988C]">Pas alle teksten &amp; opties aan</p>
                 </div>
               </div>
-
-              <button 
-                onClick={onClose}
-                className="p-1.5 rounded-lg text-[#A0988C] hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            {/* Item Switcher (If multiple items passed) */}
+            {/* Item Switcher Dropdown (If multiple items passed) */}
             {items.length > 1 && (
               <div>
                 <label className="block text-xs font-semibold text-[#C5A059] uppercase tracking-wider mb-1.5">
@@ -290,50 +317,161 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               </div>
             </div>
 
-            {/* Certificate Serial Number */}
-            <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1 flex items-center space-x-1">
-                <Hash className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Certificaat Nummer</span>
-              </label>
-              <input
-                type="text"
-                value={certNumber}
-                onChange={(e) => setCertNumber(e.target.value)}
-                className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs font-mono rounded-xl p-2.5 focus:border-[#C5A059] focus:outline-none"
-              />
+            {/* SECTION: BASICS */}
+            <div className="space-y-3 pt-2 border-t border-[#38332E]">
+              <span className="block text-[11px] font-mono uppercase font-bold text-[#C5A059] tracking-wider">
+                Certificaat Kenmerken
+              </span>
+
+              {/* Certificate Serial Number */}
+              <div>
+                <label className="block text-xs text-stone-300 mb-1">
+                  Certificaat Nummer
+                </label>
+                <input
+                  type="text"
+                  value={certNumber}
+                  onChange={(e) => setCertNumber(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs font-mono rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                />
+              </div>
+
+              {/* Issued To / Owner */}
+              <div>
+                <label className="block text-xs text-stone-300 mb-1">
+                  Gecertificeerd Voor (Klantnaam)
+                </label>
+                <input
+                  type="text"
+                  value={issuedTo}
+                  onChange={(e) => setIssuedTo(e.target.value)}
+                  placeholder="Bijv. Collectie J. van Dam"
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                />
+              </div>
+
+              {/* Certificate Date */}
+              <div>
+                <label className="block text-xs text-stone-300 mb-1">
+                  Uitgiftedatum
+                </label>
+                <input
+                  type="text"
+                  value={certDate}
+                  onChange={(e) => setCertDate(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                />
+              </div>
             </div>
 
-            {/* Issued To / Owner */}
-            <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1 flex items-center space-x-1">
-                <User className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Gecertificeerd Voor (Klantnaam)</span>
-              </label>
-              <input
-                type="text"
-                value={issuedTo}
-                onChange={(e) => setIssuedTo(e.target.value)}
-                placeholder="Bijv. Collectie J. van Dam"
-                className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2.5 focus:border-[#C5A059] focus:outline-none"
-              />
+            {/* SECTION: EDITABLE OBJECT SPECIFICATIONS */}
+            <div className="space-y-3 pt-2 border-t border-[#38332E]">
+              <span className="block text-[11px] font-mono uppercase font-bold text-[#C5A059] tracking-wider flex items-center justify-between">
+                <span>Object Specificaties Aanpassen</span>
+                <Edit3 className="w-3.5 h-3.5" />
+              </span>
+
+              {/* Title */}
+              <div>
+                <label className="block text-[11px] text-stone-400 mb-1">Titel / Omschrijving</label>
+                <textarea
+                  rows={2}
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none resize-none"
+                />
+              </div>
+
+              {/* Subtitle */}
+              <div>
+                <label className="block text-[11px] text-stone-400 mb-1">Ondertitel (Optioneel)</label>
+                <input
+                  type="text"
+                  value={customSubtitle}
+                  onChange={(e) => setCustomSubtitle(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                />
+              </div>
+
+              {/* Author & Publisher */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] text-stone-400 mb-1">Auteur / Kunstenaar</label>
+                  <input
+                    type="text"
+                    value={customAuthor}
+                    onChange={(e) => setCustomAuthor(e.target.value)}
+                    className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-stone-400 mb-1">Uitgever / Drukker</label>
+                  <input
+                    type="text"
+                    value={customPublisher}
+                    onChange={(e) => setCustomPublisher(e.target.value)}
+                    className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Period & Dimensions */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] text-stone-400 mb-1">Datering / Eeuw</label>
+                  <input
+                    type="text"
+                    value={customYear}
+                    onChange={(e) => setCustomYear(e.target.value)}
+                    className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-stone-400 mb-1">Formaat / Afmetingen</label>
+                  <input
+                    type="text"
+                    value={customDimensions}
+                    onChange={(e) => setCustomDimensions(e.target.value)}
+                    className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Binding / Medium */}
+              <div>
+                <label className="block text-[11px] text-stone-400 mb-1">Band / Medium</label>
+                <textarea
+                  rows={2}
+                  value={customBinding}
+                  onChange={(e) => setCustomBinding(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none resize-none"
+                />
+              </div>
+
+              {/* Provenance */}
+              <div>
+                <label className="block text-[11px] text-stone-400 mb-1">Geverifieerde Herkomst (Provenance)</label>
+                <textarea
+                  rows={2}
+                  value={customProvenance}
+                  onChange={(e) => setCustomProvenance(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none resize-none"
+                />
+              </div>
+
+              {/* Guarantee Text */}
+              <div>
+                <label className="block text-[11px] text-stone-400 mb-1">Garantie Verklaringstekst</label>
+                <textarea
+                  rows={3}
+                  value={customGuaranteeText}
+                  onChange={(e) => setCustomGuaranteeText(e.target.value)}
+                  className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none resize-none"
+                />
+              </div>
             </div>
 
-            {/* Certificate Date */}
-            <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1 flex items-center space-x-1">
-                <Calendar className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Uitgiftedatum</span>
-              </label>
-              <input
-                type="text"
-                value={certDate}
-                onChange={(e) => setCertDate(e.target.value)}
-                className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2.5 focus:border-[#C5A059] focus:outline-none"
-              />
-            </div>
-
-            {/* Custom Handtekening Upload */}
+            {/* SECTION: CUSTOM HANDTEKENING UPLOAD */}
             <div className="pt-2 border-t border-[#38332E] space-y-2">
               <label className="block text-xs font-semibold text-[#C5A059] uppercase tracking-wider flex items-center justify-between">
                 <span>Eigen Handtekening Uploaden</span>
@@ -364,22 +502,22 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               </div>
             </div>
 
-            {/* Custom Notes */}
+            {/* SECTION: CUSTOM NOTES */}
             <div>
               <label className="block text-xs font-semibold text-stone-300 mb-1 flex items-center space-x-1">
                 <FileText className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Aanvullende Notities (Optioneel)</span>
+                <span>Aanvullende Notitie (Optioneel)</span>
               </label>
               <textarea
                 rows={2}
                 value={customNotes}
                 onChange={(e) => setCustomNotes(e.target.value)}
                 placeholder="Bijv. Inclusief beschermcassette..."
-                className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2.5 focus:border-[#C5A059] focus:outline-none resize-none"
+                className="w-full bg-[#1C1A18] border border-[#38332E] text-white text-xs rounded-xl p-2 focus:border-[#C5A059] focus:outline-none resize-none"
               />
             </div>
 
-            {/* Toggles */}
+            {/* TOGGLES */}
             <div className="space-y-2 pt-2 border-t border-[#38332E]">
               <label className="flex items-center justify-between text-xs text-stone-300 cursor-pointer py-1">
                 <span className="flex items-center space-x-2">
@@ -457,7 +595,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
         {/* ======================================================== */}
         {/* RIGHT PREVIEW CANVAS (Clean Pure Classic COA Sheet)      */}
         {/* ======================================================== */}
-        <div className="flex-1 bg-[#12100E] p-4 sm:p-6 lg:p-8 overflow-y-auto flex items-center justify-center print:p-0 print:bg-white print:overflow-visible">
+        <div className="flex-1 bg-[#12100E] p-4 sm:p-6 lg:p-8 max-h-[85vh] lg:max-h-[90vh] overflow-y-auto flex items-start justify-center print:p-0 print:bg-white print:overflow-visible">
           
           {/* THE CLEAN CERTIFICATE DOCUMENT */}
           <div 
@@ -517,7 +655,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
                       <div className="p-1 bg-white border border-[#111111]/20 shadow-xs">
                         <img 
                           src={primaryImage} 
-                          alt={selectedItem.title}
+                          alt={customTitle || selectedItem.title}
                           className="w-full h-32 md:h-36 object-cover"
                         />
                       </div>
@@ -536,11 +674,11 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
                         {t.itemTitle}
                       </span>
                       <p className="font-serif text-sm sm:text-base font-bold text-[#111111] leading-tight">
-                        {selectedItem.title}
+                        {customTitle}
                       </p>
-                      {selectedItem.subtitle && (
+                      {customSubtitle && (
                         <p className="font-serif text-xs italic text-[#555555] mt-0.5">
-                          {selectedItem.subtitle}
+                          {customSubtitle}
                         </p>
                       )}
                     </div>
@@ -548,49 +686,49 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
                     {/* Grid of specs */}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 pt-1">
                       
-                      {selectedItem.author && (
+                      {customAuthor && (
                         <div>
                           <span className="block text-[9.5px] font-bold uppercase tracking-wider text-[#8C6D2B]">
                             {t.authorPublisher}
                           </span>
-                          <span className="font-medium text-[#111111]">{selectedItem.author}</span>
-                          {selectedItem.publisher && <span className="text-[#555555]"> ({selectedItem.publisher})</span>}
+                          <span className="font-medium text-[#111111]">{customAuthor}</span>
+                          {customPublisher && <span className="text-[#555555]"> ({customPublisher})</span>}
                         </div>
                       )}
 
-                      {(selectedItem.year || selectedItem.century) && (
+                      {customYear && (
                         <div>
                           <span className="block text-[9.5px] font-bold uppercase tracking-wider text-[#8C6D2B]">
                             {t.period}
                           </span>
-                          <span className="font-medium text-[#111111]">{selectedItem.year || selectedItem.century}</span>
+                          <span className="font-medium text-[#111111]">{customYear}</span>
                         </div>
                       )}
 
-                      {selectedItem.binding && (
+                      {customBinding && (
                         <div className="col-span-2">
                           <span className="block text-[9.5px] font-bold uppercase tracking-wider text-[#8C6D2B]">
                             {t.bindingMedium}
                           </span>
-                          <span className="font-medium text-[#111111] leading-relaxed">{selectedItem.binding}</span>
+                          <span className="font-medium text-[#111111] leading-relaxed">{customBinding}</span>
                         </div>
                       )}
 
-                      {selectedItem.dimensions && (
+                      {customDimensions && (
                         <div>
                           <span className="block text-[9.5px] font-bold uppercase tracking-wider text-[#8C6D2B]">
                             {t.dimensions}
                           </span>
-                          <span className="font-medium text-[#111111]">{selectedItem.dimensions}</span>
+                          <span className="font-medium text-[#111111]">{customDimensions}</span>
                         </div>
                       )}
 
-                      {selectedItem.provenance && (
+                      {customProvenance && (
                         <div className="col-span-2">
                           <span className="block text-[9.5px] font-bold uppercase tracking-wider text-[#8C6D2B]">
                             {t.provenance}
                           </span>
-                          <span className="font-medium text-[#111111] italic">{selectedItem.provenance}</span>
+                          <span className="font-medium text-[#111111] italic">{customProvenance}</span>
                         </div>
                       )}
 
@@ -615,7 +753,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
                     — {t.guaranteeHeader} —
                   </span>
                   <p className="font-serif text-xs sm:text-xs leading-relaxed text-[#2A2A2A] max-w-xl mx-auto italic">
-                    "{t.guaranteeText}"
+                    "{customGuaranteeText}"
                   </p>
                 </div>
 
@@ -671,7 +809,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               <div className="mt-4 pt-2 border-t border-[#111111]/10 flex items-center justify-between text-[8.5px] font-mono text-[#777777]">
                 <span>REF: {selectedItem.ref}</span>
                 <span>AUTHENTICITY VERIFICATION: {selectedItem.id.toUpperCase()}-AR2026</span>
-                <span>WWW.FABRICEBOEKENKUNST.NL</span>
+                <span>WWW.ATELIERREMBRANDT.COM</span>
               </div>
 
             </div>
