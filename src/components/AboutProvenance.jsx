@@ -70,26 +70,23 @@ export default function AboutProvenance({ onRequestConsultation }) {
     <section 
       ref={sectionRef} 
       id="herkomst" 
-      className="relative bg-[#0F0E0C] text-[#FAF7F2] py-24 sm:py-32 overflow-hidden border-b border-[#2A2620]"
+      className="relative bg-[#F4F0E8] text-[#111111] py-24 sm:py-32 overflow-hidden border-t border-b border-[#D8CEB8]"
     >
-      {/* Smooth top gradient transition */}
-      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#FAF7F2] via-[#0F0E0C]/80 to-transparent pointer-events-none z-10" />
-
       {/* Ambient background glow with scroll motion */}
       <motion.div 
         style={{ y: glowY }}
-        className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#B8860B]/12 rounded-full blur-[140px] pointer-events-none" 
+        className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#B8860B]/4 rounded-full blur-[140px] pointer-events-none" 
       />
       <motion.div 
         style={{ y: glowY }}
-        className="absolute bottom-0 right-10 w-[500px] h-[500px] bg-[#D4AF37]/8 rounded-full blur-[120px] pointer-events-none" 
+        className="absolute bottom-0 right-10 w-[500px] h-[500px] bg-[#B8860B]/3 rounded-full blur-[120px] pointer-events-none" 
       />
       
       {/* Decorative hairline grid pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+        className="absolute inset-0 opacity-[0.2] pointer-events-none" 
         style={{
-          backgroundImage: `radial-gradient(#D4AF37 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(#B8860B 1px, transparent 1px)`,
           backgroundSize: '32px 32px'
         }}
       />
@@ -103,27 +100,27 @@ export default function AboutProvenance({ onRequestConsultation }) {
       >
         
         {/* SECOND HERO HEADER BAR */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-[#2A2620] pb-8 gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-[#D8CEB8] pb-8 gap-6">
           <div className="space-y-3">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center space-x-3 text-[#D4AF37] text-xs font-mono font-bold tracking-[0.3em] uppercase"
+              className="inline-flex items-center space-x-3 text-[#B8860B] text-xs font-mono font-bold tracking-[0.3em] uppercase"
             >
-              <span className="w-8 h-px bg-[#D4AF37]" />
-              <Award className="w-4 h-4 text-[#D4AF37]" />
+              <span className="w-8 h-px bg-[#B8860B]" />
+              <Award className="w-4 h-4 text-[#B8860B]" />
               <span>{t('provenance.heroBadge')}</span>
             </motion.div>
             
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.1]">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
               {t('provenance.heroTitle')}
             </h2>
           </div>
 
 
-          <p className="text-[#C5BBAA] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed lg:pb-1">
+          <p className="text-[#333333] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed lg:pb-1">
             {t('provenance.sectionDesc')}
           </p>
         </div>
@@ -137,7 +134,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
             {/* Main Stage Photography Container with Scroll Parallax */}
             <motion.div 
               style={{ y: imageY }}
-              className="relative h-[440px] sm:h-[520px] w-full overflow-hidden shadow-2xl group rounded-sm border border-[#2A2620]"
+              className="relative h-[440px] sm:h-[520px] w-full overflow-hidden shadow-2xl group rounded-sm border border-[#D8CEB8]"
             >
               <div className="absolute inset-0 w-full h-full">
                 {provenanceVisuals.map((vis, idx) => (
@@ -160,17 +157,17 @@ export default function AboutProvenance({ onRequestConsultation }) {
               </div>
               
               {/* Vignetting */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0F0E0C] via-transparent to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
               {/* Integrated Editorial Quote Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-gradient-to-t from-[#0F0E0C] via-[#0F0E0C]/90 to-transparent">
-                <div className="flex items-start space-x-4 border-l-2 border-[#D4AF37] pl-4 sm:pl-6">
-                  <Feather className="w-5 h-5 text-[#D4AF37] shrink-0 mt-1" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-gradient-to-t from-black via-black/90 to-transparent">
+                <div className="flex items-start space-x-4 border-l-2 border-[#B8860B] pl-4 sm:pl-6">
+                  <Feather className="w-5 h-5 text-[#B8860B] shrink-0 mt-1" />
                   <div>
-                    <p className="text-sm sm:text-base text-[#E8DFD1] italic font-serif leading-relaxed">
+                    <p className="text-sm sm:text-base text-[#FAF7F2] italic font-serif leading-relaxed">
                       {activeVisual.quote}
                     </p>
-                    <span className="block text-[11px] text-[#D4AF37] font-bold uppercase tracking-widest font-mono mt-2">
+                    <span className="block text-[11px] text-[#B8860B] font-bold uppercase tracking-widest font-mono mt-2">
                       — Atelier Rembrandt
                     </span>
                   </div>
@@ -178,7 +175,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
               </div>
 
               {/* Tag indicator */}
-              <div className="absolute top-6 left-6 bg-[#0F0E0C]/85 backdrop-blur-md px-3.5 py-1.5 border border-[#D4AF37]/30 text-xs font-mono text-[#D4AF37]">
+              <div className="absolute top-6 left-6 bg-[#1C1A17]/90 backdrop-blur-md px-3.5 py-1.5 border border-[#B8860B]/30 text-xs font-mono text-[#B8860B]">
                 0{activeVisualIndex + 1} / 03
               </div>
             </motion.div>
@@ -191,11 +188,11 @@ export default function AboutProvenance({ onRequestConsultation }) {
                   onClick={() => setActiveVisualIndex(idx)}
                   className={`text-left p-3.5 transition-all duration-300 border-t-2 relative flex flex-col justify-between cursor-pointer ${
                     idx === activeVisualIndex
-                      ? 'border-[#D4AF37] bg-white/5 text-white'
-                      : 'border-[#2A2620] bg-transparent text-[#999999] hover:text-[#E8DFD1] hover:border-[#666666]'
+                      ? 'border-[#B8860B] bg-[#1C1A17]/5 text-[#111111]'
+                      : 'border-[#D8CEB8] bg-transparent text-[#666666] hover:text-[#111111] hover:border-[#B8860B]'
                   }`}
                 >
-                  <span className="text-[10px] font-mono text-[#D4AF37] font-bold tracking-widest block uppercase mb-1">
+                  <span className="text-[10px] font-mono text-[#B8860B] font-bold tracking-widest block uppercase mb-1">
                     0{idx + 1}
                   </span>
                   <span className="text-xs font-serif font-medium line-clamp-1 block">
@@ -214,24 +211,24 @@ export default function AboutProvenance({ onRequestConsultation }) {
             <motion.div 
               whileHover={{ x: 8 }}
               transition={{ duration: 0.3 }}
-              className="space-y-3 relative border-l-2 border-[#D4AF37]/80 pl-6 py-1 hover:border-[#D4AF37] transition-colors cursor-pointer group"
+              className="space-y-3 relative border-l-2 border-[#B8860B]/40 pl-6 py-1 hover:border-[#B8860B] transition-colors cursor-pointer group"
             >
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-[#D4AF37] font-bold tracking-wider uppercase">
+                <span className="text-xs font-mono text-[#B8860B] font-bold tracking-wider uppercase">
                   {t('provenance.pijler')} 01
                 </span>
-                <span className="h-px w-6 bg-[#2A2620]" />
-                <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
+                <span className="h-px w-6 bg-[#D8CEB8]" />
+                <div className="flex items-center space-x-1.5 text-[#B8860B] text-xs font-semibold uppercase tracking-wider">
                   <ShieldCheck className="w-4 h-4" />
                   <span>{t('provenance.pillar1_sub')}</span>
                 </div>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide group-hover:text-[#D4AF37] transition-colors">
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-wide group-hover:text-[#B8860B] transition-colors">
                 {t('provenance.pillar1_title_home')}
               </h3>
 
-              <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
+              <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
                 {t('provenance.pillar1_desc_home')}
               </p>
             </motion.div>
@@ -240,24 +237,24 @@ export default function AboutProvenance({ onRequestConsultation }) {
             <motion.div 
               whileHover={{ x: 8 }}
               transition={{ duration: 0.3 }}
-              className="space-y-3 relative border-l-2 border-[#D4AF37]/80 pl-6 py-1 hover:border-[#D4AF37] transition-colors cursor-pointer group"
+              className="space-y-3 relative border-l-2 border-[#B8860B]/40 pl-6 py-1 hover:border-[#B8860B] transition-colors cursor-pointer group"
             >
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-[#D4AF37] font-bold tracking-wider uppercase">
+                <span className="text-xs font-mono text-[#B8860B] font-bold tracking-wider uppercase">
                   {t('provenance.pijler')} 02
                 </span>
-                <span className="h-px w-6 bg-[#2A2620]" />
-                <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
+                <span className="h-px w-6 bg-[#D8CEB8]" />
+                <div className="flex items-center space-x-1.5 text-[#B8860B] text-xs font-semibold uppercase tracking-wider">
                   <Compass className="w-4 h-4" />
                   <span>{t('provenance.pillar2_sub')}</span>
                 </div>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide group-hover:text-[#D4AF37] transition-colors">
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-wide group-hover:text-[#B8860B] transition-colors">
                 {t('provenance.pillar2_title_home')}
               </h3>
 
-              <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
+              <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
                 {t('provenance.pillar2_desc_home')}
               </p>
             </motion.div>
@@ -266,24 +263,24 @@ export default function AboutProvenance({ onRequestConsultation }) {
             <motion.div 
               whileHover={{ x: 8 }}
               transition={{ duration: 0.3 }}
-              className="space-y-3 relative border-l-2 border-[#D4AF37]/80 pl-6 py-1 hover:border-[#D4AF37] transition-colors cursor-pointer group"
+              className="space-y-3 relative border-l-2 border-[#B8860B]/40 pl-6 py-1 hover:border-[#B8860B] transition-colors cursor-pointer group"
             >
               <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-[#D4AF37] font-bold tracking-wider uppercase">
+                <span className="text-xs font-mono text-[#B8860B] font-bold tracking-wider uppercase">
                   {t('provenance.pijler')} 03
                 </span>
-                <span className="h-px w-6 bg-[#2A2620]" />
-                <div className="flex items-center space-x-1.5 text-[#D4AF37] text-xs font-semibold uppercase tracking-wider">
+                <span className="h-px w-6 bg-[#D8CEB8]" />
+                <div className="flex items-center space-x-1.5 text-[#B8860B] text-xs font-semibold uppercase tracking-wider">
                   <Feather className="w-4 h-4" />
                   <span>{t('provenance.pillar3_sub')}</span>
                 </div>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide group-hover:text-[#D4AF37] transition-colors">
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-wide group-hover:text-[#B8860B] transition-colors">
                 {t('provenance.pillar3_title_home')}
               </h3>
 
-              <p className="text-sm text-[#C5BBAA] font-serif font-light leading-relaxed">
+              <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
                 {t('provenance.pillar3_desc_home')}
               </p>
             </motion.div>
@@ -291,13 +288,13 @@ export default function AboutProvenance({ onRequestConsultation }) {
             {/* GRAND HERO CTA BUTTON */}
             <div className="pt-6">
               <motion.button
-                whileHover={{ scale: 1.025, backgroundColor: "#D4AF37", color: "#0F0E0C" }}
+                whileHover={{ scale: 1.025, backgroundColor: "#B8860B", color: "#111111" }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onRequestConsultation}
-                className="inline-flex items-center justify-center space-x-3 px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-serif text-sm sm:text-base font-semibold tracking-wide border border-[#D4AF37]/60 hover:border-[#D4AF37] shadow-xl transition-[border-color] duration-300 cursor-pointer group"
+                className="inline-flex items-center justify-center space-x-3 px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-serif text-sm sm:text-base font-semibold tracking-wide border border-[#B8860B]/60 hover:border-[#B8860B] shadow-xl transition-all duration-300 cursor-pointer group"
               >
                 <span>{t('provenance.btnHome')}</span>
-                <ArrowRight className="w-4 h-4 text-[#D4AF37] group-hover:text-[#0F0E0C] group-hover:translate-x-1 transition-all duration-300" />
+                <ArrowRight className="w-4 h-4 text-[#B8860B] group-hover:text-[#111111] group-hover:translate-x-1 transition-all duration-300" />
               </motion.button>
             </div>
 
