@@ -5,25 +5,25 @@ import { useLanguage } from '../context/LanguageContext';
 
 const PROVENANCE_VISUALS = [
   {
+    id: 'white-gloves',
+    title: 'Inspectie met Witte Handschoenen',
+    subtitle: 'Museumwaardige conservering & gecureerde selectie van zeldzame meesterwerken',
+    image: '/images/white-gloves-conservator.jpg',
+    quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collectie."'
+  },
+  {
     id: 'bookcase',
     title: 'De Antiquariaats-Bibliotheek',
     subtitle: 'Historische boekenkast met sfeerverlichting en zeldzame banden',
     image: '/images/voltaire-lit-bookcase-desk.jpg',
-    quote: '"Een antiek boek is meer dan papier en goudstempels op shagreen; het is een tijdscapsule van ideeën met de menselijke ziel van haar vroegere bezitters."'
-  },
-  {
-    id: 'theatre',
-    title: 'Théâtre de Voltaire & Buste',
-    subtitle: 'Originele uitgave uit 1829 met marmeren buste en antieke messing leesbril',
-    image: '/images/voltaire-theatre-bust-reading-glasses.jpg',
-    quote: '"De combinatie van historische documenten en adellijke herkomst vormt de absolute top van bibliofilie."'
+    quote: '"Hier koop je geen boek. Hier koop je geschiedenis."'
   },
   {
     id: 'exlibris',
-    title: 'Ex-Libris Vacheron-Poinsot',
+    title: 'Ex-Libris & Provenance',
     subtitle: 'Handgemaakt marmeren schutblad met authentiek heraldiek eigendomsstempel',
     image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
-    quote: '"Eigendomssporen vertellen het ononderbroken verhaal van 19e-eeuwse Franse kunstverzamelaars."'
+    quote: '"Niet alles wat oud is, is uitzonderlijk. Daarom selecteren wij uitsluitend het beste."'
   }
 ];
 
@@ -33,25 +33,25 @@ export default function AboutProvenance({ onRequestConsultation }) {
 
   const provenanceVisuals = [
     {
-      id: 'bookcase',
-      title: t('provenance.visuals.v1_title'),
-      subtitle: t('provenance.visuals.v1_sub'),
-      image: '/images/voltaire-lit-bookcase-desk.jpg',
-      quote: t('provenance.visuals.v1_quote')
+      id: 'white-gloves',
+      title: 'Inspectie met Witte Handschoenen',
+      subtitle: 'Museumwaardige conservering & gecureerde selectie',
+      image: '/images/white-gloves-conservator.jpg',
+      quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collectie."'
     },
     {
-      id: 'theatre',
-      title: t('provenance.visuals.v2_title'),
-      subtitle: t('provenance.visuals.v2_sub'),
-      image: '/images/voltaire-theatre-bust-reading-glasses.jpg',
-      quote: t('provenance.visuals.v2_quote')
+      id: 'bookcase',
+      title: 'De Antiquariaats-Bibliotheek',
+      subtitle: 'Historische boekenkast met sfeerverlichting',
+      image: '/images/voltaire-lit-bookcase-desk.jpg',
+      quote: '"Hier koop je geen boek. Hier koop je geschiedenis."'
     },
     {
       id: 'exlibris',
-      title: t('provenance.visuals.v3_title'),
-      subtitle: t('provenance.visuals.v3_sub'),
+      title: 'Ex-Libris & Provenance',
+      subtitle: 'Handgemaakt marmeren schutblad met eigendomsstempel',
       image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
-      quote: t('provenance.visuals.v3_quote')
+      quote: '"Niet alles wat oud is, is uitzonderlijk. Daarom selecteren wij uitsluitend het beste."'
     }
   ];
 
@@ -70,7 +70,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
     <section 
       ref={sectionRef} 
       id="herkomst" 
-      className="relative bg-transparent text-[#111111] py-24 sm:py-32 overflow-hidden"
+      className="relative bg-transparent text-[#111111] py-28 sm:py-40 lg:py-48 overflow-hidden"
     >
       {/* Ambient background glow with scroll motion */}
       <motion.div 
@@ -100,202 +100,77 @@ export default function AboutProvenance({ onRequestConsultation }) {
       >
         
         {/* SECOND HERO HEADER BAR */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-[#D8CEB8] pb-8 gap-6">
-          <div className="space-y-3">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center space-x-3 text-[#B8860B] text-xs font-mono font-bold tracking-[0.3em] uppercase"
-            >
-              <span className="w-8 h-px bg-[#B8860B]" />
-              <Award className="w-4 h-4 text-[#B8860B]" />
-              <span>{t('provenance.heroBadge')}</span>
-            </motion.div>
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-[#D8CEB8] pb-10 gap-8">
+          <div className="space-y-4 max-w-3xl">
+            <span className="text-[11px] font-mono tracking-[0.3em] text-[#666666] uppercase font-bold block">
+              {t('provenance.heroBadge')}
+            </span>
             
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.08]">
               {t('provenance.heroTitle')}
             </h2>
           </div>
 
-
-          <p className="text-[#333333] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed lg:pb-1">
+          <p className="text-[#444444] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed">
             {t('provenance.sectionDesc')}
           </p>
         </div>
 
-        {/* SECOND HERO MAIN CONTENT STAGE */}
+        {/* MAIN EDITORIAL FEATURE STAGE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* Visual Showcase Stage */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            {/* Main Stage Photography Container with Scroll Parallax */}
-            <motion.div 
-              style={{ y: imageY }}
-              className="relative h-[440px] sm:h-[520px] w-full overflow-hidden shadow-2xl group rounded-sm border border-[#D8CEB8]"
-            >
-              <div className="absolute inset-0 w-full h-full">
-                {provenanceVisuals.map((vis, idx) => (
-                  <div
-                    key={vis.id}
-                    className="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out transform-gpu"
-                    style={{
-                      opacity: idx === activeVisualIndex ? 1 : 0,
-                      pointerEvents: idx === activeVisualIndex ? 'auto' : 'none',
-                      zIndex: idx === activeVisualIndex ? 1 : 0,
-                    }}
-                  >
-                    <img
-                      src={vis.image}
-                      alt={vis.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 filter brightness-[0.92] contrast-[1.05] transform-gpu"
-                    />
-                  </div>
-                ))}
-              </div>
-              
-              {/* Vignetting */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-
-              {/* Integrated Editorial Quote Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-gradient-to-t from-black via-black/90 to-transparent">
-                <div className="flex items-start space-x-4 border-l-2 border-[#B8860B] pl-4 sm:pl-6">
-                  <Feather className="w-5 h-5 text-[#B8860B] shrink-0 mt-1" />
-                  <div>
-                    <p className="text-sm sm:text-base text-[#FAF7F2] italic font-serif leading-relaxed">
-                      {activeVisual.quote}
-                    </p>
-                    <span className="block text-[11px] text-[#B8860B] font-bold uppercase tracking-widest font-mono mt-2">
-                      — Atelier Rembrandt
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tag indicator */}
-              <div className="absolute top-6 left-6 bg-[#1C1A17]/90 backdrop-blur-md px-3.5 py-1.5 border border-[#B8860B]/30 text-xs font-mono text-[#B8860B]">
-                0{activeVisualIndex + 1} / 03
-              </div>
-            </motion.div>
-
-            {/* Seamless Visual Switcher Tabs */}
-            <div className="grid grid-cols-3 gap-3">
-              {provenanceVisuals.map((vis, idx) => (
-                <button
-                  key={vis.id}
-                  onClick={() => setActiveVisualIndex(idx)}
-                  className={`text-left p-3.5 transition-all duration-300 border-t-2 relative flex flex-col justify-between cursor-pointer ${
-                    idx === activeVisualIndex
-                      ? 'border-[#B8860B] bg-[#1C1A17]/5 text-[#111111]'
-                      : 'border-[#D8CEB8] bg-transparent text-[#666666] hover:text-[#111111] hover:border-[#B8860B]'
-                  }`}
-                >
-                  <span className="text-[10px] font-mono text-[#B8860B] font-bold tracking-widest block uppercase mb-1">
-                    0{idx + 1}
-                  </span>
-                  <span className="text-xs font-serif font-medium line-clamp-1 block">
-                    {vis.title}
-                  </span>
-                </button>
-              ))}
+          {/* Frameless Master Photography (White Gloves Conservator) */}
+          <div className="lg:col-span-7">
+            <div className="relative aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-[#FAF7F2]">
+              <img
+                src="/images/white-gloves-conservator.jpg"
+                alt="Conservering met witte handschoenen"
+                className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.02]"
+              />
             </div>
-
           </div>
 
-          {/* Narrative & Provenance Pillars */}
+          {/* Editorial Content & Provenance Pillars */}
           <div className="lg:col-span-5 space-y-8">
-            
-            {/* Pillar 01 */}
-            <motion.div 
-              whileHover={{ x: 8 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-3 relative border-l-2 border-[#B8860B]/40 pl-6 py-1 hover:border-[#B8860B] transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-[#B8860B] font-bold tracking-wider uppercase">
-                  {t('provenance.pijler')} 01
+
+            <div className="space-y-6 pt-4 border-t border-[#D8CEB8]/60">
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono tracking-[0.25em] text-[#666666] uppercase font-bold block">
+                  01 • {t('provenance.pillar1_title_home')}
                 </span>
-                <span className="h-px w-6 bg-[#D8CEB8]" />
-                <div className="flex items-center space-x-1.5 text-[#B8860B] text-xs font-semibold uppercase tracking-wider">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>{t('provenance.pillar1_sub')}</span>
-                </div>
+                <p className="text-xs sm:text-sm text-[#444444] font-serif font-light leading-relaxed">
+                  {t('provenance.pillar1_desc_home')}
+                </p>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-wide group-hover:text-[#B8860B] transition-colors">
-                {t('provenance.pillar1_title_home')}
-              </h3>
-
-              <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
-                {t('provenance.pillar1_desc_home')}
-              </p>
-            </motion.div>
-
-            {/* Pillar 02 */}
-            <motion.div 
-              whileHover={{ x: 8 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-3 relative border-l-2 border-[#B8860B]/40 pl-6 py-1 hover:border-[#B8860B] transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-[#B8860B] font-bold tracking-wider uppercase">
-                  {t('provenance.pijler')} 02
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono tracking-[0.25em] text-[#666666] uppercase font-bold block">
+                  02 • {t('provenance.pillar2_title_home')}
                 </span>
-                <span className="h-px w-6 bg-[#D8CEB8]" />
-                <div className="flex items-center space-x-1.5 text-[#B8860B] text-xs font-semibold uppercase tracking-wider">
-                  <Compass className="w-4 h-4" />
-                  <span>{t('provenance.pillar2_sub')}</span>
-                </div>
+                <p className="text-xs sm:text-sm text-[#444444] font-serif font-light leading-relaxed">
+                  {t('provenance.pillar2_desc_home')}
+                </p>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-wide group-hover:text-[#B8860B] transition-colors">
-                {t('provenance.pillar2_title_home')}
-              </h3>
-
-              <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
-                {t('provenance.pillar2_desc_home')}
-              </p>
-            </motion.div>
-
-            {/* Pillar 03 */}
-            <motion.div 
-              whileHover={{ x: 8 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-3 relative border-l-2 border-[#B8860B]/40 pl-6 py-1 hover:border-[#B8860B] transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-[#B8860B] font-bold tracking-wider uppercase">
-                  {t('provenance.pijler')} 03
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono tracking-[0.25em] text-[#666666] uppercase font-bold block">
+                  03 • {t('provenance.pillar3_title_home')}
                 </span>
-                <span className="h-px w-6 bg-[#D8CEB8]" />
-                <div className="flex items-center space-x-1.5 text-[#B8860B] text-xs font-semibold uppercase tracking-wider">
-                  <Feather className="w-4 h-4" />
-                  <span>{t('provenance.pillar3_sub')}</span>
-                </div>
+                <p className="text-xs sm:text-sm text-[#444444] font-serif font-light leading-relaxed">
+                  {t('provenance.pillar3_desc_home')}
+                </p>
               </div>
+            </div>
 
-              <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] tracking-wide group-hover:text-[#B8860B] transition-colors">
-                {t('provenance.pillar3_title_home')}
-              </h3>
-
-              <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
-                {t('provenance.pillar3_desc_home')}
-              </p>
-            </motion.div>
-
-            {/* GRAND HERO CTA BUTTON */}
-            <div className="pt-6">
-              <motion.button
-                whileHover={{ scale: 1.025, backgroundColor: "#B8860B", color: "#111111" }}
-                whileTap={{ scale: 0.97 }}
+            {/* Subtiele Haarlijn Knop */}
+            <div className="pt-4">
+              <button
                 onClick={onRequestConsultation}
-                className="inline-flex items-center justify-center space-x-3 px-8 py-4 bg-[#1C1A17] text-[#FAF7F2] font-serif text-sm sm:text-base font-semibold tracking-wide border border-[#B8860B]/60 hover:border-[#B8860B] shadow-xl transition-all duration-300 cursor-pointer group"
+                className="inline-flex items-center space-x-2 text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#111111] border-b border-[#111111] pb-1 hover:opacity-60 transition-opacity duration-300 cursor-pointer"
               >
                 <span>{t('provenance.btnHome')}</span>
-                <ArrowRight className="w-4 h-4 text-[#B8860B] group-hover:text-[#111111] group-hover:translate-x-1 transition-all duration-300" />
-              </motion.button>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
           </div>

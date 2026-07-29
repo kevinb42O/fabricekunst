@@ -15,24 +15,22 @@ import AdminDashboard from './components/admin/AdminDashboard';
 
 import { 
   getCatalog, 
-  fetchCatalogAsync, 
-  saveItemAsync, 
-  deleteItemAsync, 
+  saveCatalogAsync, 
   getInquiries, 
-  fetchInquiriesAsync,
+  getHeroImage,
+  saveHeroImageAsync,
   getHeroSlides,
   saveHeroSlidesAsync,
   getProvenanceData,
-  fetchProvenanceDataAsync,
   saveProvenanceDataAsync,
   getFaqItems,
-  fetchFaqItemsAsync,
   saveFaqItemsAsync
 } from './utils/storage';
 
 export default function App() {
   const [catalog, setCatalog] = useState(getCatalog());
   const [inquiries, setInquiries] = useState(getInquiries());
+  const [heroImage, setHeroImage] = useState(getHeroImage());
   const [heroSlides, setHeroSlides] = useState(getHeroSlides());
   const [provenanceData, setProvenanceData] = useState(getProvenanceData());
   const [faqItems, setFaqItems] = useState(getFaqItems());
@@ -45,9 +43,18 @@ export default function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
 
+  const handleSaveHeroImage = async (updatedImage) => {
+    setHeroImage(updatedImage);
+    await saveHeroImageAsync(updatedImage);
+  };
+
   const handleSaveHeroSlides = async (updatedSlides) => {
-    setHeroSlides(updatedSlides);
-    await saveHeroSlidesAsync(updatedSlides);
+    if (typeof updatedSlides === 'string') {
+      await handleSaveHeroImage(updatedSlides);
+    } else {
+      setHeroSlides(updatedSlides);
+      await saveHeroSlidesAsync(updatedSlides);
+    }
   };
 
   const handleSaveProvenance = async (updatedData) => {
@@ -272,6 +279,7 @@ export default function App() {
         items={catalog}
         catalog={catalog}
         inquiries={inquiries}
+        heroImage={heroImage}
         heroSlides={heroSlides}
         provenanceData={provenanceData}
         faqItems={faqItems}
@@ -279,6 +287,7 @@ export default function App() {
         onSaveItem={handleSaveItem}
         onDeleteItem={handleDeleteItem}
         onUpdateInquiries={handleUpdateInquiries}
+        onSaveHeroImage={handleSaveHeroImage}
         onSaveHeroSlides={handleSaveHeroSlides}
         onSaveProvenance={handleSaveProvenance}
         onSaveFaqItems={handleSaveFaqItems}
@@ -304,14 +313,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-[#111111] flex flex-col font-sans selection:bg-[#B8860B]/20 selection:text-[#B8860B]">
+    <div className="min-h-screen bg-transparent text-[#111111] flex flex-col font-sans selection:bg-[#111111]/10 selection:text-[#111111]">
       
-      {/* High-End Scroll Progress Bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-[2px] bg-[#C5A059] transform-origin-left z-[100] pointer-events-none"
-        style={{ scaleX }}
-      />
-
       {/* Navigation Header */}
       <Navbar
         onNavigate={handleNavigate}
@@ -359,6 +362,7 @@ export default function App() {
           <>
             {/* Full-Width Hero Entry */}
             <Hero
+              heroImage={heroImage}
               slides={heroSlides}
               onExploreCatalog={() => handleNavigate('catalogus')}
               onRequestConsultation={() => handleOpenConsultation(null)}

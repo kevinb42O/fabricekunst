@@ -280,87 +280,81 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                       x: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
                       opacity: { duration: 0.75 }
                     }}
-                    whileHover={{ y: -4, borderColor: '#111111' }}
+                    whileHover={{ y: -2 }}
                     onClick={() => handleOpenDetail(item)}
-                    className="bg-white rounded-lg border-2 border-[#D8CEB8] shadow-card overflow-hidden transition-colors cursor-pointer group"
+                    className="py-10 border-b border-[#D8CEB8]/60 transition-colors cursor-pointer group"
                   >
-                    {/* Widescreen Top Row */}
-                    <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center">
+                    {/* Frameless Editorial Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                       
-                      {/* Visual */}
+                      {/* Visual (Frameless) */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setZoomModalData({ images: item.images, initialIndex: 0, title: item.title });
                         }}
-                        className="lg:col-span-5 aspect-[4/3] rounded-md overflow-hidden bg-[#FAF7F2] border border-[#D8CEB8] group/img relative cursor-zoom-in text-left focus:outline-none"
+                        className="lg:col-span-5 aspect-[4/3] overflow-hidden bg-[#FAF7F2] group/img relative cursor-zoom-in text-left focus:outline-none"
                       >
                         <img
                           src={item.images[0]?.url}
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-700 ease-out"
+                          className="w-full h-full object-cover group-hover/img:scale-[1.03] transition-transform duration-1000 ease-out"
                         />
                       </button>
 
                       {/* Summary Details */}
                       <div className="lg:col-span-7 space-y-4 text-left">
-                        <div className="flex items-center space-x-3">
-                          <span className="px-3 py-1 rounded-full bg-[#111111] text-white text-xs font-mono font-bold">
-                            {item.ref}
-                          </span>
-                          <span className="text-xs font-bold text-[#B8860B] uppercase tracking-wider font-mono">
-                            {getLocalizedCentury(item.century, language)} • {getLocalizedCategory(item.category, language)}
-                          </span>
+                        <div className="flex items-center space-x-3 text-[10px] font-mono tracking-[0.2em] uppercase text-[#8E7035]">
+                          <span>REF. {item.ref}</span>
+                          <span>•</span>
+                          <span>{getLocalizedCentury(item.century, language)}</span>
+                          <span>•</span>
+                          <span>{getLocalizedCategory(item.category, language)}</span>
                         </div>
 
-                        <h3 className="text-xl sm:text-2xl lg:text-4xl font-serif font-bold text-[#111111] group-hover:text-[#B8860B] transition-colors leading-snug">
+                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-[#111111] group-hover:text-[#B8860B] transition-colors duration-300 leading-snug">
                           {getItemField(item, 'title', language)}
                         </h3>
 
-                        <p className="text-sm text-[#555555] font-serif italic">
+                        <p className="text-xs sm:text-sm text-[#555555] font-serif italic">
                           {item.author} ({item.year}) — {item.publisher}
                         </p>
 
-                        <p className="text-sm text-[#333333] leading-relaxed font-light font-sans line-clamp-3">
+                        <p className="text-xs sm:text-sm text-[#444444] leading-relaxed font-serif font-light line-clamp-3">
                           {getItemField(item, 'description', language)}
                         </p>
 
-                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 pt-2 border-t border-[#D8CEB8]">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-4 pt-4 border-t border-[#D8CEB8]/50">
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">{t('item_detail.valuationPrice')}</span>
-                            <span className="text-xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
+                            <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-[#777777] block">{t('item_detail.valuationPrice')}</span>
+                            <span className="text-xl font-serif font-bold text-[#111111]">{getLocalizedPrice(item.price, language)}</span>
                           </div>
 
-                          <div className="flex items-center space-x-3">
-                            <motion.button
-                              whileHover={{ scale: 1.04 }}
-                              whileTap={{ scale: 0.96 }}
+                          <div className="flex items-center space-x-6">
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleOpenDetail(item);
                               }}
-                              className="px-4 sm:px-5 py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] border border-[#B8860B]/50 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 flex items-center space-x-2 cursor-pointer shadow-xs min-h-[44px]"
+                              className="text-xs font-mono font-bold uppercase tracking-[0.18em] text-[#111111] border-b border-[#111111] pb-1 hover:text-[#B8860B] hover:border-[#B8860B] transition-colors duration-300 cursor-pointer"
                             >
-                              <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
                               <span>{t('topstukken.viewDetails')}</span>
-                            </motion.button>
+                            </button>
 
-                            <motion.button
-                              whileHover={{ scale: 1.04 }}
-                              whileTap={{ scale: 0.96 }}
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onRequestInquiry(item);
                               }}
                               disabled={item.status === 'Verkocht'}
-                              className={`px-5 py-2.5 rounded-sm text-xs font-semibold uppercase tracking-wider transition-colors duration-300 ${
+                              className={`text-xs font-mono font-bold uppercase tracking-[0.18em] pb-1 border-b cursor-pointer transition-colors duration-300 ${
                                 item.status === 'Verkocht'
-                                  ? 'bg-[#FAF7F2] text-[#888888] cursor-not-allowed border border-[#D8CEB8]'
-                                  : 'bg-[#FAF7F2] hover:bg-[#111111] text-[#111111] hover:text-white border border-[#D8CEB8] cursor-pointer'
+                                  ? 'text-[#888888] border-[#888888] cursor-not-allowed'
+                                  : 'text-[#111111] border-[#111111] hover:text-[#B8860B] hover:border-[#B8860B]'
                               }`}
                             >
-                              <span>{item.status === 'Verkocht' ? t('catalog.sold') : t('topstukken.inquire')}</span>
-                            </motion.button>
+                              <span>{item.status === 'Verkocht' ? t('catalog.sold') : t('topstukken.buyInquire')}</span>
+                            </button>
                           </div>
                         </div>
                       </div>

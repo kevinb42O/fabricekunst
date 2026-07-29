@@ -52,12 +52,8 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
   };
 
   return (
-    <section id="faq" className="py-16 sm:py-24 bg-transparent relative overflow-hidden">
-      
-      {/* Decorative ambient background accent */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#B8860B]/5 rounded-full blur-[140px] pointer-events-none" />
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8 sm:space-y-12">
+    <section id="faq" className="py-24 sm:py-32 bg-transparent relative overflow-hidden">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12 sm:space-y-16">
         
         {/* Header */}
         <motion.div 
@@ -65,18 +61,17 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
           variants={headerVariants}
-          className="text-center space-y-3 max-w-3xl mx-auto"
+          className="text-left space-y-4 border-b border-[#D8CEB8] pb-8"
         >
-          <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] font-mono px-3.5 py-1.5 rounded-full bg-white border border-[#B8860B]/30 shadow-xs">
-            <HelpCircle className="w-4 h-4 text-[#B8860B]" />
-            <span>{t('faq.badge')}</span>
-          </div>
+          <span className="text-[11px] font-mono tracking-[0.3em] text-[#8E7035] uppercase font-bold block">
+            {t('faq.badge')}
+          </span>
           
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-[#111111] tracking-tight">
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
             {t('faq.title')}
           </h2>
 
-          <p className="text-sm sm:text-base text-[#555555] font-serif italic">
+          <p className="text-base sm:text-lg text-[#444444] font-serif italic">
             {t('faq.subtitle')}
           </p>
         </motion.div>
@@ -87,7 +82,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
           variants={listContainerVariants}
-          className="space-y-4"
+          className="space-y-0 divide-y divide-[#D8CEB8]/60"
         >
           {displayItems.map((item, idx) => {
             const isOpen = openIndex === idx;
@@ -98,18 +93,14 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
               <motion.div
                 key={item.id || idx}
                 variants={itemVariants}
-                className={`rounded-2xl border transition-colors transition-shadow duration-300 overflow-hidden ${
-                  isOpen 
-                    ? 'bg-white border-[#B8860B] shadow-md' 
-                    : 'bg-white/80 hover:bg-white border-[#D8CEB8] shadow-2xs'
-                }`}
+                className="py-6 transition-colors"
               >
                 <button
                   onClick={() => toggleAccordion(idx)}
-                  className="w-full p-4 sm:p-6 text-left flex items-center justify-between gap-3 sm:gap-4 cursor-pointer min-h-[56px]"
+                  className="w-full text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none py-2"
                 >
-                  <span className="font-serif font-bold text-sm sm:text-base md:text-lg text-[#111111] flex items-center gap-2 sm:gap-3">
-                    <span className="text-xs font-mono font-bold text-[#B8860B] px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
+                  <span className="font-serif font-bold text-lg sm:text-xl text-[#111111] flex items-center gap-3">
+                    <span className="text-xs font-mono font-bold text-[#8E7035]">
                       0{idx + 1}
                     </span>
                     <span>{question}</span>
@@ -118,9 +109,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                   <motion.div 
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className={`p-2 rounded-full border transition-colors duration-300 shrink-0 ${
-                      isOpen ? 'bg-[#1C1A17] text-[#D4AF37] border-[#B8860B]' : 'bg-[#FAF7F2] text-[#555555] border-[#D8CEB8]'
-                    }`}
+                    className="shrink-0 text-[#111111]"
                   >
                     <ChevronDown className="w-4 h-4" />
                   </motion.div>
@@ -136,8 +125,8 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-1 text-sm text-[#444444] font-serif leading-relaxed border-t border-[#FAF7F2]">
-                        <p className="pl-7 sm:pl-9 border-l-2 border-[#B8860B]/60 italic">
+                      <div className="pt-3 pb-2 text-sm sm:text-base text-[#444444] font-serif font-light leading-relaxed pl-8 border-l border-[#B8860B]/60 my-2">
+                        <p className="italic">
                           {answer}
                         </p>
                       </div>
@@ -150,28 +139,19 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
         </motion.div>
 
         {/* Still have questions CTA */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="p-5 sm:p-8 rounded-2xl bg-[#1C1A17] text-white flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-center justify-between gap-4 sm:gap-6 border border-[#332E27] shadow-xl"
-        >
-          <div className="space-y-1 text-center sm:text-left">
-            <h4 className="text-xl font-serif font-bold text-white">{t('faq.cta.title')}</h4>
-            <p className="text-xs text-stone-300 font-serif">{t('faq.cta.subtitle')}</p>
+        <div className="pt-8 border-t border-[#D8CEB8] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h4 className="text-xl font-serif font-bold text-[#111111]">{t('faq.cta.title')}</h4>
+            <p className="text-xs text-[#555555] font-serif italic">{t('faq.cta.subtitle')}</p>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
+          <button
             onClick={onRequestConsultation}
-            className="px-5 sm:px-6 py-3 rounded-sm bg-[#B8860B] hover:bg-white text-[#111111] font-mono text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0 flex items-center space-x-2 shadow-md min-h-[48px] w-full sm:w-auto justify-center"
+            className="inline-flex items-center space-x-2 text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#111111] border-b border-[#111111] pb-1 hover:text-[#B8860B] hover:border-[#B8860B] transition-colors duration-300 cursor-pointer shrink-0"
           >
-            <Mail className="w-4 h-4" />
             <span>{t('faq.cta.btn')}</span>
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
 
       </div>
     </section>

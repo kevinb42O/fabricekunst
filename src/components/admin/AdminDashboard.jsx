@@ -30,6 +30,7 @@ export default function AdminDashboard({
   items = [], 
   catalog = [], 
   inquiries = [], 
+  heroImage = '',
   heroSlides = [],
   faqItems = [],
   provenanceData = null,
@@ -37,6 +38,7 @@ export default function AdminDashboard({
   onSaveItem = () => {}, 
   onDeleteItem = () => {}, 
   onUpdateInquiries = () => {}, 
+  onSaveHeroImage = () => {},
   onSaveHeroSlides = () => {},
   onSaveProvenance = () => {},
   onSaveFaqItems = () => {},
@@ -354,7 +356,9 @@ export default function AdminDashboard({
 
           {activeTab === 'hero' && (
             <HeroSlidesManager
+              heroImage={heroImage}
               slides={heroSlides}
+              onSaveHeroImage={onSaveHeroImage || onSaveHeroSlides}
               onSaveSlides={onSaveHeroSlides}
               onShowToast={showToast}
             />

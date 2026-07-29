@@ -188,10 +188,6 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
                 <span>{t('item_detail.provenanceGuaranteed')}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Award className="w-4 h-4 text-[#B8860B]" />
-                <span>{t('topstukken.badge')}</span>
-              </div>
             </motion.div>
 
           </motion.div>

@@ -71,40 +71,23 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
         y: (visible || mobileMenuOpen) ? "0%" : "-100%"
       }}
       transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled 
-          ? 'bg-white/95 backdrop-blur-md border-b border-[#D8CEB8]/80 shadow-xs' 
-          : 'bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#D8CEB8]/50'
+          ? 'bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#D8CEB8]/60 text-[#111111] shadow-xs' 
+          : 'bg-transparent border-none text-[#111111]'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between min-h-[72px] sm:min-h-[80px] py-2.5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="flex items-center justify-between min-h-[72px] sm:min-h-[84px] py-2.5">
           
-          {/* Brand Image Header - Perfectly Balanced & Centered */}
-          <motion.button 
-            whileHover={{ scale: 1.015 }}
-            whileTap={{ scale: 0.985 }}
-            onClick={() => onNavigate('home')} 
-            className="flex flex-col items-center justify-center group text-center focus:outline-none cursor-pointer my-auto"
-          >
-            <img 
-              src="/images/Atelier Rembrandt.png" 
-              alt="Atelier Rembrandt" 
-              className="h-9 sm:h-11 md:h-12 w-auto object-contain filter contrast-[1.05] shrink-0"
-            />
-            <span className="text-[9.5px] sm:text-[10.5px] md:text-[11px] tracking-[0.38em] text-[#8E7035] uppercase font-serif font-semibold block leading-none mt-1.5 pl-[0.38em] text-center w-full">
-              {t('nav.brandSubtitle')}
-            </span>
-          </motion.button>
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+          {/* LEFT ZONE: Navigation Links */}
+          <div className="hidden md:flex items-center space-x-6 lg:space-x-8 w-1/3">
+            {navLinks.slice(0, 3).map((link) => (
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className={`text-xs font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
-                  activeTab === link.id ? 'text-[#8E7557]' : 'text-[#231A14]/80 hover:text-[#8E7557]'
+                className={`text-xs font-serif font-medium tracking-[0.16em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
+                  activeTab === link.id ? 'text-[#111111] font-bold' : 'text-[#111111]/75 hover:text-[#111111]'
                 }`}
               >
                 {link.label}
@@ -112,37 +95,71 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
                   <motion.span 
                     layoutId="activeTabUnderline"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#8E7557] rounded-full" 
+                    className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#111111]" 
                   />
                 )}
               </button>
             ))}
           </div>
 
-          {/* Ultra-Sleek Language Switcher */}
-          <div className="hidden md:flex items-center space-x-2.5">
-            {languages.map((lang, idx) => (
-              <React.Fragment key={lang.code}>
-                {idx > 0 && <span className="text-[#D8CEB8] text-xs font-serif select-none">•</span>}
-                <button
-                  onClick={() => setLanguage(lang.code)}
-                  className={`text-[11px] font-mono tracking-widest transition-colors cursor-pointer ${
-                    language === lang.code
-                      ? 'text-[#231A14] font-bold border-b border-[#8E7557] pb-0.5'
-                      : 'text-[#8C827A] hover:text-[#231A14]'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              </React.Fragment>
-            ))}
+          {/* CENTER ZONE: Brand Logo - DEAD CENTER (Louis Vuitton Architecture) */}
+          <div className="flex-1 md:flex-initial md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 flex justify-center text-center">
+            <motion.button 
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.985 }}
+              onClick={() => onNavigate('home')} 
+              className="flex flex-col items-center justify-center group text-center focus:outline-none cursor-pointer my-auto"
+            >
+              <img 
+                src="/images/Atelier Rembrandt.png" 
+                alt="Atelier Rembrandt" 
+                className="h-8 sm:h-10 md:h-11 w-auto object-contain filter contrast-[1.05] shrink-0"
+              />
+              <span className="text-[9.5px] sm:text-[10.5px] md:text-[11px] tracking-[0.38em] text-[#8E7035] uppercase font-serif font-semibold block leading-none mt-1.5 pl-[0.38em] text-center w-full">
+                {t('nav.brandSubtitle')}
+              </span>
+            </motion.button>
+          </div>
+
+          {/* RIGHT ZONE: Contact Link & Ultra-Sleek Language Switcher */}
+          <div className="hidden md:flex items-center justify-end space-x-6 lg:space-x-8 w-1/3">
+            <button
+              onClick={() => handleNavClick('contact')}
+              className={`text-xs font-serif font-medium tracking-[0.16em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
+                activeTab === 'contact' ? 'text-[#111111] font-bold' : 'text-[#111111]/75 hover:text-[#111111]'
+              }`}
+            >
+              {t('nav.contact') || 'Contact'}
+            </button>
+
+            <span className="text-[#D8CEB8] text-xs font-serif select-none">•</span>
+
+            <div className="flex items-center space-x-2">
+              {languages.map((lang, idx) => (
+                <React.Fragment key={lang.code}>
+                  {idx > 0 && <span className="text-[#D8CEB8] text-xs font-serif select-none">•</span>}
+                  <button
+                    onClick={() => setLanguage(lang.code)}
+                    className={`text-[11px] font-mono tracking-widest transition-colors cursor-pointer ${
+                      language === lang.code
+                        ? 'text-[#111111] font-bold border-b border-[#111111] pb-0.5'
+                        : 'text-[#666666] hover:text-[#111111]'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm text-[#231A14] hover:text-[#8E7557] focus:outline-none"
+              className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm focus:outline-none ${
+                !scrolled ? 'text-white' : 'text-[#111111]'
+              }`}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

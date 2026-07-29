@@ -114,8 +114,6 @@ export default function Footer({ onOpenAdmin, onNavigate }) {
           <p>© {new Date().getFullYear()} Atelier Rembrandt. {t('footer.rights')}</p>
           <div className="flex items-center space-x-4">
             <span>{t('item_detail.provenanceGuaranteed')}</span>
-            <span>•</span>
-            <span>{t('topstukken.badge')}</span>
           </div>
         </div>
 

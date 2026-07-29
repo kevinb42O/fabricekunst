@@ -50,6 +50,30 @@ export const DEFAULT_HERO_SLIDES = [
   }
 ];
 
+const HERO_IMAGE_KEY = 'atelier_rembrandt_hero_image';
+export const DEFAULT_HERO_IMAGE = '/images/provenience-light-cream-hero.jpg';
+
+export const getHeroImage = () => {
+  try {
+    const saved = localStorage.getItem(HERO_IMAGE_KEY);
+    if (saved && typeof saved === 'string' && saved.trim() !== '') return saved;
+    return DEFAULT_HERO_IMAGE;
+  } catch (err) {
+    console.error("Fout bij ophalen hero image:", err);
+    return DEFAULT_HERO_IMAGE;
+  }
+};
+
+export const saveHeroImageAsync = async (imageUrl) => {
+  try {
+    localStorage.setItem(HERO_IMAGE_KEY, imageUrl);
+    return imageUrl;
+  } catch (err) {
+    console.error("Fout bij opslaan hero image:", err);
+    return imageUrl;
+  }
+};
+
 export const getHeroSlides = () => {
   try {
     const saved = localStorage.getItem(HERO_SLIDES_KEY) || localStorage.getItem(OLD_HERO_SLIDES_KEY_2) || localStorage.getItem(OLD_HERO_SLIDES_KEY);
