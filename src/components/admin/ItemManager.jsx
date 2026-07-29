@@ -65,8 +65,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const getFormField = (field) => {
     if (!editingItem) return '';
     if (formLang === 'nl') return editingItem[field] || '';
-    const key = `${field}_${formLang}`;
-    return editingItem[key] || '';
+    const camelKey = `${field}_${formLang}`;
+    if (editingItem[camelKey]) return editingItem[camelKey];
+    const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
+    const snakeKey = `${snakeField}_${formLang}`;
+    if (editingItem[snakeKey]) return editingItem[snakeKey];
+    return '';
   };
 
   const updateFormField = (field, value) => {
@@ -74,8 +78,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     if (formLang === 'nl') {
       setEditingItem({ ...editingItem, [field]: value });
     } else {
-      const key = `${field}_${formLang}`;
-      setEditingItem({ ...editingItem, [key]: value });
+      const camelKey = `${field}_${formLang}`;
+      const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
+      const snakeKey = `${snakeField}_${formLang}`;
+      setEditingItem({
+        ...editingItem,
+        [camelKey]: value,
+        [snakeKey]: value
+      });
     }
   };
 

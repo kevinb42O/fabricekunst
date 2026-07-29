@@ -216,13 +216,13 @@ export const getCatalog = () => {
     const saved = localStorage.getItem(CATALOG_KEY) || localStorage.getItem(OLD_CATALOG_KEY_2) || localStorage.getItem(OLD_CATALOG_KEY);
     if (!saved) {
       localStorage.setItem(CATALOG_KEY, JSON.stringify(INITIAL_CATALOG));
-      return INITIAL_CATALOG;
+      return INITIAL_CATALOG.map(mapDbItemToFrontend);
     }
     const parsed = JSON.parse(saved);
-    return parsed.length > 0 ? parsed : INITIAL_CATALOG;
+    return parsed.length > 0 ? parsed.map(mapDbItemToFrontend) : INITIAL_CATALOG.map(mapDbItemToFrontend);
   } catch (e) {
     console.error("Error reading catalog from localStorage", e);
-    return INITIAL_CATALOG;
+    return INITIAL_CATALOG.map(mapDbItemToFrontend);
   }
 };
 
