@@ -72,66 +72,119 @@ export const saveHeroSlidesAsync = async (slides) => {
   }
 };
 
+// Helper to extract field value checking all camelCase, snake_case, and capitalization variations
+const extractFieldValue = (item, fieldName, lang) => {
+  if (!item) return '';
+  const langLower = lang.toLowerCase();
+  const langUpper = lang.toUpperCase();
+  const langCap = lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase();
+
+  const camelField = fieldName;
+  const snakeField = fieldName.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+  const possibleKeys = [
+    `${camelField}_${langLower}`,
+    `${snakeField}_${langLower}`,
+    `${camelField}${langCap}`,
+    `${snakeField}${langCap}`,
+    `${snakeField}_${langUpper}`,
+    `${camelField}_${langUpper}`
+  ];
+
+  for (const key of possibleKeys) {
+    if (item[key] !== undefined && item[key] !== null && typeof item[key] === 'string' && item[key].trim() !== '') {
+      return item[key];
+    }
+  }
+  return '';
+};
+
 // Map database column names (snake_case) to frontend item object (camelCase)
-const mapDbItemToFrontend = (dbItem) => ({
-  id: dbItem.id,
-  itemType: dbItem.item_type || 'book',
-  ref: dbItem.ref,
-  title: dbItem.title,
-  subtitle: dbItem.subtitle,
-  author: dbItem.author,
-  publisher: dbItem.publisher,
-  city: dbItem.city,
-  year: dbItem.year,
-  century: dbItem.century,
-  category: dbItem.category,
-  price: dbItem.price,
-  status: dbItem.status,
-  featured: dbItem.featured,
-  condition: dbItem.condition,
-  binding: dbItem.binding,
-  dimensions: dbItem.dimensions,
-  provenance: dbItem.provenance,
-  description: dbItem.description,
-  historicalContext: dbItem.historical_context,
-  conditionReport: dbItem.condition_report,
-  provenanceDetails: dbItem.provenance_details,
-  collationSpecs: dbItem.collation_specs,
-  images: dbItem.images || [],
-  // Multi-Language Fields (EN & FR)
-  title_en: dbItem.title_en || dbItem.titleEn || dbItem.title_EN || '',
-  title_fr: dbItem.title_fr || dbItem.titleFr || dbItem.title_FR || '',
-  subtitle_en: dbItem.subtitle_en || dbItem.subtitleEn || dbItem.subtitle_EN || '',
-  subtitle_fr: dbItem.subtitle_fr || dbItem.subtitleFr || dbItem.subtitle_FR || '',
-  description_en: dbItem.description_en || dbItem.descriptionEn || dbItem.description_EN || '',
-  description_fr: dbItem.description_fr || dbItem.descriptionFr || dbItem.description_FR || '',
-  binding_en: dbItem.binding_en || dbItem.bindingEn || dbItem.binding_EN || '',
-  binding_fr: dbItem.binding_fr || dbItem.bindingFr || dbItem.binding_FR || '',
-  condition_en: dbItem.condition_en || dbItem.conditionEn || dbItem.condition_EN || '',
-  condition_fr: dbItem.condition_fr || dbItem.conditionFr || dbItem.condition_FR || '',
-  provenance_en: dbItem.provenance_en || dbItem.provenanceEn || dbItem.provenance_EN || '',
-  provenance_fr: dbItem.provenance_fr || dbItem.provenanceFr || dbItem.provenance_FR || '',
-  
-  provenance_details_en: dbItem.provenance_details_en || dbItem.provenanceDetails_en || dbItem.provenanceDetailsEn || '',
-  provenance_details_fr: dbItem.provenance_details_fr || dbItem.provenanceDetails_fr || dbItem.provenanceDetailsFr || '',
-  provenanceDetails_en: dbItem.provenanceDetails_en || dbItem.provenance_details_en || dbItem.provenanceDetailsEn || '',
-  provenanceDetails_fr: dbItem.provenanceDetails_fr || dbItem.provenance_details_fr || dbItem.provenanceDetailsFr || '',
-  
-  condition_report_en: dbItem.condition_report_en || dbItem.conditionReport_en || dbItem.conditionReportEn || '',
-  condition_report_fr: dbItem.condition_report_fr || dbItem.conditionReport_fr || dbItem.conditionReportFr || '',
-  conditionReport_en: dbItem.conditionReport_en || dbItem.condition_report_en || dbItem.conditionReportEn || '',
-  conditionReport_fr: dbItem.conditionReport_fr || dbItem.condition_report_fr || dbItem.conditionReportFr || '',
-  
-  historical_context_en: dbItem.historical_context_en || dbItem.historicalContext_en || dbItem.historicalContextEn || '',
-  historical_context_fr: dbItem.historical_context_fr || dbItem.historicalContext_fr || dbItem.historicalContextFr || '',
-  historicalContext_en: dbItem.historicalContext_en || dbItem.historical_context_en || dbItem.historicalContextEn || '',
-  historicalContext_fr: dbItem.historicalContext_fr || dbItem.historical_context_fr || dbItem.historicalContextFr || '',
-  
-  collation_specs_en: dbItem.collation_specs_en || dbItem.collationSpecs_en || dbItem.collationSpecsEn || '',
-  collation_specs_fr: dbItem.collation_specs_fr || dbItem.collationSpecs_fr || dbItem.collationSpecsFr || '',
-  collationSpecs_en: dbItem.collationSpecs_en || dbItem.collation_specs_en || dbItem.collationSpecsEn || '',
-  collationSpecs_fr: dbItem.collationSpecs_fr || dbItem.collation_specs_fr || dbItem.collationSpecsFr || ''
-});
+const mapDbItemToFrontend = (dbItem) => {
+  if (!dbItem) return dbItem;
+
+  const title_en = extractFieldValue(dbItem, 'title', 'en');
+  const title_fr = extractFieldValue(dbItem, 'title', 'fr');
+  const subtitle_en = extractFieldValue(dbItem, 'subtitle', 'en');
+  const subtitle_fr = extractFieldValue(dbItem, 'subtitle', 'fr');
+  const description_en = extractFieldValue(dbItem, 'description', 'en');
+  const description_fr = extractFieldValue(dbItem, 'description', 'fr');
+  const binding_en = extractFieldValue(dbItem, 'binding', 'en');
+  const binding_fr = extractFieldValue(dbItem, 'binding', 'fr');
+  const condition_en = extractFieldValue(dbItem, 'condition', 'en');
+  const condition_fr = extractFieldValue(dbItem, 'condition', 'fr');
+  const provenance_en = extractFieldValue(dbItem, 'provenance', 'en');
+  const provenance_fr = extractFieldValue(dbItem, 'provenance', 'fr');
+  const provenance_details_en = extractFieldValue(dbItem, 'provenanceDetails', 'en');
+  const provenance_details_fr = extractFieldValue(dbItem, 'provenanceDetails', 'fr');
+  const condition_report_en = extractFieldValue(dbItem, 'conditionReport', 'en');
+  const condition_report_fr = extractFieldValue(dbItem, 'conditionReport', 'fr');
+  const historical_context_en = extractFieldValue(dbItem, 'historicalContext', 'en');
+  const historical_context_fr = extractFieldValue(dbItem, 'historicalContext', 'fr');
+  const collation_specs_en = extractFieldValue(dbItem, 'collationSpecs', 'en');
+  const collation_specs_fr = extractFieldValue(dbItem, 'collationSpecs', 'fr');
+
+  return {
+    ...dbItem,
+    id: dbItem.id,
+    itemType: dbItem.item_type || dbItem.itemType || 'book',
+    ref: dbItem.ref || '',
+    title: dbItem.title || '',
+    subtitle: dbItem.subtitle || '',
+    author: dbItem.author || '',
+    publisher: dbItem.publisher || '',
+    city: dbItem.city || '',
+    year: dbItem.year || '',
+    century: dbItem.century || '',
+    category: dbItem.category || '',
+    price: dbItem.price || '',
+    status: dbItem.status || 'Beschikbaar',
+    featured: Boolean(dbItem.featured),
+    condition: dbItem.condition || '',
+    binding: dbItem.binding || '',
+    dimensions: dbItem.dimensions || '',
+    provenance: dbItem.provenance || '',
+    description: dbItem.description || '',
+    historicalContext: dbItem.historical_context || dbItem.historicalContext || '',
+    conditionReport: dbItem.condition_report || dbItem.conditionReport || '',
+    provenanceDetails: dbItem.provenance_details || dbItem.provenanceDetails || '',
+    collationSpecs: dbItem.collation_specs || dbItem.collationSpecs || '',
+    images: dbItem.images || [],
+
+    title_en,
+    title_fr,
+    subtitle_en,
+    subtitle_fr,
+    description_en,
+    description_fr,
+    binding_en,
+    binding_fr,
+    condition_en,
+    condition_fr,
+    provenance_en,
+    provenance_fr,
+
+    provenance_details_en,
+    provenance_details_fr,
+    provenanceDetails_en: provenance_details_en,
+    provenanceDetails_fr: provenance_details_fr,
+
+    condition_report_en,
+    condition_report_fr,
+    conditionReport_en: condition_report_en,
+    conditionReport_fr: condition_report_fr,
+
+    historical_context_en,
+    historical_context_fr,
+    historicalContext_en: historical_context_en,
+    historicalContext_fr: historical_context_fr,
+
+    collation_specs_en,
+    collation_specs_fr,
+    collationSpecs_en: collation_specs_en,
+    collationSpecs_fr: collation_specs_fr
+  };
+};
 
 // Map frontend item object (camelCase) to database column names (snake_case)
 const mapFrontendItemToDb = (item) => ({
@@ -154,32 +207,33 @@ const mapFrontendItemToDb = (item) => ({
   dimensions: item.dimensions,
   provenance: item.provenance,
   description: item.description,
-  historical_context: item.historicalContext || item.historical_context,
-  condition_report: item.conditionReport || item.condition_report,
-  provenance_details: item.provenanceDetails || item.provenance_details,
-  collation_specs: item.collationSpecs || item.collation_specs,
+  historical_context: item.historicalContext || item.historical_context || '',
+  condition_report: item.conditionReport || item.condition_report || '',
+  provenance_details: item.provenanceDetails || item.provenance_details || '',
+  collation_specs: item.collationSpecs || item.collation_specs || '',
   images: item.images || [],
+  
   // Multi-Language Fields (EN & FR)
-  title_en: item.title_en || item.titleEn || '',
-  title_fr: item.title_fr || item.titleFr || '',
-  subtitle_en: item.subtitle_en || item.subtitleEn || '',
-  subtitle_fr: item.subtitle_fr || item.subtitleFr || '',
-  description_en: item.description_en || item.descriptionEn || '',
-  description_fr: item.description_fr || item.descriptionFr || '',
-  binding_en: item.binding_en || item.bindingEn || '',
-  binding_fr: item.binding_fr || item.bindingFr || '',
-  condition_en: item.condition_en || item.conditionEn || '',
-  condition_fr: item.condition_fr || item.conditionFr || '',
-  provenance_en: item.provenance_en || item.provenanceEn || '',
-  provenance_fr: item.provenance_fr || item.provenanceFr || '',
-  provenance_details_en: item.provenance_details_en || item.provenanceDetails_en || item.provenanceDetailsEn || '',
-  provenance_details_fr: item.provenance_details_fr || item.provenanceDetails_fr || item.provenanceDetailsFr || '',
-  condition_report_en: item.condition_report_en || item.conditionReport_en || item.conditionReportEn || '',
-  condition_report_fr: item.condition_report_fr || item.conditionReport_fr || item.conditionReportFr || '',
-  historical_context_en: item.historical_context_en || item.historicalContext_en || item.historicalContextEn || '',
-  historical_context_fr: item.historical_context_fr || item.historicalContext_fr || item.historicalContextFr || '',
-  collation_specs_en: item.collation_specs_en || item.collationSpecs_en || item.collationSpecsEn || '',
-  collation_specs_fr: item.collation_specs_fr || item.collationSpecs_fr || item.collationSpecsFr || '',
+  title_en: extractFieldValue(item, 'title', 'en'),
+  title_fr: extractFieldValue(item, 'title', 'fr'),
+  subtitle_en: extractFieldValue(item, 'subtitle', 'en'),
+  subtitle_fr: extractFieldValue(item, 'subtitle', 'fr'),
+  description_en: extractFieldValue(item, 'description', 'en'),
+  description_fr: extractFieldValue(item, 'description', 'fr'),
+  binding_en: extractFieldValue(item, 'binding', 'en'),
+  binding_fr: extractFieldValue(item, 'binding', 'fr'),
+  condition_en: extractFieldValue(item, 'condition', 'en'),
+  condition_fr: extractFieldValue(item, 'condition', 'fr'),
+  provenance_en: extractFieldValue(item, 'provenance', 'en'),
+  provenance_fr: extractFieldValue(item, 'provenance', 'fr'),
+  provenance_details_en: extractFieldValue(item, 'provenanceDetails', 'en'),
+  provenance_details_fr: extractFieldValue(item, 'provenanceDetails', 'fr'),
+  condition_report_en: extractFieldValue(item, 'conditionReport', 'en'),
+  condition_report_fr: extractFieldValue(item, 'conditionReport', 'fr'),
+  historical_context_en: extractFieldValue(item, 'historicalContext', 'en'),
+  historical_context_fr: extractFieldValue(item, 'historicalContext', 'fr'),
+  collation_specs_en: extractFieldValue(item, 'collationSpecs', 'en'),
+  collation_specs_fr: extractFieldValue(item, 'collationSpecs', 'fr'),
   updated_at: new Date().toISOString()
 });
 

@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
-import { autoTranslateItemFields } from '../../utils/translationService';
-
 
 export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast, onOpenCertificate }) {
   const [editingItem, setEditingItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
   const [formLang, setFormLang] = useState('nl');
 
   
