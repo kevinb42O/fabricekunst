@@ -572,12 +572,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             )}
                           </div>
 
-                          {/* Hover Tooltip showing missing fields */}
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-72 p-3.5 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
+                          {/* Hover Tooltip showing missing field counts */}
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-56 p-3 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
                             <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
                               <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
                                 <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
-                                <span>Vertaalstatus ({translationStatus.completeCount}/3 Compleet)</span>
+                                <span>Vertaalstatus ({translationStatus.completeCount}/3)</span>
                               </span>
                               {translationStatus.isComplete ? (
                                 <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
@@ -586,21 +586,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                               )}
                             </div>
 
-                            <div className="space-y-2 text-[11px]">
+                            <div className="space-y-1.5 text-[11px]">
                               {Object.values(translationStatus.details).map((langInfo) => (
-                                <div key={langInfo.code} className="space-y-0.5">
-                                  <div className="flex items-center justify-between font-mono text-[10px]">
-                                    <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
-                                    {langInfo.missing.length === 0 ? (
-                                      <span className="text-emerald-400 font-bold">✓ Compleet</span>
-                                    ) : (
-                                      <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
-                                    )}
-                                  </div>
-                                  {langInfo.missing.length > 0 && (
-                                    <p className="text-[10px] text-stone-400 pl-3 italic leading-snug">
-                                      Ontbreekt: {langInfo.missing.join(', ')}
-                                    </p>
+                                <div key={langInfo.code} className="flex items-center justify-between font-mono text-[10px]">
+                                  <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
+                                  {langInfo.missing.length === 0 ? (
+                                    <span className="text-emerald-400 font-bold">✓ Compleet</span>
+                                  ) : (
+                                    <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
                                   )}
                                 </div>
                               ))}
@@ -758,11 +751,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                         </div>
 
                         {/* Hover Tooltip */}
-                        <div className="absolute right-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-72 p-3.5 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
+                        <div className="absolute right-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-56 p-3 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
                           <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
                             <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
                               <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
-                              <span>Vertaalstatus ({translationStatus.completeCount}/3 Compleet)</span>
+                              <span>Vertaalstatus ({translationStatus.completeCount}/3)</span>
                             </span>
                             {translationStatus.isComplete ? (
                               <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
@@ -771,21 +764,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             )}
                           </div>
 
-                          <div className="space-y-2 text-[11px]">
+                          <div className="space-y-1.5 text-[11px]">
                             {Object.values(translationStatus.details).map((langInfo) => (
-                              <div key={langInfo.code} className="space-y-0.5">
-                                <div className="flex items-center justify-between font-mono text-[10px]">
-                                  <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
-                                  {langInfo.missing.length === 0 ? (
-                                    <span className="text-emerald-400 font-bold">✓ Compleet</span>
-                                  ) : (
-                                    <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
-                                  )}
-                                </div>
-                                {langInfo.missing.length > 0 && (
-                                  <p className="text-[10px] text-stone-400 pl-3 italic leading-snug">
-                                    Ontbreekt: {langInfo.missing.join(', ')}
-                                  </p>
+                              <div key={langInfo.code} className="flex items-center justify-between font-mono text-[10px]">
+                                <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
+                                {langInfo.missing.length === 0 ? (
+                                  <span className="text-emerald-400 font-bold">✓ Compleet</span>
+                                ) : (
+                                  <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
                                 )}
                               </div>
                             ))}
