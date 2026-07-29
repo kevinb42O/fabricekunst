@@ -65,11 +65,29 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const getFormField = (field) => {
     if (!editingItem) return '';
     if (formLang === 'nl') return editingItem[field] || '';
-    const camelKey = `${field}_${formLang}`;
-    if (editingItem[camelKey]) return editingItem[camelKey];
+    
+    const langLower = formLang.toLowerCase();
+    const langUpper = formLang.toUpperCase();
+    const langCap = formLang.charAt(0).toUpperCase() + formLang.slice(1).toLowerCase();
+
+    const camelField = field;
     const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
-    const snakeKey = `${snakeField}_${formLang}`;
-    if (editingItem[snakeKey]) return editingItem[snakeKey];
+
+    const possibleKeys = [
+      `${camelField}_${langLower}`,
+      `${snakeField}_${langLower}`,
+      `${camelField}${langCap}`,
+      `${snakeField}_${langUpper}`,
+      `${camelField}_${langUpper}`,
+      `${snakeField}${langCap}`
+    ];
+
+    for (const key of possibleKeys) {
+      if (editingItem[key] !== undefined && editingItem[key] !== null && editingItem[key] !== '') {
+        return editingItem[key];
+      }
+    }
+
     return '';
   };
 
@@ -78,13 +96,16 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     if (formLang === 'nl') {
       setEditingItem({ ...editingItem, [field]: value });
     } else {
-      const camelKey = `${field}_${formLang}`;
+      const langLower = formLang.toLowerCase();
+      const langCap = formLang.charAt(0).toUpperCase() + formLang.slice(1).toLowerCase();
+      const camelField = field;
       const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
-      const snakeKey = `${snakeField}_${formLang}`;
+
       setEditingItem({
         ...editingItem,
-        [camelKey]: value,
-        [snakeKey]: value
+        [`${camelField}_${langLower}`]: value,
+        [`${snakeField}_${langLower}`]: value,
+        [`${camelField}${langCap}`]: value
       });
     }
   };
