@@ -15,15 +15,19 @@ import AdminDashboard from './components/admin/AdminDashboard';
 
 import { 
   getCatalog, 
+  fetchCatalogAsync,
   saveCatalogAsync, 
   getInquiries, 
+  fetchInquiriesAsync,
   getHeroImage,
   saveHeroImageAsync,
   getHeroSlides,
   saveHeroSlidesAsync,
   getProvenanceData,
+  fetchProvenanceDataAsync,
   saveProvenanceDataAsync,
   getFaqItems,
+  fetchFaqItemsAsync,
   saveFaqItemsAsync
 } from './utils/storage';
 
