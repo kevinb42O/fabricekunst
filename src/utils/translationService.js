@@ -200,8 +200,13 @@ export async function autoTranslateItemFields(item) {
     title_en, title_fr,
     subtitle_en, subtitle_fr,
     description_en, description_fr,
+    binding_en, binding_fr,
+    condition_en, condition_fr,
     provenance_en, provenance_fr,
-    condition_report_en, condition_report_fr
+    condition_report_en, condition_report_fr,
+    provenance_details_en, provenance_details_fr,
+    historical_context_en, historical_context_fr,
+    collation_specs_en, collation_specs_fr
   ] = await Promise.all([
     autoTranslateText(item.title, 'en'),
     autoTranslateText(item.title, 'fr'),
@@ -209,10 +214,20 @@ export async function autoTranslateItemFields(item) {
     autoTranslateText(item.subtitle, 'fr'),
     autoTranslateText(item.description, 'en'),
     autoTranslateText(item.description, 'fr'),
+    autoTranslateText(item.binding, 'en'),
+    autoTranslateText(item.binding, 'fr'),
+    autoTranslateText(item.condition, 'en'),
+    autoTranslateText(item.condition, 'fr'),
     autoTranslateText(item.provenance, 'en'),
     autoTranslateText(item.provenance, 'fr'),
     autoTranslateText(item.conditionReport || item.condition_report, 'en'),
-    autoTranslateText(item.conditionReport || item.condition_report, 'fr')
+    autoTranslateText(item.conditionReport || item.condition_report, 'fr'),
+    autoTranslateText(item.provenanceDetails || item.provenance_details, 'en'),
+    autoTranslateText(item.provenanceDetails || item.provenance_details, 'fr'),
+    autoTranslateText(item.historicalContext || item.historical_context, 'en'),
+    autoTranslateText(item.historicalContext || item.historical_context, 'fr'),
+    autoTranslateText(item.collationSpecs || item.collation_specs, 'en'),
+    autoTranslateText(item.collationSpecs || item.collation_specs, 'fr')
   ]);
 
   return {
@@ -223,12 +238,28 @@ export async function autoTranslateItemFields(item) {
     subtitle_fr,
     description_en,
     description_fr,
+    binding_en,
+    binding_fr,
+    condition_en,
+    condition_fr,
     provenance_en,
     provenance_fr,
-    condition_report_en: condition_report_en,
-    condition_report_fr: condition_report_fr,
+    condition_report_en,
+    condition_report_fr,
     conditionReport_en: condition_report_en,
-    conditionReport_fr: condition_report_fr
+    conditionReport_fr: condition_report_fr,
+    provenance_details_en,
+    provenance_details_fr,
+    provenanceDetails_en: provenance_details_en,
+    provenanceDetails_fr: provenance_details_fr,
+    historical_context_en,
+    historical_context_fr,
+    historicalContext_en: historical_context_en,
+    historicalContext_fr: historical_context_fr,
+    collation_specs_en,
+    collation_specs_fr,
+    collationSpecs_en: collation_specs_en,
+    collationSpecs_fr: collation_specs_fr
   };
 }
 

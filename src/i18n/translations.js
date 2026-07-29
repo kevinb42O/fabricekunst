@@ -232,6 +232,13 @@ export const translations = {
     inquiry: {
       modalTitle: 'Aanvraag & Privé Consultatie',
       subtitle: 'Atelier Rembrandt — Antiquariaat & Kunsthandel',
+      typeLabel: 'Type Aanvraag',
+      optPrivateViewing: 'Privé-bezichtiging op afspraak aanvragen',
+      optMakeOffer: 'Een formeel bod uitbrengen',
+      optPhotos: 'Aanvullende detailfoto\'s & provenancedocumentatie opvragen',
+      optGeneral: 'Algemene vraag aan de verzamelaar',
+      selectItemLabel: 'Selecteer Topstuk uit de Collectie (Optioneel)',
+      noSpecificItem: '— Geen specifiek topstuk (Algemene aanvraag) —',
       formName: 'Uw Naam',
       formNamePlaceholder: 'bijv. Jean-Luc Vacheron',
       formEmail: 'E-mailadres',
@@ -245,9 +252,11 @@ export const translations = {
       formMessage: 'Uw Bericht of Specifieke Vraag',
       formMessagePlaceholder: 'Stel uw vraag over conditie, herkomst, bod of bezichtiging...',
       submitBtn: 'Aanvraag Versturen',
+      confidentialSubmit: 'Verstuur Aanvraag Vertrouwelijk',
       submitting: 'Aanvraag Wordt Verzonden...',
       successTitle: 'Aanvraag Succesvol Ontvangen',
       successDesc: 'Bedankt voor uw interesse. Atelier Rembrandt neemt binnen 2 tot 4 uur persoonlijk contact met u op.',
+      close: 'Sluiten',
       closeBtn: 'Sluit Venster'
     },
     faq: {
@@ -545,6 +554,13 @@ export const translations = {
     inquiry: {
       modalTitle: 'Inquiry & Private Consultation',
       subtitle: 'Atelier Rembrandt — Antiquarian & Fine Art',
+      typeLabel: 'Inquiry Type',
+      optPrivateViewing: 'Request private viewing by appointment',
+      optMakeOffer: 'Submit a formal offer / bid',
+      optPhotos: 'Request additional photos & provenance documentation',
+      optGeneral: 'General question for the collector',
+      selectItemLabel: 'Select Item from Collection (Optional)',
+      noSpecificItem: '— No specific item (General inquiry) —',
       formName: 'Your Name',
       formNamePlaceholder: 'e.g. Jean-Luc Vacheron',
       formEmail: 'Email Address',
@@ -558,10 +574,12 @@ export const translations = {
       formMessage: 'Message or Specific Query',
       formMessagePlaceholder: 'Describe your interest, bid, or desired viewing date...',
       submitBtn: 'Submit Inquiry',
+      confidentialSubmit: 'Submit Confidential Inquiry',
       submitting: 'Sending...',
       successTitle: 'Inquiry Successfully Received',
       successDesc: 'Thank you for your interest. We will personally respond within 24 hours.',
-      close: 'Close'
+      close: 'Close',
+      closeBtn: 'Close Window'
     },
     footer: {
       brandTag: 'Rare Antiquarian Books & Historic Fine Art',
@@ -836,6 +854,13 @@ export const translations = {
     inquiry: {
       modalTitle: 'Demande & Consultation Privée',
       subtitle: 'Atelier Rembrandt — Antiquariat & Beaux-Arts',
+      typeLabel: 'Type de Demande',
+      optPrivateViewing: 'Demander une visite privée sur rendez-vous',
+      optMakeOffer: 'Faire une offre formelle / proposition d\'achat',
+      optPhotos: 'Demander des photos supplémentaires et le dossier de provenance',
+      optGeneral: 'Question générale au collectionneur',
+      selectItemLabel: 'Sélectionner une pièce de la collection (Optionnel)',
+      noSpecificItem: '— Aucune pièce spécifique (Demande générale) —',
       formName: 'Votre Nom',
       formNamePlaceholder: 'ex. Jean-Luc Vacheron',
       formEmail: 'Adresse E-mail',
@@ -849,10 +874,12 @@ export const translations = {
       formMessage: 'Message ou Question Spécifique',
       formMessagePlaceholder: 'Décrivez votre intérêt, offre ou date de visite souhaitée...',
       submitBtn: 'Envoyer la Demande',
+      confidentialSubmit: 'Envoyer la Demande Confidentiellement',
       submitting: 'Envoi en cours...',
       successTitle: 'Demande Reçue avec Succès',
       successDesc: 'Merci pour votre intérêt. Nous vous contacterons personnellement sous 24 heures.',
-      close: 'Fermer'
+      close: 'Fermer',
+      closeBtn: 'Fermer la fenêtre'
     },
     footer: {
       brandTag: 'Livres Anciens Rares & Beaux-Arts Historiques',
