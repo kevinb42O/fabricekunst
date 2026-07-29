@@ -2,6 +2,91 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
 
+export const getItemTranslationStatus = (item) => {
+  if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
+
+  const getVal = (fieldName, lang) => {
+    if (lang === 'nl') {
+      return item[fieldName] || '';
+    }
+    const langLower = lang.toLowerCase();
+    const langUpper = lang.toUpperCase();
+    const langCap = lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase();
+
+    const camelField = fieldName;
+    const snakeField = fieldName.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+    const possibleKeys = [
+      `${camelField}_${langLower}`,
+      `${snakeField}_${langLower}`,
+      `${camelField}${langCap}`,
+      `${snakeField}${langCap}`,
+      `${snakeField}_${langUpper}`,
+      `${camelField}_${langUpper}`
+    ];
+
+    for (const key of possibleKeys) {
+      if (item[key] !== undefined && item[key] !== null && typeof item[key] === 'string' && item[key].trim() !== '') {
+        return item[key];
+      }
+    }
+    return '';
+  };
+
+  const keyLabels = {
+    title: 'Titel',
+    subtitle: 'Subtitel',
+    description: 'Algemene Beschrijving',
+    binding: 'Boekband',
+    condition: 'Conditie',
+    provenance: 'Herkomst',
+    conditionReport: 'Conditierapport',
+    provenanceDetails: 'Provenance Details',
+    historicalContext: 'Historische Context',
+    collationSpecs: 'Collatie Specs'
+  };
+
+  const fieldsToCheck = [
+    'title',
+    'subtitle',
+    'description',
+    'binding',
+    'condition',
+    'provenance',
+    'conditionReport',
+    'provenanceDetails',
+    'historicalContext',
+    'collationSpecs'
+  ];
+
+  const details = {
+    nl: { code: 'nl', flag: '🇳🇱', label: 'Nederlands', missing: [] },
+    en: { code: 'en', flag: '🇬🇧', label: 'English', missing: [] },
+    fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
+  };
+
+  let completeCount = 0;
+
+  for (const lang of ['nl', 'en', 'fr']) {
+    for (const field of fieldsToCheck) {
+      const val = getVal(field, lang);
+      if (!val || typeof val !== 'string' || val.trim() === '') {
+        details[lang].missing.push(keyLabels[field] || field);
+      }
+    }
+    if (details[lang].missing.length === 0) {
+      completeCount++;
+    }
+  }
+
+  return {
+    isComplete: completeCount === 3,
+    completeCount,
+    totalLangs: 3,
+    details
+  };
+};
+
 export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast, onOpenCertificate }) {
   const [editingItem, setEditingItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
@@ -414,6 +499,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   <th className="p-3.5">Afbeelding</th>
                   <th className="p-3.5">Titel &amp; Auteur</th>
                   <th className="p-3.5">Type</th>
+                  <th className="p-3.5">Vertaling</th>
                   <th className="p-3.5">Periode</th>
                   <th className="p-3.5">Status</th>
                   <th className="p-3.5">Prijs</th>
@@ -424,6 +510,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 {filtered.map((item) => {
                   const img = item.images?.[0]?.url || item.image || '/images/scarron-spines-white-bg.jpg';
                   const isSelected = selectedItemIds.includes(item.id);
+                  const translationStatus = getItemTranslationStatus(item);
 
                   return (
                     <tr 
@@ -460,6 +547,66 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
                       <td className="p-3.5 font-serif">
                         {item.itemType === 'painting' ? 'Schilderij' : 'Boek'}
+                      </td>
+
+                      {/* Translation Status Badge with Hover Tooltip */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <div className="relative group/tooltip inline-block">
+                          <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold flex items-center space-x-1 border cursor-help transition-all ${
+                            translationStatus.isComplete 
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100' 
+                              : translationStatus.completeCount === 2
+                              ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                              : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
+                          }`}>
+                            {translationStatus.isComplete ? (
+                              <>
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                <span>3/3 Talen</span>
+                              </>
+                            ) : (
+                              <>
+                                <Globe className="w-3 h-3 text-amber-600 shrink-0" />
+                                <span>{translationStatus.completeCount}/3 Talen</span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Hover Tooltip showing missing fields */}
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-72 p-3.5 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
+                            <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
+                              <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
+                                <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
+                                <span>Vertaalstatus ({translationStatus.completeCount}/3 Compleet)</span>
+                              </span>
+                              {translationStatus.isComplete ? (
+                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
+                              ) : (
+                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700">Ontbreekt</span>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 text-[11px]">
+                              {Object.values(translationStatus.details).map((langInfo) => (
+                                <div key={langInfo.code} className="space-y-0.5">
+                                  <div className="flex items-center justify-between font-mono text-[10px]">
+                                    <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
+                                    {langInfo.missing.length === 0 ? (
+                                      <span className="text-emerald-400 font-bold">✓ Compleet</span>
+                                    ) : (
+                                      <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
+                                    )}
+                                  </div>
+                                  {langInfo.missing.length > 0 && (
+                                    <p className="text-[10px] text-stone-400 pl-3 italic leading-snug">
+                                      Ontbreekt: {langInfo.missing.join(', ')}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       </td>
 
                       <td className="p-3.5 text-[#555555] font-serif">
@@ -584,6 +731,69 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       </span>
                     )}
                   </div>
+
+                  {/* Translation Status Badge in Grid View */}
+                  {(() => {
+                    const translationStatus = getItemTranslationStatus(item);
+                    return (
+                      <div className="relative group/tooltip inline-block">
+                        <div className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold flex items-center space-x-1 border cursor-help transition-all ${
+                          translationStatus.isComplete 
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                            : translationStatus.completeCount === 2
+                            ? 'bg-amber-50 text-amber-800 border-amber-300'
+                            : 'bg-rose-50 text-rose-800 border-rose-300'
+                        }`}>
+                          {translationStatus.isComplete ? (
+                            <>
+                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                              <span>3/3 Talen</span>
+                            </>
+                          ) : (
+                            <>
+                              <Globe className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                              <span>{translationStatus.completeCount}/3 Talen</span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Hover Tooltip */}
+                        <div className="absolute right-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-72 p-3.5 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
+                          <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
+                            <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
+                              <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
+                              <span>Vertaalstatus ({translationStatus.completeCount}/3 Compleet)</span>
+                            </span>
+                            {translationStatus.isComplete ? (
+                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
+                            ) : (
+                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700">Ontbreekt</span>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 text-[11px]">
+                            {Object.values(translationStatus.details).map((langInfo) => (
+                              <div key={langInfo.code} className="space-y-0.5">
+                                <div className="flex items-center justify-between font-mono text-[10px]">
+                                  <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
+                                  {langInfo.missing.length === 0 ? (
+                                    <span className="text-emerald-400 font-bold">✓ Compleet</span>
+                                  ) : (
+                                    <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
+                                  )}
+                                </div>
+                                {langInfo.missing.length > 0 && (
+                                  <p className="text-[10px] text-stone-400 pl-3 italic leading-snug">
+                                    Ontbreekt: {langInfo.missing.join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Quick Status Dropdown */}
                   <select
