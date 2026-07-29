@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Award, Bookmark } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { getItemField, getLocalizedPrice } from '../utils/translationService';
 
 export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeImage, setActiveImage] = useState(0);
 
   const sectionRef = useRef(null);
@@ -22,13 +23,20 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
     { url: "/images/scarron-spines-white-bg.jpg", caption: "Overzicht van de authentieke kalfslederen ruggen met goudgestempelde versieringen" }
   ];
 
+  const itemTitle = item ? getItemField(item, 'title', language) : t('scarron.title');
+  const itemSubtitle = item ? getItemField(item, 'subtitle', language) : t('scarron.subtitle');
+  const itemPrice = item ? getLocalizedPrice(item.price, language) : t('voltaire.priceOnRequest');
+  const itemDescription = item ? getItemField(item, 'description', language) : t('scarron.description');
+  const itemBinding = item ? getItemField(item, 'binding', language) : t('scarron.detailBinding');
+  const itemProvenance = item ? getItemField(item, 'provenance', language) : null;
+
   const scarronItem = item || {
     id: 'scarron-1713-oeuvres',
-    title: t('scarron.title'),
+    title: itemTitle,
     ref: 'FB-1713-SCA',
     author: 'Paul Scarron',
     year: '1713',
-    price: t('voltaire.priceOnRequest'),
+    price: itemPrice,
     images
   };
 
@@ -65,16 +73,16 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
             </motion.div>
             
             <h2 className="text-4xl sm:text-6xl font-serif font-bold text-[#111111] tracking-tight">
-              {item?.title || t('scarron.title')}
+              {itemTitle}
             </h2>
             <p className="text-lg text-[#555555] font-serif italic mt-1">
-              {item?.subtitle || t('scarron.subtitle')}
+              {itemSubtitle}
             </p>
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
             <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">
-              {item?.price || t('voltaire.priceOnRequest')}
+              {itemPrice}
             </span>
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
@@ -101,13 +109,13 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
                 exit={{ opacity: 0.3 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 src={typeof images[activeImage] === 'string' ? images[activeImage] : (images[activeImage]?.url || images[activeImage])}
-                alt={images[activeImage]?.caption || item?.title || "Scarron Showcase"}
+                alt={images[activeImage]?.caption || itemTitle}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
             </AnimatePresence>
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex items-center justify-between z-10">
               <span className="text-sm font-serif font-semibold text-white">
-                {images[activeImage]?.caption || item?.title}
+                {images[activeImage]?.caption || itemTitle}
               </span>
               <span className="text-xs font-mono text-[#D4AF37] font-bold px-3 py-1 rounded bg-[#111111] shadow-sm">
                 {t('voltaire.photoOf', { current: activeImage + 1, total: images.length })}
@@ -139,10 +147,10 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
           {/* Narrative */}
           <div className="lg:col-span-7 space-y-6 text-[#333333] font-serif leading-relaxed text-base sm:text-lg">
             <h3 className="text-2xl font-bold text-[#111111] leading-tight">
-              {item?.title || "Paul Scarron — Œuvres (1713)"}
+              {itemTitle}
             </h3>
             <p>
-              {item?.description || t('scarron.description')}
+              {itemDescription}
             </p>
 
             <motion.div 
@@ -155,10 +163,10 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
                 <span>Exemplaar met Zeldzame Kopergravures</span>
               </div>
               <p className="text-sm text-[#111111] italic font-serif leading-relaxed">
-                {item?.binding || t('scarron.detailBinding')}
+                {itemBinding}
               </p>
-              {item?.provenance && (
-                <p className="text-xs text-[#555555]">{item.provenance}</p>
+              {itemProvenance && (
+                <p className="text-xs text-[#555555]">{itemProvenance}</p>
               )}
             </motion.div>
           </div>

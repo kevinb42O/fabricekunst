@@ -113,12 +113,20 @@ const mapDbItemToFrontend = (dbItem) => ({
   provenance_fr: dbItem.provenance_fr || '',
   provenance_details_en: dbItem.provenance_details_en || '',
   provenance_details_fr: dbItem.provenance_details_fr || '',
+  provenanceDetails_en: dbItem.provenance_details_en || '',
+  provenanceDetails_fr: dbItem.provenance_details_fr || '',
   condition_report_en: dbItem.condition_report_en || '',
   condition_report_fr: dbItem.condition_report_fr || '',
+  conditionReport_en: dbItem.condition_report_en || '',
+  conditionReport_fr: dbItem.condition_report_fr || '',
   historical_context_en: dbItem.historical_context_en || '',
   historical_context_fr: dbItem.historical_context_fr || '',
+  historicalContext_en: dbItem.historical_context_en || '',
+  historicalContext_fr: dbItem.historical_context_fr || '',
   collation_specs_en: dbItem.collation_specs_en || '',
-  collation_specs_fr: dbItem.collation_specs_fr || ''
+  collation_specs_fr: dbItem.collation_specs_fr || '',
+  collationSpecs_en: dbItem.collation_specs_en || '',
+  collationSpecs_fr: dbItem.collation_specs_fr || ''
 });
 
 // Map frontend item object (camelCase) to database column names (snake_case)

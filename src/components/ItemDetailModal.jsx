@@ -6,15 +6,13 @@ import {
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
+import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 
 export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
   const { t, language } = useLanguage();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-
   const [zoomModalData, setZoomModalData] = useState(null);
-
 
   if (!item) return null;
 
@@ -65,7 +63,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
               'bg-stone-100 text-stone-700 border-stone-300'
             }`}>
-              {item.status}
+              {getLocalizedStatus(item.status, language)}
             </span>
             <button
               onClick={onClose}
@@ -86,9 +84,9 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="relative aspect-[4/3] rounded-2xl bg-white border border-[#D8CEB8] overflow-hidden group shadow-sm">
                 <img
                   src={currentImage.url}
-                  alt={currentImage.caption || item.title}
+                  alt={currentImage.caption || getItemField(item, 'title', language)}
                   className="w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-105"
-                  onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: item.title })}
+                  onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: getItemField(item, 'title', language) })}
                 />
                 
                 {/* Carousel Navigation */}
@@ -111,7 +109,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
 
                 {/* Click to Zoom Pill */}
                 <button
-                  onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: item.title })}
+                  onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: getItemField(item, 'title', language) })}
                   className="absolute top-3 right-3 p-2 rounded-full bg-white/90 text-[#111111] hover:text-[#B8860B] border border-[#D8CEB8] transition-all shadow-xs cursor-pointer"
                 >
                   <Maximize2 className="w-4 h-4" />
@@ -148,7 +146,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="space-y-2 border-b border-[#D8CEB8]/70 pb-4">
                 <span className="text-xs font-mono font-bold text-[#B8860B] uppercase tracking-wider flex items-center space-x-1">
                   <Award className="w-3.5 h-3.5" />
-                  <span>Antiquariaat Topstuk</span>
+                  <span>{t('item_detail.topstukBadge')}</span>
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#111111] leading-tight">
                   {getItemField(item, 'title', language)}
@@ -160,17 +158,17 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
 
               <div className="flex items-center justify-between border-b border-[#D8CEB8]/70 pb-4">
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">Taxatie / Prijs</span>
+                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
                   <span className="text-2xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">Status</span>
+                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono border inline-block ${
                     item.status === 'Beschikbaar' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
                     item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
                     'bg-stone-100 text-stone-700 border-stone-300'
                   }`}>
-                    {item.status}
+                    {getLocalizedStatus(item.status, language)}
                   </span>
                 </div>
               </div>
@@ -178,16 +176,16 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               {/* Specs */}
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8]">
-                  <span className="text-[#666666] uppercase block text-[10px]">Formaat</span>
+                  <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.format')}</span>
                   <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{item.dimensions || "In-8°"}</span>
                 </div>
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8]">
-                  <span className="text-[#666666] uppercase block text-[10px]">Eeuw</span>
+                  <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.century')}</span>
                   <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{getLocalizedCentury(item.century, language)}</span>
                 </div>
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8] col-span-2">
-                  <span className="text-[#666666] uppercase block text-[10px]">Boekband</span>
-                  <span className="font-bold text-[#111111] font-serif text-xs leading-snug block mt-0.5">{item.binding || "Kalfsleer"}</span>
+                  <span className="text-[#666666] uppercase block text-[10px]">{item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}</span>
+                  <span className="font-bold text-[#111111] font-serif text-xs leading-snug block mt-0.5">{getItemField(item, 'binding', language) || item.binding || "Origineel"}</span>
                 </div>
               </div>
 
@@ -196,13 +194,13 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 <div className="space-y-1">
                   <span className="text-[#B8860B] font-mono font-bold text-xs uppercase tracking-wider flex items-center space-x-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Privé Consultatie</span>
+                    <span>{t('item_detail.directAvailable')}</span>
                   </span>
                   <h4 className="text-base font-serif font-bold text-white">
-                    Vrijblijvende Aanvraag
+                    {t('item_detail.addToCollection')}
                   </h4>
                   <p className="text-xs text-stone-300 font-serif leading-relaxed">
-                    Neem rechtstreeks contact op met Atelier Rembrandt voor bezichtiging of hoog-resolutie documentatie.
+                    {t('item_detail.inquiryContactText')}
                   </p>
                 </div>
 
@@ -219,7 +217,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                   }`}
                 >
                   <PhoneCall className="w-4 h-4" />
-                  <span>{item.status === 'Verkocht' ? 'Verkocht (Archief)' : 'Aanvraag / Doe Een Bod'}</span>
+                  <span>{item.status === 'Verkocht' ? t('item_detail.soldArchive') : t('item_detail.requestPurchaseBtn')}</span>
                 </button>
               </div>
 
@@ -237,11 +235,11 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="flex items-center space-x-2 text-[#B8860B]">
                 <BookOpen className="w-4 h-4" />
                 <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  Beschrijving &amp; Bibliografie
+                  {t('item_detail.descriptionBiblio')}
                 </h3>
               </div>
               <p className="text-base text-[#222222] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3">
-                {item.description}
+                {getItemField(item, 'description', language)}
               </p>
             </section>
 
@@ -250,11 +248,11 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="flex items-center space-x-2 text-[#B8860B]">
                 <History className="w-4 h-4" />
                 <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  Historische &amp; Literaire Context
+                  {item.itemType === 'painting' ? t('item_detail.artHistoricalContext') : t('item_detail.historicalContext')}
                 </h3>
               </div>
               <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
-                {(item.historicalContext || item.description || "Dit historische werk vertegenwoordigt een zeldzaam tijdsdocument uit de Europese antiquarische literatuurgeschiedenis.")
+                {(getItemField(item, 'historicalContext', language) || getItemField(item, 'description', language) || "Dit historische werk vertegenwoordigt een zeldzaam tijdsdocument uit de Europese antiquarische literatuurgeschiedenis.")
                   .split('\n\n')
                   .map((paragraph, pIdx) => (
                     <p key={pIdx}>{paragraph}</p>
@@ -267,14 +265,14 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="flex items-center space-x-2 text-[#B8860B]">
                 <Bookmark className="w-4 h-4" />
                 <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  Bandanalyse &amp; Conditie
+                  {item.itemType === 'painting' ? t('item_detail.canvasConditionReport') : t('item_detail.bindingConditionReport')}
                 </h3>
               </div>
               <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
-                <p><strong>Boekband:</strong> {item.binding}</p>
-                <p><strong>Staat van conservering:</strong> {item.condition}</p>
+                <p><strong>{item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}:</strong> {getItemField(item, 'binding', language)}</p>
+                <p><strong>{t('item_detail.conservationState')}:</strong> {getItemField(item, 'condition', language)}</p>
                 <div className="space-y-2 pt-2">
-                  {(item.conditionReport || "Het exemplaar bevindt zich in uitstekende antiquarische staat. Het papier vertoont de authentieke frisse kenmerken van 18e/19e-eeuws scheppapier met ruime marges.")
+                  {(getItemField(item, 'conditionReport', language) || getItemField(item, 'condition_report', language) || "Het exemplaar bevindt zich in uitstekende antiquarische staat.")
                     .split('\n\n')
                     .map((paragraph, pIdx) => (
                       <p key={pIdx}>{paragraph}</p>
@@ -288,17 +286,17 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="flex items-center space-x-2 text-[#B8860B]">
                 <Award className="w-4 h-4" />
                 <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  Herkomst &amp; Provenance
+                  {t('item_detail.provenanceTitle')}
                 </h3>
               </div>
               <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
-                {item.provenance && (
+                {getItemField(item, 'provenance', language) && (
                   <p className="italic font-serif text-[#111111] border-l-2 border-[#B8860B] pl-3 py-0.5">
-                    "{item.provenance}"
+                    "{getItemField(item, 'provenance', language)}"
                   </p>
                 )}
                 <div>
-                  {(item.provenanceDetails || "Afkomstig uit een vooraanstaande particuliere bibliotheek. Dit werk is door Atelier Rembrandt grondig geanalyseerd op herkomstsporen.")
+                  {(getItemField(item, 'provenanceDetails', language) || getItemField(item, 'provenance_details', language) || "Afkomstig uit een vooraanstaande particuliere bibliotheek.")
                     .split('\n\n')
                     .map((paragraph, pIdx) => (
                       <p key={pIdx}>{paragraph}</p>
@@ -309,10 +307,10 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 <div className="p-4 rounded-xl bg-white border border-[#D8CEB8] space-y-1 mt-4 shadow-2xs">
                   <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase">
                     <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
-                    <span>Formeel Echtheidscertificaat Inbegrepen</span>
+                    <span>{t('item_detail.certificateIncluded')}</span>
                   </div>
                   <p className="text-xs font-serif text-[#555555] leading-relaxed">
-                    Bij aankoop van dit werk ontvangt u een officieel provenance-dossier van Atelier Rembrandt met de complete documentatie.
+                    {t('item_detail.certificateDesc')}
                   </p>
                 </div>
               </div>

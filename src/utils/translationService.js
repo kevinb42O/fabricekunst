@@ -240,12 +240,27 @@ export function getItemField(item, field, language = 'nl') {
   if (!item) return '';
   if (language === 'nl') return item[field] || '';
 
+  // 1. Direct snake_case or standard key (e.g. title_fr, condition_report_fr)
   const localizedKey = `${field}_${language}`;
-  if (item[localizedKey] && item[localizedKey].trim() !== '') {
+  if (item[localizedKey] && typeof item[localizedKey] === 'string' && item[localizedKey].trim() !== '') {
     return item[localizedKey];
   }
 
-  return item[field] || '';
+  // 2. Snake to camelCase e.g. condition_report -> conditionReport_fr
+  const camelField = field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  const camelKey = `${camelField}_${language}`;
+  if (item[camelKey] && typeof item[camelKey] === 'string' && item[camelKey].trim() !== '') {
+    return item[camelKey];
+  }
+
+  // 3. Camel to snake_case e.g. conditionReport -> condition_report_fr
+  const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
+  const snakeKey = `${snakeField}_${language}`;
+  if (item[snakeKey] && typeof item[snakeKey] === 'string' && item[snakeKey].trim() !== '') {
+    return item[snakeKey];
+  }
+
+  return item[field] || item[camelField] || item[snakeField] || '';
 }
 
 /**

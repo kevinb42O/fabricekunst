@@ -327,7 +327,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
 
                         <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 sm:gap-4 pt-2 border-t border-[#D8CEB8]">
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">Taxatie / Prijs</span>
+                            <span className="text-[10px] uppercase font-bold text-[#666666] block font-mono">{t('item_detail.valuationPrice')}</span>
                             <span className="text-xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
                           </div>
 
@@ -342,7 +342,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                               className="px-4 sm:px-5 py-2.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] border border-[#B8860B]/50 text-xs font-semibold uppercase tracking-wider transition-colors duration-300 flex items-center space-x-2 cursor-pointer shadow-xs min-h-[44px]"
                             >
                               <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
-                              <span>Bekijk Catalogusfiche</span>
+                              <span>{t('topstukken.viewDetails')}</span>
                             </motion.button>
 
                             <motion.button
@@ -359,7 +359,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                                   : 'bg-[#FAF7F2] hover:bg-[#111111] text-[#111111] hover:text-white border border-[#D8CEB8] cursor-pointer'
                               }`}
                             >
-                              <span>{item.status === 'Verkocht' ? 'Verkocht' : 'Aanvragen'}</span>
+                              <span>{item.status === 'Verkocht' ? t('catalog.sold') : t('topstukken.inquire')}</span>
                             </motion.button>
                           </div>
                         </div>

@@ -3,9 +3,10 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Award, Bookmark, ZoomIn } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import { useLanguage } from '../context/LanguageContext';
+import { getItemField, getLocalizedPrice } from '../utils/translationService';
 
 export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeImage, setActiveImage] = useState(0);
   const [zoomModalOpen, setZoomModalOpen] = useState(false);
 
@@ -20,19 +21,28 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
 
   const images = item?.images && item.images.length > 0 ? item.images : [
     { url: "/images/voltaire-theatre-bust-reading-glasses.jpg", caption: "Théâtre de Voltaire met antieke leesbril en marmeren buste" },
-    { url: "/images/voltaire-presentation-overlay.jpg", caption: "Presentatie met geopend deel, portretgravure en ex-libris Vacheron-Poinsot" },
+    { url: "/images/voltaire-presentation-overlay.jpg", caption: "Presentatie met geopend deel, portretgravure en ex-libris VacheronPoinsot" },
     { url: "/images/voltaire-marbled-endpaper-exlibris.jpg", caption: "Close-up van het handgemaakte marmeren schutblad en ex-libris label" },
     { url: "/images/voltaire-lit-bookcase-desk.jpg", caption: "De Voltaire-reeks in een sfeervol verlichte antikariaats-boekenkast" },
     { url: "/images/voltaire-52-books-birds-eye.jpg", caption: "Totaaloverzicht van de complete 52-delige reeks liggend in vier keurige rijen" }
   ];
 
+  const itemTitle = item ? getItemField(item, 'title', language) : t('voltaire.title');
+  const itemSubtitle = item ? getItemField(item, 'subtitle', language) : t('voltaire.subtitle');
+  const itemPrice = item ? getLocalizedPrice(item.price, language) : t('voltaire.priceOnRequest');
+  const itemDescription = item ? getItemField(item, 'description', language) : t('voltaire.narrativeP1');
+  const itemHistoricalContext = item ? getItemField(item, 'historicalContext', language) : null;
+  const itemProvenance = item ? getItemField(item, 'provenance', language) : t('voltaire.provenanceQuote');
+  const itemProvenanceDetails = item ? getItemField(item, 'provenanceDetails', language) : null;
+  const itemBinding = item ? getItemField(item, 'binding', language) : null;
+
   const voltaireItem = item || {
     id: 'voltaire-1829-52delig',
-    title: t('voltaire.title'),
+    title: itemTitle,
     ref: 'FB-1829-VOL',
     author: 'Voltaire',
     year: '1829–1833',
-    price: t('voltaire.priceOnRequest'),
+    price: itemPrice,
     images
   };
 
@@ -69,16 +79,16 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             </motion.div>
             
             <h2 className="text-4xl sm:text-6xl font-serif font-bold text-[#111111] tracking-tight">
-              {item?.title || t('voltaire.title')}
+              {itemTitle}
             </h2>
             <p className="text-lg text-[#555555] font-serif italic mt-1">
-              {item?.subtitle || t('voltaire.subtitle')}
+              {itemSubtitle}
             </p>
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
             <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">
-              {item?.price || t('voltaire.priceOnRequest')}
+              {itemPrice}
             </span>
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
@@ -106,13 +116,13 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 exit={{ opacity: 0.3 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 src={typeof images[activeImage] === 'string' ? images[activeImage] : (images[activeImage]?.url || images[activeImage])}
-                alt={images[activeImage]?.caption || item?.title || "Voltaire Showcase"}
+                alt={images[activeImage]?.caption || itemTitle}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
             </AnimatePresence>
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex items-center justify-between z-10">
               <span className="text-sm font-serif font-semibold text-white flex items-center space-x-2">
-                <span>{images[activeImage]?.caption || item?.title}</span>
+                <span>{images[activeImage]?.caption || itemTitle}</span>
                 <span className="text-xs font-mono text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity">{t('voltaire.clickEnlarge')}</span>
               </span>
               <span className="text-xs font-mono text-[#D4AF37] font-bold px-3 py-1 rounded bg-[#111111] flex items-center space-x-1.5 shadow-sm">
@@ -144,9 +154,9 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
         {/* Image Zoom Lightbox */}
         {zoomModalOpen && (
           <ImageZoomModal
-            images={images.map(img => typeof img === 'string' ? { url: img, caption: item?.title || '' } : img)}
+            images={images.map(img => typeof img === 'string' ? { url: img, caption: itemTitle } : img)}
             initialIndex={activeImage}
-            title={item?.title || "Voltaire Showcase"}
+            title={itemTitle}
             onClose={() => setZoomModalOpen(false)}
           />
         )}
@@ -157,13 +167,13 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
           {/* Detailed Storytelling Narrative */}
           <div className="lg:col-span-7 space-y-6 text-[#333333] font-serif leading-relaxed text-base sm:text-lg">
             <h3 className="text-2xl font-bold text-[#111111] leading-tight">
-              {item?.title || t('voltaire.narrativeTitle')}
+              {itemTitle}
             </h3>
             <p>
-              {item?.description || t('voltaire.narrativeP1')}
+              {itemDescription}
             </p>
-            {item?.historicalContext && (
-              <p>{item.historicalContext}</p>
+            {itemHistoricalContext && (
+              <p>{itemHistoricalContext}</p>
             )}
 
             {/* Provenance Box */}
@@ -177,13 +187,11 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 <span>{t('voltaire.provenanceBadge')}</span>
               </div>
               <p className="text-sm text-[#111111] italic font-serif leading-relaxed">
-                {item?.provenance || t('voltaire.provenanceQuote')}
+                "{itemProvenance}"
               </p>
-              {item?.provenanceDetails && (
+              {itemProvenanceDetails && (
                 <p className="text-xs text-[#555555]">
-                  {item.provenanceDetails}
-                </p>
-              )}
+                  {itemProvenanceDetails}
             </motion.div>
           </div>
 
