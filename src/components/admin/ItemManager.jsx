@@ -44,9 +44,6 @@ export const getItemTranslationStatus = (item) => {
   const keyLabels = {
     title: 'Titel',
     subtitle: 'Subtitel',
-    publisher: 'Drukker / Uitgever',
-    city: 'Plaats van Uitgave',
-    dimensions: 'Formaat & Afmetingen',
     description: 'Algemene Beschrijving',
     binding: 'Boekband / Lijst',
     condition: 'Conditie Summary',
@@ -54,15 +51,16 @@ export const getItemTranslationStatus = (item) => {
     conditionReport: 'Conditierapport',
     provenanceDetails: 'Provenance Details',
     historicalContext: 'Historische Context',
-    collationSpecs: 'Collatie Specs'
+    collationSpecs: 'Collatie Specs',
+    publisher: 'Drukker / Uitgever',
+    city: 'Plaats van Uitgave',
+    dimensions: 'Formaat & Afmetingen'
   };
 
-  const fieldsToCheck = [
+  // Narrative text fields that require translation when present in Dutch
+  const narrativeTextFields = [
     'title',
     'subtitle',
-    'publisher',
-    'city',
-    'dimensions',
     'description',
     'binding',
     'condition',
@@ -79,9 +77,23 @@ export const getItemTranslationStatus = (item) => {
     fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
   };
 
-  // Check all 3 languages uniformly
-  for (const lang of ['nl', 'en', 'fr']) {
-    for (const field of fieldsToCheck) {
+  // 1. Dutch status check (Master Record)
+  const nlTitle = getRawVal('title', 'nl');
+  if (!nlTitle || nlTitle.trim() === '') {
+    details.nl.missing.push('Titel');
+  }
+
+  // Determine which narrative fields are actually ACTIVE in the Dutch master record
+  const activeNarrativeFieldsInDutch = narrativeTextFields.filter(field => {
+    if (field === 'title') return true;
+    const nlVal = getRawVal(field, 'nl');
+    const isNvtNl = isFieldMarkedEmpty(item, field, 'nl');
+    return isNvtNl || (nlVal && typeof nlVal === 'string' && nlVal.trim() !== '');
+  });
+
+  // 2. English & French status checks against ONLY active Dutch fields
+  for (const lang of ['en', 'fr']) {
+    for (const field of activeNarrativeFieldsInDutch) {
       const val = getRawVal(field, lang);
       const isMarkedNvt = isFieldMarkedEmpty(item, field, lang);
       if ((!val || typeof val !== 'string' || val.trim() === '') && !isMarkedNvt) {
