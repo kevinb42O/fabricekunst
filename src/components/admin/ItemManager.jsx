@@ -59,6 +59,10 @@ export const getItemTranslationStatus = (item) => {
 
   const translatableTextFields = [
     'title',
+    'subtitle',
+    'publisher',
+    'city',
+    'dimensions',
     'description',
     'binding',
     'condition',
