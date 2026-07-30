@@ -268,7 +268,7 @@ export async function autoTranslateItemFields(item) {
 export function isFieldMarkedEmpty(item, field, language = 'nl') {
   if (!item) return false;
 
-  const emptyFields = item.emptyFields;
+  const emptyFields = item.emptyFields || item.empty_fields;
 
   // 1. Check item.emptyFields structure (array or object)
   if (emptyFields) {
