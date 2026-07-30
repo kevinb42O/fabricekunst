@@ -37,6 +37,8 @@ export const getItemTranslationStatus = (item) => {
   const keyLabels = {
     title: 'Titel',
     subtitle: 'Subtitel',
+    publisher: 'Drukker / Uitgever',
+    city: 'Plaats van Uitgave',
     description: 'Algemene Beschrijving',
     binding: 'Boekband',
     condition: 'Conditie',
@@ -50,6 +52,8 @@ export const getItemTranslationStatus = (item) => {
   const fieldsToCheck = [
     'title',
     'subtitle',
+    'publisher',
+    'city',
     'description',
     'binding',
     'condition',
@@ -290,6 +294,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     const fieldsToTranslate = [
       { key: 'title', label: editingItem.itemType === 'painting' ? 'Titel van het Schilderij' : 'Titel van het Boek' },
       { key: 'subtitle', label: 'Ondertitel / Korte Subtitel' },
+      { key: 'publisher', label: editingItem.itemType === 'painting' ? 'Galerie / Atelier' : 'Drukker / Uitgever (Publisher / Printer)' },
+      { key: 'city', label: editingItem.itemType === 'painting' ? 'Plaats van ontstaan' : 'Plaats van Uitgave (Place of Printing)' },
       { key: 'description', label: 'Algemene Beschrijving & Overzicht' },
       { key: 'binding', label: editingItem.itemType === 'painting' ? 'Lijst & Inlijsting' : 'Bandstijl (Binding)' },
       { key: 'condition', label: 'Staat & Conditie Summary' },
@@ -1419,6 +1425,40 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                         </>
                       )}
                     </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Galerie / Atelier / Werkplaats" : "Drukker / Uitgever (Publisher / Printer)", "publisher")}
+                    <input
+                      type="text"
+                      value={getFormField('publisher') || editingItem.publisher || ''}
+                      onChange={(e) => {
+                        updateFormField('publisher', e.target.value);
+                        setEditingItem(prev => ({ ...prev, publisher: e.target.value }));
+                      }}
+                      placeholder={isFieldNvt('publisher', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Atelier Rembrandt / Galerie" : "Bijv. Chez Baudouin / Elzevier")}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111] ${
+                        isFieldNvt('publisher', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Plaats van ontstaan (Atelier / Origine)" : "Plaats van Uitgave (Place of Printing)", "city")}
+                    <input
+                      type="text"
+                      value={getFormField('city') || editingItem.city || ''}
+                      onChange={(e) => {
+                        updateFormField('city', e.target.value);
+                        setEditingItem(prev => ({ ...prev, city: e.target.value }));
+                      }}
+                      placeholder={isFieldNvt('city', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Delft / Antwerpen" : "Bijv. Parijs / Amsterdam / Leiden")}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111] ${
+                        isFieldNvt('city', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                      }`}
+                    />
                   </div>
                 </div>
 
