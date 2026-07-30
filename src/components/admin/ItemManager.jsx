@@ -1222,48 +1222,26 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
-                  {formLang !== 'nl' && (
+                {/* Language Tab Switcher */}
+                <div className="flex items-center space-x-1 bg-black/60 p-1.5 rounded-xl border border-stone-700 font-mono text-xs w-full sm:w-auto justify-center">
+                  {[
+                    { id: 'nl', label: '🇳🇱 Nederlands' },
+                    { id: 'en', label: '🇬🇧 English' },
+                    { id: 'fr', label: '🇫🇷 Français' }
+                  ].map((tab) => (
                     <button
+                      key={tab.id}
                       type="button"
-                      onClick={() => toggleLangNvt(formLang)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center space-x-1.5 border ${
-                        isLangNvt(formLang)
-                          ? 'bg-amber-500/20 text-[#D4AF37] border-[#D4AF37]'
-                          : 'bg-white/10 hover:bg-white/20 text-stone-200 border-stone-600'
+                      onClick={() => setFormLang(tab.id)}
+                      className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                        formLang === tab.id
+                          ? 'bg-[#B8860B] text-black shadow-md scale-105'
+                          : 'text-stone-300 hover:text-white hover:bg-white/10'
                       }`}
-                      title={isLangNvt(formLang) ? "Klik om N.v.t. markering op te heffen" : `Markeer ${formLang === 'en' ? 'Engels' : 'Frans'} als Volledig / N.v.t. (Geen vertaling nodig)`}
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>
-                        {isLangNvt(formLang)
-                          ? `✓ ${formLang === 'en' ? 'Engels' : 'Frans'} is N.v.t.`
-                          : `Markeer ${formLang === 'en' ? 'Engels' : 'Frans'} N.v.t.`}
-                      </span>
+                      {tab.label}
                     </button>
-                  )}
-
-                  {/* Language Tab Switcher */}
-                  <div className="flex items-center space-x-1 bg-black/60 p-1.5 rounded-xl border border-stone-700 font-mono text-xs w-full sm:w-auto justify-center">
-                    {[
-                      { id: 'nl', label: '🇳🇱 Nederlands' },
-                      { id: 'en', label: '🇬🇧 English' },
-                      { id: 'fr', label: '🇫🇷 Français' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setFormLang(tab.id)}
-                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                          formLang === tab.id
-                            ? 'bg-[#B8860B] text-black shadow-md scale-105'
-                            : 'text-stone-300 hover:text-white hover:bg-white/10'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
 
