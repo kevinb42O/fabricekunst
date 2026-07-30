@@ -283,7 +283,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     }
   };
 
-  // AI Translation Prompt Copy & Import Handlers
+  // AI Translation Prompt Copy & Import Handlers (Context-Aware per active tab)
   const handleCopyAiPrompt = async () => {
     if (!editingItem) return;
 
@@ -300,29 +300,43 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       { key: 'historicalContext', label: 'Diepgaande Historische & Kunsthistorische Context' }
     ];
 
-    let promptText = `Vertaal de onderstaande gegevens van een antiquarisch/kunst object van het Nederlands naar het Engels (en) en Frans (fr).\n`;
+    let sourceLangName = 'Nederlands';
+    let targetLangInstruction = 'het Engels (en) en Frans (fr)';
+    let targetKeys = (fKey) => [`${fKey}_en`, `${fKey}_fr`];
+
+    if (formLang === 'en') {
+      sourceLangName = 'Engels';
+      targetLangInstruction = 'het Nederlands (nl) en Frans (fr)';
+      targetKeys = (fKey) => [fKey, `${fKey}_fr`];
+    } else if (formLang === 'fr') {
+      sourceLangName = 'Frans';
+      targetLangInstruction = 'het Nederlands (nl) en Engels (en)';
+      targetKeys = (fKey) => [fKey, `${fKey}_en`];
+    }
+
+    let promptText = `Vertaal de onderstaande gegevens van een antiquarisch/kunst object van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
     promptText += `Gebruik hoogwaardig antiquarisch, bibliofiel en kunsthistorisch jargon.\n`;
-    promptText += `Als een sectie "Niet ingevuld / Bewust leeg" is, vul dan in de JSON voor de corresponderende _en en _fr sleutels een lege string "" in.\n\n`;
+    promptText += `Als een sectie "Niet ingevuld / Bewust leeg" is, vul dan in de JSON voor de corresponderende sleutels een lege string "" in.\n\n`;
     promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst, geen markdown opmaak rond de code):\n\n`;
 
     const sampleJson = {};
     fieldsToTranslate.forEach(f => {
-      sampleJson[`${f.key}_en`] = "";
-      sampleJson[`${f.key}_fr`] = "";
+      const keys = targetKeys(f.key);
+      keys.forEach(k => { sampleJson[k] = ""; });
     });
     promptText += `${JSON.stringify(sampleJson, null, 2)}\n\n`;
-    promptText += `BRONGEGEVENS (NEDERLANDS):\n---------------------------\n`;
+    promptText += `BRONGEGEVENS (${sourceLangName.toUpperCase()}):\n---------------------------\n`;
 
     fieldsToTranslate.forEach(f => {
-      const val = editingItem[f.key];
-      const isNvt = isFieldNvt(f.key, 'nl');
+      const val = getFormField(f.key);
+      const isNvt = isFieldNvt(f.key, formLang);
       const content = (isNvt || !val || (typeof val === 'string' && val.trim() === '')) ? '[Niet ingevuld / Bewust leeg]' : val.trim();
       promptText += `* ${f.label} [${f.key}]:\n${content}\n\n`;
     });
 
     const success = await copyTextToClipboard(promptText);
     if (success && onShowToast) {
-      onShowToast("📋 AI Vertaal-prompt gekopieerd naar klembord!");
+      onShowToast(`📋 AI Vertaal-prompt (bron: ${sourceLangName}) gekopieerd naar klembord!`);
     }
   };
 

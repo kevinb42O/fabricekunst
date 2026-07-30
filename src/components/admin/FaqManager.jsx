@@ -82,24 +82,37 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
   const handleCopyAiPrompt = async () => {
     if (!editingItem) return;
 
-    let promptText = `Vertaal de onderstaande FAQ vraag & antwoord van het Nederlands naar Engels (en) en Frans (fr).\n`;
+    let sourceLangName = 'Nederlands';
+    let targetLangInstruction = 'Engels (en) en Frans (fr)';
+    let sampleJson = { question_en: "", answer_en: "", question_fr: "", answer_fr: "" };
+    let sourceQuestion = editingItem.question;
+    let sourceAnswer = editingItem.answer;
+
+    if (formLang === 'en') {
+      sourceLangName = 'Engels';
+      targetLangInstruction = 'Nederlands (nl) en Frans (fr)';
+      sampleJson = { question: "", answer: "", question_fr: "", answer_fr: "" };
+      sourceQuestion = editingItem.question_en || editingItem.question;
+      sourceAnswer = editingItem.answer_en || editingItem.answer;
+    } else if (formLang === 'fr') {
+      sourceLangName = 'Frans';
+      targetLangInstruction = 'Nederlands (nl) en Engels (en)';
+      sampleJson = { question: "", answer: "", question_en: "", answer_en: "" };
+      sourceQuestion = editingItem.question_fr || editingItem.question;
+      sourceAnswer = editingItem.answer_fr || editingItem.answer;
+    }
+
+    let promptText = `Vertaal de onderstaande FAQ vraag & antwoord van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
     promptText += `Gebruik verzorgde, professionele taal.\n`;
     promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst of markdown opmaak):\n\n`;
-
-    const sampleJson = {
-      question_en: "",
-      answer_en: "",
-      question_fr: "",
-      answer_fr: ""
-    };
     promptText += `${JSON.stringify(sampleJson, null, 2)}\n\n`;
-    promptText += `BRONGEGEVENS (NEDERLANDS):\n---------------------------\n`;
-    promptText += `* Vraag [question]: ${editingItem.question || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* Antwoord [answer]: ${editingItem.answer || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `BRONGEGEVENS (${sourceLangName.toUpperCase()}):\n---------------------------\n`;
+    promptText += `* Vraag [question]: ${sourceQuestion || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Antwoord [answer]: ${sourceAnswer || '[Niet ingevuld / Bewust leeg]'}\n`;
 
     const success = await copyTextToClipboard(promptText);
     if (success && onShowToast) {
-      onShowToast("📋 AI Vertaal-prompt gekopieerd naar klembord!");
+      onShowToast(`📋 AI Vertaal-prompt voor FAQ (bron: ${sourceLangName}) gekopieerd naar klembord!`);
     }
   };
 
@@ -114,15 +127,17 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
 
     setEditingItem(prev => ({
       ...prev,
-      question_en: data.question_en || prev.question_en,
-      answer_en: data.answer_en || prev.answer_en,
-      question_fr: data.question_fr || prev.question_fr,
-      answer_fr: data.answer_fr || prev.answer_fr
+      ...(data.question !== undefined ? { question: data.question } : {}),
+      ...(data.answer !== undefined ? { answer: data.answer } : {}),
+      ...(data.question_en !== undefined ? { question_en: data.question_en } : {}),
+      ...(data.answer_en !== undefined ? { answer_en: data.answer_en } : {}),
+      ...(data.question_fr !== undefined ? { question_fr: data.question_fr } : {}),
+      ...(data.answer_fr !== undefined ? { answer_fr: data.answer_fr } : {})
     }));
 
     setShowAiImportModal(false);
     setAiJsonInput('');
-    if (onShowToast) onShowToast("✨ Success! FAQ vertalingen geïmporteerd (EN & FR).");
+    if (onShowToast) onShowToast("✨ Success! FAQ vertalingen geïmporteerd.");
   };
 
   return (

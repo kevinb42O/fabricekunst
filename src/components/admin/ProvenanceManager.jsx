@@ -148,33 +148,61 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   };
 
   const handleCopyAiPrompt = async () => {
-    let promptText = `Vertaal de onderstaande teksten van de Herkomst & Provenance pagina naar Engels (en) en Frans (fr).\n`;
-    promptText += `Gebruik hoogwaardige, elegante museum en antiquariaat terminologie.\n`;
-    promptText += `Als een veld leeg is, vul dan in de JSON een lege string "" in.\n\n`;
-    promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst of markdown opmaak):\n\n`;
-
-    const sampleJson = {
+    let sourceLangName = 'Nederlands';
+    let targetLangInstruction = 'Engels (en) en Frans (fr)';
+    let sampleJson = {
       hero_title_en: "", hero_title_fr: "",
       hero_subtitle_en: "", hero_subtitle_fr: "",
       story_title_en: "", story_title_fr: "",
       story_quote_en: "", story_quote_fr: "",
       story_narrative_en: "", story_narrative_fr: "",
       cta_title_en: "", cta_title_fr: "",
-      cta_description_en: "", cta_description_fr: ""
+      cta_subtitle_en: "", cta_subtitle_fr: ""
     };
+
+    if (formLang === 'en') {
+      sourceLangName = 'Engels';
+      targetLangInstruction = 'Nederlands (nl) en Frans (fr)';
+      sampleJson = {
+        hero_title: "", hero_title_fr: "",
+        hero_subtitle: "", hero_subtitle_fr: "",
+        story_title: "", story_title_fr: "",
+        story_quote: "", story_quote_fr: "",
+        story_narrative: "", story_narrative_fr: "",
+        cta_title: "", cta_title_fr: "",
+        cta_subtitle: "", cta_subtitle_fr: ""
+      };
+    } else if (formLang === 'fr') {
+      sourceLangName = 'Frans';
+      targetLangInstruction = 'Nederlands (nl) en Engels (en)';
+      sampleJson = {
+        hero_title: "", hero_title_en: "",
+        hero_subtitle: "", hero_subtitle_en: "",
+        story_title: "", story_title_en: "",
+        story_quote: "", story_quote_en: "",
+        story_narrative: "", story_narrative_en: "",
+        cta_title: "", cta_title_en: "",
+        cta_subtitle: "", cta_subtitle_en: ""
+      };
+    }
+
+    let promptText = `Vertaal de onderstaande teksten van de Herkomst & Provenance pagina van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
+    promptText += `Gebruik hoogwaardige, elegante museum en antiquariaat terminologie.\n`;
+    promptText += `Als een veld leeg is, vul dan in de JSON een lege string "" in.\n\n`;
+    promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst of markdown opmaak):\n\n`;
     promptText += `${JSON.stringify(sampleJson, null, 2)}\n\n`;
-    promptText += `BRONGEGEVENS (NEDERLANDS):\n---------------------------\n`;
-    promptText += `* Hero Titel: ${formData.hero?.title || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* Hero Subtitel: ${formData.hero?.subtitle || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* Story Titel: ${formData.story?.title || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* Story Quote: ${formData.story?.quote || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* Story Narrative: ${formData.story?.narrative || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* CTA Titel: ${formData.cta?.title || '[Niet ingevuld / Bewust leeg]'}\n`;
-    promptText += `* CTA Beschrijving: ${formData.cta?.description || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `BRONGEGEVENS (${sourceLangName.toUpperCase()}):\n---------------------------\n`;
+    promptText += `* Hero Titel: ${getFieldValue('hero', 'title') || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Hero Subtitel: ${getFieldValue('hero', 'subtitle') || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Story Titel: ${getFieldValue('story', 'title') || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Story Quote: ${getFieldValue('story', 'quote') || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Story Narrative: ${getFieldValue('story', 'narrative') || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* CTA Titel: ${getFieldValue('cta', 'title') || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* CTA Beschrijving: ${getFieldValue('cta', 'subtitle') || '[Niet ingevuld / Bewust leeg]'}\n`;
 
     const success = await copyTextToClipboard(promptText);
     if (success && showToast) {
-      showToast("📋 AI Vertaal-prompt voor Herkomst pagina gekopieerd naar klembord!");
+      showToast(`📋 AI Vertaal-prompt voor Herkomst (bron: ${sourceLangName}) gekopieerd naar klembord!`);
     }
   };
 
@@ -189,29 +217,26 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
     setFormData(prev => {
       const next = { ...prev };
-      if (data.hero_title_en) next.hero = { ...(next.hero || {}), title_en: data.hero_title_en };
-      if (data.hero_title_fr) next.hero = { ...(next.hero || {}), title_fr: data.hero_title_fr };
-      if (data.hero_subtitle_en) next.hero = { ...(next.hero || {}), subtitle_en: data.hero_subtitle_en };
-      if (data.hero_subtitle_fr) next.hero = { ...(next.hero || {}), subtitle_fr: data.hero_subtitle_fr };
-      
-      if (data.story_title_en) next.story = { ...(next.story || {}), title_en: data.story_title_en };
-      if (data.story_title_fr) next.story = { ...(next.story || {}), title_fr: data.story_title_fr };
-      if (data.story_quote_en) next.story = { ...(next.story || {}), quote_en: data.story_quote_en };
-      if (data.story_quote_fr) next.story = { ...(next.story || {}), quote_fr: data.story_quote_fr };
-      if (data.story_narrative_en) next.story = { ...(next.story || {}), narrative_en: data.story_narrative_en };
-      if (data.story_narrative_fr) next.story = { ...(next.story || {}), narrative_fr: data.story_narrative_fr };
+      Object.keys(data).forEach(fullKey => {
+        const val = data[fullKey];
+        if (typeof val !== 'string' || !val.trim()) return;
 
-      if (data.cta_title_en) next.cta = { ...(next.cta || {}), title_en: data.cta_title_en };
-      if (data.cta_title_fr) next.cta = { ...(next.cta || {}), title_fr: data.cta_title_fr };
-      if (data.cta_description_en) next.cta = { ...(next.cta || {}), description_en: data.cta_description_en };
-      if (data.cta_description_fr) next.cta = { ...(next.cta || {}), description_fr: data.cta_description_fr };
+        const parts = fullKey.split('_');
+        const section = parts[0];
+        if (['hero', 'story', 'cta'].includes(section)) {
+          const prop = fullKey.substring(section.length + 1);
+          if (prop) {
+            next[section] = { ...(next[section] || {}), [prop]: val };
+          }
+        }
+      });
 
       return next;
     });
 
     setShowAiImportModal(false);
     setAiJsonInput('');
-    if (showToast) showToast("✨ Success! Herkomst pagina vertalingen geïmporteerd (EN & FR).");
+    if (showToast) showToast("✨ Success! Herkomst pagina vertalingen geïmporteerd.");
   };
 
   return (
