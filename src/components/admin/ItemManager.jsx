@@ -44,6 +44,9 @@ export const getItemTranslationStatus = (item) => {
   const keyLabels = {
     title: 'Titel',
     subtitle: 'Subtitel',
+    publisher: 'Drukker / Uitgever',
+    city: 'Plaats van Uitgave',
+    dimensions: 'Formaat & Afmetingen',
     description: 'Algemene Beschrijving',
     binding: 'Boekband / Lijst',
     condition: 'Conditie Summary',
@@ -51,13 +54,10 @@ export const getItemTranslationStatus = (item) => {
     conditionReport: 'Conditierapport',
     provenanceDetails: 'Provenance Details',
     historicalContext: 'Historische Context',
-    collationSpecs: 'Collatie Specs',
-    publisher: 'Drukker / Uitgever',
-    city: 'Plaats van Uitgave',
-    dimensions: 'Formaat & Afmetingen'
+    collationSpecs: 'Collatie Specs'
   };
 
-  const translatableTextFields = [
+  const fieldsToCheck = [
     'title',
     'subtitle',
     'publisher',
@@ -79,23 +79,9 @@ export const getItemTranslationStatus = (item) => {
     fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
   };
 
-  // 1. Dutch status check (Master Record)
-  const nlTitle = getRawVal('title', 'nl');
-  if (!nlTitle || nlTitle.trim() === '') {
-    details.nl.missing.push('Titel');
-  }
-
-  // Active text fields in Dutch master record
-  const activeFieldsInDutch = translatableTextFields.filter(field => {
-    if (field === 'title') return true;
-    const nlVal = getRawVal(field, 'nl');
-    const isNvtNl = isFieldMarkedEmpty(item, field, 'nl');
-    return isNvtNl || (nlVal && typeof nlVal === 'string' && nlVal.trim() !== '');
-  });
-
-  // 2. English & French status checks
-  for (const lang of ['en', 'fr']) {
-    for (const field of activeFieldsInDutch) {
+  // Check all 3 languages uniformly
+  for (const lang of ['nl', 'en', 'fr']) {
+    for (const field of fieldsToCheck) {
       const val = getRawVal(field, lang);
       const isMarkedNvt = isFieldMarkedEmpty(item, field, lang);
       if ((!val || typeof val !== 'string' || val.trim() === '') && !isMarkedNvt) {
