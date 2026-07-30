@@ -27,15 +27,15 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       <div className="min-h-screen bg-white pt-32 pb-24 text-center">
         <div className="max-w-md mx-auto space-y-4">
           <BookOpen className="w-12 h-12 text-[#B8860B] mx-auto opacity-50" />
-          <h2 className="text-2xl font-serif font-bold text-[#111111]">Item Niet Gevonden</h2>
+          <h2 className="text-2xl font-serif font-bold text-[#111111]">{t('item_detail.notFoundTitle')}</h2>
           <p className="text-sm font-serif text-[#666666]">
-            Het opgevraagde antiquarische meesterwerk kon niet worden teruggevonden in de catalogus.
+            {t('item_detail.notFoundDesc')}
           </p>
           <button
             onClick={onNavigateBack}
             className="px-6 py-2.5 rounded-sm bg-[#1C1A17] text-white font-mono text-xs uppercase font-semibold hover:bg-[#B8860B] hover:text-[#111111] transition-colors cursor-pointer"
           >
-            Terug naar Collectie
+            {t('item_detail.backToCatalog')}
           </button>
         </div>
       </div>

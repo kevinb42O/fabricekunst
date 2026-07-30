@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
+import { isPriceOnRequest } from '../../utils/translationService';
 
 export const getItemTranslationStatus = (item) => {
   if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
@@ -1040,9 +1041,29 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      Prijs / Taxatie
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider">
+                        Prijs / Taxatie
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const poa = isPriceOnRequest(editingItem.price);
+                          setEditingItem({
+                            ...editingItem,
+                            price: poa ? '€ ' : 'Prijs op aanvraag'
+                          });
+                        }}
+                        className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-md border transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isPriceOnRequest(editingItem.price)
+                            ? 'bg-[#1C1A17] text-[#B8860B] border-[#1C1A17] shadow-xs'
+                            : 'bg-[#FAF7F2] text-[#666666] border-[#D8CEB8] hover:text-[#111111] hover:border-[#111111]'
+                        }`}
+                        title="Schakel tussen 'Prijs op aanvraag' en een vast Euro bedrag"
+                      >
+                        <span>{isPriceOnRequest(editingItem.price) ? '✓ Prijs op aanvraag' : '+ Prijs op aanvraag'}</span>
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={editingItem.price}
@@ -1050,6 +1071,9 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       placeholder="€ 3.500 of Prijs op aanvraag"
                       className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
                     />
+                    <p className="text-[11px] font-serif text-[#666666] italic mt-1.5">
+                      💡 Wordt op de website automatisch gelokaliseerd: EN (&ldquo;Price on request&rdquo;) &bull; FR (&ldquo;Prix sur demande&rdquo;)
+                    </p>
                   </div>
                 </div>
 

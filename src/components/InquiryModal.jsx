@@ -84,6 +84,10 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
       setErrorMessage(t('inquiry.errEmailInvalid'));
       return;
     }
+    if ((contactPref === 'phone' || contactPref === 'whatsapp') && (!formData.phone || formData.phone.trim().length < 6)) {
+      setErrorMessage(t('inquiry.errPhoneRequired'));
+      return;
+    }
     if (!isMessageValid(formData.message)) {
       setErrorMessage(t('inquiry.errMessageRequired'));
       return;
@@ -230,7 +234,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       {t('nav.brandSubtitle')}
                     </span>
                     <p className="text-xs text-[#333333] font-serif leading-relaxed font-medium">
-                      Elk werk in onze collectie wordt vergezeld van een officieel certificaat van herkomst en gedetailleerd conditierapport.
+                      {t('inquiry.certificateNotice')}
                     </p>
                   </div>
                 )}
@@ -388,7 +392,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[#111111] uppercase tracking-[0.15em] text-xs font-sans font-bold mb-1">
-                        {t('inquiry.formPhone')}
+                        {t('inquiry.formPhone')}{(contactPref === 'phone' || contactPref === 'whatsapp') ? ' *' : ''}
                       </label>
                       <input
                         type="tel"
@@ -406,7 +410,10 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       <div className="grid grid-cols-3 gap-1.5">
                         <button
                           type="button"
-                          onClick={() => setContactPref('email')}
+                          onClick={() => {
+                            setContactPref('email');
+                            setFormData(prev => ({ ...prev, contactPref: 'email' }));
+                          }}
                           className={`py-2 text-xs font-bold uppercase tracking-wider font-sans border rounded-lg transition-all cursor-pointer text-center min-h-[40px] ${
                             contactPref === 'email'
                               ? 'bg-[#FAF7F0] border-2 border-[#B8860B] text-[#B8860B]'
@@ -417,7 +424,10 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                         </button>
                         <button
                           type="button"
-                          onClick={() => setContactPref('phone')}
+                          onClick={() => {
+                            setContactPref('phone');
+                            setFormData(prev => ({ ...prev, contactPref: 'phone' }));
+                          }}
                           className={`py-2 text-xs font-bold uppercase tracking-wider font-sans border rounded-lg transition-all cursor-pointer text-center min-h-[40px] ${
                             contactPref === 'phone'
                               ? 'bg-[#FAF7F0] border-2 border-[#B8860B] text-[#B8860B]'
@@ -428,7 +438,10 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                         </button>
                         <button
                           type="button"
-                          onClick={() => setContactPref('whatsapp')}
+                          onClick={() => {
+                            setContactPref('whatsapp');
+                            setFormData(prev => ({ ...prev, contactPref: 'whatsapp' }));
+                          }}
                           className={`py-2 text-xs font-bold uppercase tracking-wider font-sans border rounded-lg transition-all cursor-pointer text-center min-h-[40px] ${
                             contactPref === 'whatsapp'
                               ? 'bg-[#FAF7F0] border-2 border-[#B8860B] text-[#B8860B]'

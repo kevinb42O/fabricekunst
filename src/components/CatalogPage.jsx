@@ -71,6 +71,7 @@ function buildSearchDocument(item) {
       item.author,
       item.publisher,
       item.city,
+      item.year,
       item.category,
       item.century,
       item.status,
@@ -296,6 +297,30 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
 
       if (sortBy === 'titel-asc') {
         return getItemField(left, 'title', language).localeCompare(getItemField(right, 'title', language), language, { sensitivity: 'base' });
+      }
+
+      const parsePrice = (priceStr) => {
+        if (!priceStr || typeof priceStr !== 'string') return null;
+        const digits = priceStr.replace(/[^0-9]/g, '');
+        return digits ? Number(digits) : null;
+      };
+
+      if (sortBy === 'prijs-asc') {
+        const leftPrice = parsePrice(left.price);
+        const rightPrice = parsePrice(right.price);
+        if (leftPrice === null && rightPrice === null) return 0;
+        if (leftPrice === null) return 1;
+        if (rightPrice === null) return -1;
+        return leftPrice - rightPrice;
+      }
+
+      if (sortBy === 'prijs-desc') {
+        const leftPrice = parsePrice(left.price);
+        const rightPrice = parsePrice(right.price);
+        if (leftPrice === null && rightPrice === null) return 0;
+        if (leftPrice === null) return 1;
+        if (rightPrice === null) return -1;
+        return rightPrice - leftPrice;
       }
 
       const featuredDelta = Number(Boolean(right.featured)) - Number(Boolean(left.featured));
@@ -588,6 +613,8 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                         <option value="jaar-desc">{t('catalog.sortYearDesc')}</option>
                         <option value="auteur-asc">{t('catalog.sortAuthorAsc')}</option>
                         <option value="titel-asc">{t('catalog.sortTitleAsc')}</option>
+                        <option value="prijs-asc">{t('catalog.sortPriceAsc')}</option>
+                        <option value="prijs-desc">{t('catalog.sortPriceDesc')}</option>
                       </select>
                       <ChevronDown className="absolute right-0 top-1/2 w-4 h-4 -translate-y-1/2 text-[#B8860B] pointer-events-none" />
                     </div>

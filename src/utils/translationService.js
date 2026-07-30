@@ -151,6 +151,18 @@ export function getLocalizedStatus(status, language = 'nl') {
   return STATUS_TRANSLATIONS[language]?.[status] || status;
 }
 
+const applyGlossary = (sourceText, lang) => {
+  if (!sourceText || typeof sourceText !== 'string') return sourceText;
+  let result = sourceText;
+  const glossary = ANTIQUARIAN_GLOSSARY[lang] || {};
+  Object.keys(glossary).forEach((term) => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(?<=^|\\s|\\b)${escaped}(?=\\s|\\b|$|[,.;:!?])`, 'gi');
+    result = result.replace(regex, glossary[term]);
+  });
+  return result;
+};
+
 /**
  * Translates a given text to targetLang ('en' | 'fr')
  * Applies glossary replacements to ensure precise bibliofilie jargon.
@@ -169,23 +181,10 @@ export async function autoTranslateText(text, targetLang = 'en') {
     const data = await response.json();
     let translated = data?.responseData?.translatedText || text;
 
-    const glossary = ANTIQUARIAN_GLOSSARY[targetLang] || {};
-    Object.keys(glossary).forEach((term) => {
-      const regex = new RegExp(`\\b${term}\\b`, 'gi');
-      translated = translated.replace(regex, glossary[term]);
-    });
-
-    return translated;
+    return applyGlossary(translated, targetLang);
   } catch (error) {
     console.warn(`Translation API warning (${targetLang}):`, error);
-    
-    let fallbackText = text;
-    const glossary = ANTIQUARIAN_GLOSSARY[targetLang] || {};
-    Object.keys(glossary).forEach((term) => {
-      const regex = new RegExp(`\\b${term}\\b`, 'gi');
-      fallbackText = fallbackText.replace(regex, glossary[term]);
-    });
-    return fallbackText;
+    return applyGlossary(text, targetLang);
   }
 }
 
@@ -295,31 +294,60 @@ export function getItemField(item, field, language = 'nl') {
 }
 
 /**
- * Localizes and converts price string from Euros to Dollars if language is English.
- * Assumes the input price starts with the € symbol (e.g., "€ 2.850").
+ * Helper to test if a price string represents "Price on request"
+ */
+export function isPriceOnRequest(priceStr) {
+  if (!priceStr || typeof priceStr !== 'string') return true;
+  const normalized = priceStr.trim().toLowerCase();
+  if (normalized === '' || normalized === '0') return true;
+  return (
+    normalized.includes('aanvraag') ||
+    normalized.includes('request') ||
+    normalized.includes('demande') ||
+    normalized.includes('por') ||
+    normalized === 'p.o.a.'
+  );
+}
+
+/**
+ * Localizes and converts price string for target language (NL, EN, FR).
+ * Translates "Prijs op aanvraag" to EN "Price on request" and FR "Prix sur demande".
+ * Converts Euro values to USD if language is English.
  */
 export function getLocalizedPrice(priceStr, language = 'nl') {
-  if (!priceStr || typeof priceStr !== 'string') return '';
-  
-  if (language !== 'en' || !priceStr.includes('€')) {
+  if (!priceStr || typeof priceStr !== 'string' || priceStr.trim() === '') {
+    if (language === 'en') return 'Price on request';
+    if (language === 'fr') return 'Prix sur demande';
+    return 'Prijs op aanvraag';
+  }
+
+  if (isPriceOnRequest(priceStr)) {
+    if (language === 'en') return 'Price on request';
+    if (language === 'fr') return 'Prix sur demande';
+    return 'Prijs op aanvraag';
+  }
+
+  if (language === 'en') {
+    if (priceStr.includes('€')) {
+      const cleanStr = priceStr.replace('€', '').trim();
+      const numericStr = cleanStr.replace(/\./g, '');
+      const euros = parseFloat(numericStr);
+      if (!isNaN(euros)) {
+        const rate = 1.09;
+        const dollars = Math.round(euros * rate);
+        const formattedDollars = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return `$ ${formattedDollars}`;
+      }
+    }
     return priceStr;
   }
-  
-  // Parse the number from the string
-  const cleanStr = priceStr.replace('€', '').trim();
-  const numericStr = cleanStr.replace(/\./g, '');
-  const euros = parseFloat(numericStr);
-  
-  if (isNaN(euros)) {
+
+  if (language === 'fr') {
+    if (priceStr.includes('€')) {
+      return priceStr.replace('€', '').trim() + ' €';
+    }
     return priceStr;
   }
-  
-  // Exchange rate: 1 EUR = 1.09 USD (approximate current rate)
-  const rate = 1.09;
-  const dollars = Math.round(euros * rate);
-  
-  // Format with commas as thousand separators
-  const formattedDollars = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  
-  return `$ ${formattedDollars}`;
+
+  return priceStr;
 }

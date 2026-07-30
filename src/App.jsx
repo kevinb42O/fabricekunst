@@ -206,9 +206,11 @@ export default function App() {
     if (document.startViewTransition && typeof document.startViewTransition === 'function') {
       document.startViewTransition(() => {
         updateStateFn();
+        window.scrollTo(0, 0);
       });
     } else {
       updateStateFn();
+      window.scrollTo(0, 0);
     }
   };
 
@@ -223,7 +225,6 @@ export default function App() {
     if (window.location.pathname !== newPath) {
       window.history.pushState({ page: 'item', id: item.id }, '', newPath);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigate = (targetId) => {
@@ -413,7 +414,7 @@ export default function App() {
                   i.id === selectedDetailItemId ||
                   i.id?.toLowerCase() === selectedDetailItemId?.toLowerCase() ||
                   i.ref?.toLowerCase() === selectedDetailItemId?.toLowerCase()
-              ) || catalog[0]
+              ) || null
             }
             catalog={catalog}
             onOpenItemDetail={handleOpenItemDetail}

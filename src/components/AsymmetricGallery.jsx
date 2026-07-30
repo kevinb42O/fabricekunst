@@ -60,6 +60,34 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
       result = [...result].sort((a, b) => (a.author || '').localeCompare(b.author || ''));
     } else if (sortBy === 'titel-asc') {
       result = [...result].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    } else if (sortBy === 'prijs-asc') {
+      const parsePrice = (priceStr) => {
+        if (!priceStr || typeof priceStr !== 'string') return null;
+        const digits = priceStr.replace(/[^0-9]/g, '');
+        return digits ? Number(digits) : null;
+      };
+      result = [...result].sort((a, b) => {
+        const pA = parsePrice(a.price);
+        const pB = parsePrice(b.price);
+        if (pA === null && pB === null) return 0;
+        if (pA === null) return 1;
+        if (pB === null) return -1;
+        return pA - pB;
+      });
+    } else if (sortBy === 'prijs-desc') {
+      const parsePrice = (priceStr) => {
+        if (!priceStr || typeof priceStr !== 'string') return null;
+        const digits = priceStr.replace(/[^0-9]/g, '');
+        return digits ? Number(digits) : null;
+      };
+      result = [...result].sort((a, b) => {
+        const pA = parsePrice(a.price);
+        const pB = parsePrice(b.price);
+        if (pA === null && pB === null) return 0;
+        if (pA === null) return 1;
+        if (pB === null) return -1;
+        return pB - pA;
+      });
     }
 
     return result;
@@ -220,6 +248,8 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                   <option value="jaar-desc" className="bg-white text-[#111111]">{t('catalog.sortYearDesc')}</option>
                   <option value="auteur-asc" className="bg-white text-[#111111]">{t('catalog.sortAuthorAsc')}</option>
                   <option value="titel-asc" className="bg-white text-[#111111]">{t('catalog.sortTitleAsc')}</option>
+                  <option value="prijs-asc" className="bg-white text-[#111111]">{t('catalog.sortPriceAsc')}</option>
+                  <option value="prijs-desc" className="bg-white text-[#111111]">{t('catalog.sortPriceDesc')}</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-[#B8860B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
