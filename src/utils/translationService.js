@@ -263,34 +263,86 @@ export async function autoTranslateItemFields(item) {
 }
 
 /**
+ * Helper to check if a field or field-language combination is marked intentionally empty/N.v.t.
+ */
+export function isFieldMarkedEmpty(item, field, language = 'nl') {
+  if (!item) return false;
+
+  const emptyFields = item.emptyFields;
+
+  // 1. Check item.emptyFields structure (array or object)
+  if (emptyFields) {
+    const camelField = field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+    const keysToCheck = [
+      field,
+      camelField,
+      snakeField,
+      `${field}_${language}`,
+      `${camelField}_${language}`,
+      `${snakeField}_${language}`,
+      `lang_${language}`
+    ];
+
+    if (Array.isArray(emptyFields)) {
+      if (keysToCheck.some(k => emptyFields.includes(k))) return true;
+    } else if (typeof emptyFields === 'object') {
+      if (keysToCheck.some(k => Boolean(emptyFields[k]))) return true;
+    }
+  }
+
+  // 2. Direct string sentinel check
+  const val = item[`${field}_${language}`] || item[field];
+  if (val === '__NONE__') return true;
+
+  return false;
+}
+
+/**
  * Helper to safely extract the translated or fallback text field from an item
  * Usage: getItemField(item, 'title', language)
  */
 export function getItemField(item, field, language = 'nl') {
   if (!item) return '';
-  if (language === 'nl') return item[field] || '';
+
+  // If marked explicitly empty for this language (or globally), return empty string
+  if (isFieldMarkedEmpty(item, field, language)) {
+    return '';
+  }
+
+  if (language === 'nl') {
+    const val = item[field];
+    return (val && val !== '__NONE__') ? val : '';
+  }
 
   // 1. Direct snake_case or standard key (e.g. title_fr, condition_report_fr)
   const localizedKey = `${field}_${language}`;
-  if (item[localizedKey] && typeof item[localizedKey] === 'string' && item[localizedKey].trim() !== '') {
+  if (item[localizedKey] && typeof item[localizedKey] === 'string' && item[localizedKey].trim() !== '' && item[localizedKey] !== '__NONE__') {
     return item[localizedKey];
   }
 
   // 2. Snake to camelCase e.g. condition_report -> conditionReport_fr
   const camelField = field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   const camelKey = `${camelField}_${language}`;
-  if (item[camelKey] && typeof item[camelKey] === 'string' && item[camelKey].trim() !== '') {
+  if (item[camelKey] && typeof item[camelKey] === 'string' && item[camelKey].trim() !== '' && item[camelKey] !== '__NONE__') {
     return item[camelKey];
   }
 
   // 3. Camel to snake_case e.g. conditionReport -> condition_report_fr
   const snakeField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
   const snakeKey = `${snakeField}_${language}`;
-  if (item[snakeKey] && typeof item[snakeKey] === 'string' && item[snakeKey].trim() !== '') {
+  if (item[snakeKey] && typeof item[snakeKey] === 'string' && item[snakeKey].trim() !== '' && item[snakeKey] !== '__NONE__') {
     return item[snakeKey];
   }
 
-  return item[field] || item[camelField] || item[snakeField] || '';
+  // If Dutch is marked empty, don't fall back to Dutch
+  if (isFieldMarkedEmpty(item, field, 'nl')) {
+    return '';
+  }
+
+  const defaultVal = item[field] || item[camelField] || item[snakeField] || '';
+  return (defaultVal && defaultVal !== '__NONE__') ? defaultVal : '';
 }
 
 /**

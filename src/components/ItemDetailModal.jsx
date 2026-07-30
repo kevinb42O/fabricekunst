@@ -231,90 +231,106 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
           <div className="border-t border-[#D8CEB8] pt-8 space-y-10 text-[#111111]">
             
             {/* SECTION I */}
-            <section className="space-y-3">
-              <div className="flex items-center space-x-2 text-[#B8860B]">
-                <BookOpen className="w-4 h-4" />
-                <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  {t('item_detail.descriptionBiblio')}
-                </h3>
-              </div>
-              <p className="text-base text-[#222222] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3">
-                {getItemField(item, 'description', language)}
-              </p>
-            </section>
+            {getItemField(item, 'description', language) && (
+              <section className="space-y-3">
+                <div className="flex items-center space-x-2 text-[#B8860B]">
+                  <BookOpen className="w-4 h-4" />
+                  <h3 className="text-[#111111] font-serif font-bold text-lg">
+                    {t('item_detail.descriptionBiblio')}
+                  </h3>
+                </div>
+                <p className="text-base text-[#222222] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3">
+                  {getItemField(item, 'description', language)}
+                </p>
+              </section>
+            )}
 
             {/* SECTION II */}
-            <section className="space-y-3">
-              <div className="flex items-center space-x-2 text-[#B8860B]">
-                <History className="w-4 h-4" />
-                <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  {item.itemType === 'painting' ? t('item_detail.artHistoricalContext') : t('item_detail.historicalContext')}
-                </h3>
-              </div>
-              <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
-                {(getItemField(item, 'historicalContext', language) || getItemField(item, 'description', language) || "Dit historische werk vertegenwoordigt een zeldzaam tijdsdocument uit de Europese antiquarische literatuurgeschiedenis.")
-                  .split('\n\n')
-                  .map((paragraph, pIdx) => (
-                    <p key={pIdx}>{paragraph}</p>
-                  ))}
-              </div>
-            </section>
+            {getItemField(item, 'historicalContext', language) && (
+              <section className="space-y-3">
+                <div className="flex items-center space-x-2 text-[#B8860B]">
+                  <History className="w-4 h-4" />
+                  <h3 className="text-[#111111] font-serif font-bold text-lg">
+                    {item.itemType === 'painting' ? t('item_detail.artHistoricalContext') : t('item_detail.historicalContext')}
+                  </h3>
+                </div>
+                <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
+                  {getItemField(item, 'historicalContext', language)
+                    .split('\n\n')
+                    .map((paragraph, pIdx) => (
+                      <p key={pIdx}>{paragraph}</p>
+                    ))}
+                </div>
+              </section>
+            )}
 
             {/* SECTION III */}
-            <section className="space-y-3">
-              <div className="flex items-center space-x-2 text-[#B8860B]">
-                <Bookmark className="w-4 h-4" />
-                <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  {item.itemType === 'painting' ? t('item_detail.canvasConditionReport') : t('item_detail.bindingConditionReport')}
-                </h3>
-              </div>
-              <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
-                <p><strong>{item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}:</strong> {getItemField(item, 'binding', language)}</p>
-                <p><strong>{t('item_detail.conservationState')}:</strong> {getItemField(item, 'condition', language)}</p>
-                <div className="space-y-2 pt-2">
-                  {(getItemField(item, 'conditionReport', language) || getItemField(item, 'condition_report', language) || "Het exemplaar bevindt zich in uitstekende antiquarische staat.")
-                    .split('\n\n')
-                    .map((paragraph, pIdx) => (
-                      <p key={pIdx}>{paragraph}</p>
-                    ))}
+            {(getItemField(item, 'binding', language) || getItemField(item, 'condition', language) || getItemField(item, 'conditionReport', language)) && (
+              <section className="space-y-3">
+                <div className="flex items-center space-x-2 text-[#B8860B]">
+                  <Bookmark className="w-4 h-4" />
+                  <h3 className="text-[#111111] font-serif font-bold text-lg">
+                    {item.itemType === 'painting' ? t('item_detail.canvasConditionReport') : t('item_detail.bindingConditionReport')}
+                  </h3>
                 </div>
-              </div>
-            </section>
+                <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
+                  {getItemField(item, 'binding', language) && (
+                    <p><strong>{item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}:</strong> {getItemField(item, 'binding', language)}</p>
+                  )}
+                  {getItemField(item, 'condition', language) && (
+                    <p><strong>{t('item_detail.conservationState')}:</strong> {getItemField(item, 'condition', language)}</p>
+                  )}
+                  {getItemField(item, 'conditionReport', language) && (
+                    <div className="space-y-2 pt-2">
+                      {getItemField(item, 'conditionReport', language)
+                        .split('\n\n')
+                        .map((paragraph, pIdx) => (
+                          <p key={pIdx}>{paragraph}</p>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             {/* SECTION IV */}
-            <section className="space-y-3">
-              <div className="flex items-center space-x-2 text-[#B8860B]">
-                <Award className="w-4 h-4" />
-                <h3 className="text-[#111111] font-serif font-bold text-lg">
-                  {t('item_detail.provenanceTitle')}
-                </h3>
-              </div>
-              <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
-                {getItemField(item, 'provenance', language) && (
-                  <p className="italic font-serif text-[#111111] border-l-2 border-[#B8860B] pl-3 py-0.5">
-                    "{getItemField(item, 'provenance', language)}"
-                  </p>
-                )}
-                <div>
-                  {(getItemField(item, 'provenanceDetails', language) || getItemField(item, 'provenance_details', language) || "Afkomstig uit een vooraanstaande particuliere bibliotheek.")
-                    .split('\n\n')
-                    .map((paragraph, pIdx) => (
-                      <p key={pIdx}>{paragraph}</p>
-                    ))}
+            {(getItemField(item, 'provenance', language) || getItemField(item, 'provenanceDetails', language)) && (
+              <section className="space-y-3">
+                <div className="flex items-center space-x-2 text-[#B8860B]">
+                  <Award className="w-4 h-4" />
+                  <h3 className="text-[#111111] font-serif font-bold text-lg">
+                    {t('item_detail.provenanceTitle')}
+                  </h3>
                 </div>
+                <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
+                  {getItemField(item, 'provenance', language) && (
+                    <p className="italic font-serif text-[#111111] border-l-2 border-[#B8860B] pl-3 py-0.5">
+                      "{getItemField(item, 'provenance', language)}"
+                    </p>
+                  )}
+                  {getItemField(item, 'provenanceDetails', language) && (
+                    <div>
+                      {getItemField(item, 'provenanceDetails', language)
+                        .split('\n\n')
+                        .map((paragraph, pIdx) => (
+                          <p key={pIdx}>{paragraph}</p>
+                        ))}
+                    </div>
+                  )}
 
-                {/* Formeel Echtheidscertificaat Info Card */}
-                <div className="p-4 rounded-xl bg-white border border-[#D8CEB8] space-y-1 mt-4 shadow-2xs">
-                  <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase">
-                    <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
-                    <span>{t('item_detail.certificateIncluded')}</span>
+                  {/* Formeel Echtheidscertificaat Info Card */}
+                  <div className="p-4 rounded-xl bg-white border border-[#D8CEB8] space-y-1 mt-4 shadow-2xs">
+                    <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase">
+                      <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
+                      <span>{t('item_detail.certificateIncluded')}</span>
+                    </div>
+                    <p className="text-xs font-serif text-[#555555] leading-relaxed">
+                      {t('item_detail.certificateDesc')}
+                    </p>
                   </div>
-                  <p className="text-xs font-serif text-[#555555] leading-relaxed">
-                    {t('item_detail.certificateDesc')}
-                  </p>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
           </div>
 

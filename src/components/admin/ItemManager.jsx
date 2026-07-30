@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
-import { isPriceOnRequest } from '../../utils/translationService';
+import { isPriceOnRequest, isFieldMarkedEmpty } from '../../utils/translationService';
 
 export const getItemTranslationStatus = (item) => {
   if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
@@ -71,7 +71,8 @@ export const getItemTranslationStatus = (item) => {
   for (const lang of ['nl', 'en', 'fr']) {
     for (const field of fieldsToCheck) {
       const val = getVal(field, lang);
-      if (!val || typeof val !== 'string' || val.trim() === '') {
+      const isMarkedNvt = isFieldMarkedEmpty(item, field, lang);
+      if ((!val || typeof val !== 'string' || val.trim() === '') && !isMarkedNvt) {
         details[lang].missing.push(keyLabels[field] || field);
       }
     }
@@ -174,10 +175,89 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     return '';
   };
 
+  const isFieldNvt = (field, lang = formLang) => {
+    return isFieldMarkedEmpty(editingItem, field, lang);
+  };
+
+  const toggleFieldNvt = (field, lang = formLang) => {
+    if (!editingItem) return;
+    const key = `${field}_${lang}`;
+    const currentEmpty = typeof editingItem.emptyFields === 'object' && editingItem.emptyFields !== null && !Array.isArray(editingItem.emptyFields)
+      ? { ...editingItem.emptyFields }
+      : {};
+
+    if (currentEmpty[key] || currentEmpty[field]) {
+      delete currentEmpty[key];
+      delete currentEmpty[field];
+    } else {
+      currentEmpty[key] = true;
+    }
+
+    setEditingItem({
+      ...editingItem,
+      emptyFields: currentEmpty
+    });
+  };
+
+  const toggleLangNvt = (lang = formLang) => {
+    if (!editingItem) return;
+    const key = `lang_${lang}`;
+    const currentEmpty = typeof editingItem.emptyFields === 'object' && editingItem.emptyFields !== null && !Array.isArray(editingItem.emptyFields)
+      ? { ...editingItem.emptyFields }
+      : {};
+
+    if (currentEmpty[key]) {
+      delete currentEmpty[key];
+    } else {
+      currentEmpty[key] = true;
+    }
+
+    setEditingItem({
+      ...editingItem,
+      emptyFields: currentEmpty
+    });
+  };
+
+  const renderFieldHeader = (label, field, required = false) => {
+    const isNvt = isFieldNvt(field, formLang);
+    return (
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider">
+          {label} {required && <span className="text-rose-500">*</span>}
+          <span className="text-[#B8860B] text-[10px] ml-1 font-mono">[{formLang.toUpperCase()}]</span>
+        </label>
+        <button
+          type="button"
+          onClick={() => toggleFieldNvt(field, formLang)}
+          className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center space-x-1 cursor-pointer border ${
+            isNvt
+              ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold shadow-xs'
+              : 'bg-stone-100 hover:bg-stone-200 text-stone-600 border-stone-300'
+          }`}
+          title={isNvt ? "Klik om weer in te vullen" : "Markeer dit veld als N.v.t. / Bewust leeg"}
+        >
+          <span>{isNvt ? "✓ Bewust Leeg (N.v.t.)" : "+ Markeer N.v.t."}</span>
+        </button>
+      </div>
+    );
+  };
+
   const updateFormField = (field, value) => {
     if (!editingItem) return;
+    
+    // Auto-unmark N.v.t. if typing new value
+    let newEmptyFields = editingItem.emptyFields;
+    const key = `${field}_${formLang}`;
+    if (value && value.trim() !== '' && newEmptyFields && typeof newEmptyFields === 'object') {
+      if (newEmptyFields[key] || newEmptyFields[field]) {
+        newEmptyFields = { ...newEmptyFields };
+        delete newEmptyFields[key];
+        delete newEmptyFields[field];
+      }
+    }
+
     if (formLang === 'nl') {
-      setEditingItem({ ...editingItem, [field]: value });
+      setEditingItem({ ...editingItem, [field]: value, emptyFields: newEmptyFields });
     } else {
       const langLower = formLang.toLowerCase();
       const langCap = formLang.charAt(0).toUpperCase() + formLang.slice(1).toLowerCase();
@@ -186,6 +266,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
       setEditingItem({
         ...editingItem,
+        emptyFields: newEmptyFields,
         [`${camelField}_${langLower}`]: value,
         [`${snakeField}_${langLower}`]: value,
         [`${camelField}${langCap}`]: value
@@ -886,26 +967,31 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         </div>
       )}
 
-      {/* Edit / Create Form Modal (Spacious & Elegant Museum Form) */}
+      {/* Edit / Create Form Modal (Spacious & Seamless Museum Form) */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="relative w-full max-w-4xl lg:max-w-5xl bg-white border-2 border-[#D8CEB8] rounded-3xl shadow-strong max-h-[94vh] flex flex-col overflow-hidden text-[#111111]">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in">
+          <div className="relative w-full max-w-4xl lg:max-w-5xl bg-[#FAF7F2] border border-[#D8CEB8] rounded-3xl shadow-strong max-h-[92vh] flex flex-col overflow-hidden text-[#111111]">
             
             {/* Modal Top Header */}
-            <div className="px-6 py-5 border-b border-[#D8CEB8] bg-[#FAF7F2] flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#111111] text-white flex items-center justify-center shadow-md">
+            <div className="px-6 sm:px-8 py-4 border-b border-[#D8CEB8] bg-white flex items-center justify-between shrink-0 shadow-xs">
+              <div className="flex items-center space-x-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-[#111111] text-white flex items-center justify-center shadow-sm shrink-0">
                   {editingItem.itemType === 'painting' ? (
-                    <Palette className="w-5 h-5 text-[#D4AF37]" />
+                    <Palette className="w-5 h-5 text-[#C5A059]" />
                   ) : (
-                    <BookOpen className="w-5 h-5 text-[#D4AF37]" />
+                    <BookOpen className="w-5 h-5 text-[#C5A059]" />
                   )}
                 </div>
-                <div>
-                  <span className="text-[10px] font-mono uppercase font-bold text-[#B8860B] tracking-widest block">
-                    {isNew ? "Nieuw Museum Stuk" : editingItem.ref}
-                  </span>
-                  <h3 className="text-lg font-serif font-bold text-[#111111]">
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2 py-0.5 rounded bg-[#111111] text-[#FAF7F2] font-mono text-[10px] font-bold tracking-wider">
+                      {isNew ? "NIEUW" : editingItem.ref}
+                    </span>
+                    <span className="text-[11px] font-mono font-bold text-[#C5A059] uppercase tracking-wider hidden sm:inline">
+                      {editingItem.itemType === 'painting' ? "Schilderij & Kunst" : "Antiquarisch Boek"}
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-[#111111] truncate mt-0.5">
                     {isNew ? "Nieuw Object Invoeren in Collectie" : editingItem.title}
                   </h3>
                 </div>
@@ -913,14 +999,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
               <button
                 onClick={() => setEditingItem(null)}
-                className="p-2.5 rounded-full bg-white text-[#111111] hover:bg-stone-200 border border-[#D8CEB8] transition-colors shadow-xs"
+                className="p-2.5 rounded-full bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body Form */}
-            <form onSubmit={handleSaveForm} className="p-6 sm:p-8 overflow-y-auto space-y-8 flex-grow text-sm font-sans">
+            <form onSubmit={handleSaveForm} className="px-6 sm:px-8 py-5 overflow-y-auto space-y-6 flex-grow text-sm font-sans">
               
               {/* PURE MANUAL MULTI-LANGUAGE TAB BAR */}
               <div className="p-4 rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border border-[#B8860B]/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
@@ -1078,35 +1164,29 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>{editingItem.itemType === 'painting' ? "Titel van het Schilderij / Kunstwerk *" : "Titel van het Boek *"}</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader(editingItem.itemType === 'painting' ? "Titel van het Schilderij / Kunstwerk" : "Titel van het Boek", "title", true)}
                   <input
                     type="text"
                     required
                     value={getFormField('title')}
                     onChange={(e) => updateFormField('title', e.target.value)}
-                    placeholder={editingItem.itemType === 'painting' ? "Bijv. Stilleven met Boeken en Ganzenveer" : "Bijv. Voltaire — Œuvres Complètes"}
-                    className="w-full px-4 py-3.5 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] font-serif font-bold text-base focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20"
+                    placeholder={isFieldNvt('title', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Stilleven met Boeken en Ganzenveer" : "Bijv. Voltaire — Œuvres Complètes")}
+                    className={`w-full px-4 py-3.5 rounded-xl border text-[#111111] font-serif font-bold text-base focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 ${
+                      isFieldNvt('title', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Ondertitel / Korte Subtitel</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader("Ondertitel / Korte Subtitel", "subtitle")}
                   <input
                     type="text"
                     value={getFormField('subtitle')}
                     onChange={(e) => updateFormField('subtitle', e.target.value)}
-                    placeholder="Bijv. Parijs 1829 • 52 Delen Compleet"
-                    className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111]"
+                    placeholder={isFieldNvt('subtitle', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Bijv. Parijs 1829 • 52 Delen Compleet"}
+                    className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111] ${
+                      isFieldNvt('subtitle', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
 
@@ -1213,30 +1293,28 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                      <span>{editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)"}</span>
-                      <span className="text-[#B8860B] text-[10px]">[{formLang.toUpperCase()}]</span>
-                    </label>
+                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)", "binding")}
                     <textarea
                       rows={3}
                       value={getFormField('binding')}
                       onChange={(e) => updateFormField('binding', e.target.value)}
-                      placeholder={editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst..." : "Volledige kalfslederen band met goudstempels op de rug..."}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed"
+                      placeholder={isFieldNvt('binding', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst..." : "Volledige kalfslederen band met goudstempels op de rug...")}
+                      className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed ${
+                        isFieldNvt('binding', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                      }`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                      <span>Staat &amp; Conditie Summary</span>
-                      <span className="text-[#B8860B] text-[10px]">[{formLang.toUpperCase()}]</span>
-                    </label>
+                    {renderFieldHeader("Staat & Conditie Summary", "condition")}
                     <textarea
                       rows={3}
                       value={getFormField('condition')}
                       onChange={(e) => updateFormField('condition', e.target.value)}
-                      placeholder={editingItem.itemType === 'painting' ? "Bijv. Excellente museumstaat, authentiek craquelé..." : "Excellente antiquarische staat..."}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed"
+                      placeholder={isFieldNvt('condition', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Excellente museumstaat, authentiek craquelé..." : "Excellente antiquarische staat...")}
+                      className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed ${
+                        isFieldNvt('condition', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                      }`}
                     />
                   </div>
                 </div>
@@ -1256,65 +1334,55 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                      <span>{editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties"}</span>
-                      <span className="text-[#B8860B] text-[10px]">[{formLang.toUpperCase()}]</span>
-                    </label>
+                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties", "collationSpecs")}
                     <input
                       type="text"
                       value={getFormField('collationSpecs')}
                       onChange={(e) => updateFormField('collationSpecs', e.target.value)}
-                      placeholder={editingItem.itemType === 'painting' ? "Bijv. Olieverf op paneel. Gesigneerd linksonder 1645." : "52 delen compleet. In-8°. Ca. 28.000 pp."}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-mono focus:outline-none focus:border-[#111111]"
+                      placeholder={isFieldNvt('collationSpecs', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Olieverf op paneel. Gesigneerd linksonder 1645." : "52 delen compleet. In-8°. Ca. 28.000 pp.")}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-mono focus:outline-none focus:border-[#111111] ${
+                        isFieldNvt('collationSpecs', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                      }`}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Provenance (Korte Herkomst Omschrijving)</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader("Provenance (Korte Herkomst Omschrijving)", "provenance")}
                   <input
                     type="text"
                     value={getFormField('provenance')}
                     onChange={(e) => updateFormField('provenance', e.target.value)}
-                    placeholder={editingItem.itemType === 'painting' ? "Bijv. Collectie Jonkheer van der Heyden • Christie's 1988..." : "Ex-Libris Vacheron-Poinsot..."}
-                    className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111]"
+                    placeholder={isFieldNvt('provenance', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Collectie Jonkheer van der Heyden • Christie's 1988..." : "Ex-Libris Vacheron-Poinsot...")}
+                    className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111] ${
+                      isFieldNvt('provenance', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>{editingItem.itemType === 'painting' ? "Restauratie & Conditierapport (Doek/Paneel Dossier)" : "Uitgebreid Conditierapport (Museum Dossier)"}</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader(editingItem.itemType === 'painting' ? "Restauratie & Conditierapport (Doek/Paneel Dossier)" : "Uitgebreid Conditierapport (Museum Dossier)", "conditionReport")}
                   <textarea
                     rows={4}
                     value={getFormField('conditionReport')}
                     onChange={(e) => updateFormField('conditionReport', e.target.value)}
-                    placeholder={editingItem.itemType === 'painting' ? "UV-inspectie toont authentiek craquelé-netwerk. Massieve eiken drager..." : "Banden in rood Chagrin-halfleer in uitzonderlijk stevige staat..."}
-                    className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
+                    placeholder={isFieldNvt('conditionReport', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "UV-inspectie toont authentiek craquelé-netwerk. Massieve eiken drager..." : "Banden in rood Chagrin-halfleer in uitzonderlijk stevige staat...")}
+                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
+                      isFieldNvt('conditionReport', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Uitgebreid Provenance Verhaal &amp; Veilinghistorie</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader("Uitgebreid Provenance Verhaal & Veilinghistorie", "provenanceDetails")}
                   <textarea
                     rows={4}
                     value={getFormField('provenanceDetails')}
                     onChange={(e) => updateFormField('provenanceDetails', e.target.value)}
-                    placeholder={editingItem.itemType === 'painting' ? "Herkomst uit de adellijke verzameling..." : "Afkomstig uit het kasteelarchief van de adellijke familie..."}
-                    className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
+                    placeholder={isFieldNvt('provenanceDetails', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Herkomst uit de adellijke verzameling..." : "Afkomstig uit het kasteelarchief van de adellijke familie...")}
+                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
+                      isFieldNvt('provenanceDetails', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
               </div>
@@ -1332,34 +1400,28 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 </h4>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Algemene Beschrijving &amp; Overzicht</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader("Algemene Beschrijving & Overzicht", "description")}
                   <textarea
                     rows={4}
                     value={getFormField('description')}
                     onChange={(e) => updateFormField('description', e.target.value)}
-                    placeholder="Schrijf hier het overzicht achter dit meesterwerk..."
-                    className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
+                    placeholder={isFieldNvt('description', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Schrijf hier het overzicht achter dit meesterwerk..."}
+                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
+                      isFieldNvt('description', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Diepgaande Historische &amp; Kunsthistorische Context</span>
-                    <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      TAAL: {formLang.toUpperCase()}
-                    </span>
-                  </label>
+                  {renderFieldHeader("Diepgaande Historische & Kunsthistorische Context", "historicalContext")}
                   <textarea
                     rows={5}
                     value={getFormField('historicalContext')}
                     onChange={(e) => updateFormField('historicalContext', e.target.value)}
-                    placeholder="Schrijf hier de uitgebreide historische of kunsthistorische context..."
-                    className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif"
+                    placeholder={isFieldNvt('historicalContext', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Schrijf hier de uitgebreide historische of kunsthistorische context..."}
+                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
+                      isFieldNvt('historicalContext', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                    }`}
                   />
                 </div>
 
