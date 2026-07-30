@@ -93,7 +93,7 @@ export default function CertificateManager({
       guaranteeHeader: "ECHTHEIDSGARANTIE",
       guaranteeText: "Ondergetekende, namens Atelier Rembrandt, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
       expertTitle: "Expert Oude Boeken, Prenten & Kunst",
-      galleryLocation: "Atelier Rembrandt — Oostende",
+      galleryLocation: "ATELIER REMBRANDT",
       verifyNotice: "Geregistreerd in het archief van Atelier Rembrandt onder de bovenstaande unieke referentie."
     },
     fr: {
@@ -111,7 +111,7 @@ export default function CertificateManager({
       guaranteeHeader: "GARANTIE D'AUTHENTICITÉ",
       guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
       expertTitle: "Expert en Livres Rares, Gravures & Œuvres d'Art",
-      galleryLocation: "Atelier Rembrandt — Ostende",
+      galleryLocation: "ATELIER REMBRANDT",
       verifyNotice: "Ce certificat est immatriculé dans les archives de l'Atelier Rembrandt sous la référence unique ci-dessus."
     },
     en: {
@@ -129,7 +129,7 @@ export default function CertificateManager({
       guaranteeHeader: "GUARANTEE OF AUTHENTICITY",
       guaranteeText: "The undersigned, on behalf of Atelier Rembrandt, hereby guarantees that the antiquarian item described above has been thoroughly examined and verified as 100% genuine and authentic in all respects, matching the cataloged provenance and binding details.",
       expertTitle: "Expert in Rare Books, Fine Art & Antiquities",
-      galleryLocation: "Atelier Rembrandt — Ostend",
+      galleryLocation: "ATELIER REMBRANDT",
       verifyNotice: "Officially registered in the archives of Atelier Rembrandt under the unique reference code above."
     }
   };
