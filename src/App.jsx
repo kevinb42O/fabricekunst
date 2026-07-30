@@ -8,6 +8,8 @@ import FaqSection from './components/FaqSection';
 import CatalogPage from './components/CatalogPage';
 import HerkomstPage from './components/HerkomstPage';
 import ItemDetailPage from './components/ItemDetailPage';
+import PrivacyPage from './components/PrivacyPage';
+import TermsPage from './components/TermsPage';
 import Footer from './components/Footer';
 import InquiryModal from './components/InquiryModal';
 import AdminLoginModal from './components/admin/AdminLoginModal';
@@ -120,6 +122,14 @@ export default function App() {
         setCurrentPage('herkomst');
         setActiveTab('herkomst');
         setSelectedDetailItemId(null);
+      } else if (path === '/privacy' || hash === '#privacy') {
+        setCurrentPage('privacy');
+        setActiveTab('privacy');
+        setSelectedDetailItemId(null);
+      } else if (path === '/voorwaarden' || path === '/algemene-voorwaarden' || hash === '#voorwaarden' || hash === '#algemene-voorwaarden') {
+        setCurrentPage('voorwaarden');
+        setActiveTab('voorwaarden');
+        setSelectedDetailItemId(null);
       } else if (path === '/topstukken' || hash === '#topstukken') {
         setCurrentPage('home');
         setActiveTab('topstukken');
@@ -139,13 +149,22 @@ export default function App() {
       }
     };
 
+    const handleKeyDown = (e) => {
+      if ((e.altKey || e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        handleOpenAdmin();
+      }
+    };
+
     checkRoutes();
 
     window.addEventListener('popstate', checkRoutes);
     window.addEventListener('hashchange', checkRoutes);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('popstate', checkRoutes);
       window.removeEventListener('hashchange', checkRoutes);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -171,11 +190,23 @@ export default function App() {
     }
   };
 
+  const transitionPageChange = (updateStateFn) => {
+    if (document.startViewTransition && typeof document.startViewTransition === 'function') {
+      document.startViewTransition(() => {
+        updateStateFn();
+      });
+    } else {
+      updateStateFn();
+    }
+  };
+
   const handleOpenItemDetail = (item) => {
     if (!item) return;
-    setSelectedDetailItemId(item.id);
-    setCurrentPage('item-detail');
-    setActiveTab('catalogus');
+    transitionPageChange(() => {
+      setSelectedDetailItemId(item.id);
+      setCurrentPage('item-detail');
+      setActiveTab('catalogus');
+    });
     const newPath = `/collectie/${item.id}`;
     if (window.location.pathname !== newPath) {
       window.history.pushState({ page: 'item', id: item.id }, '', newPath);
@@ -188,7 +219,9 @@ export default function App() {
     setSelectedDetailItemId(null);
 
     if (targetId === 'catalogus' || targetId === 'collectie') {
-      setCurrentPage('catalogus');
+      transitionPageChange(() => {
+        setCurrentPage('catalogus');
+      });
       if (window.location.pathname !== '/collectie') {
         window.history.pushState({ page: 'collectie' }, '', '/collectie');
       }
@@ -197,7 +230,9 @@ export default function App() {
     }
 
     if (targetId === 'herkomst') {
-      setCurrentPage('herkomst');
+      transitionPageChange(() => {
+        setCurrentPage('herkomst');
+      });
       if (window.location.pathname !== '/herkomst') {
         window.history.pushState({ page: 'herkomst' }, '', '/herkomst');
       }
@@ -205,8 +240,32 @@ export default function App() {
       return;
     }
 
+    if (targetId === 'privacy') {
+      transitionPageChange(() => {
+        setCurrentPage('privacy');
+      });
+      if (window.location.pathname !== '/privacy') {
+        window.history.pushState({ page: 'privacy' }, '', '/privacy');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (targetId === 'voorwaarden' || targetId === 'algemene-voorwaarden') {
+      transitionPageChange(() => {
+        setCurrentPage('voorwaarden');
+      });
+      if (window.location.pathname !== '/voorwaarden') {
+        window.history.pushState({ page: 'voorwaarden' }, '', '/voorwaarden');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (targetId === 'home') {
-      setCurrentPage('home');
+      transitionPageChange(() => {
+        setCurrentPage('home');
+      });
       if (window.location.pathname !== '/') {
         window.history.pushState({ page: 'home' }, '', '/');
       }
@@ -228,7 +287,9 @@ export default function App() {
       };
 
       if (currentPage !== 'home') {
-        setCurrentPage('home');
+        transitionPageChange(() => {
+          setCurrentPage('home');
+        });
         setTimeout(scrollToTarget, 150);
       } else {
         scrollToTarget();
@@ -238,7 +299,9 @@ export default function App() {
 
     // Default section fallback
     if (currentPage !== 'home') {
-      setCurrentPage('home');
+      transitionPageChange(() => {
+        setCurrentPage('home');
+      });
       setTimeout(() => {
         const el = document.getElementById(targetId);
         if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -361,6 +424,18 @@ export default function App() {
             onNavigateHome={() => handleNavigate('home')}
             onRequestConsultation={() => handleOpenConsultation(null)}
           />
+        ) : currentPage === 'privacy' ? (
+          /* Production-Ready Privacy Policy Page (/privacy) */
+          <PrivacyPage
+            onNavigateHome={() => handleNavigate('home')}
+            onRequestConsultation={() => handleOpenConsultation(null)}
+          />
+        ) : currentPage === 'voorwaarden' ? (
+          /* Production-Ready Terms & Conditions Page (/voorwaarden) */
+          <TermsPage
+            onNavigateHome={() => handleNavigate('home')}
+            onRequestConsultation={() => handleOpenConsultation(null)}
+          />
         ) : (
           /* Pure Storytelling Homepage */
           <>
@@ -399,7 +474,6 @@ export default function App() {
       <Footer
         onNavigate={handleNavigate}
         onRequestConsultation={() => handleOpenConsultation(null)}
-        onOpenAdmin={handleOpenAdmin}
       />
 
       {/* Inquiry Modal */}

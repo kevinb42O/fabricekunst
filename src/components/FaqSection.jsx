@@ -4,10 +4,11 @@ import { HelpCircle, ChevronDown, Mail } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField } from '../utils/translationService';
 import { DEFAULT_FAQ_ITEMS } from '../utils/storage';
+import { LUXURY_EASE } from '../utils/motion';
 
 export default function FaqSection({ items = [], onRequestConsultation = () => {} }) {
   const { t, language } = useLanguage();
-  const [openIndex, setOpenIndex] = useState(0);
+  const [openIndex, setOpenIndex] = useState(null);
 
   const displayItems = Array.isArray(items) && items.length > 0 ? items : DEFAULT_FAQ_ITEMS;
 
@@ -17,13 +18,13 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
 
   // Ultra-smooth animation variants
   const headerVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 32 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
-        ease: [0.16, 1, 0.3, 1]
+        duration: 0.9,
+        ease: LUXURY_EASE
       }
     }
   };
@@ -33,7 +34,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08,
+        staggerChildren: 0.1,
         delayChildren: 0.1
       }
     }
@@ -45,14 +46,14 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.7,
-        ease: [0.16, 1, 0.3, 1]
+        duration: 0.8,
+        ease: LUXURY_EASE
       }
     }
   };
 
   return (
-    <section id="faq" className="py-24 sm:py-32 bg-transparent relative overflow-hidden">
+    <section id="faq" className="py-24 sm:py-32 bg-white relative overflow-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12 sm:space-y-16">
         
         {/* Header */}
@@ -61,9 +62,9 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
           variants={headerVariants}
-          className="text-left space-y-4 border-b border-[#D8CEB8] pb-8"
+          className="text-left space-y-4"
         >
-          <span className="text-[11px] font-mono tracking-[0.3em] text-[#8E7035] uppercase font-bold block">
+          <span className="text-xs sm:text-sm font-serif tracking-[0.2em] text-[#8E7035] uppercase font-semibold block">
             {t('faq.badge')}
           </span>
           
@@ -100,7 +101,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                   className="w-full text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none py-2"
                 >
                   <span className="font-serif font-bold text-lg sm:text-xl text-[#111111] flex items-center gap-3">
-                    <span className="text-xs font-mono font-bold text-[#8E7035]">
+                    <span className="text-xs font-serif font-semibold text-[#8E7035]">
                       0{idx + 1}
                     </span>
                     <span>{question}</span>
@@ -108,7 +109,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                   
                   <motion.div 
                     animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.4, ease: LUXURY_EASE }}
                     className="shrink-0 text-[#111111]"
                   >
                     <ChevronDown className="w-4 h-4" />
@@ -122,7 +123,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{ duration: 0.4, ease: LUXURY_EASE }}
                       className="overflow-hidden"
                     >
                       <div className="pt-3 pb-2 text-sm sm:text-base text-[#444444] font-serif font-light leading-relaxed pl-8 border-l border-[#B8860B]/60 my-2">
@@ -142,12 +143,12 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
         <div className="pt-8 border-t border-[#D8CEB8] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-1">
             <h4 className="text-xl font-serif font-bold text-[#111111]">{t('faq.cta.title')}</h4>
-            <p className="text-xs text-[#555555] font-serif italic">{t('faq.cta.subtitle')}</p>
+            <p className="text-xs sm:text-sm text-[#555555] font-serif italic">{t('faq.cta.subtitle')}</p>
           </div>
 
           <button
             onClick={onRequestConsultation}
-            className="inline-flex items-center space-x-2 text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#111111] border-b border-[#111111] pb-1 hover:text-[#B8860B] hover:border-[#B8860B] transition-colors duration-300 cursor-pointer shrink-0"
+            className="inline-flex items-center space-x-2 text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] border-b border-[#111111] pb-1 hover:text-[#B8860B] hover:border-[#B8860B] transition-colors duration-300 cursor-pointer shrink-0"
           >
             <span>{t('faq.cta.btn')}</span>
           </button>

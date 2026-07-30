@@ -1,407 +1,844 @@
-import React, { useRef, useState, useMemo } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowLeft, ShieldCheck, Award, Search, ChevronDown, SlidersHorizontal, ArrowUpDown, RotateCcw, BookOpen, Palette } from 'lucide-react';
-import AsymmetricGallery from './AsymmetricGallery';
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronDown,
+  LayoutGrid,
+  Palette,
+  RotateCcw,
+  Rows3,
+  Search,
+  X
+} from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
+import {
+  getItemField,
+  getLocalizedCategory,
+  getLocalizedCentury,
+  getLocalizedPrice,
+  getLocalizedStatus
+} from '../utils/translationService';
+
+const DEFAULT_FILTER_VALUE = 'Alle';
+const DEFAULT_VIEW_MODE = 'grid';
+const VALID_VIEW_MODES = ['grid', 'editorial'];
+const STATUS_ORDER = ['Beschikbaar', 'Gereserveerd', 'Verkocht'];
+
+function normalizeText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function extractYearNumber(value) {
+  const match = String(value || '').match(/\d{4}/);
+  return match ? Number(match[0]) : 0;
+}
+
+function getTypeValue(item) {
+  return item?.itemType || 'book';
+}
+
+function getUniqueValues(items, selector) {
+  const seen = new Set();
+  const values = [];
+
+  items.forEach((item) => {
+    const value = selector(item);
+    if (!value || seen.has(value)) return;
+    seen.add(value);
+    values.push(value);
+  });
+
+  return values;
+}
+
+function buildSearchDocument(item) {
+  return normalizeText(
+    [
+      item.ref,
+      item.title,
+      item.title_en,
+      item.title_fr,
+      item.subtitle,
+      item.subtitle_en,
+      item.subtitle_fr,
+      item.description,
+      item.description_en,
+      item.description_fr,
+      item.author,
+      item.publisher,
+      item.city,
+      item.category,
+      item.century,
+      item.status,
+      item.provenance,
+      item.provenance_en,
+      item.provenance_fr,
+      item.binding,
+      item.binding_en,
+      item.binding_fr
+    ]
+      .filter(Boolean)
+      .join(' ')
+  );
+}
+
+function matchesFilters(item, filters, ignoredKey = null) {
+  const normalizedQuery = normalizeText(filters.query);
+
+  if (ignoredKey !== 'query' && normalizedQuery && !item.searchDocument.includes(normalizedQuery)) {
+    return false;
+  }
+
+  if (ignoredKey !== 'type' && filters.type !== DEFAULT_FILTER_VALUE && item.typeValue !== filters.type) {
+    return false;
+  }
+
+  if (ignoredKey !== 'status' && filters.status !== DEFAULT_FILTER_VALUE && item.status !== filters.status) {
+    return false;
+  }
+
+  if (ignoredKey !== 'century' && filters.century !== DEFAULT_FILTER_VALUE && item.century !== filters.century) {
+    return false;
+  }
+
+  if (ignoredKey !== 'category' && filters.category !== DEFAULT_FILTER_VALUE && item.category !== filters.category) {
+    return false;
+  }
+
+  return true;
+}
+
+function countBy(items, selector) {
+  return items.reduce((accumulator, item) => {
+    const value = selector(item);
+    accumulator[value] = (accumulator[value] || 0) + 1;
+    return accumulator;
+  }, {});
+}
+
+function getPrimaryMeta(item) {
+  return [item.author, item.year].filter(Boolean).join(' • ');
+}
+
+function getSecondaryMeta(item) {
+  if (getTypeValue(item) === 'painting') {
+    return item.publisher || item.city || '';
+  }
+
+  return [item.publisher, item.city].filter(Boolean).join(' • ');
+}
+
+function getInitialParam(name, fallback = '') {
+  if (typeof window === 'undefined') return fallback;
+  return new URLSearchParams(window.location.search).get(name) || fallback;
+}
+
+function getInitialViewMode() {
+  const viewMode = getInitialParam('view', DEFAULT_VIEW_MODE);
+  return VALID_VIEW_MODES.includes(viewMode) ? viewMode : DEFAULT_VIEW_MODE;
+}
+
+function getStatusTone(status) {
+  switch (status) {
+    case 'Beschikbaar':
+      return {
+        text: 'text-emerald-700',
+        dot: 'bg-emerald-600'
+      };
+    case 'Gereserveerd':
+      return {
+        text: 'text-amber-700',
+        dot: 'bg-amber-600'
+      };
+    case 'Verkocht':
+      return {
+        text: 'text-stone-500',
+        dot: 'bg-stone-400'
+      };
+    default:
+      return {
+        text: 'text-[#777777]',
+        dot: 'bg-[#B8860B]'
+      };
+  }
+}
+
+function getStatusOrderIndex(status) {
+  const index = STATUS_ORDER.indexOf(status);
+  return index === -1 ? STATUS_ORDER.length : index;
+}
 
 export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, onRequestInquiry }) {
   const { t, language } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => getInitialParam('q', ''));
+  const [selectedType, setSelectedType] = useState(() => getInitialParam('type', DEFAULT_FILTER_VALUE));
+  const [selectedStatus, setSelectedStatus] = useState(() => getInitialParam('status', DEFAULT_FILTER_VALUE));
+  const [selectedCentury, setSelectedCentury] = useState(() => getInitialParam('century', DEFAULT_FILTER_VALUE));
+  const [selectedCategory, setSelectedCategory] = useState(() => getInitialParam('category', DEFAULT_FILTER_VALUE));
+  const [sortBy, setSortBy] = useState(() => getInitialParam('sort', 'standaard'));
+  const [viewMode, setViewMode] = useState(getInitialViewMode);
 
-  const [selectedType, setSelectedType] = useState('Alle'); // 'Alle' | 'book' | 'painting'
-  const [selectedCentury, setSelectedCentury] = useState('Alle');
-  const [selectedCategory, setSelectedCategory] = useState('Alle');
-  const [sortBy, setSortBy] = useState('standaard');
+  const normalizedItems = useMemo(
+    () =>
+      items.map((item) => ({
+        ...item,
+        typeValue: getTypeValue(item),
+        sortYear: extractYearNumber(item.year),
+        searchDocument: buildSearchDocument(item)
+      })),
+    [items]
+  );
 
-  const heroRef = useRef(null);
+  const typeOptions = useMemo(() => {
+    const discoveredTypes = getUniqueValues(normalizedItems, (item) => item.typeValue);
+    const orderedTypes = ['book', 'painting'].filter((type) => discoveredTypes.includes(type));
+    return [DEFAULT_FILTER_VALUE, ...orderedTypes];
+  }, [normalizedItems]);
 
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
+  const statusOptions = useMemo(() => {
+    const discoveredStatuses = getUniqueValues(normalizedItems, (item) => item.status);
+    const orderedStatuses = STATUS_ORDER.filter((status) => discoveredStatuses.includes(status));
+    return [DEFAULT_FILTER_VALUE, ...orderedStatuses];
+  }, [normalizedItems]);
 
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '12%']);
-  const contentY = useTransform(scrollYProgress, [0, 1], ['0px', '-40px']);
+  const centuryOptions = useMemo(
+    () => [
+      DEFAULT_FILTER_VALUE,
+      ...getUniqueValues(normalizedItems, (item) => item.century).sort((left, right) => extractYearNumber(left) - extractYearNumber(right))
+    ],
+    [normalizedItems]
+  );
 
-  const centuries = ['Alle', '17e Eeuw', '18e Eeuw', '19e Eeuw'];
-  const categories = ['Alle', 'Literatuur & Filosofie', 'Literatuur & Satire', 'Wetenschap & Illustraties', 'Oude Meesters', 'Kartografie & Reizen'];
+  const categoryOptions = useMemo(
+    () => [DEFAULT_FILTER_VALUE, ...getUniqueValues(normalizedItems, (item) => item.category)],
+    [normalizedItems]
+  );
 
-  const hasActiveFilters = searchQuery !== '' || selectedType !== 'Alle' || selectedCentury !== 'Alle' || selectedCategory !== 'Alle' || sortBy !== 'standaard';
+  useEffect(() => {
+    if (selectedType !== DEFAULT_FILTER_VALUE && !typeOptions.includes(selectedType)) {
+      setSelectedType(DEFAULT_FILTER_VALUE);
+    }
+  }, [selectedType, typeOptions]);
+
+  useEffect(() => {
+    if (selectedStatus !== DEFAULT_FILTER_VALUE && !statusOptions.includes(selectedStatus)) {
+      setSelectedStatus(DEFAULT_FILTER_VALUE);
+    }
+  }, [selectedStatus, statusOptions]);
+
+  useEffect(() => {
+    if (selectedCentury !== DEFAULT_FILTER_VALUE && !centuryOptions.includes(selectedCentury)) {
+      setSelectedCentury(DEFAULT_FILTER_VALUE);
+    }
+  }, [selectedCentury, centuryOptions]);
+
+  useEffect(() => {
+    if (selectedCategory !== DEFAULT_FILTER_VALUE && !categoryOptions.includes(selectedCategory)) {
+      setSelectedCategory(DEFAULT_FILTER_VALUE);
+    }
+  }, [selectedCategory, categoryOptions]);
+
+  useEffect(() => {
+    if (!VALID_VIEW_MODES.includes(viewMode)) {
+      setViewMode(DEFAULT_VIEW_MODE);
+    }
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams();
+    const trimmedSearch = searchQuery.trim();
+
+    if (trimmedSearch) params.set('q', trimmedSearch);
+    if (selectedType !== DEFAULT_FILTER_VALUE) params.set('type', selectedType);
+    if (selectedStatus !== DEFAULT_FILTER_VALUE) params.set('status', selectedStatus);
+    if (selectedCentury !== DEFAULT_FILTER_VALUE) params.set('century', selectedCentury);
+    if (selectedCategory !== DEFAULT_FILTER_VALUE) params.set('category', selectedCategory);
+    if (sortBy !== 'standaard') params.set('sort', sortBy);
+    if (viewMode !== DEFAULT_VIEW_MODE) params.set('view', viewMode);
+
+    const queryString = params.toString();
+    const nextUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, [searchQuery, selectedType, selectedStatus, selectedCentury, selectedCategory, sortBy, viewMode]);
+
+  const filters = useMemo(
+    () => ({
+      query: searchQuery,
+      type: selectedType,
+      status: selectedStatus,
+      century: selectedCentury,
+      category: selectedCategory
+    }),
+    [searchQuery, selectedType, selectedStatus, selectedCentury, selectedCategory]
+  );
+
+  const filteredItems = useMemo(() => {
+    const result = normalizedItems.filter((item) => matchesFilters(item, filters));
+
+    return [...result].sort((left, right) => {
+      if (sortBy === 'jaar-asc') {
+        return left.sortYear - right.sortYear || getItemField(left, 'title', language).localeCompare(getItemField(right, 'title', language));
+      }
+
+      if (sortBy === 'jaar-desc') {
+        return right.sortYear - left.sortYear || getItemField(left, 'title', language).localeCompare(getItemField(right, 'title', language));
+      }
+
+      if (sortBy === 'auteur-asc') {
+        return (left.author || '').localeCompare(right.author || '', language, { sensitivity: 'base' });
+      }
+
+      if (sortBy === 'titel-asc') {
+        return getItemField(left, 'title', language).localeCompare(getItemField(right, 'title', language), language, { sensitivity: 'base' });
+      }
+
+      const featuredDelta = Number(Boolean(right.featured)) - Number(Boolean(left.featured));
+      if (featuredDelta !== 0) return featuredDelta;
+
+      const statusDelta = getStatusOrderIndex(left.status) - getStatusOrderIndex(right.status);
+      if (statusDelta !== 0) return statusDelta;
+
+      return right.sortYear - left.sortYear;
+    });
+  }, [filters, language, normalizedItems, sortBy]);
+
+  const typePool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'type')), [normalizedItems, filters]);
+  const statusPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'status')), [normalizedItems, filters]);
+  const centuryPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'century')), [normalizedItems, filters]);
+  const categoryPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'category')), [normalizedItems, filters]);
+
+  const typeCounts = useMemo(() => countBy(typePool, (item) => item.typeValue), [typePool]);
+  const statusCounts = useMemo(() => countBy(statusPool, (item) => item.status), [statusPool]);
+  const centuryCounts = useMemo(() => countBy(centuryPool, (item) => item.century), [centuryPool]);
+  const categoryCounts = useMemo(() => countBy(categoryPool, (item) => item.category), [categoryPool]);
+
+  const totalItems = normalizedItems.length;
+  const totalBooks = normalizedItems.filter((item) => item.typeValue === 'book').length;
+  const totalPaintings = normalizedItems.filter((item) => item.typeValue === 'painting').length;
+  const availableItems = normalizedItems.filter((item) => item.status === 'Beschikbaar').length;
+
+  const activeFilters = useMemo(() => {
+    const chips = [];
+
+    if (searchQuery.trim()) {
+      chips.push({ key: 'query', label: `"${searchQuery.trim()}"`, clear: () => setSearchQuery('') });
+    }
+
+    if (selectedType !== DEFAULT_FILTER_VALUE) {
+      chips.push({
+        key: 'type',
+        label: selectedType === 'painting' ? t('catalog.paintings') : t('catalog.books'),
+        clear: () => setSelectedType(DEFAULT_FILTER_VALUE)
+      });
+    }
+
+    if (selectedStatus !== DEFAULT_FILTER_VALUE) {
+      chips.push({
+        key: 'status',
+        label: getLocalizedStatus(selectedStatus, language),
+        clear: () => setSelectedStatus(DEFAULT_FILTER_VALUE)
+      });
+    }
+
+    if (selectedCentury !== DEFAULT_FILTER_VALUE) {
+      chips.push({
+        key: 'century',
+        label: getLocalizedCentury(selectedCentury, language),
+        clear: () => setSelectedCentury(DEFAULT_FILTER_VALUE)
+      });
+    }
+
+    if (selectedCategory !== DEFAULT_FILTER_VALUE) {
+      chips.push({
+        key: 'category',
+        label: getLocalizedCategory(selectedCategory, language),
+        clear: () => setSelectedCategory(DEFAULT_FILTER_VALUE)
+      });
+    }
+
+    return chips;
+  }, [language, searchQuery, selectedCategory, selectedCentury, selectedStatus, selectedType, t]);
+
+  const hasActiveFilters = activeFilters.length > 0 || sortBy !== 'standaard';
 
   const resetFilters = () => {
     setSearchQuery('');
-    setSelectedType('Alle');
-    setSelectedCentury('Alle');
-    setSelectedCategory('Alle');
+    setSelectedType(DEFAULT_FILTER_VALUE);
+    setSelectedStatus(DEFAULT_FILTER_VALUE);
+    setSelectedCentury(DEFAULT_FILTER_VALUE);
+    setSelectedCategory(DEFAULT_FILTER_VALUE);
     setSortBy('standaard');
   };
 
-  const filteredItems = useMemo(() => {
-    let result = items.filter(item => {
-      const matchesSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesType = selectedType === 'Alle' || (item.itemType || 'book') === selectedType;
-      const matchesCentury = selectedCentury === 'Alle' || item.century === selectedCentury;
-      const matchesCategory = selectedCategory === 'Alle' || item.category === selectedCategory;
-
-      return matchesSearch && matchesType && matchesCentury && matchesCategory;
-    });
-
-    if (sortBy === 'jaar-asc') {
-      result = [...result].sort((a, b) => parseInt(a.year || '0') - parseInt(b.year || '0'));
-    } else if (sortBy === 'jaar-desc') {
-      result = [...result].sort((a, b) => parseInt(b.year || '0') - parseInt(a.year || '0'));
-    } else if (sortBy === 'auteur-asc') {
-      result = [...result].sort((a, b) => (a.author || '').localeCompare(b.author || ''));
-    } else if (sortBy === 'titel-asc') {
-      result = [...result].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    }
-
-    return result;
-  }, [items, searchQuery, selectedCentury, selectedCategory, sortBy]);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] }
-    }
+  const renderTypeLabel = (value) => {
+    if (value === 'painting') return t('catalog.paintings');
+    if (value === 'book') return t('catalog.books');
+    return t('catalog.all');
   };
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen text-[#111111]">
-      
-      {/* ------------------------------------------------------------- */}
-      {/* MONUMENTAL HERO SECTION WITH INTEGRATED SEARCH/SORT PANEL     */}
-      {/* ------------------------------------------------------------- */}
-      <section 
-        ref={heroRef}
-        className="relative w-full bg-[#FAF7F2] pt-28 select-none"
-      >
-        
-        {/* Photography Background Showcase (Extends down to exactly 50% of the Search Card height) */}
-        <div className="absolute top-0 inset-x-0 bottom-[140px] sm:bottom-[150px] lg:bottom-[160px] z-0 overflow-hidden pointer-events-none">
-          {/* Parallax Image */}
-          <motion.div 
-            style={{ y: bgY }}
-            className="w-full h-full absolute inset-0"
-          >
-            <img
-              src="/images/hero/hero-voltaire-glasses.jpg"
-              alt="Atelier Rembrandt Collectie Overview"
-              className="absolute top-0 right-0 w-full lg:w-[68%] h-full object-cover filter contrast-[1.02] brightness-[0.98]"
-            />
-          </motion.div>
-
-          {/* Solid cream overlay gradient extending seamlessly for readability (FIXED) */}
-          <div
-            className="absolute inset-y-0 left-0 w-full h-full z-10 pointer-events-none"
-            style={{
-              background: 'linear-gradient(to right, #FAF7F2 0%, #FAF7F2 45%, rgba(250, 247, 242, 0.78) 58%, transparent 75%)'
-            }}
-          />
-
-          {/* Seamless bottom fade transition at 50% height of search bar (FIXED) */}
-          <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/80 via-50% to-transparent z-10 pointer-events-none" />
-        </div>
-
-        {/* Hero Text Content */}
-        <motion.div 
-          style={{ y: contentY }}
-          className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mb-10 sm:mb-14"
-        >
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="max-w-2xl lg:max-w-3xl space-y-6"
-          >
-            
-            {/* Top Navigation Breadcrumb Bar */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center justify-between border-b border-[#D8CEB8]/70 pb-4 mb-2"
-            >
-              <button
-                onClick={onNavigateHome}
-                className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-[0.18em] text-[#111111] hover:text-[#B8860B] transition-colors group font-mono cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4 text-[#B8860B] group-hover:-translate-x-1 transition-transform" />
-                <span>{t('nav.backHome')}</span>
-              </button>
-            </motion.div>
-
-
-            {/* Authentic Subtitle & Divider */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center space-x-3 text-xs font-serif font-medium tracking-[0.25em] text-[#8E7035] uppercase pt-2"
-            >
-              <motion.span 
-                initial={{ width: 0 }}
-                animate={{ width: 40 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="h-[1.5px] bg-[#B8860B] inline-block" 
-              />
-              <span>{t('catalog.heroTagline')}</span>
-            </motion.div>
-
-            {/* Grand Headline Layout */}
-            <motion.h1 
-              variants={itemVariants}
-              className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
-            >
-              <span className="block">{t('catalog.title')}</span>
-            </motion.h1>
-
-            {/* Subtitle Paragraph */}
-            <motion.p 
-              variants={itemVariants}
-              className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
-            >
-              {t('catalog.subtitle')}
-            </motion.p>
-
-            {/* Provenance & Quality Badges */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex flex-wrap items-center gap-6 pt-3 text-xs font-mono text-[#555555]"
-            >
-              <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-[#B8860B]" />
-                <span>{t('item_detail.provenanceGuaranteed')}</span>
-              </div>
-            </motion.div>
-
-          </motion.div>
-        </motion.div>
-
-        {/* ------------------------------------------------------------- */}
-        {/* INTEGRATED SEARCH & SORT PANEL (EXACTLY 50% HEIGHT IN HERO)  */}
-        {/* ------------------------------------------------------------- */}
-        <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <motion.div 
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            whileHover={{ borderColor: 'rgba(184, 134, 11, 0.65)' }}
-            className="bg-white/95 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-8 lg:p-10 border border-[#D8CEB8] shadow-[0_25px_60px_-15px_rgba(28,26,23,0.14),0_8px_24px_-8px_rgba(184,134,11,0.08)] space-y-4 sm:space-y-6 transition-all duration-300"
-          >
-            {/* Header row with reset option */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-[#D8CEB8]/70">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-1.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8]">
-                  <SlidersHorizontal className="w-4 h-4 text-[#B8860B]" />
-                </div>
-                <div>
-                  <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#111111] block">
-                    {t('nav.search')} &amp; {t('catalog.sortLabel')}
-                  </span>
-                  <span className="text-[11px] font-serif text-[#666666] italic">
-                    {t('catalog.subtitle')}
-                  </span>
-                </div>
-              </div>
-
+    <div className="min-h-screen bg-white text-[#111111]">
+      <section className="max-w-7xl mx-auto px-4 pt-28 pb-10 sm:px-6 sm:pt-32 sm:pb-12 lg:px-8 lg:pt-36 lg:pb-14">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[280px,minmax(0,1fr)] xl:grid-cols-[300px,minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-28 lg:self-start lg:pr-8 lg:border-r lg:border-[#E8DFCF]/40">
+            <div className="flex items-center justify-between border-b border-[#E8DFCF]/60 pb-3.5">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[#8E7035]">
+                {t('catalog.refineTitle')}
+              </span>
               {hasActiveFilters && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                <button
+                  type="button"
                   onClick={resetFilters}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-[#111111] text-[#B8860B] hover:text-white border border-[#D8CEB8] text-xs font-mono font-semibold transition-all duration-300 cursor-pointer shadow-xs"
+                  className="inline-flex items-center space-x-1.5 text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-[#8E7035] transition-colors hover:text-[#111111]"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-3 h-3" />
                   <span>{t('catalog.resetFilters')}</span>
-                </motion.button>
-              )}
-            </div>
-            
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#B8860B]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('catalog.searchPlaceholder')}
-                className="w-full pl-12 pr-12 py-3.5 sm:py-4 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] placeholder-[#777777] focus:outline-none focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20 text-sm font-medium shadow-inner transition-all duration-300"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-[#B8860B] hover:text-[#111111] hover:underline font-bold cursor-pointer bg-white px-2 py-1 rounded border border-[#D8CEB8]"
-                >
-                  {t('catalog.clearSearch')}
                 </button>
               )}
             </div>
 
-            {/* Object Type Switcher Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto mobile-scroll-x pt-1 border-b border-[#D8CEB8]/50 pb-4 font-mono text-xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#666666] shrink-0 mr-1">
-                {t('catalog.typeFilter')}:
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedType('Alle')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all shrink-0 whitespace-nowrap min-h-[36px] ${
-                  selectedType === 'Alle'
-                    ? 'bg-[#111111] text-white shadow-sm'
-                    : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
-                }`}
-              >
-                {t('catalog.all')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedType('book')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 shrink-0 whitespace-nowrap min-h-[36px] ${
-                  selectedType === 'book'
-                    ? 'bg-[#111111] text-white shadow-sm'
-                    : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>{t('catalog.books')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedType('painting')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 shrink-0 whitespace-nowrap min-h-[36px] ${
-                  selectedType === 'painting'
-                    ? 'bg-[#111111] text-white shadow-sm'
-                    : 'bg-[#FAF7F2] text-[#555555] hover:text-[#111111] border border-[#D8CEB8]'
-                }`}
-              >
-                <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>{t('catalog.paintings')}</span>
-              </button>
+            <div className="pt-5">
+              <label htmlFor="catalog-search" className="block text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#777777]">
+                {t('nav.search')}
+              </label>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-[#8E7035]" />
+                <input
+                  id="catalog-search"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={t('catalog.searchPlaceholder')}
+                  className="w-full rounded-md bg-[#F4EFE6]/70 border border-[#E8DFCF]/80 py-2.5 pl-9 pr-8 text-sm text-[#111111] placeholder-[#8C8174] transition-all focus:bg-white focus:border-[#B8860B]/60 focus:outline-none focus:ring-1 focus:ring-[#B8860B]/30"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#555555] transition-colors hover:text-[#111111]"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Filter & Sort Controls Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 pt-2">
-              
-              {/* Century filter */}
+            <div className="space-y-6 pt-6">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
+                  {t('catalog.typeFilter')}
+                </div>
+                <div className="space-y-0.5">
+                  {typeOptions.map((option) => {
+                    const isAllOption = option === DEFAULT_FILTER_VALUE;
+                    const count = isAllOption ? typePool.length : (typeCounts[option] || 0);
+                    const isActive = selectedType === option;
+                    const isDisabled = !isActive && count === 0;
+                    const Icon = option === 'painting' ? Palette : BookOpen;
+
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setSelectedType(option)}
+                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
+                          isActive
+                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
+                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
+                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
+                      >
+                        <span className="inline-flex items-center space-x-2">
+                          {!isAllOption && <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#B8860B]' : 'text-[#9C8B66]'}`} />}
+                          <span className="text-sm">{renderTypeLabel(option)}</span>
+                        </span>
+                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-t border-[#E8DFCF]/50 pt-5">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
+                  {t('catalog.statusFilter')}
+                </div>
+                <div className="space-y-0.5">
+                  {statusOptions.map((option) => {
+                    const isAllOption = option === DEFAULT_FILTER_VALUE;
+                    const count = isAllOption ? statusPool.length : (statusCounts[option] || 0);
+                    const isActive = selectedStatus === option;
+                    const isDisabled = !isActive && count === 0;
+
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setSelectedStatus(option)}
+                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
+                          isActive
+                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
+                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
+                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
+                      >
+                        <span className="text-sm">
+                          {isAllOption ? t('catalog.all') : getLocalizedStatus(option, language)}
+                        </span>
+                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-t border-[#E8DFCF]/50 pt-5">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
                   {t('catalog.centuryFilter')}
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {centuries.map(c => (
-                    <motion.button
-                      key={c}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setSelectedCentury(c)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                        selectedCentury === c
-                          ? 'bg-[#1C1A17] text-[#FAF7F2] border border-[#B8860B]/80 shadow-xs'
-                          : 'bg-[#FAF7F2] text-[#333333] hover:text-black border border-[#D8CEB8]'
+                </div>
+                <div className="space-y-0.5">
+                  {centuryOptions.map((option) => {
+                    const isAllOption = option === DEFAULT_FILTER_VALUE;
+                    const count = isAllOption ? centuryPool.length : (centuryCounts[option] || 0);
+                    const isActive = selectedCentury === option;
+                    const isDisabled = !isActive && count === 0;
+
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setSelectedCentury(option)}
+                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
+                          isActive
+                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
+                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
+                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
+                      >
+                        <span className="text-sm">
+                          {isAllOption ? t('catalog.all') : getLocalizedCentury(option, language)}
+                        </span>
+                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-t border-[#E8DFCF]/50 pt-5">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
+                  {t('catalog.categoryFilter')}
+                </div>
+                <div className="space-y-0.5">
+                  {categoryOptions.map((option) => {
+                    const isAllOption = option === DEFAULT_FILTER_VALUE;
+                    const count = isAllOption ? categoryPool.length : (categoryCounts[option] || 0);
+                    const isActive = selectedCategory === option;
+                    const isDisabled = !isActive && count === 0;
+
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setSelectedCategory(option)}
+                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
+                          isActive
+                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
+                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
+                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
+                      >
+                        <span className="pr-3 text-sm">
+                          {isAllOption ? t('catalog.all') : getLocalizedCategory(option, language)}
+                        </span>
+                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <div className="min-w-0 space-y-8">
+            <div className="border-b border-[#D8CEB8]/70 pb-5">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <h1 className="text-2xl font-serif font-bold text-[#111111] sm:text-3xl">
+                    {t('catalog.resultsLabel')}
+                  </h1>
+                </div>
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                  <div className="min-w-[220px]">
+                    <div className="relative border-b border-[#D8CEB8]">
+                      <select
+                        value={sortBy}
+                        onChange={(event) => setSortBy(event.target.value)}
+                        className="w-full appearance-none bg-transparent py-3 pr-8 text-sm font-semibold text-[#111111] transition-all focus:outline-none"
+                      >
+                        <option value="standaard">{t('catalog.sortStandard')}</option>
+                        <option value="jaar-asc">{t('catalog.sortYearAsc')}</option>
+                        <option value="jaar-desc">{t('catalog.sortYearDesc')}</option>
+                        <option value="auteur-asc">{t('catalog.sortAuthorAsc')}</option>
+                        <option value="titel-asc">{t('catalog.sortTitleAsc')}</option>
+                      </select>
+                      <ChevronDown className="absolute right-0 top-1/2 w-4 h-4 -translate-y-1/2 text-[#B8860B] pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pt-2 sm:pt-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`inline-flex items-center space-x-2 border-b pb-1 text-xs font-mono font-bold uppercase tracking-[0.14em] transition-colors ${
+                        viewMode === 'grid'
+                          ? 'border-[#111111] text-[#111111]'
+                          : 'border-transparent text-[#8C8174] hover:text-[#111111]'
                       }`}
                     >
-                      {c === 'Alle' ? t('catalog.all') : getLocalizedCentury(c, language)}
-                    </motion.button>
+                      <LayoutGrid className="w-4 h-4" />
+                      <span>{t('catalog.gridView')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('editorial')}
+                      className={`inline-flex items-center space-x-2 border-b pb-1 text-xs font-mono font-bold uppercase tracking-[0.14em] transition-colors ${
+                        viewMode === 'editorial'
+                          ? 'border-[#111111] text-[#111111]'
+                          : 'border-transparent text-[#8C8174] hover:text-[#111111]'
+                      }`}
+                    >
+                      <Rows3 className="w-4 h-4" />
+                      <span>{t('catalog.editorialView')}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {activeFilters.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+                  {activeFilters.map((filterChip) => (
+                    <button
+                      key={filterChip.key}
+                      type="button"
+                      onClick={filterChip.clear}
+                      className="inline-flex items-center space-x-2 border-b border-[#111111] pb-0.5 text-xs font-mono font-semibold uppercase tracking-[0.12em] text-[#111111] transition-colors hover:border-[#B8860B] hover:text-[#B8860B]"
+                    >
+                      <span>{filterChip.label}</span>
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Category filter */}
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono">
-                  {t('catalog.categoryFilter')}
-                </span>
-                <div className="relative">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full py-2.5 px-3.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] text-xs font-semibold focus:outline-none focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20 cursor-pointer appearance-none pr-8"
-                  >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat} className="bg-white text-[#111111]">
-                        {cat === 'Alle' ? t('catalog.all') : getLocalizedCategory(cat, language)}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-[#B8860B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Sort Order */}
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block mb-2 font-mono flex items-center justify-between">
-                  <span>{t('catalog.sortLabel')}</span>
-                  <ArrowUpDown className="w-3 h-3 text-[#B8860B]" />
-                </span>
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full py-2.5 px-3.5 rounded-md bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] text-xs font-semibold focus:outline-none focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20 cursor-pointer appearance-none pr-8"
-                  >
-                    <option value="standaard" className="bg-white text-[#111111]">{t('catalog.sortStandard')}</option>
-                    <option value="jaar-asc" className="bg-white text-[#111111]">{t('catalog.sortYearAsc')}</option>
-                    <option value="jaar-desc" className="bg-white text-[#111111]">{t('catalog.sortYearDesc')}</option>
-                    <option value="auteur-asc" className="bg-white text-[#111111]">{t('catalog.sortAuthorAsc')}</option>
-                    <option value="titel-asc" className="bg-white text-[#111111]">{t('catalog.sortTitleAsc')}</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-[#B8860B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-            </div>
-
-            {/* Results status bar */}
-            <div className="flex items-center justify-between text-xs font-mono text-[#666666] pt-3 border-t border-[#D8CEB8]/60">
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-[#B8860B] animate-pulse" />
-                <span>
-                  {t('catalog.itemsFound', { count: filteredItems.length })}
-                </span>
-              </div>
-              {hasActiveFilters && (
-                <span className="text-[11px] text-[#B8860B] italic font-serif">
-                  {t('catalog.resetFilters')}
-                </span>
               )}
             </div>
 
-          </motion.div>
+            {filteredItems.length === 0 ? (
+              <div className="py-20 text-center">
+                <h2 className="text-2xl font-serif font-bold text-[#111111]">
+                  {t('catalog.noItems')}
+                </h2>
+                <p className="mx-auto mt-3 max-w-lg text-sm font-serif leading-relaxed text-[#666666]">
+                  {t('catalog.noItemsDesc')}
+                </p>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-6 inline-flex items-center border-b border-[#111111] pb-1 text-xs font-mono font-bold uppercase tracking-[0.16em] text-[#111111] transition-colors hover:border-[#B8860B] hover:text-[#B8860B]"
+                >
+                  {t('catalog.noItemsReset')}
+                </button>
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+                {filteredItems.map((item, index) => {
+                  const isPainting = item.typeValue === 'painting';
+                  const primaryMeta = getPrimaryMeta(item);
+                  const statusTone = getStatusTone(item.status);
 
+                  return (
+                    <motion.article
+                      key={item.id}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.24) }}
+                      className="group flex flex-col h-full cursor-pointer"
+                      onClick={() => onOpenItemDetail(item)}
+                    >
+                      {/* Image Frame */}
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F1ECE3]">
+                        <img
+                          src={item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
+                          alt={getItemField(item, 'title', language)}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#111111]/25 to-transparent pointer-events-none" />
+                        
+                        {/* Status Badge (if reserved or sold) */}
+                        {item.status !== 'Beschikbaar' && (
+                          <div className="absolute top-3 right-3 z-10">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em] bg-[#111111]/85 text-[#FBFBFA] backdrop-blur-sm shadow-sm">
+                              <span className={`h-1.5 w-1.5 rounded-full ${statusTone.dot}`} />
+                              <span>{getLocalizedStatus(item.status, language)}</span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content Card Body */}
+                      <div className="mt-4 flex flex-col flex-1 border-t border-[#E8DFCF]/70 pt-3.5 space-y-2">
+                        {/* Top Micro-Header */}
+                        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-[#8E7035]">
+                          <span>
+                            {isPainting ? t('catalog.paintings') : t('catalog.books')}
+                            <span className="mx-1.5 text-[#B8860B]/40">·</span>
+                            {getLocalizedCentury(item.century, language)}
+                          </span>
+                          <span className="text-[#888888] font-light">{item.ref}</span>
+                        </div>
+
+                        {/* Title (Clamped to 2 lines max with fixed height baseline) */}
+                        <h2 className="text-lg font-serif font-bold leading-snug text-[#111111] transition-colors duration-300 group-hover:text-[#8E7035] line-clamp-2 min-h-[2.75rem]">
+                          {getItemField(item, 'title', language)}
+                        </h2>
+
+                        {/* Attribution / Primary Meta (Clamped to 1 line max with fixed height baseline) */}
+                        <p className="text-xs font-serif italic text-[#666666] line-clamp-1 min-h-[1.1rem]">
+                          {primaryMeta || '\u00A0'}
+                        </p>
+
+                        {/* Bottom Row - Pinned to bottom of card */}
+                        <div className="mt-auto pt-3.5 flex items-center justify-between border-t border-[#E8DFCF]/40">
+                          <div>
+                            <span className="text-sm font-serif font-bold text-[#111111]">
+                              {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
+                            </span>
+                          </div>
+
+                          <div className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#111111] transition-colors group-hover:text-[#8E7035]">
+                            <span>{t('topstukken.viewDetails')}</span>
+                            <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-12">
+                {filteredItems.map((item, index) => {
+                  const primaryMeta = getPrimaryMeta(item);
+                  const secondaryMeta = getSecondaryMeta(item);
+                  const statusTone = getStatusTone(item.status);
+                  const isPainting = item.typeValue === 'painting';
+                  const mediaOnRight = index % 2 === 1;
+
+                  return (
+                    <motion.article
+                      key={item.id}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.24) }}
+                      className={index === 0 ? "pt-2" : "border-t border-[#D8CEB8]/70 pt-12"}
+                    >
+                      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 lg:items-start">
+                        <div className={`lg:col-span-5 ${mediaOnRight ? 'lg:order-2' : ''}`}>
+                          <button
+                            type="button"
+                            onClick={() => onOpenItemDetail(item)}
+                            className="block w-full overflow-hidden bg-[#F1ECE3] text-left group"
+                          >
+                            <div className="aspect-[4/3] overflow-hidden relative">
+                              <img
+                                src={item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
+                                alt={getItemField(item, 'title', language)}
+                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                              />
+                            </div>
+                          </button>
+                        </div>
+
+                        <div className={`lg:col-span-7 ${mediaOnRight ? 'lg:order-1' : ''}`}>
+                          <div className="flex flex-wrap items-center gap-x-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[#8E7035]">
+                            <span>{item.ref}</span>
+                            <span className="text-[#B8860B]/40">·</span>
+                            <span>{getLocalizedCentury(item.century, language)}</span>
+                            <span className="text-[#B8860B]/40">·</span>
+                            <span>{getLocalizedCategory(item.category, language)}</span>
+                          </div>
+
+                          <h2 
+                            onClick={() => onOpenItemDetail(item)}
+                            className="mt-3 text-2xl font-serif font-bold leading-[1.18] text-[#111111] transition-colors duration-300 hover:text-[#8E7035] cursor-pointer lg:text-3xl"
+                          >
+                            {getItemField(item, 'title', language)}
+                          </h2>
+
+                          {primaryMeta && (
+                            <p className="mt-2 text-sm font-serif italic text-[#555555]">
+                              {primaryMeta}
+                            </p>
+                          )}
+
+                          {secondaryMeta && (
+                            <p className="mt-1.5 text-xs font-mono uppercase tracking-[0.14em] text-[#777777]">
+                              {secondaryMeta}
+                            </p>
+                          )}
+
+                          <p className="mt-4 max-w-2xl line-clamp-3 text-sm font-serif leading-relaxed text-[#444444] lg:text-base">
+                            {getItemField(item, 'description', language)}
+                          </p>
+
+                          <div className="mt-6 flex flex-col gap-4 border-t border-[#E8DFCF]/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-4">
+                              <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] ${statusTone.text}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${statusTone.dot}`} />
+                                <span>{getLocalizedStatus(item.status, language)}</span>
+                              </span>
+                              <span className="text-[#E8DFCF]">|</span>
+                              <span className="text-lg font-serif font-bold text-[#111111] lg:text-xl">
+                                {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-x-6">
+                              <button
+                                type="button"
+                                onClick={() => onOpenItemDetail(item)}
+                                className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:text-[#B8860B]"
+                              >
+                                <span>{t('topstukken.viewDetails')}</span>
+                                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                              </button>
+                              {item.status !== 'Verkocht' && (
+                                <button
+                                  type="button"
+                                  onClick={() => onRequestInquiry(item)}
+                                  className="border-b border-[#111111] pb-0.5 text-xs font-mono font-bold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:border-[#B8860B] hover:text-[#B8860B]"
+                                >
+                                  {t('catalog.inquire')}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-
       </section>
-
-      {/* ------------------------------------------------------------- */}
-      {/* CATALOG GRID ITEMS DISPLAY SECTION                             */}
-      {/* ------------------------------------------------------------- */}
-      <div className="pt-12 pb-24">
-        <AsymmetricGallery
-          items={items}
-          filteredItems={filteredItems}
-          onOpenItemDetail={onOpenItemDetail}
-          onRequestInquiry={onRequestInquiry}
-          hideHeader={true}
-          hideControls={true}
-        />
-      </div>
-
     </div>
   );
 }

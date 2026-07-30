@@ -2,9 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Fluid Typography Scale Tokens (Claude Fable 5 & Awwwards Luxury Standard) */
+  --text-hero: clamp(2.75rem, 6.5vw, 6.5rem);
+  --text-hero-sub: clamp(1.75rem, 4.2vw, 4.25rem);
+  --text-h1: clamp(2.25rem, 4.8vw, 4.8rem);
+  --text-h2: clamp(1.75rem, 3.2vw, 3.2rem);
+  --text-body: clamp(0.95rem, 1.15vw, 1.15rem);
+  --text-micro: clamp(0.7rem, 0.8vw, 0.85rem);
+
+  /* Physics-Based Custom Easing Curves */
+  --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-reveal: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-architectural: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
 @layer base {
   html, body {
-    background-color: #FAF9F6;
+    background-color: #FFFFFF;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
     color: #111111;
     font-family: 'Plus Jakarta Sans', sans-serif;
@@ -19,6 +34,39 @@
   
   h1, h2, h3, h4, .font-serif-heading {
     font-family: 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+
+  /* Haute Couture Editorial Display Headline */
+  .text-fluid-hero {
+    font-size: var(--text-hero);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+
+  .text-fluid-hero-sub {
+    font-size: var(--text-hero-sub);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .text-fluid-h1 {
+    font-size: var(--text-h1);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
+  .text-fluid-h2 {
+    font-size: var(--text-h2);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  /* Native View Transitions API Styling */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.45s;
+    animation-timing-function: var(--ease-luxury);
   }
 
   /* Safe area insets for iPhone notch / Dynamic Island */
@@ -33,6 +81,23 @@
   button, a, [role="button"] {
     -webkit-touch-callout: none;
     user-select: none;
+  }
+
+  /* Accessible Keyboard Focus-Visible Rings (UI/UX Pro Max Accessibility Standard) */
+  :focus-visible {
+    outline: 2px solid #B8860B;
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Accessibility: Respect OS Motion Reduction Settings */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Smooth momentum scrolling for overflow containers */
@@ -67,6 +132,24 @@
   .mobile-scroll-x::-webkit-scrollbar {
     display: none;
   }
+
+  /* Mobile Touch Snap Carousel Ergonomics */
+  .touch-snap-x {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .touch-snap-x::-webkit-scrollbar {
+    display: none;
+  }
+  .touch-snap-item {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    shrink: 0;
+  }
 }
 
 /* Light Museum Scrollbar */
@@ -75,7 +158,7 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAF7F2;
+  background: #FFFFFF;
 }
 ::-webkit-scrollbar-thumb {
   background: #D8CEB8;

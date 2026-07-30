@@ -54,7 +54,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
     <section 
       ref={sectionRef} 
       id="topstukken" 
-      className="py-24 bg-[#FAF7F2] overflow-hidden"
+      className="py-24 bg-white overflow-hidden"
     >
       <motion.div 
         initial={{ opacity: 0, y: 50 }}

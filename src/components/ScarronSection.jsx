@@ -48,7 +48,7 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
     <section 
       ref={sectionRef} 
       id="scarron-1713" 
-      className="py-24 bg-[#FAF7F2] overflow-hidden"
+      className="py-24 bg-white overflow-hidden"
     >
       <motion.div 
         initial={{ opacity: 0, y: 50 }}

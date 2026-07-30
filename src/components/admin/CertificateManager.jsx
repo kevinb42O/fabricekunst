@@ -91,7 +91,7 @@ export default function CertificateManager({
       dimensions: "Formaat & Afmetingen",
       provenance: "Geverifieerde Herkomst (Provenance)",
       guaranteeHeader: "ECHTHEIDSGARANTIE",
-      guaranteeText: "Ondergetekende, namens Atelier Rembrandt / Fabrice Boeken & Kunst, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
+      guaranteeText: "Ondergetekende, namens Atelier Rembrandt, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
       expertTitle: "Expert Oude Boeken, Prenten & Kunst",
       galleryLocation: "Atelier Rembrandt — Oostende",
       verifyNotice: "Geregistreerd in het archief van Atelier Rembrandt onder de bovenstaande unieke referentie."
@@ -109,7 +109,7 @@ export default function CertificateManager({
       dimensions: "Collation & Dimensions",
       provenance: "Provenance Historique Vérifiée",
       guaranteeHeader: "GARANTIE D'AUTHENTICITÉ",
-      guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt / Fabrice Livres & Art, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
+      guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
       expertTitle: "Expert en Livres Rares, Gravures & Œuvres d'Art",
       galleryLocation: "Atelier Rembrandt — Ostende",
       verifyNotice: "Ce certificat est immatriculé dans les archives de l'Atelier Rembrandt sous la référence unique ci-dessus."
@@ -127,7 +127,7 @@ export default function CertificateManager({
       dimensions: "Collation & Dimensions",
       provenance: "Verified Provenance",
       guaranteeHeader: "GUARANTEE OF AUTHENTICITY",
-      guaranteeText: "The undersigned, on behalf of Atelier Rembrandt / Fabrice Books & Fine Art, hereby guarantees that the antiquarian item described above has been thoroughly examined and verified as 100% genuine and authentic in all respects, matching the cataloged provenance and binding details.",
+      guaranteeText: "The undersigned, on behalf of Atelier Rembrandt, hereby guarantees that the antiquarian item described above has been thoroughly examined and verified as 100% genuine and authentic in all respects, matching the cataloged provenance and binding details.",
       expertTitle: "Expert in Rare Books, Fine Art & Antiquities",
       galleryLocation: "Atelier Rembrandt — Ostend",
       verifyNotice: "Officially registered in the archives of Atelier Rembrandt under the unique reference code above."
@@ -584,7 +584,7 @@ export default function CertificateManager({
                         }
                       </div>
                     )}
-                    <span className="block font-serif text-[15px] font-bold text-[#111111]">Fabrice</span>
+                    <span className="block font-serif text-[15px] font-bold text-[#111111]">Atelier Rembrandt</span>
                     <span className="block font-sans text-[10px] text-[#555555] font-semibold">{t.expertTitle}</span>
                   </div>
                 </div>

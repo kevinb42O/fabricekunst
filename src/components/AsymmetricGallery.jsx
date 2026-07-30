@@ -68,7 +68,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
   const displayItems = overrideFilteredItems || calculatedFilteredItems;
 
   return (
-    <section id="catalogus" className={`bg-[#FAF7F2] relative overflow-x-hidden ${hideHeader ? 'pt-0 pb-16 sm:pb-24' : 'py-24 border-b border-[#D8CEB8]'}`}>
+    <section id="catalogus" className={`bg-white relative overflow-x-hidden ${hideHeader ? 'pt-0 pb-16 sm:pb-24' : 'py-24 border-b border-[#D8CEB8]'}`}>
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}

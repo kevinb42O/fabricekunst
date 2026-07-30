@@ -743,56 +743,122 @@ const PROVENANCE_PAGE_KEY = 'atelier_rembrandt_provenance_page';
 export const DEFAULT_PROVENANCE_DATA = {
   hero: {
     badge: 'Herkomst & Expertise',
+    badge_en: 'Provenance & Expertise',
+    badge_fr: 'Provenance & Expertise',
     title: 'Gecertificeerde Provenance & Wetenschappelijk Onderzoek',
+    title_en: 'Certified Provenance & Bibliographical Research',
+    title_fr: 'Provenance Certifiée & Recherche Bibliographique',
     subtitle: 'Elk zeldzaam meesterwerk in onze collectie wordt vergezeld van een aantoonbare herkomstgeschiedenis en een grondig bibliografisch verificatierapport.',
+    subtitle_en: 'Every rare masterwork in our collection is accompanied by a documented provenance history and a rigorous bibliographical verification report.',
+    subtitle_fr: 'Chaque chef-d’œuvre rare de notre collection est accompagné d’un historique de provenance documenté et d’un rapport de vérification bibliographique rigoureux.',
     bgImage: '/images/hero/hero-voltaire-exlibris.jpg'
   },
   protocol: {
     badge: 'Gecertificeerd Verificatieprotocol',
+    badge_en: 'Certified Verification Protocol',
+    badge_fr: 'Protocole de Vérification Certifié',
     title: 'Het Protocol van Authenticiteit & Verificatie',
+    title_en: 'The Protocol of Authenticity & Verification',
+    title_fr: 'Le Protocole d’Authenticité & de Vérification',
     subtitle: 'Voordat een antiquarisch meesterwerk in onze gecureerde collectie wordt opgenomen, doorloopt het ons vierstappen-onderzoeksprotocol.',
+    subtitle_en: 'Before an antiquarian masterpiece is included in our curated collection, it undergoes our four-step research protocol.',
+    subtitle_fr: 'Avant d’intégrer notre collection sélectionnée, chaque ouvrage précieux franchit notre protocole d’examen en quatre étapes.',
     steps: [
       {
         step: '01',
         title: 'Fysiek & Materieel Onderzoek',
-        description: 'Nauwkeurige inspectie van papierstructuur, watermerken, binding, marmerpapier en 18e-eeuws rood roggevel shagreen leder.'
+        title_en: 'Physical & Material Analysis',
+        title_fr: 'Examen Physique & Matériel',
+        description: 'Nauwkeurige inspectie van papierstructuur, watermerken, binding, marmerpapier en 18e-eeuws rood roggevel shagreen leder.',
+        description_en: 'Meticulous inspection of paper structure, watermarks, binding, marbled endpapers, and 18th-century red shagreen leather.',
+        description_fr: 'Inspection minutieuse de la structure du papier, des filigranes, de la reliure, des papiers marbrés et du chagrin rouge du XVIIIe siècle.'
       },
       {
         step: '02',
         title: 'Archief & Provenance Check',
-        description: 'Verificatie van ex-libris stempels, eigenaarsinscripties en historische veilingcatalogi uit adellijke en bibliofiele privécollecties.'
+        title_en: 'Archive & Provenance Verification',
+        title_fr: 'Vérification d’Archives & Provenance',
+        description: 'Verificatie van ex-libris stempels, eigenaarsinscripties en historische veilingcatalogi uit adellijke en bibliofiele privécollecties.',
+        description_en: 'Verification of bookplates, ownership inscriptions, and historical auction catalogues from noble and bibliophilic private collections.',
+        description_fr: 'Vérification des ex-libris, inscriptions de propriété et catalogues de ventes historiques issus de collections privées nobles.'
       },
       {
         step: '03',
         title: 'Bibliografische Match',
-        description: 'Kruisverwijzing met standaard naslagwerken (Brunet, Cohen-de Ricci, Graesse) voor oplage, gravure-aantallen en zeldzaamheid.'
+        title_en: 'Bibliographical Matching',
+        title_fr: 'Concordance Bibliographique',
+        description: 'Kruisverwijzing met standaard naslagwerken (Brunet, Cohen-de Ricci, Graesse) voor oplage, gravure-aantallen en zeldzaamheid.',
+        description_en: 'Cross-referencing with standard reference works (Brunet, Cohen-de Ricci, Graesse) for edition size, plate counts, and rarity.',
+        description_fr: 'Recoupement avec les ouvrages de référence (Brunet, Cohen-de Ricci, Graesse) pour les tirages, le nombre de planches et la rareté.'
       },
       {
         step: '04',
         title: 'Certificaat van Echtheid',
-        description: 'Elk werk wordt geleverd met een officieel Atelier Rembrandt echtheidscertificaat met gedetailleerde conditiestatus en herkomst.'
+        title_en: 'Certificate of Authenticity',
+        title_fr: 'Certificat d’Authenticité',
+        description: 'Elk werk wordt geleverd met een officieel Atelier Rembrandt echtheidscertificaat met gedetailleerde conditiestatus en herkomst.',
+        description_en: 'Every work is delivered with an official Atelier Rembrandt Certificate of Authenticity specifying condition status and provenance.',
+        description_fr: 'Chaque œuvre est délivrée avec un Certificat d’Authenticité officiel de l’Atelier Rembrandt détaillant l’état et la provenance.'
       }
     ]
   },
   story: {
     badge: 'Ex-Libris & Eigendomssporen',
+    badge_en: 'Bookplates & Provenance Traces',
+    badge_fr: 'Ex-Libris & Traces de Propriété',
     title: 'Aantoonbare Historie van Franse Topverzamelaars',
+    title_en: 'Documented History of Distinguished French Collectors',
+    title_fr: 'Histoire Documentée des Grands Collectionneurs Français',
     quote: 'Een antiek boek ontleent zijn ultieme waarde aan de tastbare bewijzen van zijn reis door de eeuwen heen.',
+    quote_en: 'An antique book derives its ultimate value from the tangible evidence of its journey through the centuries.',
+    quote_fr: 'Un livre ancien tire sa valeur ultime des preuves tangibles de son voyage à travers les siècles.',
     quoteAuthor: 'Atelier Rembrandt',
+    quoteAuthor_en: 'Atelier Rembrandt',
+    quoteAuthor_fr: 'Atelier Rembrandt',
     narrative: 'Zeldzame stukken uit onze privé-bibliotheek worden niet alleen geanalyseerd op fysieke staat, maar ook op provenance. Heraldieke stempels, ex-libris afbeeldingen en marginalia vormen de ononderbroken keten van eigenaarskap sinds de eerste druk.',
+    narrative_en: 'Rare items from our private library are analyzed not only for physical condition, but also for provenance. Armorial stamps, bookplates, and marginalia form the unbroken chain of ownership since the first edition.',
+    narrative_fr: 'Les pièces rares de notre bibliothèque privée ne sont pas seulement analysées pour leur état physique, maar aussi pour leur provenance. Armoiries, ex-libris et marginalia constituent la chaîne ininterrompue de propriété depuis l’édition originale.',
     image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
     imageCaption: 'Ex-Libris Vacheron-Poinsot op handgemaakt gemarmerd schutblad (1829).',
+    imageCaption_en: 'Vacheron-Poinsot armorial bookplate on handmade marbled endpaper (1829).',
+    imageCaption_fr: 'Vacheron-Poinsot ex-libris armorié sur garde marbrée faite main (1829).',
     bullets: [
       'Adellijk Heraldiek Stempel (Vacheron-Poinsot)',
       'Ongebroken Eigendomsreeks (1829 – Heden)'
+    ],
+    bullets_en: [
+      'Noble Armorial Stamp (Vacheron-Poinsot)',
+      'Unbroken Chain of Ownership (1829 – Present)'
+    ],
+    bullets_fr: [
+      'Timbre Armorié Noble (Vacheron-Poinsot)',
+      'Chaîne de Propriété Ininterrompue (1829 – Présent)'
     ]
   },
   cta: {
     badge: 'Particuliere Expertise & Consultatie',
+    badge_en: 'Private Advisory & Consultation',
+    badge_fr: 'Expertise Privée & Consultation',
     title: 'Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?',
+    title_en: 'Would You Like to Verify the Provenance of Your Collection?',
+    title_fr: 'Souhaitez-vous Faire Vérifier la Provenance de Votre Collection ?',
     subtitle: 'Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.',
-    buttonText: 'Privé Consultatie Aanvragen'
+    subtitle_en: 'Atelier Rembrandt advises collectors and heirs on valuation, conservation, and authenticity verification for historic private libraries.',
+    subtitle_fr: 'L’Atelier Rembrandt conseille les collectionneurs et héritiers pour l’évaluation, la conservation et la vérification d’authenticité de bibliothèques historiques.',
+    buttonText: 'Privé Consultatie Aanvragen',
+    buttonText_en: 'Request Private Consultation',
+    buttonText_fr: 'Demander une Consultation Privée'
   }
+};
+
+const mergeProtocolSteps = (savedSteps = []) => {
+  return DEFAULT_PROVENANCE_DATA.protocol.steps.map((defaultStep, idx) => {
+    const savedStep = savedSteps[idx] || {};
+    return {
+      ...defaultStep,
+      ...savedStep
+    };
+  });
 };
 
 export const getProvenanceData = () => {
@@ -805,9 +871,7 @@ export const getProvenanceData = () => {
       protocol: { 
         ...DEFAULT_PROVENANCE_DATA.protocol, 
         ...(parsed.protocol || {}),
-        steps: Array.isArray(parsed.protocol?.steps) && parsed.protocol.steps.length === 4 
-          ? parsed.protocol.steps 
-          : DEFAULT_PROVENANCE_DATA.protocol.steps
+        steps: mergeProtocolSteps(parsed.protocol?.steps)
       },
       story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
       cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) }
@@ -834,9 +898,7 @@ export const fetchProvenanceDataAsync = async () => {
           protocol: { 
             ...DEFAULT_PROVENANCE_DATA.protocol, 
             ...(parsed.protocol || {}),
-            steps: Array.isArray(parsed.protocol?.steps) && parsed.protocol.steps.length === 4 
-              ? parsed.protocol.steps 
-              : DEFAULT_PROVENANCE_DATA.protocol.steps
+            steps: mergeProtocolSteps(parsed.protocol?.steps)
           },
           story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
           cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) }

@@ -80,7 +80,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       provenance: "Geverifieerde Herkomst (Provenance)",
       condition: "Staat & Inscripties",
       guaranteeHeader: "ECHTHEIDSGARANTIE",
-      guaranteeText: "Ondergetekende, namens Atelier Rembrandt / Fabrice Boeken & Kunst, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
+      guaranteeText: "Ondergetekende, namens Atelier Rembrandt, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
       expertTitle: "Expert Oude Boeken, Prenten & Kunst",
       galleryLocation: "Atelier Rembrandt — Amsterdam / Parijs",
       verifyNotice: "Geregistreerd in het archief van Atelier Rembrandt onder de bovenstaande unieke referentie."
@@ -99,7 +99,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       provenance: "Provenance Historique Vérifiée",
       condition: "État & Particularités",
       guaranteeHeader: "GARANTIE D'AUTHENTICITÉ",
-      guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt / Fabrice Livres & Art, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
+      guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
       expertTitle: "Expert en Livres Rares, Gravures & Œuvres d'Art",
       galleryLocation: "Atelier Rembrandt — Amsterdam / Paris",
       verifyNotice: "Ce certificat est immatriculé dans les archives de l'Atelier Rembrandt sous la référence unique ci-dessus."
@@ -118,7 +118,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       provenance: "Verified Provenance",
       condition: "Condition & Specs",
       guaranteeHeader: "GUARANTEE OF AUTHENTICITY",
-      guaranteeText: "The undersigned, on behalf of Atelier Rembrandt / Fabrice Books & Fine Art, hereby guarantees that the antiquarian item described above has been thoroughly examined and verified as 100% genuine and authentic in all respects, matching the cataloged provenance and binding details.",
+      guaranteeText: "The undersigned, on behalf of Atelier Rembrandt, hereby guarantees that the antiquarian item described above has been thoroughly examined and verified as 100% genuine and authentic in all respects, matching the cataloged provenance and binding details.",
       expertTitle: "Expert in Rare Books, Fine Art & Antiquities",
       galleryLocation: "Atelier Rembrandt — Amsterdam / Paris",
       verifyNotice: "Officially registered in the archives of Atelier Rembrandt under the unique reference code above."
@@ -548,7 +548,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               <label className="flex items-center justify-between text-xs text-stone-300 cursor-pointer py-1">
                 <span className="flex items-center space-x-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#C5A059]" />
-                  <span>Handtekening Fabrice</span>
+                  <span>Handtekening Expert</span>
                 </span>
                 <input
                   type="checkbox"
@@ -795,7 +795,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
 
                   <div className="space-y-0.5">
                     <span className="block font-serif text-sm font-bold text-[#111111]">
-                      Fabrice
+                      Atelier Rembrandt
                     </span>
                     <span className="block font-sans text-[9px] text-[#555555] font-semibold">
                       {t.expertTitle}

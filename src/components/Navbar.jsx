@@ -2,42 +2,33 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { LUXURY_EASE } from '../utils/motion';
 
 export default function Navbar({ onNavigate, activeTab, onRequestConsultation }) {
   const [scrolled, setScrolled] = useState(false);
-  const [visible, setVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Update background styling state
-      setScrolled(currentScrollY > 20);
-
-      // Always show navbar near top of page (< 140px)
-      if (currentScrollY < 140) {
-        setVisible(true);
-      } else {
-        const delta = currentScrollY - lastScrollY;
-        // Require a distinct scroll down (> 22px) to trigger gentle hide
-        if (delta > 22) {
-          setVisible(false);
-        } else if (delta < -12) {
-          // Scroll up (> 12px) to reveal
-          setVisible(true);
-        }
-      }
-
-      lastScrollY = currentScrollY;
+      setScrolled(window.scrollY > 20);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Lock body scroll on mobile when menu drawer is active
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   const navLinks = [
     { id: 'topstukken', label: t('nav.topstukken') },
@@ -67,27 +58,25 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
   return (
     <motion.nav 
       initial={{ y: "0%" }}
-      animate={{ 
-        y: (visible || mobileMenuOpen) ? "0%" : "-100%"
-      }}
-      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      animate={{ y: "0%" }}
+      transition={{ duration: 0.8, ease: LUXURY_EASE }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled 
-          ? 'bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#D8CEB8]/60 text-[#111111] shadow-xs' 
+          ? 'bg-white/95 backdrop-blur-md border-b border-[#D8CEB8]/60 text-[#111111] shadow-xs' 
           : 'bg-transparent border-none text-[#111111]'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="flex items-center justify-between min-h-[72px] sm:min-h-[84px] py-2.5">
+        <div className="flex items-center justify-between min-h-[76px] sm:min-h-[88px] py-3">
           
           {/* LEFT ZONE: Navigation Links */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8 w-1/3">
+          <div className="hidden md:flex items-center space-x-6 lg:space-x-10 w-1/3">
             {navLinks.slice(0, 3).map((link) => (
               <button
                 key={link.id}
                 onClick={() => handleNavClick(link.id)}
-                className={`text-xs font-serif font-medium tracking-[0.16em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
-                  activeTab === link.id ? 'text-[#111111] font-bold' : 'text-[#111111]/75 hover:text-[#111111]'
+                className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
+                  activeTab === link.id ? 'text-[#111111] font-semibold' : 'text-[#111111]/75 hover:text-[#111111]'
                 }`}
               >
                 {link.label}
@@ -115,18 +104,18 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
                 alt="Atelier Rembrandt" 
                 className="h-8 sm:h-10 md:h-11 w-auto object-contain filter contrast-[1.05] shrink-0"
               />
-              <span className="text-[9.5px] sm:text-[10.5px] md:text-[11px] tracking-[0.38em] text-[#8E7035] uppercase font-serif font-semibold block leading-none mt-1.5 pl-[0.38em] text-center w-full">
+              <span className="text-xs sm:text-xs tracking-[0.24em] text-[#8E7035] uppercase font-serif font-medium block leading-none mt-1.5 pl-[0.24em] text-center w-full">
                 {t('nav.brandSubtitle')}
               </span>
             </motion.button>
           </div>
 
           {/* RIGHT ZONE: Contact Link & Ultra-Sleek Language Switcher */}
-          <div className="hidden md:flex items-center justify-end space-x-6 lg:space-x-8 w-1/3">
+          <div className="hidden md:flex items-center justify-end space-x-6 lg:space-x-10 w-1/3">
             <button
               onClick={() => handleNavClick('contact')}
-              className={`text-xs font-serif font-medium tracking-[0.16em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
-                activeTab === 'contact' ? 'text-[#111111] font-bold' : 'text-[#111111]/75 hover:text-[#111111]'
+              className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
+                activeTab === 'contact' ? 'text-[#111111] font-semibold' : 'text-[#111111]/75 hover:text-[#111111]'
               }`}
             >
               {t('nav.contact') || 'Contact'}
@@ -134,15 +123,15 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
 
             <span className="text-[#D8CEB8] text-xs font-serif select-none">•</span>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2.5">
               {languages.map((lang, idx) => (
                 <React.Fragment key={lang.code}>
                   {idx > 0 && <span className="text-[#D8CEB8] text-xs font-serif select-none">•</span>}
                   <button
                     onClick={() => setLanguage(lang.code)}
-                    className={`text-[11px] font-mono tracking-widest transition-colors cursor-pointer ${
+                    className={`text-xs font-serif tracking-wider transition-colors cursor-pointer ${
                       language === lang.code
-                        ? 'text-[#111111] font-bold border-b border-[#111111] pb-0.5'
+                        ? 'text-[#111111] font-semibold border-b border-[#111111] pb-0.5'
                         : 'text-[#666666] hover:text-[#111111]'
                     }`}
                   >
@@ -157,9 +146,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm focus:outline-none ${
-                !scrolled ? 'text-white' : 'text-[#111111]'
-              }`}
+              className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm focus:outline-none text-[#111111]`}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -188,8 +175,8 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="md:hidden bg-[#FAF7F2] border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
+            transition={{ duration: 0.3, ease: LUXURY_EASE }}
+            className="md:hidden bg-white border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
           >
             {/* Navigation links */}
             <div className="space-y-1">
@@ -216,7 +203,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
 
             {/* Language Switcher in Mobile Drawer */}
             <div className="px-4 py-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C827A] block mb-2">
+              <span className="text-xs font-serif font-medium uppercase tracking-wider text-[#8C827A] block mb-2">
                 {language === 'nl' ? 'Taal / Language' : language === 'fr' ? 'Langue / Language' : 'Language'}
               </span>
               <div className="flex items-center space-x-2">
@@ -226,7 +213,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
                     onClick={() => {
                       setLanguage(lang.code);
                     }}
-                    className={`flex-1 py-2.5 rounded-md border text-center text-xs font-mono font-bold tracking-wider transition-all min-h-[44px] flex items-center justify-center cursor-pointer ${
+                    className={`flex-1 py-2.5 rounded-md border text-center text-xs font-serif font-semibold tracking-wider transition-all min-h-[44px] flex items-center justify-center cursor-pointer ${
                       language === lang.code
                         ? 'bg-[#1C1A17] text-[#D4AF37] border-[#B8860B] shadow-sm'
                         : 'bg-white text-[#231A14] border-[#D8CEB8] hover:border-[#1C1A17]'

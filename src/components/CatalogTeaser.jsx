@@ -42,7 +42,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
   };
 
   return (
-    <section id="catalogus-preview" className="py-24 bg-[#FAF7F2] overflow-hidden">
+    <section id="catalogus-preview" className="py-24 bg-white overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -70,7 +70,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={onOpenFullCatalog}
-            className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer min-h-[48px] w-full sm:w-auto text-center"
+            className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-white hover:text-[#111111] font-semibold text-xs uppercase tracking-widest shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer min-h-[48px] w-full sm:w-auto text-center"
           >
             <span>{t('catalog.viewItem')} ({items.length})</span>
           </motion.button>
@@ -93,7 +93,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
               className="bg-white rounded-lg border-2 border-[#D8CEB8] shadow-card overflow-hidden flex flex-col justify-between group hover:border-[#111111] transition-colors duration-300 cursor-pointer"
             >
               {/* Image Preview */}
-              <div className="aspect-[4/3] bg-[#FAF7F2] overflow-hidden relative border-b border-[#D8CEB8]">
+              <div className="aspect-[4/3] bg-neutral-50 overflow-hidden relative border-b border-[#D8CEB8]">
                 <img
                   src={item.images[0]?.url}
                   alt={getItemField(item, 'title', language)}

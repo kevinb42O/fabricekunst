@@ -24,7 +24,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
   if (!item) {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] pt-32 pb-24 text-center">
+      <div className="min-h-screen bg-white pt-32 pb-24 text-center">
         <div className="max-w-md mx-auto space-y-4">
           <BookOpen className="w-12 h-12 text-[#B8860B] mx-auto opacity-50" />
           <h2 className="text-2xl font-serif font-bold text-[#111111]">Item Niet Gevonden</h2>
@@ -33,7 +33,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           </p>
           <button
             onClick={onNavigateBack}
-            className="px-6 py-2.5 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-mono text-xs uppercase font-semibold hover:bg-[#B8860B] hover:text-[#111111] transition-colors cursor-pointer"
+            className="px-6 py-2.5 rounded-sm bg-[#1C1A17] text-white font-mono text-xs uppercase font-semibold hover:bg-[#B8860B] hover:text-[#111111] transition-colors cursor-pointer"
           >
             Terug naar Collectie
           </button>
@@ -64,7 +64,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   };
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen text-[#111111] pt-22 sm:pt-28 pb-16 sm:pb-24 selection:bg-[#B8860B]/20">
+    <div className="bg-white min-h-screen text-[#111111] pt-22 sm:pt-28 pb-16 sm:pb-24 selection:bg-[#B8860B]/20">
       
       {/* ------------------------------------------------------------- */}
       {/* BREADCRUMB & HEADER CONTROL STRIP                             */}
@@ -123,7 +123,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             
             {/* Primary High-Res Gallery Frame */}
             <div className="space-y-4">
-              <div className="relative aspect-[4/3] sm:aspect-[4/3] rounded-xl sm:rounded-2xl bg-white border border-[#D8CEB8] overflow-hidden group shadow-sm">
+              <div className="relative aspect-[3/4] sm:aspect-[4/5] rounded-xl sm:rounded-2xl bg-white border border-[#D8CEB8] overflow-hidden group shadow-sm">
                 <img
                   src={currentImage.url}
                   alt={currentImage.caption || getItemField(item, 'title', language)}
@@ -158,12 +158,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   </>
                 )}
 
-                {/* Image Caption */}
-                {currentImage.caption && (
-                  <div className="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-[#D8CEB8] p-3 text-xs text-[#333333] italic font-serif">
-                    {currentImage.caption}
-                  </div>
-                )}
+
               </div>
 
               {/* Thumbnail Gallery Strip */}
@@ -565,6 +560,26 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           </div>
         </div>
 
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* MOBILE STICKY THUMB-ZONE ACTION BAR (MOBILE UX BEST PRACTICE)  */}
+      {/* ------------------------------------------------------------- */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#D8CEB8] p-3.5 z-40 shadow-lg flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <span className="text-[10px] font-mono text-[#8E7035] font-bold uppercase tracking-wider block">{item.ref}</span>
+          <span className="text-base font-serif font-bold text-[#111111] block leading-tight truncate">
+            {getLocalizedPrice(item.price, language)}
+          </span>
+        </div>
+
+        <button
+          onClick={() => onRequestInquiry && onRequestInquiry(item)}
+          className="px-5 py-3 rounded-md bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-serif text-xs font-semibold uppercase tracking-[0.14em] shadow-md transition-all duration-300 flex items-center space-x-2 shrink-0 cursor-pointer min-h-[44px]"
+        >
+          <span>{t('item_detail.inquireAction') || 'Aanvragen'}</span>
+          <ArrowRight className="w-3.5 h-3.5 text-[#D4AF37]" />
+        </button>
       </div>
 
       {/* High-Res Image Lightbox Modal */}

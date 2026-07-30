@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Award, BookOpen, Mail, ArrowRight, ShieldCheck, Truck, FileCheck, PhoneCall, ChevronRight, CheckCircle2, Star, Sparkles, Filter } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
+import { LUXURY_EASE } from '../utils/motion';
 
 export default function TopstukkenShowcase({ 
   items = [], 
@@ -26,24 +27,21 @@ export default function TopstukkenShowcase({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.12 }
+      transition: { staggerChildren: 0.14, delayChildren: 0.1 }
     }
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 32 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.7, ease: "easeOut" }
+      transition: { duration: 0.95, ease: LUXURY_EASE }
     }
   };
 
   return (
-    <section id="topstukken" className="py-28 sm:py-36 lg:py-40 bg-transparent relative overflow-hidden">
-      
-      {/* Ambient Glow Accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-[#B8860B]/4 rounded-full blur-[160px] pointer-events-none" />
+    <section id="topstukken" className="py-28 sm:py-36 lg:py-40 bg-white relative overflow-hidden">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12 sm:space-y-20">
         
@@ -59,10 +57,10 @@ export default function TopstukkenShowcase({
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onOpenFullCatalog}
-            className="px-6 sm:px-8 py-4 rounded-sm bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-semibold text-xs uppercase tracking-[0.2em] shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer flex items-center space-x-2.5 min-h-[50px] w-full lg:w-auto justify-center"
+            className="px-6 sm:px-8 py-4 bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-serif font-semibold text-xs sm:text-sm uppercase tracking-[0.16em] shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer flex items-center space-x-2.5 min-h-[50px] w-full lg:w-auto justify-center"
           >
             <span>{t('catalog.viewAllCollection')} ({items.length})</span>
             <ArrowRight className="w-4 h-4" />
@@ -72,21 +70,21 @@ export default function TopstukkenShowcase({
 
 
         {/* ------------------------------------------------------------- */}
-        {/* FEATURED SPOTLIGHT ITEM (FRAMELESS MAISON HERITAGE PRESENTATION) */}
+        {/* FEATURED SPOTLIGHT ITEM (EDITED MAISON HERITAGE PRESENTATION)  */}
         {/* ------------------------------------------------------------- */}
         {spotlightItem && (
           <motion.div
             key={spotlightItem.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
+            transition={{ duration: 1.0, ease: LUXURY_EASE }}
             onClick={() => onOpenItemDetail(spotlightItem)}
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center group cursor-pointer py-6"
           >
             {/* Spotlight Photography (Frameless, Pristine Edge-to-Edge) */}
             <div className="lg:col-span-7">
-              <div className="relative overflow-hidden bg-[#FAF7F2] aspect-[4/3] sm:aspect-[16/11]">
+              <div className="relative overflow-hidden bg-neutral-50 aspect-[4/3] sm:aspect-[16/11]">
                 <img
                   src={spotlightItem.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                   alt={getItemField(spotlightItem, 'title', language)}
@@ -95,13 +93,11 @@ export default function TopstukkenShowcase({
               </div>
             </div>
 
-            {/* Spotlight Content Column (Pure Editorial Typography) */}
+            {/* Spotlight Content Column (Pure Editorial Typography - Edited Harder) */}
             <div className="lg:col-span-5 space-y-6">
               <div className="space-y-3">
-                <div className="flex items-center space-x-3 text-[11px] font-mono tracking-[0.25em] text-[#8E7035] uppercase font-medium">
+                <div className="flex items-center space-x-3 text-xs sm:text-sm font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
                   <span>{getLocalizedCategory(spotlightItem.category, language)}</span>
-                  <span>•</span>
-                  <span>REF. {spotlightItem.ref}</span>
                 </div>
 
                 <h3 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300">
@@ -113,24 +109,19 @@ export default function TopstukkenShowcase({
                     {spotlightItem.author} {spotlightItem.year ? `(${spotlightItem.year})` : ''}
                   </p>
                 )}
-
-                {getItemField(spotlightItem, 'description', language) && (
-                  <p className="text-xs sm:text-sm font-serif font-light text-[#444444] leading-relaxed line-clamp-3 pt-2">
-                    {getItemField(spotlightItem, 'description', language)}
-                  </p>
-                )}
               </div>
 
-              {spotlightItem.provenance && (
-                <div className="border-l border-[#111111] pl-4 py-1 space-y-1">
-                  <span className="text-[10px] font-mono tracking-[0.25em] text-[#111111] uppercase font-bold block">{t('topstukken.provenanceBadge')}</span>
-                  <p className="text-xs font-serif italic text-[#222222]">"{spotlightItem.provenance}"</p>
+              {/* Localized Provenance Highlight Quote (Fixed Localization Bug) */}
+              {getItemField(spotlightItem, 'provenance', language) && (
+                <div className="border-l border-[#8E7035] pl-4 py-2 space-y-1.5 bg-neutral-50 my-3">
+                  <span className="text-xs font-serif tracking-[0.16em] text-[#8E7035] uppercase font-semibold block">{t('topstukken.provenanceBadge')}</span>
+                  <p className="text-xs sm:text-sm font-serif italic text-[#222222] leading-relaxed">"{getItemField(spotlightItem, 'provenance', language)}"</p>
                 </div>
               )}
 
               <div className="pt-6 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-6">
                 <div>
-                  <span className="text-[10px] uppercase font-mono tracking-[0.2em] text-[#777777] block">{t('topstukken.priceValuation')}</span>
+                  <span className="text-xs uppercase font-serif tracking-[0.14em] text-[#777777] block">{t('topstukken.priceValuation')}</span>
                   <span className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">{getLocalizedPrice(spotlightItem.price, language)}</span>
                 </div>
 
@@ -139,7 +130,7 @@ export default function TopstukkenShowcase({
                     e.stopPropagation();
                     onRequestInquiry(spotlightItem);
                   }}
-                  className="inline-flex items-center space-x-2 text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#111111] border-b border-[#111111] pb-1 hover:opacity-60 transition-opacity duration-300 cursor-pointer"
+                  className="inline-flex items-center space-x-2 text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] border-b border-[#111111] pb-1 hover:opacity-60 transition-opacity duration-300 cursor-pointer"
                 >
                   <span>{t('topstukken.buyInquire')}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -159,57 +150,89 @@ export default function TopstukkenShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
-            className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 pt-12 items-start"
+            className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 pt-8 md:pt-12 items-start"
           >
             {gridItems.map((item, idx) => {
               const itemTitle = getItemField(item, 'title', language);
               const mainImage = item.images && item.images.length > 0 ? item.images[0]?.url : '/images/scarron-spines-white-bg.jpg';
-              // Asymmetric magazine column layout logic (5 cols for first, 7 cols for second)
-              const colSpan = idx % 2 === 0 ? "md:col-span-5" : "md:col-span-7";
-              const aspect = idx % 2 === 0 ? "aspect-[3/4]" : "aspect-[4/3]";
+              
+              // High-fashion editorial magazine layout logic:
+              // Index 0 (Left): 5 columns, portrait vertical (aspect-4/5), top-aligned
+              // Index 1 (Right): 7 columns, landscape (aspect-16/11), staggered top margin (md:mt-16 lg:mt-24) to balance height & eliminate whitespace
+              // Index 2+ (Wide): 12 columns, wide cinematic editorial feature
+              let colSpan = "md:col-span-5 lg:col-span-5";
+              let aspect = "aspect-[4/5] sm:aspect-[3/4]";
+              let staggeredClass = "md:mt-0";
+
+              if (idx % 3 === 1) {
+                colSpan = "md:col-span-7 lg:col-span-7";
+                aspect = "aspect-[4/3] sm:aspect-[16/11]";
+                staggeredClass = "md:mt-16 lg:mt-24";
+              } else if (idx % 3 === 2) {
+                colSpan = "md:col-span-12 lg:col-span-12";
+                aspect = "aspect-[16/9] sm:aspect-[21/9]";
+                staggeredClass = "md:mt-8 lg:mt-12";
+              }
 
               return (
                 <motion.div
                   key={item.id}
                   variants={cardVariants}
                   onClick={() => onOpenItemDetail(item)}
-                  className={`${colSpan} space-y-4 group cursor-pointer`}
+                  className={`${colSpan} ${staggeredClass} flex flex-col justify-between group cursor-pointer space-y-5`}
                 >
-                  {/* Image Showcase (High-Fashion Editorial Frameless) */}
-                  <div className={`${aspect} bg-[#FAF7F2] overflow-hidden`}>
-                    <img
-                      src={mainImage}
-                      alt={itemTitle}
-                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
-                    />
+                  <div className="space-y-4">
+                    {/* Image Showcase (High-Fashion Editorial Frameless) */}
+                    <div className={`${aspect} bg-neutral-50 overflow-hidden relative group/img`}>
+                      <img
+                        src={mainImage}
+                        alt={itemTitle}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-[#111111]/0 group-hover:bg-[#111111]/5 transition-colors duration-500 pointer-events-none" />
+                    </div>
+
+                    {/* Body Content */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between text-xs font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
+                        <span>{getLocalizedCategory(item.category, language)}</span>
+                        {item.ref && (
+                          <span className="text-[10px] text-[#777777] font-mono tracking-widest">{item.ref}</span>
+                        )}
+                      </div>
+
+                      <h3 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300">
+                        {itemTitle}
+                      </h3>
+
+                      {item.author && (
+                        <p className="text-xs sm:text-sm text-[#555555] font-serif italic">
+                          {item.author} {item.year ? `(${item.year})` : ''}
+                        </p>
+                      )}
+
+                      {item.subtitle && (
+                        <p className="text-xs text-[#666666] font-serif line-clamp-2 leading-relaxed pt-1">
+                          {getItemField(item, 'subtitle', language)}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Body Content */}
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-[10px] font-mono tracking-[0.25em] text-[#666666] uppercase font-bold">
-                      <span>{getLocalizedCategory(item.category, language)}</span>
-                      <span>REF. {item.ref}</span>
-                    </div>
-
-                    <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#111111] leading-snug group-hover:opacity-70 transition-opacity duration-300">
-                      {itemTitle}
-                    </h3>
-
-                    {item.author && (
-                      <p className="text-xs text-[#555555] font-serif italic">
-                        {item.author} {item.year ? `(${item.year})` : ''}
-                      </p>
-                    )}
-
-                    <div className="pt-3 flex items-center justify-between border-t border-[#D8CEB8]/60">
-                      <span className="text-lg font-serif font-bold text-[#111111]">
+                  {/* Pinned Bottom Details Bar */}
+                  <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-auto">
+                    <div>
+                      <span className="text-[10px] uppercase font-serif tracking-[0.14em] text-[#777777] block font-medium">
+                        {t('topstukken.priceValuation')}
+                      </span>
+                      <span className="text-lg sm:text-xl font-serif font-bold text-[#111111]">
                         {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                       </span>
-
-                      <span className="text-[11px] font-mono tracking-[0.2em] text-[#111111] uppercase border-b border-[#111111] pb-0.5 group-hover:opacity-60 transition-opacity">
-                        {t('topstukken.viewDetails')}
-                      </span>
                     </div>
+
+                    <span className="text-xs font-serif tracking-[0.16em] text-[#111111] uppercase font-semibold border-b border-[#111111] pb-0.5 group-hover:text-[#B8860B] group-hover:border-[#B8860B] transition-colors duration-300 shrink-0">
+                      {t('topstukken.viewDetails')}
+                    </span>
                   </div>
                 </motion.div>
               );

@@ -62,7 +62,7 @@ export function RollSegment({ children, id = '', className = '' }) {
 
 export default function Continuous3DRollHomepage({ children }) {
   return (
-    <div className="relative w-full [perspective:1400px] [transform-style:preserve-3d] bg-[#FAF7F2] overflow-x-hidden">
+    <div className="relative w-full [perspective:1400px] [transform-style:preserve-3d] bg-white overflow-x-hidden">
       
       {/* Top 3D Roll Cylinder Shadow & Highlight Accent (Fixed at top of viewport) */}
       <div className="fixed top-0 left-0 right-0 h-20 bg-gradient-to-b from-[#1C1A17]/25 via-[#B8860B]/8 to-transparent pointer-events-none z-40 border-t border-[#B8860B]/20" />
