@@ -37,23 +37,21 @@ export const getItemTranslationStatus = (item) => {
   const keyLabels = {
     title: 'Titel',
     subtitle: 'Subtitel',
-    publisher: 'Drukker / Uitgever',
-    city: 'Plaats van Uitgave',
     description: 'Algemene Beschrijving',
-    binding: 'Boekband',
-    condition: 'Conditie',
-    provenance: 'Herkomst',
+    binding: 'Boekband / Lijst',
+    condition: 'Conditie Summary',
+    provenance: 'Herkomst Summary',
     conditionReport: 'Conditierapport',
     provenanceDetails: 'Provenance Details',
     historicalContext: 'Historische Context',
-    collationSpecs: 'Collatie Specs'
+    collationSpecs: 'Collatie Specs',
+    publisher: 'Drukker / Uitgever',
+    city: 'Plaats van Uitgave'
   };
 
-  const fieldsToCheck = [
+  const allPossibleFields = [
     'title',
     'subtitle',
-    'publisher',
-    'city',
     'description',
     'binding',
     'condition',
@@ -61,7 +59,9 @@ export const getItemTranslationStatus = (item) => {
     'conditionReport',
     'provenanceDetails',
     'historicalContext',
-    'collationSpecs'
+    'collationSpecs',
+    'publisher',
+    'city'
   ];
 
   const details = {
@@ -70,20 +70,34 @@ export const getItemTranslationStatus = (item) => {
     fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
   };
 
-  let completeCount = 0;
+  // Determine which fields are active in the Dutch master version
+  const activeFieldsInDutch = allPossibleFields.filter(field => {
+    if (field === 'title') return true;
+    const nlVal = item[field];
+    const isNvtNl = isFieldMarkedEmpty(item, field, 'nl');
+    return isNvtNl || (nlVal && typeof nlVal === 'string' && nlVal.trim() !== '');
+  });
 
-  for (const lang of ['nl', 'en', 'fr']) {
-    for (const field of fieldsToCheck) {
+  // 1. Dutch status check
+  if (!item.title || (typeof item.title === 'string' && item.title.trim() === '')) {
+    details.nl.missing.push('Titel');
+  }
+
+  // 2. English & French status checks
+  for (const lang of ['en', 'fr']) {
+    for (const field of activeFieldsInDutch) {
       const val = getVal(field, lang);
       const isMarkedNvt = isFieldMarkedEmpty(item, field, lang);
       if ((!val || typeof val !== 'string' || val.trim() === '') && !isMarkedNvt) {
         details[lang].missing.push(keyLabels[field] || field);
       }
     }
-    if (details[lang].missing.length === 0) {
-      completeCount++;
-    }
   }
+
+  let completeCount = 0;
+  if (details.nl.missing.length === 0) completeCount++;
+  if (details.en.missing.length === 0) completeCount++;
+  if (details.fr.missing.length === 0) completeCount++;
 
   return {
     isComplete: completeCount === 3,
