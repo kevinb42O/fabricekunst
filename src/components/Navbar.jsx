@@ -6,6 +6,7 @@ import { LUXURY_EASE } from '../utils/motion';
 
 export default function Navbar({ onNavigate, activeTab, onRequestConsultation }) {
   const [scrolled, setScrolled] = useState(false);
+  const [isNavInteractive, setIsNavInteractive] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
 
@@ -55,13 +56,23 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
     }
   };
 
+  const showNavbarBackground = scrolled || isNavInteractive || mobileMenuOpen;
+
   return (
     <motion.nav 
       initial={{ y: "0%" }}
       animate={{ y: "0%" }}
       transition={{ duration: 0.8, ease: LUXURY_EASE }}
+      onMouseEnter={() => setIsNavInteractive(true)}
+      onMouseLeave={() => setIsNavInteractive(false)}
+      onFocusCapture={() => setIsNavInteractive(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setIsNavInteractive(false);
+        }
+      }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled 
+        showNavbarBackground
           ? 'bg-white/95 backdrop-blur-md border-b border-[#D8CEB8]/60 text-[#111111] shadow-xs' 
           : 'bg-transparent border-none text-[#111111]'
       }`}
