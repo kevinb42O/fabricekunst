@@ -1218,9 +1218,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="p-2.5 rounded-full bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer shrink-0"
+                  className="p-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md border border-red-700 transition-all cursor-pointer shrink-0 flex items-center justify-center hover:scale-105 active:scale-95 ml-2"
+                  title="Venster sluiten"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 stroke-[2.5]" />
                 </button>
               </div>
             </div>
@@ -1779,9 +1780,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
               <button
                 type="button"
                 onClick={() => setShowAiImportModal(false)}
-                className="p-2 rounded-full bg-white hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer"
+                className="p-2 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md border border-red-700 transition-all cursor-pointer shrink-0 flex items-center justify-center hover:scale-105 active:scale-95"
+                title="Sluiten"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 

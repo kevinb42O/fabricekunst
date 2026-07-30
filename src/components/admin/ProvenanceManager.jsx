@@ -793,9 +793,10 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               <button
                 type="button"
                 onClick={() => setShowAiImportModal(false)}
-                className="p-2 rounded-full bg-white hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer"
+                className="p-2 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md border border-red-700 transition-all cursor-pointer shrink-0 flex items-center justify-center hover:scale-105 active:scale-95"
+                title="Sluiten"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 
