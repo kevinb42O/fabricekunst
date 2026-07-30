@@ -18,7 +18,9 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import { 
   getCatalog, 
   fetchCatalogAsync,
-  saveCatalogAsync, 
+  saveCatalogAsync,
+  saveItemAsync,
+  deleteItemAsync,
   getInquiries, 
   fetchInquiriesAsync,
   getHeroImage,
