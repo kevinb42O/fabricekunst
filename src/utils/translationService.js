@@ -403,3 +403,74 @@ export function getLocalizedPrice(priceStr, language = 'nl') {
 
   return priceStr;
 }
+
+/**
+ * Safely copies text to clipboard with fallback for non-secure contexts or legacy browsers.
+ */
+export async function copyTextToClipboard(text) {
+  if (!text) return false;
+
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Clipboard API write failed, attempting fallback...', err);
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    textarea.setAttribute('readonly', '');
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, 99999);
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return successful;
+  } catch (err) {
+    console.error('Clipboard fallback failed:', err);
+    return false;
+  }
+}
+
+/**
+ * Robustly parses JSON output from AI LLMs (ChatGPT, Claude, Gemini).
+ * Handles raw JSON, ```json ... ``` codeblocks, or embedded JSON objects.
+ */
+export function parseAiJsonTranslation(rawInput) {
+  if (!rawInput || typeof rawInput !== 'string') return null;
+  const clean = rawInput.trim();
+
+  // 1. Direct JSON parse
+  try {
+    const parsed = JSON.parse(clean);
+    if (typeof parsed === 'object' && parsed !== null) return parsed;
+  } catch (e) {}
+
+  // 2. Codeblock extraction: ```json ... ``` or ``` ... ```
+  const codeblockMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeblockMatch && codeblockMatch[1]) {
+    try {
+      const parsed = JSON.parse(codeblockMatch[1].trim());
+      if (typeof parsed === 'object' && parsed !== null) return parsed;
+    } catch (e) {}
+  }
+
+  // 3. First '{' to last '}' extraction
+  const firstBrace = clean.indexOf('{');
+  const lastBrace = clean.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      const jsonSub = clean.substring(firstBrace, lastBrace + 1);
+      const parsed = JSON.parse(jsonSub);
+      if (typeof parsed === 'object' && parsed !== null) return parsed;
+    } catch (e) {}
+  }
+
+  return null;
+}

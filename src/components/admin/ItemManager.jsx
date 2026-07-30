@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
-import { isPriceOnRequest, isFieldMarkedEmpty } from '../../utils/translationService';
+import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
 export const getItemTranslationStatus = (item) => {
   if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
@@ -94,6 +94,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [formLang, setFormLang] = useState('nl');
+
+  // AI Translation Helper State
+  const [showAiImportModal, setShowAiImportModal] = useState(false);
+  const [aiJsonInput, setAiJsonInput] = useState('');
 
   
   // Filtering State
@@ -272,6 +276,83 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         [`${camelField}${langCap}`]: value
       });
     }
+  };
+
+  // AI Translation Prompt Copy & Import Handlers
+  const handleCopyAiPrompt = async () => {
+    if (!editingItem) return;
+
+    const fieldsToTranslate = [
+      { key: 'title', label: editingItem.itemType === 'painting' ? 'Titel van het Schilderij' : 'Titel van het Boek' },
+      { key: 'subtitle', label: 'Ondertitel / Korte Subtitel' },
+      { key: 'description', label: 'Algemene Beschrijving & Overzicht' },
+      { key: 'binding', label: editingItem.itemType === 'painting' ? 'Lijst & Inlijsting' : 'Bandstijl (Binding)' },
+      { key: 'condition', label: 'Staat & Conditie Summary' },
+      { key: 'collationSpecs', label: editingItem.itemType === 'painting' ? 'Signatuur & Medium' : 'Collatie & Specificaties' },
+      { key: 'provenance', label: 'Provenance (Korte Herkomst Omschrijving)' },
+      { key: 'conditionReport', label: editingItem.itemType === 'painting' ? 'Restauratie & Conditierapport' : 'Uitgebreid Conditierapport' },
+      { key: 'provenanceDetails', label: 'Uitgebreid Provenance Verhaal & Veilinghistorie' },
+      { key: 'historicalContext', label: 'Diepgaande Historische & Kunsthistorische Context' }
+    ];
+
+    let promptText = `Vertaal de onderstaande gegevens van een antiquarisch/kunst object van het Nederlands naar het Engels (en) en Frans (fr).\n`;
+    promptText += `Gebruik hoogwaardig antiquarisch, bibliofiel en kunsthistorisch jargon.\n`;
+    promptText += `Als een sectie "Niet ingevuld / Bewust leeg" is, vul dan in de JSON voor de corresponderende _en en _fr sleutels een lege string "" in.\n\n`;
+    promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst, geen markdown opmaak rond de code):\n\n`;
+
+    const sampleJson = {};
+    fieldsToTranslate.forEach(f => {
+      sampleJson[`${f.key}_en`] = "";
+      sampleJson[`${f.key}_fr`] = "";
+    });
+    promptText += `${JSON.stringify(sampleJson, null, 2)}\n\n`;
+    promptText += `BRONGEGEVENS (NEDERLANDS):\n---------------------------\n`;
+
+    fieldsToTranslate.forEach(f => {
+      const val = editingItem[f.key];
+      const isNvt = isFieldNvt(f.key, 'nl');
+      const content = (isNvt || !val || (typeof val === 'string' && val.trim() === '')) ? '[Niet ingevuld / Bewust leeg]' : val.trim();
+      promptText += `* ${f.label} [${f.key}]:\n${content}\n\n`;
+    });
+
+    const success = await copyTextToClipboard(promptText);
+    if (success && onShowToast) {
+      onShowToast("📋 AI Vertaal-prompt gekopieerd naar klembord!");
+    }
+  };
+
+  const handleImportAiTranslation = () => {
+    if (!aiJsonInput || !aiJsonInput.trim()) return;
+
+    const data = parseAiJsonTranslation(aiJsonInput);
+    if (!data) {
+      if (onShowToast) onShowToast("⚠️ Ongeldige JSON code. Controleer het resultaat van de AI.", "error");
+      return;
+    }
+
+    const updatedItem = { ...editingItem };
+    let count = 0;
+
+    Object.keys(data).forEach(key => {
+      const val = data[key];
+      if (typeof val === 'string' && val.trim() !== '') {
+        updatedItem[key] = val;
+        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        if (snakeKey !== key) {
+          updatedItem[snakeKey] = val;
+        }
+        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        if (camelKey !== key) {
+          updatedItem[camelKey] = val;
+        }
+        count++;
+      }
+    });
+
+    setEditingItem(updatedItem);
+    setShowAiImportModal(false);
+    setAiJsonInput('');
+    if (onShowToast) onShowToast(`✨ Success! ${count} vertaalvelden geïmporteerd (EN & FR).`);
   };
 
   const handleDuplicate = (item) => {
@@ -973,8 +1054,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           <div className="relative w-full max-w-4xl lg:max-w-5xl bg-[#FAF7F2] border border-[#D8CEB8] rounded-3xl shadow-strong max-h-[92vh] flex flex-col overflow-hidden text-[#111111]">
             
             {/* Modal Top Header */}
-            <div className="px-6 sm:px-8 py-4 border-b border-[#D8CEB8] bg-white flex items-center justify-between shrink-0 shadow-xs">
-              <div className="flex items-center space-x-3.5">
+            <div className="px-6 sm:px-8 py-4 border-b border-[#D8CEB8] bg-white flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
+              <div className="flex items-center space-x-3.5 min-w-0">
                 <div className="w-10 h-10 rounded-2xl bg-[#111111] text-white flex items-center justify-center shadow-sm shrink-0">
                   {editingItem.itemType === 'painting' ? (
                     <Palette className="w-5 h-5 text-[#C5A059]" />
@@ -997,12 +1078,40 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 </div>
               </div>
 
-              <button
-                onClick={() => setEditingItem(null)}
-                className="p-2.5 rounded-full bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                {/* AI TRANSLATION HELPER HEADER BUTTONS */}
+                <div className="flex items-center space-x-1.5 bg-[#FAF7F2] p-1 rounded-2xl border border-[#D8CEB8]">
+                  <button
+                    type="button"
+                    onClick={handleCopyAiPrompt}
+                    className="px-3 py-1.5 rounded-xl bg-[#111111] text-[#FAF7F2] hover:bg-[#B8860B] hover:text-black text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                    title="Kopieer alle ingevulde velden als AI vertaal-prompt naar het klembord"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+                    <span className="hidden md:inline">1. Kopieer AI Prompt</span>
+                    <span className="md:hidden">Prompt</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAiImportModal(true)}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-200 text-[#111111] border border-[#D8CEB8] text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                    title="Plak en importeer de JSON vertaling van ChatGPT / Claude in 1 klik"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#B8860B]" />
+                    <span className="hidden md:inline">2. Importeer Vertaling</span>
+                    <span className="md:hidden">Importeer</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(null)}
+                  className="p-2.5 rounded-full bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body Form */}
@@ -1501,6 +1610,85 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         </div>
       )}
 
+      {/* AI TRANSLATION IMPORT POPUP MODAL */}
+      {showAiImportModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#FAF7F2] text-[#111111] rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 border border-[#D8CEB8] shadow-strong">
+            <div className="flex items-center justify-between border-b border-[#D8CEB8] pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#111111] text-[#C5A059] flex items-center justify-center font-bold">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-[#111111]">
+                    Importeer AI Vertaling (JSON)
+                  </h3>
+                  <p className="text-xs text-stone-600 font-sans">
+                    Plak hieronder het JSON antwoord van ChatGPT of Claude.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiImportModal(false)}
+                className="p-2 rounded-full bg-white hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-stone-700">
+                  Plak JSON Resultaat:
+                </label>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) setAiJsonInput(text);
+                    } catch (e) {
+                      // Clipboard permission denied
+                    }
+                  }}
+                  className="text-xs font-mono font-bold text-[#B8860B] hover:underline flex items-center space-x-1 cursor-pointer"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Plak van Klembord</span>
+                </button>
+              </div>
+
+              <textarea
+                value={aiJsonInput}
+                onChange={(e) => setAiJsonInput(e.target.value)}
+                placeholder={`{\n  "title_en": "...",\n  "title_fr": "...",\n  ...\n}`}
+                rows={9}
+                className="w-full p-4 font-mono text-xs bg-white text-[#111111] border border-[#D8CEB8] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#B8860B] focus:border-transparent resize-y"
+              />
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAiImportModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-[#D8CEB8] text-xs font-mono font-bold text-stone-700 hover:bg-stone-200 cursor-pointer"
+              >
+                Annuleren
+              </button>
+              <button
+                type="button"
+                onClick={handleImportAiTranslation}
+                disabled={!aiJsonInput || !aiJsonInput.trim()}
+                className="px-5 py-2.5 rounded-xl bg-[#111111] text-[#FAF7F2] hover:bg-[#B8860B] hover:text-black font-mono text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2 cursor-pointer shadow-md"
+              >
+                <Download className="w-4 h-4 text-[#C5A059]" />
+                <span>Toepassen &amp; Vul In</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

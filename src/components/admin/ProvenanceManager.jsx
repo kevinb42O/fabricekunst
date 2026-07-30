@@ -5,9 +5,14 @@ import {
   RotateCcw, 
   Upload, 
   Image as ImageIcon, 
-  Globe
+  Globe,
+  Sparkles,
+  Download,
+  Copy,
+  X
 } from 'lucide-react';
 import { uploadCatalogImage, DEFAULT_PROVENANCE_DATA } from '../../utils/storage';
+import { copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
 export default function ProvenanceManager({ provenanceData, onSaveProvenance, showToast }) {
   const [formData, setFormData] = useState(provenanceData || DEFAULT_PROVENANCE_DATA);
@@ -15,6 +20,8 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   const [formLang, setFormLang] = useState('nl'); // 'nl' | 'en' | 'fr'
   const [uploadingStory, setUploadingStory] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showAiImportModal, setShowAiImportModal] = useState(false);
+  const [aiJsonInput, setAiJsonInput] = useState('');
 
   const getFieldValue = (section, field) => {
     if (!formData[section]) return '';
@@ -140,6 +147,73 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     }
   };
 
+  const handleCopyAiPrompt = async () => {
+    let promptText = `Vertaal de onderstaande teksten van de Herkomst & Provenance pagina naar Engels (en) en Frans (fr).\n`;
+    promptText += `Gebruik hoogwaardige, elegante museum en antiquariaat terminologie.\n`;
+    promptText += `Als een veld leeg is, vul dan in de JSON een lege string "" in.\n\n`;
+    promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst of markdown opmaak):\n\n`;
+
+    const sampleJson = {
+      hero_title_en: "", hero_title_fr: "",
+      hero_subtitle_en: "", hero_subtitle_fr: "",
+      story_title_en: "", story_title_fr: "",
+      story_quote_en: "", story_quote_fr: "",
+      story_narrative_en: "", story_narrative_fr: "",
+      cta_title_en: "", cta_title_fr: "",
+      cta_description_en: "", cta_description_fr: ""
+    };
+    promptText += `${JSON.stringify(sampleJson, null, 2)}\n\n`;
+    promptText += `BRONGEGEVENS (NEDERLANDS):\n---------------------------\n`;
+    promptText += `* Hero Titel: ${formData.hero?.title || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Hero Subtitel: ${formData.hero?.subtitle || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Story Titel: ${formData.story?.title || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Story Quote: ${formData.story?.quote || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* Story Narrative: ${formData.story?.narrative || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* CTA Titel: ${formData.cta?.title || '[Niet ingevuld / Bewust leeg]'}\n`;
+    promptText += `* CTA Beschrijving: ${formData.cta?.description || '[Niet ingevuld / Bewust leeg]'}\n`;
+
+    const success = await copyTextToClipboard(promptText);
+    if (success && showToast) {
+      showToast("📋 AI Vertaal-prompt voor Herkomst pagina gekopieerd naar klembord!");
+    }
+  };
+
+  const handleImportAiTranslation = () => {
+    if (!aiJsonInput || !aiJsonInput.trim()) return;
+
+    const data = parseAiJsonTranslation(aiJsonInput);
+    if (!data) {
+      if (showToast) showToast("⚠️ Ongeldige JSON code. Controleer het resultaat van de AI.");
+      return;
+    }
+
+    setFormData(prev => {
+      const next = { ...prev };
+      if (data.hero_title_en) next.hero = { ...(next.hero || {}), title_en: data.hero_title_en };
+      if (data.hero_title_fr) next.hero = { ...(next.hero || {}), title_fr: data.hero_title_fr };
+      if (data.hero_subtitle_en) next.hero = { ...(next.hero || {}), subtitle_en: data.hero_subtitle_en };
+      if (data.hero_subtitle_fr) next.hero = { ...(next.hero || {}), subtitle_fr: data.hero_subtitle_fr };
+      
+      if (data.story_title_en) next.story = { ...(next.story || {}), title_en: data.story_title_en };
+      if (data.story_title_fr) next.story = { ...(next.story || {}), title_fr: data.story_title_fr };
+      if (data.story_quote_en) next.story = { ...(next.story || {}), quote_en: data.story_quote_en };
+      if (data.story_quote_fr) next.story = { ...(next.story || {}), quote_fr: data.story_quote_fr };
+      if (data.story_narrative_en) next.story = { ...(next.story || {}), narrative_en: data.story_narrative_en };
+      if (data.story_narrative_fr) next.story = { ...(next.story || {}), narrative_fr: data.story_narrative_fr };
+
+      if (data.cta_title_en) next.cta = { ...(next.cta || {}), title_en: data.cta_title_en };
+      if (data.cta_title_fr) next.cta = { ...(next.cta || {}), title_fr: data.cta_title_fr };
+      if (data.cta_description_en) next.cta = { ...(next.cta || {}), description_en: data.cta_description_en };
+      if (data.cta_description_fr) next.cta = { ...(next.cta || {}), description_fr: data.cta_description_fr };
+
+      return next;
+    });
+
+    setShowAiImportModal(false);
+    setAiJsonInput('');
+    if (showToast) showToast("✨ Success! Herkomst pagina vertalingen geïmporteerd (EN & FR).");
+  };
+
   return (
     <div className="space-y-8 pb-12">
       
@@ -158,7 +232,29 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
           </p>
         </div>
 
-        <div className="flex items-center space-x-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex items-center space-x-1.5 bg-[#FAF7F2] p-1 rounded-xl border border-[#E8E2D6]">
+            <button
+              type="button"
+              onClick={handleCopyAiPrompt}
+              className="px-3 py-2 rounded-lg bg-[#1C1A18] text-[#FAF7F2] hover:bg-[#C5A059] hover:text-[#1C1A18] text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
+              title="Kopieer herkomst-teksten als AI vertaal-prompt"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span>Prompt</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowAiImportModal(true)}
+              className="px-3 py-2 rounded-lg bg-white hover:bg-[#F3EDE2] text-[#1C1A18] border border-[#E8E2D6] text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
+              title="Importeer AI JSON vertaling"
+            >
+              <Download className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span>Importeer</span>
+            </button>
+          </div>
+
           <button
             onClick={handleReset}
             className="px-4 py-2.5 bg-[#FAF7F2] hover:bg-[#F3EDE2] text-[#555555] rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-colors border border-[#E8E2D6] flex items-center space-x-2 cursor-pointer"
@@ -646,6 +742,86 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                 onChange={(e) => updateFieldValue('cta', 'buttonText', e.target.value)}
                 className="w-full px-4 py-3 bg-[#FAF7F2] border border-[#E8E2D6] rounded-xl text-sm font-mono font-bold uppercase text-[#1C1A18] focus:outline-none focus:border-[#C5A059]"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI TRANSLATION IMPORT POPUP MODAL */}
+      {showAiImportModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#FAF7F2] text-[#111111] rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 border border-[#D8CEB8] shadow-strong">
+            <div className="flex items-center justify-between border-b border-[#D8CEB8] pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#111111] text-[#C5A059] flex items-center justify-center font-bold">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-serif font-bold text-[#111111]">
+                    Importeer Herkomst AI Vertaling (JSON)
+                  </h3>
+                  <p className="text-xs text-stone-600 font-sans">
+                    Plak hieronder het JSON antwoord van ChatGPT of Claude.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiImportModal(false)}
+                className="p-2 rounded-full bg-white hover:bg-[#111111] hover:text-white border border-[#D8CEB8] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-stone-700">
+                  Plak JSON Resultaat:
+                </label>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) setAiJsonInput(text);
+                    } catch (e) {
+                      // Clipboard blocked
+                    }
+                  }}
+                  className="text-xs font-mono font-bold text-[#B8860B] hover:underline flex items-center space-x-1 cursor-pointer"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Plak van Klembord</span>
+                </button>
+              </div>
+
+              <textarea
+                value={aiJsonInput}
+                onChange={(e) => setAiJsonInput(e.target.value)}
+                placeholder={`{\n  "hero_title_en": "...",\n  "hero_title_fr": "...",\n  ...\n}`}
+                rows={8}
+                className="w-full p-4 font-mono text-xs bg-white text-[#111111] border border-[#D8CEB8] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#B8860B] resize-y"
+              />
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAiImportModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-[#D8CEB8] text-xs font-mono font-bold text-stone-700 hover:bg-stone-200 cursor-pointer"
+              >
+                Annuleren
+              </button>
+              <button
+                type="button"
+                onClick={handleImportAiTranslation}
+                disabled={!aiJsonInput || !aiJsonInput.trim()}
+                className="px-5 py-2.5 rounded-xl bg-[#111111] text-[#FAF7F2] hover:bg-[#B8860B] hover:text-black font-mono text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2 cursor-pointer shadow-md"
+              >
+                <Download className="w-4 h-4 text-[#C5A059]" />
+                <span>Toepassen &amp; Vul In</span>
+              </button>
             </div>
           </div>
         </div>
