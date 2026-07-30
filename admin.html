@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="nl" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/images/andor.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Admin — Atelier Rembrandt</title>
+    <meta name="description" content="Atelier Rembrandt — Collectiebeheer & CMS" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1C1A18" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ADMIN PWA Manifest — static link, iOS reads this at install time -->
+    <link rel="manifest" href="/admin-manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AR Admin" />
+    <link rel="apple-touch-icon" href="/images/andor.jpeg" />
+  </head>
+  <body class="bg-cream text-ink font-sans antialiased selection:bg-gold/20 selection:text-gold overflow-x-hidden">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
