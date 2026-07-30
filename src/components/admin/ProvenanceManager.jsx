@@ -266,7 +266,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               title="Kopieer herkomst-teksten als AI vertaal-prompt"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span>Prompt</span>
+              <span>Prompt ({formLang === 'nl' ? '🇳🇱 NL' : formLang === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'})</span>
             </button>
 
             <button

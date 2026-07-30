@@ -340,6 +340,39 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     }
   };
 
+  const setFieldVariantKeys = (targetObj, emptyFieldsObj, key, val) => {
+    targetObj[key] = val;
+    delete emptyFieldsObj[key];
+
+    const langMatch = key.match(/^(.*?)_(en|fr|nl)$/i);
+    if (langMatch) {
+      const base = langMatch[1];
+      const lang = langMatch[2].toLowerCase();
+      const langCap = lang.charAt(0).toUpperCase() + lang.slice(1);
+
+      const camelBase = base.replace(/_([a-z])/g, (_, l) => l.toUpperCase());
+      const snakeBase = base.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+      targetObj[`${camelBase}_${lang}`] = val;
+      targetObj[`${snakeBase}_${lang}`] = val;
+      targetObj[`${camelBase}${langCap}`] = val;
+      targetObj[`${snakeBase}${langCap}`] = val;
+
+      delete emptyFieldsObj[`${camelBase}_${lang}`];
+      delete emptyFieldsObj[`${snakeBase}_${lang}`];
+      delete emptyFieldsObj[`${camelBase}${langCap}`];
+      delete emptyFieldsObj[`${snakeBase}${langCap}`];
+    } else {
+      const camelBase = key.replace(/_([a-z])/g, (_, l) => l.toUpperCase());
+      const snakeBase = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      targetObj[camelBase] = val;
+      targetObj[snakeBase] = val;
+
+      delete emptyFieldsObj[camelBase];
+      delete emptyFieldsObj[snakeBase];
+    }
+  };
+
   const handleImportAiTranslation = () => {
     if (!aiJsonInput || !aiJsonInput.trim()) return;
 
@@ -350,28 +383,27 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     }
 
     const updatedItem = { ...editingItem };
+    const rawEmpty = updatedItem.emptyFields || updatedItem.empty_fields;
+    const newEmptyFields = typeof rawEmpty === 'object' && rawEmpty !== null && !Array.isArray(rawEmpty)
+      ? { ...rawEmpty }
+      : {};
     let count = 0;
 
     Object.keys(data).forEach(key => {
       const val = data[key];
       if (typeof val === 'string' && val.trim() !== '') {
-        updatedItem[key] = val;
-        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        if (snakeKey !== key) {
-          updatedItem[snakeKey] = val;
-        }
-        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        if (camelKey !== key) {
-          updatedItem[camelKey] = val;
-        }
+        setFieldVariantKeys(updatedItem, newEmptyFields, key, val.trim());
         count++;
       }
     });
 
+    updatedItem.emptyFields = newEmptyFields;
+    updatedItem.empty_fields = newEmptyFields;
+
     setEditingItem(updatedItem);
     setShowAiImportModal(false);
     setAiJsonInput('');
-    if (onShowToast) onShowToast(`✨ Success! ${count} vertaalvelden geïmporteerd (EN & FR).`);
+    if (onShowToast) onShowToast(`✨ Success! ${count} vertaalvelden geïmporteerd.`);
   };
 
   const handleDuplicate = (item) => {
@@ -1104,11 +1136,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     type="button"
                     onClick={handleCopyAiPrompt}
                     className="px-3 py-1.5 rounded-xl bg-[#111111] text-[#FAF7F2] hover:bg-[#B8860B] hover:text-black text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
-                    title="Kopieer alle ingevulde velden als AI vertaal-prompt naar het klembord"
+                    title={`Kopieer velden van actieve taal [${formLang.toUpperCase()}] als AI vertaal-prompt`}
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                    <span className="hidden md:inline">1. Kopieer AI Prompt</span>
-                    <span className="md:hidden">Prompt</span>
+                    <span className="hidden md:inline">1. Kopieer AI Prompt ({formLang === 'nl' ? '🇳🇱 NL' : formLang === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'})</span>
+                    <span className="md:hidden">Prompt ({formLang.toUpperCase()})</span>
                   </button>
 
                   <button
