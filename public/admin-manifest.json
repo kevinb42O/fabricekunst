@@ -1,7 +1,7 @@
 {
   "short_name": "AR Admin",
-  "name": "Atelier Rembrandt — Admin",
-  "description": "Atelier Rembrandt collectiebeheer & CMS",
+  "name": "AR Admin",
+  "description": "Atelier Rembrandt — Collectiebeheer CMS",
   "icons": [
     {
       "src": "/images/andor.jpeg",
@@ -13,7 +13,9 @@
   "start_url": "/admin",
   "scope": "/",
   "background_color": "#1C1A18",
-  "theme_color": "#C5A059",
+  "theme_color": "#1C1A18",
   "display": "standalone",
-  "orientation": "portrait"
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "prefer_related_applications": false
 }

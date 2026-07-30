@@ -25,134 +25,108 @@ export default function DashboardOverview({
   return (
     <div className="space-y-8 animate-fade-in text-[#1C1A18] font-sans">
       
-      {/* A. HERO WELCOME SECTION (Clean Typography, No dark box container) */}
-      <div className="flex items-center justify-between gap-6 pb-6 border-b border-[#EBE7DF] flex-wrap sm:flex-nowrap">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-[#1C1A18] tracking-tight shrink-0">
+      {/* A. HERO WELCOME SECTION */}
+      <div className="pb-5 border-b border-[#EBE7DF]">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#1C1A18] tracking-tight">
           Welkom terug, Fabrice
         </h1>
-
-        {/* Primary Action Area (Balanced CTAs) */}
-        <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
-          {/* Solid Antique Gold CTA */}
+        <div className="flex flex-wrap gap-2.5 mt-3">
           <button
             onClick={onCreateNewItem}
-            className="px-5 py-3 rounded-xl bg-[#C5A059] hover:bg-[#B38F48] text-[#1C1A18] text-xs font-sans font-bold shadow-sm transition-all flex items-center space-x-2 group hover:scale-[1.01] cursor-pointer whitespace-nowrap"
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#C5A059] hover:bg-[#B38F48] text-[#1C1A18] text-xs font-bold shadow-sm transition-all flex items-center justify-center space-x-2 cursor-pointer min-h-[44px]"
           >
-            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
-            <span>+ Nieuw Stuk Invoeren</span>
+            <Plus className="w-4 h-4 shrink-0" />
+            <span>Nieuw Stuk</span>
           </button>
-
-          {/* Outlined Secondary CTA (Styled for light background) */}
           <button
             onClick={() => onNavigateTab('items')}
-            className="px-5 py-3 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#D8CEB8] text-[#1C1A18] text-xs font-sans font-bold transition-all flex items-center space-x-2 hover:border-[#C5A059] cursor-pointer whitespace-nowrap"
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-white border border-[#D8CEB8] text-[#1C1A18] text-xs font-bold transition-all flex items-center justify-center space-x-2 hover:border-[#C5A059] cursor-pointer min-h-[44px]"
           >
-            <BookOpen className="w-4 h-4 text-[#C5A059]" />
-            <span>Bekijk Collectie</span>
+            <BookOpen className="w-4 h-4 text-[#C5A059] shrink-0" />
+            <span>Collectie</span>
           </button>
         </div>
       </div>
 
       {/* B. METRIC CARDS (4-Column KPI Grid) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         
         {/* KPI 1: Total Catalog Items */}
-        <div 
+        <div
           onClick={() => onNavigateTab('items')}
-          className="group cursor-pointer p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
+          className="group cursor-pointer p-4 sm:p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-sans font-bold uppercase text-[#8C8478] tracking-wider">Catalogus</span>
-            <div className="w-10 h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#1C1A18] group-hover:bg-[#1C1A18] group-hover:text-[#C5A059] transition-colors">
-              <BookOpen className="w-5 h-5" />
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase text-[#8C8478] tracking-wider leading-tight">Catalogus</span>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#1C1A18] group-hover:bg-[#1C1A18] group-hover:text-[#C5A059] transition-colors shrink-0">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-sans font-bold text-[#1C1A18] tracking-tight">
-              {items.length} <span className="text-xs font-sans font-normal text-[#8C8478]">objecten</span>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1C1A18] tracking-tight">
+              {items.length}
             </div>
-            <div className="mt-2 flex items-center space-x-3 text-xs text-[#6E675E] font-medium">
-              <span className="inline-flex items-center space-x-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#C5A059]" />
-                <span>{booksCount} Boeken</span>
-              </span>
-              <span className="inline-flex items-center space-x-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#4A6B5D]" />
-                <span>{paintingsCount} Kunst</span>
-              </span>
-            </div>
+            <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">{booksCount}b · {paintingsCount}k</div>
           </div>
         </div>
 
         {/* KPI 2: Topstukken (Featured Items) */}
-        <div 
+        <div
           onClick={() => onNavigateTab('items')}
-          className="group cursor-pointer p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
+          className="group cursor-pointer p-4 sm:p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-sans font-bold uppercase text-[#8C8478] tracking-wider">Topstukken</span>
-            <div className="w-10 h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#1C1A18] transition-colors">
-              <Star className="w-5 h-5 fill-current" />
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase text-[#8C8478] tracking-wider leading-tight">Topstukken</span>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#1C1A18] transition-colors shrink-0">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
             </div>
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-sans font-bold text-[#1C1A18] tracking-tight">
-              {featuredCount} <span className="text-xs font-sans font-normal text-[#8C8478]">uitgelicht</span>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1C1A18] tracking-tight">
+              {featuredCount}
             </div>
-            <p className="mt-2 text-xs text-[#6E675E] font-medium">
-              Getoond op de homepage vitrine
-            </p>
+            <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">homepage uitgelicht</div>
           </div>
         </div>
 
         {/* KPI 3: Inquiries / Aanvragen */}
-        <div 
+        <div
           onClick={() => onNavigateTab('inquiries')}
-          className="group cursor-pointer p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
+          className="group cursor-pointer p-4 sm:p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-sans font-bold uppercase text-[#8C8478] tracking-wider">Aanvragen</span>
-            <div className="w-10 h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#1C1A18] group-hover:bg-[#1C1A18] group-hover:text-[#C5A059] transition-colors relative">
-              <Mail className="w-5 h-5" />
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase text-[#8C8478] tracking-wider leading-tight">Aanvragen</span>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#1C1A18] group-hover:bg-[#1C1A18] group-hover:text-[#C5A059] transition-colors relative shrink-0">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
               {newInquiries.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#C5A059] border-2 border-white animate-pulse" />
               )}
             </div>
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-sans font-bold text-[#1C1A18] tracking-tight">
-              {inquiries.length} <span className="text-xs font-sans font-normal text-[#8C8478]">totaal</span>
-            </div>
-            <div className="mt-2 flex items-center space-x-2 text-xs font-medium">
-              {newInquiries.length > 0 ? (
-                <span className="px-2 py-0.5 rounded bg-[#C5A059]/15 text-[#8E7035] font-bold">
-                  {newInquiries.length} nieuw / onbehandeld
-                </span>
-              ) : (
-                <span className="text-[#6E675E]">Alle aanvragen verwerkt</span>
-              )}
-            </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1C1A18] tracking-tight">{inquiries.length}</div>
+            {newInquiries.length > 0 ? (
+              <div className="text-[10px] sm:text-xs font-bold text-[#C5A059] mt-0.5">{newInquiries.length} nieuw</div>
+            ) : (
+              <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">alles verwerkt</div>
+            )}
           </div>
         </div>
 
         {/* KPI 4: Customers / Verzamelaars Index */}
-        <div 
+        <div
           onClick={() => onNavigateTab('customers')}
-          className="group cursor-pointer p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
+          className="group cursor-pointer p-4 sm:p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm hover:shadow-md hover:border-[#C5A059] transition-all"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-sans font-bold uppercase text-[#8C8478] tracking-wider">Verzamelaars</span>
-            <div className="w-10 h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#1C1A18] group-hover:bg-[#1C1A18] group-hover:text-[#C5A059] transition-colors">
-              <Users className="w-5 h-5" />
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[10px] sm:text-xs font-bold uppercase text-[#8C8478] tracking-wider leading-tight">Klanten</span>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FDFBF7] border border-[#EBE7DF] flex items-center justify-center text-[#1C1A18] group-hover:bg-[#1C1A18] group-hover:text-[#C5A059] transition-colors shrink-0">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-sans font-bold text-[#1C1A18] tracking-tight">
-              {uniqueCustomers} <span className="text-xs font-sans font-normal text-[#8C8478]">contacten</span>
-            </div>
-            <p className="mt-2 text-xs text-[#6E675E] font-medium">
-              Geïnteresseerde kopers &amp; relaties
-            </p>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1C1A18] tracking-tight">{uniqueCustomers}</div>
+            <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">kopers & relaties</div>
           </div>
         </div>
 

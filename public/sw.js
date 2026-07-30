@@ -1,123 +1,104 @@
 // Atelier Rembrandt — PWA Service Worker
 
-const CACHE_NAME = 'atelier-rembrandt-v1';
+const CACHE_NAME = 'atelier-rembrandt-v3';
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
-  '/images/andor.jpeg',
-  '/manifest.json'
+  '/manifest.json',
+  '/admin-manifest.json',
+  '/images/andor.jpeg'
 ];
 
-// Install Event
+// Install Event — pre-cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate Event
+// Activate Event — clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('Service Worker: Clearing Old Cache');
-            return caches.delete(cache);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((cacheNames) =>
+      Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// Fetch Event (Cache falling back to network)
+// Fetch Event
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests and local assets
-  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
+  const url = new URL(event.request.url);
 
-  // Skip API routes from caching
-  if (event.request.url.includes('/api/')) {
-    return;
-  }
+  // Only handle same-origin GET requests
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
 
+  // CRITICAL: Never intercept /admin or /api routes — let the server handle them
+  if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/')) return;
+
+  // Never cache HTML navigation requests — always go to network for fresh routing
+  if (event.request.mode === 'navigate') return;
+
+  // For static assets: cache first, then network
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return networkResponse;
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
       });
     })
   );
 });
 
-// Push Event
+// Push Notification Event
 self.addEventListener('push', (event) => {
-  let data = { title: 'Nieuwe aanvraag!', body: 'U heeft een nieuwe aanvraag ontvangen.' };
-  
+  let data = {
+    title: 'Nieuwe aanvraag!',
+    body: 'U heeft een nieuwe aanvraag ontvangen.'
+  };
+
   if (event.data) {
     try {
       data = event.data.json();
-    } catch (e) {
-      data = { title: 'Nieuwe aanvraag!', body: event.data.text() };
+    } catch {
+      data.body = event.data.text();
     }
   }
 
-  const title = data.title || 'Nieuwe aanvraag!';
-  const options = {
-    body: data.body || 'U heeft een nieuwe aanvraag ontvangen.',
-    icon: '/images/andor.jpeg',
-    badge: '/images/andor.jpeg',
-    vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/admin#inquiries'
-    },
-    actions: [
-      { action: 'open', title: 'Bekijken' }
-    ]
-  };
-
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(data.title || 'Nieuwe aanvraag!', {
+      body: data.body || 'U heeft een nieuwe aanvraag ontvangen.',
+      icon: '/images/andor.jpeg',
+      badge: '/images/andor.jpeg',
+      vibrate: [100, 50, 100],
+      data: { url: data.url || '/admin' },
+      actions: [{ action: 'open', title: 'Bekijken' }]
+    })
   );
 });
 
 // Notification Click Event
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/admin#inquiries';
+  const targetUrl = event.notification.data?.url || '/admin';
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Look for a client window that is already open
-      for (let client of windowClients) {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
         const clientUrl = new URL(client.url, self.location.origin);
-        if (clientUrl.pathname.includes('/admin') || clientUrl.hash.includes('admin')) {
-          // Tell the window to navigate/refresh state if possible
-          if ('focus' in client) {
-            client.postMessage({ type: 'NAVIGATE', url: targetUrl });
-            return client.focus();
-          }
+        if (clientUrl.pathname === '/admin' || clientUrl.pathname.startsWith('/admin/')) {
+          client.postMessage({ type: 'NAVIGATE', url: targetUrl });
+          return client.focus();
         }
       }
-      
-      // If no window is open, open a new one
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(targetUrl);
-      }
+      return self.clients.openWindow(targetUrl);
     })
   );
 });
