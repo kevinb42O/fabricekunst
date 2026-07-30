@@ -4,7 +4,7 @@ const CACHE_NAME = 'atelier-rembrandt-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/rblogo.png',
+  '/images/andor.jpeg',
   '/manifest.json'
 ];
 
@@ -79,8 +79,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Nieuwe aanvraag!';
   const options = {
     body: data.body || 'U heeft een nieuwe aanvraag ontvangen.',
-    icon: '/rblogo.png',
-    badge: '/rblogo.png',
+    icon: '/images/andor.jpeg',
+    badge: '/images/andor.jpeg',
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/admin#inquiries'
