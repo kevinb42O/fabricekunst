@@ -284,4 +284,23 @@ CREATE POLICY "Public read faq_items" ON public.faq_items FOR SELECT USING (true
 DROP POLICY IF EXISTS "Allow write faq_items" ON public.faq_items;
 CREATE POLICY "Allow write faq_items" ON public.faq_items FOR ALL USING (true) WITH CHECK (true);
 
+-- ========================================================
+-- Push Notifications Table (Run in Supabase SQL Editor)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+    id BIGSERIAL PRIMARY KEY,
+    subscription JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read/write policies
+DROP POLICY IF EXISTS "Public read push_subscriptions" ON public.push_subscriptions;
+CREATE POLICY "Public read push_subscriptions" ON public.push_subscriptions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow write push_subscriptions" ON public.push_subscriptions;
+CREATE POLICY "Allow write push_subscriptions" ON public.push_subscriptions FOR ALL USING (true) WITH CHECK (true);
+
 

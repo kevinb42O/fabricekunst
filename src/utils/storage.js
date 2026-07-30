@@ -509,7 +509,20 @@ export const saveInquiryAsync = async (inquiry) => {
     try {
       const dbInq = mapFrontendInquiryToDb(newInquiry);
       const { error } = await supabase.from('inquiries').insert(dbInq);
-      if (error) console.error("Supabase inquiry insert error", error);
+      if (error) {
+        console.error("Supabase inquiry insert error", error);
+      } else {
+        // Trigger push notification to admin securely via Vercel serverless function
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: 'Nieuwe aanvraag!',
+            body: `${newInquiry.name} heeft een aanvraag ingediend voor "${newInquiry.itemTitle}"`,
+            url: '/admin#inquiries'
+          })
+        }).catch(err => console.error("Fout bij triggeren push API:", err));
+      }
     } catch (e) {
       console.error("Supabase inquiry insert exception", e);
     }
