@@ -34,10 +34,39 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Allow GET requests to serve as a status / health-check endpoint
+  if (req.method === 'GET') {
+    let subCount = null;
+    let dbError = null;
+
+    if (supabase) {
+      const { count, error } = await supabase
+        .from('push_subscriptions')
+        .select('*', { count: 'exact', head: true });
+      if (error) {
+        dbError = error.message;
+      } else {
+        subCount = count;
+      }
+    }
+
+    return res.status(200).json({
+      status: 'API is active and operational',
+      supabaseConfigured: !!supabase,
+      vapidConfigured: !!(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
+      activeSubscriptionsCount: subCount,
+      dbError: dbError,
+      supabaseUrl: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : null,
+      vapidSubject: VAPID_SUBJECT,
+      instruction: 'To send a push notification, send an HTTP POST request with JSON body { title, body, url }'
+    });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // Debug endpoint — POST with { debug: true } to check config
