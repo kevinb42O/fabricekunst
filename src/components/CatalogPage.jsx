@@ -3,8 +3,11 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BookOpen,
+  ChevronDown,
+  LayoutGrid,
   Palette,
   RotateCcw,
+  Rows3,
   Search,
   X
 } from 'lucide-react';
@@ -564,9 +567,63 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
           </aside>
 
           <div className="min-w-0 space-y-8">
-            {activeFilters.length > 0 && (
-              <div className="border-b border-[#D8CEB8]/70 pb-4">
-                <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <div className="border-b border-[#D8CEB8]/70 pb-5">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <h1 className="text-2xl font-serif font-bold text-[#111111] sm:text-3xl">
+                    {t('catalog.resultsLabel')}
+                  </h1>
+                </div>
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                  <div className="min-w-[220px]">
+                    <div className="relative border-b border-[#D8CEB8]">
+                      <select
+                        value={sortBy}
+                        onChange={(event) => setSortBy(event.target.value)}
+                        className="w-full appearance-none bg-transparent py-3 pr-8 text-sm font-semibold text-[#111111] transition-all focus:outline-none"
+                      >
+                        <option value="standaard">{t('catalog.sortStandard')}</option>
+                        <option value="jaar-asc">{t('catalog.sortYearAsc')}</option>
+                        <option value="jaar-desc">{t('catalog.sortYearDesc')}</option>
+                        <option value="auteur-asc">{t('catalog.sortAuthorAsc')}</option>
+                        <option value="titel-asc">{t('catalog.sortTitleAsc')}</option>
+                      </select>
+                      <ChevronDown className="absolute right-0 top-1/2 w-4 h-4 -translate-y-1/2 text-[#B8860B] pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pt-2 sm:pt-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`inline-flex items-center space-x-2 border-b pb-1 text-xs font-mono font-bold uppercase tracking-[0.14em] transition-colors ${
+                        viewMode === 'grid'
+                          ? 'border-[#111111] text-[#111111]'
+                          : 'border-transparent text-[#8C8174] hover:text-[#111111]'
+                      }`}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      <span>{t('catalog.gridView')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('editorial')}
+                      className={`inline-flex items-center space-x-2 border-b pb-1 text-xs font-mono font-bold uppercase tracking-[0.14em] transition-colors ${
+                        viewMode === 'editorial'
+                          ? 'border-[#111111] text-[#111111]'
+                          : 'border-transparent text-[#8C8174] hover:text-[#111111]'
+                      }`}
+                    >
+                      <Rows3 className="w-4 h-4" />
+                      <span>{t('catalog.editorialView')}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {activeFilters.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
                   {activeFilters.map((filterChip) => (
                     <button
                       key={filterChip.key}
@@ -579,8 +636,8 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {filteredItems.length === 0 ? (
               <div className="py-20 text-center">
