@@ -1,96 +1,122 @@
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase using environment variables
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://xbqgyijkwwvdooohygcn.supabase.co';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+// Initialize Supabase
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-let supabase = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseKey) {
+  console.error('[send-push] Missing Supabase env vars:', {
+    url: !!supabaseUrl,
+    key: !!supabaseKey
+  });
 }
 
-// VAPID credentials for Web Push
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BEqRebAmxtntuKm65eaLXdpqBaW9rbSWhIvfQitsSuA-JUmf_ZAaAsBpk6FlN4QAcpxnsFfR3L-kwIZHwYaWjf4';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '16Ztua0romLyPJm4GYH-J7N2KRi4vEcBRbF1-BKS0RY';
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
-webpush.setVapidDetails(
-  'mailto:kevin@webaanzee.be',
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
-);
+// VAPID credentials
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:kevin@webaanzee.be';
+
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  console.error('[send-push] Missing VAPID env vars:', {
+    pub: !!VAPID_PUBLIC_KEY,
+    priv: !!VAPID_PRIVATE_KEY
+  });
+}
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
 
 export default async function handler(req, res) {
-  // CORS Configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  // Debug endpoint — POST with { debug: true } to check config
+  if (req.body?.debug) {
+    return res.status(200).json({
+      supabaseConfigured: !!supabase,
+      vapidConfigured: !!(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
+      supabaseUrl: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : null,
+      vapidSubject: VAPID_SUBJECT
+    });
   }
 
   if (!supabase) {
-    console.error('Supabase client failed to initialize: missing URL or Anon Key.');
-    return res.status(500).json({ error: 'Supabase client is not configured on the backend.' });
+    return res.status(500).json({ error: 'Supabase not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.' });
+  }
+
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    return res.status(500).json({ error: 'VAPID keys not configured. Check VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in Vercel environment variables.' });
   }
 
   const { title, body, url } = req.body || {};
 
   try {
-    // 1. Retrieve all active push subscriptions
-    const { data: subscriptions, error } = await supabase
+    // Fetch all subscriptions
+    const { data: rows, error } = await supabase
       .from('push_subscriptions')
-      .select('*');
+      .select('id, subscription');
 
     if (error) {
-      console.error('Failed to query push_subscriptions table:', error);
-      return res.status(500).json({ error: 'Database select error', details: error.message });
+      console.error('[send-push] DB select error:', error);
+      return res.status(500).json({ error: 'DB error', details: error.message });
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return res.status(200).json({ success: true, count: 0, message: 'No registered push subscriptions found.' });
+    if (!rows || rows.length === 0) {
+      console.log('[send-push] No subscriptions found in DB.');
+      return res.status(200).json({ success: true, count: 0, message: 'No subscriptions registered.' });
     }
+
+    console.log(`[send-push] Found ${rows.length} subscription(s). Sending...`);
 
     const payload = JSON.stringify({
-      title: title || 'Nieuw bericht!',
-      body: body || 'U heeft een nieuwe aanvraag ontvangen.',
-      url: url || '/admin#inquiries'
+      title: title || 'Nieuwe aanvraag!',
+      body: body || 'U heeft een nieuwe aanvraag ontvangen bij Atelier Rembrandt.',
+      url: url || '/admin'
     });
 
-    // 2. Broadcast push notifications to all endpoints in parallel
     const results = await Promise.all(
-      subscriptions.map(async (subRecord) => {
+      rows.map(async (row) => {
+        // The subscription field may be the object directly, or nested in a 'subscription' key
+        let pushSub = row.subscription;
+        
+        // Handle case where subscription is double-nested
+        if (pushSub && typeof pushSub === 'object' && pushSub.subscription) {
+          pushSub = pushSub.subscription;
+        }
+
+        if (!pushSub || !pushSub.endpoint) {
+          console.warn(`[send-push] Row ${row.id} has invalid subscription format:`, JSON.stringify(pushSub).substring(0, 100));
+          return { id: row.id, status: 'invalid_format' };
+        }
+
         try {
-          await webpush.sendNotification(subRecord.subscription, payload);
-          return { id: subRecord.id, status: 'sent' };
+          await webpush.sendNotification(pushSub, payload);
+          console.log(`[send-push] Sent to ${row.id}`);
+          return { id: row.id, status: 'sent' };
         } catch (err) {
-          // If subscription is expired or invalid (statusCode 410 or 404), remove it from DB to keep it clean
+          console.error(`[send-push] Error sending to ${row.id}:`, err.statusCode, err.message);
           if (err.statusCode === 410 || err.statusCode === 404) {
-            console.log(`Push endpoint is gone (status ${err.statusCode}). Deleting expired subscription ID: ${subRecord.id}`);
-            await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('id', subRecord.id);
-            return { id: subRecord.id, status: 'deleted_expired' };
+            await supabase.from('push_subscriptions').delete().eq('id', row.id);
+            return { id: row.id, status: 'expired_deleted' };
           }
-          console.error(`Error sending push notification to subscription ID ${subRecord.id}:`, err);
-          return { id: subRecord.id, status: 'failed', error: err.message };
+          return { id: row.id, status: 'failed', error: err.message, code: err.statusCode };
         }
       })
     );
 
-    return res.status(200).json({
-      success: true,
-      count: subscriptions.length,
-      results
-    });
-  } catch (error) {
-    console.error('Uncaught serverless function exception:', error);
-    return res.status(500).json({ error: 'Serverless function exception occurred', message: error.message });
+    return res.status(200).json({ success: true, count: rows.length, results });
+  } catch (err) {
+    console.error('[send-push] Fatal error:', err);
+    return res.status(500).json({ error: 'Internal server error', message: err.message });
   }
 }

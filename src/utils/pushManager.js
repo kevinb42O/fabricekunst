@@ -1,24 +1,21 @@
 import { supabase } from './supabaseClient';
 
+// The VAPID public key — must match exactly what's set in Vercel VAPID_PUBLIC_KEY env var
 export const VAPID_PUBLIC_KEY = 'BEqRebAmxtntuKm65eaLXdpqBaW9rbSWhIvfQitsSuA-JUmf_ZAaAsBpk6FlN4QAcpxnsFfR3L-kwIZHwYaWjf4';
 
-// Helper to convert VAPID public key
+// Helper: convert VAPID base64 key to Uint8Array for pushManager.subscribe()
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
+  const output = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    output[i] = rawData.charCodeAt(i);
   }
-  return outputArray;
+  return output;
 }
 
-// Check if push notifications are supported by browser
+// Check full push support
 export function isPushSupported() {
   return (
     'serviceWorker' in navigator &&
@@ -27,13 +24,12 @@ export function isPushSupported() {
   );
 }
 
-// Detect if running on iOS (iPhone / iPad)
+// Detect iOS device
 export function isIOS() {
-  const userAgent = window.navigator.userAgent.toLowerCase();
-  return /iphone|ipad|ipod/.test(userAgent);
+  return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
-// Detect if the app is currently running in standalone PWA mode (installed)
+// Detect PWA standalone mode (required on iOS for push)
 export function isStandalone() {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -41,74 +37,85 @@ export function isStandalone() {
   );
 }
 
-// Get the current push subscription
+// Get the current push subscription from the service worker
 export async function getPushSubscription() {
   if (!isPushSupported()) return null;
-  
   try {
     const registration = await navigator.serviceWorker.ready;
     return await registration.pushManager.getSubscription();
   } catch (err) {
-    console.error('Fout bij ophalen push-abonnement:', err);
+    console.error('[pushManager] getPushSubscription error:', err);
     return null;
   }
 }
 
-// Subscribe the user to push notifications
+// Subscribe this device to push notifications and save to Supabase
 export async function subscribeUserToPush() {
   if (!isPushSupported()) {
-    throw new Error('Push-notificaties worden niet ondersteund door deze browser.');
+    throw new Error('Push notificaties worden niet ondersteund door deze browser.');
   }
 
-  // 1. Request Notification permission
+  // 1. Request permission
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
-    throw new Error('Toestemming voor notificaties is geweigerd.');
+    throw new Error('Toestemming voor notificaties geweigerd. Controleer uw iOS instellingen.');
   }
 
-  // 2. Await SW ready
+  // 2. Get service worker registration
   const registration = await navigator.serviceWorker.ready;
 
-  // 3. Subscribe to push manager
+  // 3. Subscribe via PushManager
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
   });
 
-  // 4. Save to Supabase
+  // 4. Serialize the PushSubscription to a plain JSON object
+  // CRITICAL: subscription.toJSON() gives us { endpoint, expirationTime, keys: { p256dh, auth } }
+  // We must store this as a plain object — NOT the raw PushSubscription class instance
+  const subscriptionJSON = subscription.toJSON();
+  console.log('[pushManager] Subscription to save:', JSON.stringify(subscriptionJSON).substring(0, 80) + '...');
+
+  if (!subscriptionJSON.endpoint) {
+    throw new Error('Ongeldig push-abonnement ontvangen. Probeer opnieuw.');
+  }
+
+  // 5. Save to Supabase
   if (supabase) {
-    // Check if subscription endpoint already exists to avoid duplicates
-    const { data, error: selectError } = await supabase
+    // Check for duplicate endpoint
+    const { data: existing, error: selectErr } = await supabase
       .from('push_subscriptions')
       .select('id')
-      .eq('subscription->>endpoint', subscription.endpoint);
+      .eq('subscription->>endpoint', subscriptionJSON.endpoint);
 
-    if (selectError) {
-      console.error('Fout bij controleren bestaand abonnement:', selectError);
+    if (selectErr) {
+      console.warn('[pushManager] Could not check for duplicate:', selectErr.message);
     }
 
-    if (data && data.length > 0) {
-      console.log('Push-abonnement bestaat al in de database.');
+    if (existing && existing.length > 0) {
+      console.log('[pushManager] Subscription already exists in DB, skipping insert.');
       return subscription;
     }
 
-    // Insert new subscription
-    const { error: insertError } = await supabase
+    // Insert serialized subscription as plain JSON
+    const { error: insertErr } = await supabase
       .from('push_subscriptions')
-      .insert({ subscription });
+      .insert([{ subscription: subscriptionJSON }]);
 
-    if (insertError) {
-      console.error('Fout bij opslaan abonnement in Supabase:', insertError);
-      throw insertError;
+    if (insertErr) {
+      console.error('[pushManager] Insert error:', insertErr);
+      throw new Error(`Kon abonnement niet opslaan: ${insertErr.message}`);
     }
+
+    console.log('[pushManager] Subscription saved to Supabase ✓');
   } else {
-    console.warn('Supabase is niet geconfigureerd. Abonnement kon niet worden opgeslagen.');
+    console.warn('[pushManager] No Supabase client — subscription not saved.');
   }
 
   return subscription;
 }
 
-// Unsubscribe the user from push notifications
+// Unsubscribe this device from push notifications
 export async function unsubscribeUserFromPush() {
   if (!isPushSupported()) return false;
 
@@ -116,23 +123,28 @@ export async function unsubscribeUserFromPush() {
     const subscription = await getPushSubscription();
     if (!subscription) return false;
 
-    // 1. Unsubscribe client
+    const endpoint = subscription.endpoint;
+
+    // Unsubscribe from browser push
     await subscription.unsubscribe();
 
-    // 2. Delete from Supabase
+    // Remove from Supabase
     if (supabase) {
       const { error } = await supabase
         .from('push_subscriptions')
         .delete()
-        .eq('subscription->>endpoint', subscription.endpoint);
+        .eq('subscription->>endpoint', endpoint);
 
       if (error) {
-        console.error('Fout bij verwijderen abonnement uit Supabase:', error);
+        console.error('[pushManager] Delete error:', error.message);
+      } else {
+        console.log('[pushManager] Subscription removed from Supabase ✓');
       }
     }
+
     return true;
   } catch (err) {
-    console.error('Fout bij uitschrijven push-notificaties:', err);
+    console.error('[pushManager] Unsubscribe error:', err);
     throw err;
   }
 }
