@@ -187,32 +187,40 @@ const extractFieldValue = (item, fieldName, lang) => {
     }
   }
   return '';
-};
-
-// Map database column names (snake_case) to frontend item object (camelCase)
+}// Map database column names (snake_case) to frontend item object (camelCase)
 const mapDbItemToFrontend = (dbItem) => {
   if (!dbItem) return dbItem;
 
-  const title_en = extractFieldValue(dbItem, 'title', 'en');
-  const title_fr = extractFieldValue(dbItem, 'title', 'fr');
-  const subtitle_en = extractFieldValue(dbItem, 'subtitle', 'en');
-  const subtitle_fr = extractFieldValue(dbItem, 'subtitle', 'fr');
-  const description_en = extractFieldValue(dbItem, 'description', 'en');
-  const description_fr = extractFieldValue(dbItem, 'description', 'fr');
-  const binding_en = extractFieldValue(dbItem, 'binding', 'en');
-  const binding_fr = extractFieldValue(dbItem, 'binding', 'fr');
-  const condition_en = extractFieldValue(dbItem, 'condition', 'en');
-  const condition_fr = extractFieldValue(dbItem, 'condition', 'fr');
-  const provenance_en = extractFieldValue(dbItem, 'provenance', 'en');
-  const provenance_fr = extractFieldValue(dbItem, 'provenance', 'fr');
-  const provenance_details_en = extractFieldValue(dbItem, 'provenanceDetails', 'en');
-  const provenance_details_fr = extractFieldValue(dbItem, 'provenanceDetails', 'fr');
-  const condition_report_en = extractFieldValue(dbItem, 'conditionReport', 'en');
-  const condition_report_fr = extractFieldValue(dbItem, 'conditionReport', 'fr');
-  const historical_context_en = extractFieldValue(dbItem, 'historicalContext', 'en');
-  const historical_context_fr = extractFieldValue(dbItem, 'historicalContext', 'fr');
-  const collation_specs_en = extractFieldValue(dbItem, 'collationSpecs', 'en');
-  const collation_specs_fr = extractFieldValue(dbItem, 'collationSpecs', 'fr');
+  let extPayload = {};
+  let cleanImages = [];
+
+  if (Array.isArray(dbItem.images)) {
+    for (const img of dbItem.images) {
+      if (img && img.__ext__ && img.payload) {
+        extPayload = img.payload;
+      } else {
+        cleanImages.push(img);
+      }
+    }
+  }
+
+  const title_en = dbItem.title_en || extPayload.title_en || extractFieldValue(dbItem, 'title', 'en');
+  const title_fr = dbItem.title_fr || extPayload.title_fr || extractFieldValue(dbItem, 'title', 'fr');
+  const subtitle_en = dbItem.subtitle_en || extPayload.subtitle_en || extractFieldValue(dbItem, 'subtitle', 'en');
+  const subtitle_fr = dbItem.subtitle_fr || extPayload.subtitle_fr || extractFieldValue(dbItem, 'subtitle', 'fr');
+  const description_en = dbItem.description_en || extPayload.description_en || extractFieldValue(dbItem, 'description', 'en');
+  const description_fr = dbItem.description_fr || extPayload.description_fr || extractFieldValue(dbItem, 'description', 'fr');
+  const binding_en = dbItem.binding_en || extPayload.binding_en || extractFieldValue(dbItem, 'binding', 'en');
+  const binding_fr = dbItem.binding_fr || extPayload.binding_fr || extractFieldValue(dbItem, 'binding', 'fr');
+  const condition_en = dbItem.condition_en || extPayload.condition_en || extractFieldValue(dbItem, 'condition', 'en');
+  const condition_fr = dbItem.condition_fr || extPayload.condition_fr || extractFieldValue(dbItem, 'condition', 'fr');
+  const provenance_en = dbItem.provenance_en || extPayload.provenance_en || extractFieldValue(dbItem, 'provenance', 'en');
+  const provenance_fr = dbItem.provenance_fr || extPayload.provenance_fr || extractFieldValue(dbItem, 'provenance', 'fr');
+
+  const historicalContext = dbItem.historical_context || dbItem.historicalContext || extPayload.historicalContext || '';
+  const conditionReport = dbItem.condition_report || dbItem.conditionReport || extPayload.conditionReport || '';
+  const provenanceDetails = dbItem.provenance_details || dbItem.provenanceDetails || extPayload.provenanceDetails || '';
+  const collationSpecs = dbItem.collation_specs || dbItem.collationSpecs || extPayload.collationSpecs || '';
 
   return {
     ...dbItem,
@@ -235,11 +243,11 @@ const mapDbItemToFrontend = (dbItem) => {
     dimensions: dbItem.dimensions || '',
     provenance: dbItem.provenance || '',
     description: dbItem.description || '',
-    historicalContext: dbItem.historical_context || dbItem.historicalContext || '',
-    conditionReport: dbItem.condition_report || dbItem.conditionReport || '',
-    provenanceDetails: dbItem.provenance_details || dbItem.provenanceDetails || '',
-    collationSpecs: dbItem.collation_specs || dbItem.collationSpecs || '',
-    images: dbItem.images || [],
+    historicalContext,
+    conditionReport,
+    provenanceDetails,
+    collationSpecs,
+    images: cleanImages,
 
     title_en,
     title_fr,
@@ -254,78 +262,171 @@ const mapDbItemToFrontend = (dbItem) => {
     provenance_en,
     provenance_fr,
 
-    provenance_details_en,
-    provenance_details_fr,
-    provenanceDetails_en: provenance_details_en,
-    provenanceDetails_fr: provenance_details_fr,
+    provenance_details_en: extPayload.provenanceDetails_en || extractFieldValue(dbItem, 'provenanceDetails', 'en'),
+    provenance_details_fr: extPayload.provenanceDetails_fr || extractFieldValue(dbItem, 'provenanceDetails', 'fr'),
+    provenanceDetails_en: extPayload.provenanceDetails_en || extractFieldValue(dbItem, 'provenanceDetails', 'en'),
+    provenanceDetails_fr: extPayload.provenanceDetails_fr || extractFieldValue(dbItem, 'provenanceDetails', 'fr'),
 
-    condition_report_en,
-    condition_report_fr,
-    conditionReport_en: condition_report_en,
-    conditionReport_fr: condition_report_fr,
+    condition_report_en: extPayload.conditionReport_en || extractFieldValue(dbItem, 'conditionReport', 'en'),
+    condition_report_fr: extPayload.conditionReport_fr || extractFieldValue(dbItem, 'conditionReport', 'fr'),
+    conditionReport_en: extPayload.conditionReport_en || extractFieldValue(dbItem, 'conditionReport', 'en'),
+    conditionReport_fr: extPayload.conditionReport_fr || extractFieldValue(dbItem, 'conditionReport', 'fr'),
 
-    historical_context_en,
-    historical_context_fr,
-    historicalContext_en: historical_context_en,
-    historicalContext_fr: historical_context_fr,
+    historical_context_en: extPayload.historicalContext_en || extractFieldValue(dbItem, 'historicalContext', 'en'),
+    historical_context_fr: extPayload.historicalContext_fr || extractFieldValue(dbItem, 'historicalContext', 'fr'),
+    historicalContext_en: extPayload.historicalContext_en || extractFieldValue(dbItem, 'historicalContext', 'en'),
+    historicalContext_fr: extPayload.historicalContext_fr || extractFieldValue(dbItem, 'historicalContext', 'fr'),
 
-    collation_specs_en,
-    collation_specs_fr,
-    collationSpecs_en: collation_specs_en,
-    collationSpecs_fr: collation_specs_fr
+    collation_specs_en: extPayload.collationSpecs_en || extractFieldValue(dbItem, 'collationSpecs', 'en'),
+    collation_specs_fr: extPayload.collationSpecs_fr || extractFieldValue(dbItem, 'collationSpecs', 'fr'),
+    collationSpecs_en: extPayload.collationSpecs_en || extractFieldValue(dbItem, 'collationSpecs', 'en'),
+    collationSpecs_fr: extPayload.collationSpecs_fr || extractFieldValue(dbItem, 'collationSpecs', 'fr')
   };
 };
 
 // Map frontend item object (camelCase) to database column names (snake_case)
-const mapFrontendItemToDb = (item) => ({
-  id: item.id,
-  item_type: item.itemType || item.item_type || 'book',
-  ref: item.ref,
-  title: item.title,
-  subtitle: item.subtitle,
-  author: item.author,
-  publisher: item.publisher,
-  city: item.city,
-  year: item.year,
-  century: item.century,
-  category: item.category,
-  price: item.price,
-  status: item.status,
-  featured: Boolean(item.featured),
-  condition: item.condition,
-  binding: item.binding,
-  dimensions: item.dimensions,
-  provenance: item.provenance,
-  description: item.description,
-  historical_context: item.historicalContext || item.historical_context || '',
-  condition_report: item.conditionReport || item.condition_report || '',
-  provenance_details: item.provenanceDetails || item.provenance_details || '',
-  collation_specs: item.collationSpecs || item.collation_specs || '',
-  images: item.images || [],
-  
-  // Multi-Language Fields (EN & FR)
-  title_en: extractFieldValue(item, 'title', 'en'),
-  title_fr: extractFieldValue(item, 'title', 'fr'),
-  subtitle_en: extractFieldValue(item, 'subtitle', 'en'),
-  subtitle_fr: extractFieldValue(item, 'subtitle', 'fr'),
-  description_en: extractFieldValue(item, 'description', 'en'),
-  description_fr: extractFieldValue(item, 'description', 'fr'),
-  binding_en: extractFieldValue(item, 'binding', 'en'),
-  binding_fr: extractFieldValue(item, 'binding', 'fr'),
-  condition_en: extractFieldValue(item, 'condition', 'en'),
-  condition_fr: extractFieldValue(item, 'condition', 'fr'),
-  provenance_en: extractFieldValue(item, 'provenance', 'en'),
-  provenance_fr: extractFieldValue(item, 'provenance', 'fr'),
-  provenance_details_en: extractFieldValue(item, 'provenanceDetails', 'en'),
-  provenance_details_fr: extractFieldValue(item, 'provenanceDetails', 'fr'),
-  condition_report_en: extractFieldValue(item, 'conditionReport', 'en'),
-  condition_report_fr: extractFieldValue(item, 'conditionReport', 'fr'),
-  historical_context_en: extractFieldValue(item, 'historicalContext', 'en'),
-  historical_context_fr: extractFieldValue(item, 'historicalContext', 'fr'),
-  collation_specs_en: extractFieldValue(item, 'collationSpecs', 'en'),
-  collation_specs_fr: extractFieldValue(item, 'collationSpecs', 'fr'),
-  updated_at: new Date().toISOString()
-});
+const mapFrontendItemToDb = (item) => {
+  const images = Array.isArray(item.images) ? [...item.images] : [];
+  const cleanImages = images.filter(img => !img || !img.__ext__);
+  cleanImages.push({
+    __ext__: true,
+    payload: {
+      historicalContext: item.historicalContext || '',
+      conditionReport: item.conditionReport || '',
+      provenanceDetails: item.provenanceDetails || '',
+      collationSpecs: item.collationSpecs || '',
+      title_en: item.title_en || '',
+      title_fr: item.title_fr || '',
+      subtitle_en: item.subtitle_en || '',
+      subtitle_fr: item.subtitle_fr || '',
+      description_en: item.description_en || '',
+      description_fr: item.description_fr || '',
+      binding_en: item.binding_en || '',
+      binding_fr: item.binding_fr || '',
+      condition_en: item.condition_en || '',
+      condition_fr: item.condition_fr || '',
+      provenance_en: item.provenance_en || '',
+      provenance_fr: item.provenance_fr || '',
+      provenanceDetails_en: item.provenanceDetails_en || '',
+      provenanceDetails_fr: item.provenanceDetails_fr || '',
+      conditionReport_en: item.conditionReport_en || '',
+      conditionReport_fr: item.conditionReport_fr || '',
+      historicalContext_en: item.historicalContext_en || '',
+      historicalContext_fr: item.historicalContext_fr || '',
+      collationSpecs_en: item.collationSpecs_en || '',
+      collationSpecs_fr: item.collationSpecs_fr || ''
+    }
+  });
+
+  return {
+    id: item.id,
+    item_type: item.itemType || item.item_type || 'book',
+    ref: item.ref,
+    title: item.title,
+    subtitle: item.subtitle,
+    author: item.author,
+    publisher: item.publisher,
+    city: item.city,
+    year: item.year,
+    century: item.century,
+    category: item.category,
+    price: item.price,
+    status: item.status,
+    featured: Boolean(item.featured),
+    condition: item.condition,
+    binding: item.binding,
+    dimensions: item.dimensions,
+    provenance: item.provenance,
+    description: item.description,
+    historical_context: item.historicalContext || item.historical_context || '',
+    condition_report: item.conditionReport || item.condition_report || '',
+    provenance_details: item.provenanceDetails || item.provenance_details || '',
+    collation_specs: item.collationSpecs || item.collation_specs || '',
+    images: cleanImages,
+    
+    // Multi-Language Fields (EN & FR)
+    title_en: extractFieldValue(item, 'title', 'en'),
+    title_fr: extractFieldValue(item, 'title', 'fr'),
+    subtitle_en: extractFieldValue(item, 'subtitle', 'en'),
+    subtitle_fr: extractFieldValue(item, 'subtitle', 'fr'),
+    description_en: extractFieldValue(item, 'description', 'en'),
+    description_fr: extractFieldValue(item, 'description', 'fr'),
+    binding_en: extractFieldValue(item, 'binding', 'en'),
+    binding_fr: extractFieldValue(item, 'binding', 'fr'),
+    condition_en: extractFieldValue(item, 'condition', 'en'),
+    condition_fr: extractFieldValue(item, 'condition', 'fr'),
+    provenance_en: extractFieldValue(item, 'provenance', 'en'),
+    provenance_fr: extractFieldValue(item, 'provenance', 'fr'),
+    provenance_details_en: extractFieldValue(item, 'provenanceDetails', 'en'),
+    provenance_details_fr: extractFieldValue(item, 'provenanceDetails', 'fr'),
+    condition_report_en: extractFieldValue(item, 'conditionReport', 'en'),
+    condition_report_fr: extractFieldValue(item, 'conditionReport', 'fr'),
+    historical_context_en: extractFieldValue(item, 'historicalContext', 'en'),
+    historical_context_fr: extractFieldValue(item, 'historicalContext', 'fr'),
+    collation_specs_en: extractFieldValue(item, 'collationSpecs', 'en'),
+    collation_specs_fr: extractFieldValue(item, 'collationSpecs', 'fr'),
+    updated_at: new Date().toISOString()
+  };
+};
+
+// Map frontend item object to minimal DB columns supported by any schema version
+const mapFrontendItemToBasicDb = (item) => {
+  const images = Array.isArray(item.images) ? [...item.images] : [];
+  const cleanImages = images.filter(img => !img || !img.__ext__);
+  cleanImages.push({
+    __ext__: true,
+    payload: {
+      historicalContext: item.historicalContext || '',
+      conditionReport: item.conditionReport || '',
+      provenanceDetails: item.provenanceDetails || '',
+      collationSpecs: item.collationSpecs || '',
+      title_en: item.title_en || '',
+      title_fr: item.title_fr || '',
+      subtitle_en: item.subtitle_en || '',
+      subtitle_fr: item.subtitle_fr || '',
+      description_en: item.description_en || '',
+      description_fr: item.description_fr || '',
+      binding_en: item.binding_en || '',
+      binding_fr: item.binding_fr || '',
+      condition_en: item.condition_en || '',
+      condition_fr: item.condition_fr || '',
+      provenance_en: item.provenance_en || '',
+      provenance_fr: item.provenance_fr || '',
+      provenanceDetails_en: item.provenanceDetails_en || '',
+      provenanceDetails_fr: item.provenanceDetails_fr || '',
+      conditionReport_en: item.conditionReport_en || '',
+      conditionReport_fr: item.conditionReport_fr || '',
+      historicalContext_en: item.historicalContext_en || '',
+      historicalContext_fr: item.historicalContext_fr || '',
+      collationSpecs_en: item.collationSpecs_en || '',
+      collationSpecs_fr: item.collationSpecs_fr || ''
+    }
+  });
+
+  return {
+    id: item.id,
+    item_type: item.itemType || item.item_type || 'book',
+    ref: item.ref,
+    title: item.title,
+    subtitle: item.subtitle,
+    author: item.author,
+    publisher: item.publisher,
+    city: item.city,
+    year: item.year,
+    century: item.century,
+    category: item.category,
+    price: item.price,
+    status: item.status,
+    featured: Boolean(item.featured),
+    condition: item.condition,
+    binding: item.binding,
+    dimensions: item.dimensions,
+    provenance: item.provenance,
+    description: item.description,
+    images: cleanImages,
+    updated_at: new Date().toISOString()
+  };
+};
 
 // Map database inquiry (snake_case) to frontend inquiry object
 const mapDbInquiryToFrontend = (dbInq) => ({
@@ -372,25 +473,6 @@ export const getCatalog = () => {
     console.error("Error reading catalog from localStorage", e);
     return INITIAL_CATALOG.map(mapDbItemToFrontend);
   }
-}// Helper to strip optional multi-language columns if Supabase table schema hasn't been migrated yet
-const stripMultiLangFields = (dbItem) => {
-  const clean = { ...dbItem };
-  const multiLangKeys = [
-    'title_en', 'title_fr',
-    'subtitle_en', 'subtitle_fr',
-    'description_en', 'description_fr',
-    'binding_en', 'binding_fr',
-    'condition_en', 'condition_fr',
-    'provenance_en', 'provenance_fr',
-    'provenance_details_en', 'provenance_details_fr',
-    'condition_report_en', 'condition_report_fr',
-    'historical_context_en', 'historical_context_fr',
-    'collation_specs_en', 'collation_specs_fr'
-  ];
-  for (const k of multiLangKeys) {
-    delete clean[k];
-  }
-  return clean;
 };
 
 export const fetchCatalogAsync = async () => {
@@ -426,8 +508,23 @@ export const fetchCatalogAsync = async () => {
           }
           return frontendItem;
         });
-        localStorage.setItem(CATALOG_KEY, JSON.stringify(mapped));
-        return mapped;
+
+        // Smart Merge with local data: preserve local non-empty fields if local has newer data
+        const localCatalog = getCatalog();
+        const mergedCatalog = mapped.map(remoteItem => {
+          const localItem = localCatalog.find(l => l.id === remoteItem.id);
+          if (!localItem) return remoteItem;
+          return {
+            ...remoteItem,
+            historicalContext: remoteItem.historicalContext || localItem.historicalContext || '',
+            conditionReport: remoteItem.conditionReport || localItem.conditionReport || '',
+            provenanceDetails: remoteItem.provenanceDetails || localItem.provenanceDetails || '',
+            collationSpecs: remoteItem.collationSpecs || localItem.collationSpecs || ''
+          };
+        });
+
+        localStorage.setItem(CATALOG_KEY, JSON.stringify(mergedCatalog));
+        return mergedCatalog;
       }
     } catch (e) {
       console.error("Supabase catalog fetch failed, falling back to local data", e);
@@ -451,8 +548,8 @@ export const saveCatalogAsync = async (items) => {
       const dbItems = items.map(mapFrontendItemToDb);
       const { error } = await supabase.from('items').upsert(dbItems, { onConflict: 'id' });
       if (error) {
-        console.warn("Supabase catalog upsert warning (retrying with base fields):", error.message);
-        const baseItems = dbItems.map(stripMultiLangFields);
+        console.warn("Supabase catalog upsert warning (retrying with basic fields):", error.message);
+        const baseItems = items.map(mapFrontendItemToBasicDb);
         await supabase.from('items').upsert(baseItems, { onConflict: 'id' });
       }
 
@@ -480,7 +577,7 @@ export const saveItemAsync = async (item) => {
   } else {
     updatedCatalog = [item, ...currentCatalog];
   }
-  
+
   saveCatalog(updatedCatalog);
 
   if (isSupabaseConfigured() && supabase) {
@@ -489,16 +586,16 @@ export const saveItemAsync = async (item) => {
       const { error } = await supabase.from('items').upsert(dbItem, { onConflict: 'id' });
       
       if (error) {
-        console.warn("Supabase item upsert warning (retrying base columns):", error.message);
-        // Fallback: strip multi-language fields if DB schema lacks those columns
-        const baseDbItem = stripMultiLangFields(dbItem);
-        const { error: fallbackErr } = await supabase.from('items').upsert(baseDbItem, { onConflict: 'id' });
+        console.warn("Supabase item upsert warning (retrying with basic schema):", error.message);
+        // Fallback: use basic schema mapping that puts all extended data in images JSONB
+        const basicDbItem = mapFrontendItemToBasicDb(item);
+        const { error: fallbackErr } = await supabase.from('items').upsert(basicDbItem, { onConflict: 'id' });
         if (fallbackErr) {
           console.error("Supabase item save fallback error:", fallbackErr);
         }
       }
 
-      // Always save full item JSON into admin_settings as a bulletproof backup
+      // Always save full item JSON into admin_settings as a bulletproof secondary backup
       await supabase.from('admin_settings').upsert({
         key: `item_ext_${item.id}`,
         value: JSON.stringify(item),
