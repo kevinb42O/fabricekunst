@@ -41,30 +41,41 @@ export const getItemTranslationStatus = (item) => {
     return '';
   };
 
+  const isPainting = item.itemType === 'painting';
+
   const keyLabels = {
-    title: 'Titel',
+    title: isPainting ? 'Titel van het schilderij' : 'Titel',
     subtitle: 'Subtitel',
-    description: 'Algemene Beschrijving',
-    binding: 'Boekband / Lijst',
-    condition: 'Conditie Summary',
+    author: isPainting ? 'Kunstenaar / Meester' : 'Auteur / Schrijver',
+    publisher: isPainting ? 'Galerie / Atelier / Werkplaats' : 'Drukker / Uitgever',
+    city: isPainting ? 'Plaats van ontstaan' : 'Plaats van Uitgave',
+    dimensions: isPainting ? 'Afmetingen' : 'Formaat & Afmetingen',
+    binding: isPainting ? 'Lijst & Inlijsting' : 'Boekband / Lijst',
+    condition: 'Staat & Conditie',
     provenance: 'Herkomst Summary',
+    description: 'Beschrijving',
     conditionReport: 'Conditierapport',
     provenanceDetails: 'Provenance Details',
     historicalContext: 'Historische Context',
-    collationSpecs: 'Collatie Specs',
-    publisher: 'Drukker / Uitgever',
-    city: 'Plaats van Uitgave',
-    dimensions: 'Formaat & Afmetingen'
+    collationSpecs: 'Collatie Specs'
   };
 
-  // Narrative text fields that require translation when present in Dutch
-  const narrativeTextFields = [
+  // Base form fields expected for the master Dutch record
+  const masterFormFields = [
     'title',
-    'subtitle',
-    'description',
+    'publisher',
+    'city',
+    'dimensions',
     'binding',
     'condition',
     'provenance',
+    'description'
+  ];
+
+  // Extended optional fields that become active if filled or NVT in Dutch
+  const optionalExtendedFields = [
+    'subtitle',
+    'author',
     'conditionReport',
     'provenanceDetails',
     'historicalContext',
@@ -77,26 +88,37 @@ export const getItemTranslationStatus = (item) => {
     fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
   };
 
-  // 1. Dutch status check (Master Record)
-  const nlTitle = getRawVal('title', 'nl');
-  if (!nlTitle || nlTitle.trim() === '') {
-    details.nl.missing.push('Titel');
+  // 1. Check Dutch [NL] master form fields
+  for (const field of masterFormFields) {
+    const val = getRawVal(field, 'nl');
+    const isNvt = isFieldMarkedEmpty(item, field, 'nl');
+    if ((!val || typeof val !== 'string' || val.trim() === '') && !isNvt) {
+      details.nl.missing.push(keyLabels[field] || field);
+    }
   }
 
-  // Determine which narrative fields are actually ACTIVE in the Dutch master record
-  const activeNarrativeFieldsInDutch = narrativeTextFields.filter(field => {
-    if (field === 'title') return true;
-    const nlVal = getRawVal(field, 'nl');
-    const isNvtNl = isFieldMarkedEmpty(item, field, 'nl');
-    return isNvtNl || (nlVal && typeof nlVal === 'string' && nlVal.trim() !== '');
-  });
+  // Active fields in Dutch (master fields + any optional fields filled or marked NVT in Dutch)
+  const activeFieldsForTranslation = [
+    ...masterFormFields,
+    ...optionalExtendedFields.filter(field => {
+      const val = getRawVal(field, 'nl');
+      const isNvt = isFieldMarkedEmpty(item, field, 'nl');
+      return isNvt || (val && typeof val === 'string' && val.trim() !== '');
+    })
+  ];
 
-  // 2. English & French status checks against ONLY active Dutch fields
+  // 2. Check English [EN] & French [FR] against active fields
   for (const lang of ['en', 'fr']) {
-    for (const field of activeNarrativeFieldsInDutch) {
+    for (const field of activeFieldsForTranslation) {
       const val = getRawVal(field, lang);
-      const isMarkedNvt = isFieldMarkedEmpty(item, field, lang);
-      if ((!val || typeof val !== 'string' || val.trim() === '') && !isMarkedNvt) {
+      const isNvt = isFieldMarkedEmpty(item, field, lang);
+
+      // Metadata fields (publisher, city, dimensions, author) fallback to Dutch value if non-empty
+      const nlVal = getRawVal(field, 'nl');
+      const isMetadataField = ['publisher', 'city', 'dimensions', 'author'].includes(field);
+      const hasFallback = isMetadataField && nlVal && typeof nlVal === 'string' && nlVal.trim() !== '';
+
+      if ((!val || typeof val !== 'string' || val.trim() === '') && !isNvt && !hasFallback) {
         details[lang].missing.push(keyLabels[field] || field);
       }
     }
