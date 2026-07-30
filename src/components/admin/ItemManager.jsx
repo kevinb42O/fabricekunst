@@ -6,16 +6,23 @@ import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonT
 export const getItemTranslationStatus = (item) => {
   if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
 
-  const getVal = (fieldName, lang) => {
+  const getRawVal = (fieldName, lang) => {
+    const camelField = fieldName.replace(/_([a-z])/g, (_, l) => l.toUpperCase());
+    const snakeField = fieldName.replace(/([A-Z])/g, '_$1').toLowerCase();
+
     if (lang === 'nl') {
-      return item[fieldName] || '';
+      const keysToCheck = [fieldName, camelField, snakeField];
+      for (const k of keysToCheck) {
+        if (item[k] !== undefined && item[k] !== null && typeof item[k] === 'string' && item[k].trim() !== '') {
+          return item[k];
+        }
+      }
+      return '';
     }
+
     const langLower = lang.toLowerCase();
     const langUpper = lang.toUpperCase();
     const langCap = lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase();
-
-    const camelField = fieldName;
-    const snakeField = fieldName.replace(/([A-Z])/g, '_$1').toLowerCase();
 
     const possibleKeys = [
       `${camelField}_${langLower}`,
@@ -46,10 +53,11 @@ export const getItemTranslationStatus = (item) => {
     historicalContext: 'Historische Context',
     collationSpecs: 'Collatie Specs',
     publisher: 'Drukker / Uitgever',
-    city: 'Plaats van Uitgave'
+    city: 'Plaats van Uitgave',
+    dimensions: 'Formaat & Afmetingen'
   };
 
-  const allPossibleFields = [
+  const translatableTextFields = [
     'title',
     'subtitle',
     'description',
@@ -59,9 +67,7 @@ export const getItemTranslationStatus = (item) => {
     'conditionReport',
     'provenanceDetails',
     'historicalContext',
-    'collationSpecs',
-    'publisher',
-    'city'
+    'collationSpecs'
   ];
 
   const details = {
@@ -70,23 +76,24 @@ export const getItemTranslationStatus = (item) => {
     fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
   };
 
-  // Determine which fields are active in the Dutch master version
-  const activeFieldsInDutch = allPossibleFields.filter(field => {
+  // 1. Dutch status check (Master Record)
+  const nlTitle = getRawVal('title', 'nl');
+  if (!nlTitle || nlTitle.trim() === '') {
+    details.nl.missing.push('Titel');
+  }
+
+  // Active text fields in Dutch master record
+  const activeFieldsInDutch = translatableTextFields.filter(field => {
     if (field === 'title') return true;
-    const nlVal = item[field];
+    const nlVal = getRawVal(field, 'nl');
     const isNvtNl = isFieldMarkedEmpty(item, field, 'nl');
     return isNvtNl || (nlVal && typeof nlVal === 'string' && nlVal.trim() !== '');
   });
 
-  // 1. Dutch status check
-  if (!item.title || (typeof item.title === 'string' && item.title.trim() === '')) {
-    details.nl.missing.push('Titel');
-  }
-
   // 2. English & French status checks
   for (const lang of ['en', 'fr']) {
     for (const field of activeFieldsInDutch) {
-      const val = getVal(field, lang);
+      const val = getRawVal(field, lang);
       const isMarkedNvt = isFieldMarkedEmpty(item, field, lang);
       if ((!val || typeof val !== 'string' || val.trim() === '') && !isMarkedNvt) {
         details[lang].missing.push(keyLabels[field] || field);
@@ -242,6 +249,16 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       emptyFields: currentEmpty,
       empty_fields: currentEmpty
     });
+  };
+
+  const isLangNvt = (lang = formLang) => {
+    if (!editingItem) return false;
+    const rawEmpty = editingItem.emptyFields || editingItem.empty_fields;
+    if (!rawEmpty) return false;
+    const key = `lang_${lang}`;
+    if (Array.isArray(rawEmpty)) return rawEmpty.includes(key);
+    if (typeof rawEmpty === 'object') return Boolean(rawEmpty[key]);
+    return false;
   };
 
   const renderFieldHeader = (label, field, required = false) => {
@@ -1205,26 +1222,48 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   </div>
                 </div>
 
-                {/* Language Tab Switcher */}
-                <div className="flex items-center space-x-1 bg-black/60 p-1.5 rounded-xl border border-stone-700 font-mono text-xs w-full sm:w-auto justify-center">
-                  {[
-                    { id: 'nl', label: '🇳🇱 Nederlands' },
-                    { id: 'en', label: '🇬🇧 English' },
-                    { id: 'fr', label: '🇫🇷 Français' }
-                  ].map((tab) => (
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                  {formLang !== 'nl' && (
                     <button
-                      key={tab.id}
                       type="button"
-                      onClick={() => setFormLang(tab.id)}
-                      className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                        formLang === tab.id
-                          ? 'bg-[#B8860B] text-black shadow-md scale-105'
-                          : 'text-stone-300 hover:text-white hover:bg-white/10'
+                      onClick={() => toggleLangNvt(formLang)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center space-x-1.5 border ${
+                        isLangNvt(formLang)
+                          ? 'bg-amber-500/20 text-[#D4AF37] border-[#D4AF37]'
+                          : 'bg-white/10 hover:bg-white/20 text-stone-200 border-stone-600'
                       }`}
+                      title={isLangNvt(formLang) ? "Klik om N.v.t. markering op te heffen" : `Markeer ${formLang === 'en' ? 'Engels' : 'Frans'} als Volledig / N.v.t. (Geen vertaling nodig)`}
                     >
-                      {tab.label}
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>
+                        {isLangNvt(formLang)
+                          ? `✓ ${formLang === 'en' ? 'Engels' : 'Frans'} is N.v.t.`
+                          : `Markeer ${formLang === 'en' ? 'Engels' : 'Frans'} N.v.t.`}
+                      </span>
                     </button>
-                  ))}
+                  )}
+
+                  {/* Language Tab Switcher */}
+                  <div className="flex items-center space-x-1 bg-black/60 p-1.5 rounded-xl border border-stone-700 font-mono text-xs w-full sm:w-auto justify-center">
+                    {[
+                      { id: 'nl', label: '🇳🇱 Nederlands' },
+                      { id: 'en', label: '🇬🇧 English' },
+                      { id: 'fr', label: '🇫🇷 Français' }
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setFormLang(tab.id)}
+                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                          formLang === tab.id
+                            ? 'bg-[#B8860B] text-black shadow-md scale-105'
+                            : 'text-stone-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -1535,15 +1574,18 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      {editingItem.itemType === 'painting' ? "Afmetingen (doek & met lijst)" : "Formaat & Afmetingen"}
-                    </label>
+                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Afmetingen (doek & met lijst)" : "Formaat & Afmetingen", "dimensions")}
                     <input
                       type="text"
-                      value={editingItem.dimensions || ''}
-                      onChange={(e) => setEditingItem({ ...editingItem, dimensions: e.target.value })}
-                      placeholder={editingItem.itemType === 'painting' ? "Bijv. 48 x 38 cm (met lijst 62 x 52 cm)" : "In-8° (21,5 x 13,5 cm)"}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
+                      value={getFormField('dimensions') || editingItem.dimensions || ''}
+                      onChange={(e) => {
+                        updateFormField('dimensions', e.target.value);
+                        setEditingItem(prev => ({ ...prev, dimensions: e.target.value }));
+                      }}
+                      placeholder={isFieldNvt('dimensions', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. 48 x 38 cm (met lijst 62 x 52 cm)" : "In-8° (21,5 x 13,5 cm)")}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111] ${
+                        isFieldNvt('dimensions', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
+                      }`}
                     />
                   </div>
 
