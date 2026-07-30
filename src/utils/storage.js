@@ -64,14 +64,45 @@ export const getHeroImage = () => {
   }
 };
 
+export const fetchHeroImageAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .eq('key', 'hero_image')
+        .maybeSingle();
+
+      if (!error && data && data.value) {
+        localStorage.setItem(HERO_IMAGE_KEY, data.value);
+        return data.value;
+      }
+    } catch (err) {
+      console.error("Fout bij ophalen hero image van Supabase:", err);
+    }
+  }
+  return getHeroImage();
+};
+
 export const saveHeroImageAsync = async (imageUrl) => {
   try {
     localStorage.setItem(HERO_IMAGE_KEY, imageUrl);
-    return imageUrl;
   } catch (err) {
     console.error("Fout bij opslaan hero image:", err);
-    return imageUrl;
   }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      await supabase.from('admin_settings').upsert({
+        key: 'hero_image',
+        value: imageUrl,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error("Supabase hero image save exception:", e);
+    }
+  }
+  return imageUrl;
 };
 
 export const getHeroSlides = () => {
@@ -86,14 +117,49 @@ export const getHeroSlides = () => {
   }
 };
 
+export const fetchHeroSlidesAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .eq('key', 'hero_slides')
+        .maybeSingle();
+
+      if (!error && data && data.value) {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(parsed));
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.error("Fout bij ophalen hero slides van Supabase:", err);
+    }
+  }
+  return getHeroSlides();
+};
+
 export const saveHeroSlidesAsync = async (slides) => {
   try {
     localStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(slides));
-    return slides;
   } catch (err) {
     console.error("Fout bij opslaan hero slides:", err);
-    return slides;
   }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const payload = typeof slides === 'string' ? slides : JSON.stringify(slides);
+      await supabase.from('admin_settings').upsert({
+        key: 'hero_slides',
+        value: payload,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error("Supabase hero slides save exception:", e);
+    }
+  }
+  return slides;
 };
 
 // Helper to extract field value checking all camelCase, snake_case, and capitalization variations
@@ -306,14 +372,60 @@ export const getCatalog = () => {
     console.error("Error reading catalog from localStorage", e);
     return INITIAL_CATALOG.map(mapDbItemToFrontend);
   }
+}// Helper to strip optional multi-language columns if Supabase table schema hasn't been migrated yet
+const stripMultiLangFields = (dbItem) => {
+  const clean = { ...dbItem };
+  const multiLangKeys = [
+    'title_en', 'title_fr',
+    'subtitle_en', 'subtitle_fr',
+    'description_en', 'description_fr',
+    'binding_en', 'binding_fr',
+    'condition_en', 'condition_fr',
+    'provenance_en', 'provenance_fr',
+    'provenance_details_en', 'provenance_details_fr',
+    'condition_report_en', 'condition_report_fr',
+    'historical_context_en', 'historical_context_fr',
+    'collation_specs_en', 'collation_specs_fr'
+  ];
+  for (const k of multiLangKeys) {
+    delete clean[k];
+  }
+  return clean;
 };
 
 export const fetchCatalogAsync = async () => {
   if (isSupabaseConfigured() && supabase) {
     try {
-      const { data, error } = await supabase.from('items').select('*').order('created_at', { ascending: true });
-      if (!error && data && data.length > 0) {
-        const mapped = data.map(mapDbItemToFrontend);
+      // 1. Fetch items from items table
+      const { data: dbItems, error } = await supabase.from('items').select('*').order('created_at', { ascending: true });
+
+      // 2. Fetch extended item data (translations/extra fields) from admin_settings
+      const { data: extSettings } = await supabase.from('admin_settings').select('*').like('key', 'item_ext_%');
+      const extMap = {};
+      if (extSettings && Array.isArray(extSettings)) {
+        for (const row of extSettings) {
+          try {
+            const itemId = row.key.replace('item_ext_', '');
+            const parsed = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+            if (itemId && parsed) extMap[itemId] = parsed;
+          } catch (e) {
+            console.error("Fout bij parsen van item_ext row:", e);
+          }
+        }
+      }
+
+      if (!error && dbItems && dbItems.length > 0) {
+        const mapped = dbItems.map(dbItem => {
+          const frontendItem = mapDbItemToFrontend(dbItem);
+          const extData = extMap[dbItem.id];
+          if (extData) {
+            return {
+              ...frontendItem,
+              ...extData
+            };
+          }
+          return frontendItem;
+        });
         localStorage.setItem(CATALOG_KEY, JSON.stringify(mapped));
         return mapped;
       }
@@ -338,7 +450,20 @@ export const saveCatalogAsync = async (items) => {
     try {
       const dbItems = items.map(mapFrontendItemToDb);
       const { error } = await supabase.from('items').upsert(dbItems, { onConflict: 'id' });
-      if (error) console.error("Error upserting catalog to Supabase", error);
+      if (error) {
+        console.warn("Supabase catalog upsert warning (retrying with base fields):", error.message);
+        const baseItems = dbItems.map(stripMultiLangFields);
+        await supabase.from('items').upsert(baseItems, { onConflict: 'id' });
+      }
+
+      // Save extended items to admin_settings so no translation or detail is ever lost
+      for (const item of items) {
+        await supabase.from('admin_settings').upsert({
+          key: `item_ext_${item.id}`,
+          value: JSON.stringify(item),
+          updated_at: new Date().toISOString()
+        }).catch(() => {});
+      }
     } catch (e) {
       console.error("Supabase catalog save failed", e);
     }
@@ -362,7 +487,24 @@ export const saveItemAsync = async (item) => {
     try {
       const dbItem = mapFrontendItemToDb(item);
       const { error } = await supabase.from('items').upsert(dbItem, { onConflict: 'id' });
-      if (error) console.error("Supabase item save error:", error);
+      
+      if (error) {
+        console.warn("Supabase item upsert warning (retrying base columns):", error.message);
+        // Fallback: strip multi-language fields if DB schema lacks those columns
+        const baseDbItem = stripMultiLangFields(dbItem);
+        const { error: fallbackErr } = await supabase.from('items').upsert(baseDbItem, { onConflict: 'id' });
+        if (fallbackErr) {
+          console.error("Supabase item save fallback error:", fallbackErr);
+        }
+      }
+
+      // Always save full item JSON into admin_settings as a bulletproof backup
+      await supabase.from('admin_settings').upsert({
+        key: `item_ext_${item.id}`,
+        value: JSON.stringify(item),
+        updated_at: new Date().toISOString()
+      }).catch(err => console.warn("Could not save item_ext backup:", err));
+
     } catch (e) {
       console.error("Supabase item save exception:", e);
     }

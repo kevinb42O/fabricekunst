@@ -22,8 +22,10 @@ import {
   getInquiries, 
   fetchInquiriesAsync,
   getHeroImage,
+  fetchHeroImageAsync,
   saveHeroImageAsync,
   getHeroSlides,
+  fetchHeroSlidesAsync,
   saveHeroSlidesAsync,
   getProvenanceData,
   fetchProvenanceDataAsync,
@@ -88,6 +90,14 @@ export default function App() {
 
     fetchInquiriesAsync().then(inqs => {
       if (inqs) setInquiries(inqs);
+    });
+
+    fetchHeroImageAsync().then(img => {
+      if (img) setHeroImage(img);
+    });
+
+    fetchHeroSlidesAsync().then(slides => {
+      if (slides) setHeroSlides(slides);
     });
 
     fetchProvenanceDataAsync().then(pData => {
