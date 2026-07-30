@@ -216,6 +216,10 @@ const mapDbItemToFrontend = (dbItem) => {
   const condition_fr = dbItem.condition_fr || extPayload.condition_fr || extractFieldValue(dbItem, 'condition', 'fr');
   const provenance_en = dbItem.provenance_en || extPayload.provenance_en || extractFieldValue(dbItem, 'provenance', 'en');
   const provenance_fr = dbItem.provenance_fr || extPayload.provenance_fr || extractFieldValue(dbItem, 'provenance', 'fr');
+  const publisher_en = dbItem.publisher_en || extPayload.publisher_en || extractFieldValue(dbItem, 'publisher', 'en');
+  const publisher_fr = dbItem.publisher_fr || extPayload.publisher_fr || extractFieldValue(dbItem, 'publisher', 'fr');
+  const city_en = dbItem.city_en || extPayload.city_en || extractFieldValue(dbItem, 'city', 'en');
+  const city_fr = dbItem.city_fr || extPayload.city_fr || extractFieldValue(dbItem, 'city', 'fr');
 
   const historicalContext = dbItem.historical_context || dbItem.historicalContext || extPayload.historicalContext || '';
   const conditionReport = dbItem.condition_report || dbItem.conditionReport || extPayload.conditionReport || '';
@@ -264,6 +268,10 @@ const mapDbItemToFrontend = (dbItem) => {
     condition_fr,
     provenance_en,
     provenance_fr,
+    publisher_en,
+    publisher_fr,
+    city_en,
+    city_fr,
 
     provenance_details_en: extPayload.provenanceDetails_en || extractFieldValue(dbItem, 'provenanceDetails', 'en'),
     provenance_details_fr: extPayload.provenanceDetails_fr || extractFieldValue(dbItem, 'provenanceDetails', 'fr'),
@@ -318,6 +326,10 @@ const mapFrontendItemToDb = (item) => {
       historicalContext_fr: item.historicalContext_fr || '',
       collationSpecs_en: item.collationSpecs_en || '',
       collationSpecs_fr: item.collationSpecs_fr || '',
+      publisher_en: item.publisher_en || '',
+      publisher_fr: item.publisher_fr || '',
+      city_en: item.city_en || '',
+      city_fr: item.city_fr || '',
       emptyFields: item.emptyFields || item.empty_fields || {}
     }
   });
@@ -404,6 +416,10 @@ const mapFrontendItemToBasicDb = (item) => {
       historicalContext_fr: item.historicalContext_fr || '',
       collationSpecs_en: item.collationSpecs_en || '',
       collationSpecs_fr: item.collationSpecs_fr || '',
+      publisher_en: item.publisher_en || '',
+      publisher_fr: item.publisher_fr || '',
+      city_en: item.city_en || '',
+      city_fr: item.city_fr || '',
       emptyFields: item.emptyFields || item.empty_fields || {}
     }
   });
