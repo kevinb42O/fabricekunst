@@ -221,6 +221,7 @@ const mapDbItemToFrontend = (dbItem) => {
   const conditionReport = dbItem.condition_report || dbItem.conditionReport || extPayload.conditionReport || '';
   const provenanceDetails = dbItem.provenance_details || dbItem.provenanceDetails || extPayload.provenanceDetails || '';
   const collationSpecs = dbItem.collation_specs || dbItem.collationSpecs || extPayload.collationSpecs || '';
+  const emptyFields = dbItem.emptyFields || dbItem.empty_fields || extPayload.emptyFields || extPayload.empty_fields || {};
 
   return {
     ...dbItem,
@@ -247,6 +248,8 @@ const mapDbItemToFrontend = (dbItem) => {
     conditionReport,
     provenanceDetails,
     collationSpecs,
+    emptyFields,
+    empty_fields: emptyFields,
     images: cleanImages,
 
     title_en,
@@ -314,7 +317,8 @@ const mapFrontendItemToDb = (item) => {
       historicalContext_en: item.historicalContext_en || '',
       historicalContext_fr: item.historicalContext_fr || '',
       collationSpecs_en: item.collationSpecs_en || '',
-      collationSpecs_fr: item.collationSpecs_fr || ''
+      collationSpecs_fr: item.collationSpecs_fr || '',
+      emptyFields: item.emptyFields || item.empty_fields || {}
     }
   });
 
@@ -399,7 +403,8 @@ const mapFrontendItemToBasicDb = (item) => {
       historicalContext_en: item.historicalContext_en || '',
       historicalContext_fr: item.historicalContext_fr || '',
       collationSpecs_en: item.collationSpecs_en || '',
-      collationSpecs_fr: item.collationSpecs_fr || ''
+      collationSpecs_fr: item.collationSpecs_fr || '',
+      emptyFields: item.emptyFields || item.empty_fields || {}
     }
   });
 
@@ -516,6 +521,8 @@ export const fetchCatalogAsync = async () => {
           if (!localItem) return remoteItem;
           return {
             ...remoteItem,
+            emptyFields: remoteItem.emptyFields && Object.keys(remoteItem.emptyFields).length > 0 ? remoteItem.emptyFields : (localItem.emptyFields || remoteItem.empty_fields || localItem.empty_fields || {}),
+            empty_fields: remoteItem.empty_fields && Object.keys(remoteItem.empty_fields).length > 0 ? remoteItem.empty_fields : (localItem.empty_fields || remoteItem.emptyFields || localItem.emptyFields || {}),
             historicalContext: remoteItem.historicalContext || localItem.historicalContext || '',
             conditionReport: remoteItem.conditionReport || localItem.conditionReport || '',
             provenanceDetails: remoteItem.provenanceDetails || localItem.provenanceDetails || '',

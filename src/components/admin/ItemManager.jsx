@@ -186,8 +186,9 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const toggleFieldNvt = (field, lang = formLang) => {
     if (!editingItem) return;
     const key = `${field}_${lang}`;
-    const currentEmpty = typeof editingItem.emptyFields === 'object' && editingItem.emptyFields !== null && !Array.isArray(editingItem.emptyFields)
-      ? { ...editingItem.emptyFields }
+    const rawEmpty = editingItem.emptyFields || editingItem.empty_fields;
+    const currentEmpty = typeof rawEmpty === 'object' && rawEmpty !== null && !Array.isArray(rawEmpty)
+      ? { ...rawEmpty }
       : {};
 
     if (currentEmpty[key] || currentEmpty[field]) {
@@ -199,15 +200,17 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
     setEditingItem({
       ...editingItem,
-      emptyFields: currentEmpty
+      emptyFields: currentEmpty,
+      empty_fields: currentEmpty
     });
   };
 
   const toggleLangNvt = (lang = formLang) => {
     if (!editingItem) return;
     const key = `lang_${lang}`;
-    const currentEmpty = typeof editingItem.emptyFields === 'object' && editingItem.emptyFields !== null && !Array.isArray(editingItem.emptyFields)
-      ? { ...editingItem.emptyFields }
+    const rawEmpty = editingItem.emptyFields || editingItem.empty_fields;
+    const currentEmpty = typeof rawEmpty === 'object' && rawEmpty !== null && !Array.isArray(rawEmpty)
+      ? { ...rawEmpty }
       : {};
 
     if (currentEmpty[key]) {
@@ -218,7 +221,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
     setEditingItem({
       ...editingItem,
-      emptyFields: currentEmpty
+      emptyFields: currentEmpty,
+      empty_fields: currentEmpty
     });
   };
 
@@ -250,7 +254,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     if (!editingItem) return;
     
     // Auto-unmark N.v.t. if typing new value
-    let newEmptyFields = editingItem.emptyFields;
+    let newEmptyFields = editingItem.emptyFields || editingItem.empty_fields;
     const key = `${field}_${formLang}`;
     if (value && value.trim() !== '' && newEmptyFields && typeof newEmptyFields === 'object') {
       if (newEmptyFields[key] || newEmptyFields[field]) {
@@ -261,7 +265,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     }
 
     if (formLang === 'nl') {
-      setEditingItem({ ...editingItem, [field]: value, emptyFields: newEmptyFields });
+      setEditingItem({ ...editingItem, [field]: value, emptyFields: newEmptyFields, empty_fields: newEmptyFields });
     } else {
       const langLower = formLang.toLowerCase();
       const langCap = formLang.charAt(0).toUpperCase() + formLang.slice(1).toLowerCase();
@@ -271,6 +275,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       setEditingItem({
         ...editingItem,
         emptyFields: newEmptyFields,
+        empty_fields: newEmptyFields,
         [`${camelField}_${langLower}`]: value,
         [`${snakeField}_${langLower}`]: value,
         [`${camelField}${langCap}`]: value
