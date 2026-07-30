@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Mail, Award, Plus, ArrowRight, Users, Star, Inbox } from 'lucide-react';
+import { BookOpen, Mail, Plus, ArrowRight, Users, Star, Inbox } from 'lucide-react';
 
 export default function DashboardOverview({
   items = [],
@@ -25,49 +25,31 @@ export default function DashboardOverview({
   return (
     <div className="space-y-8 animate-fade-in text-[#1C1A18] font-sans">
       
-      {/* A. HERO WELCOME BANNER (Dark Rounded Banner) */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#1C1A18] text-white p-6 sm:p-8 shadow-xl border border-[#2C2926]">
-        {/* Soft Radial Gold Accent Glow */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(197,160,89,0.18),transparent_70%)] pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            {/* Subtle Gold Badge */}
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 text-[#C5A059] text-xs font-sans font-semibold mb-3">
-              <Award className="w-3.5 h-3.5" />
-              <span>Atelier Rembrandt Beheersysteem</span>
-            </div>
-            
-            {/* Welcoming Serif Header */}
-            <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-white">
-              Welkom terug
-            </h2>
-            
-            <p className="text-stone-300 text-xs sm:text-sm max-w-xl mt-1.5 leading-relaxed font-sans font-normal">
-              Beheer uw antiquarische boekencollectie, historische kunstwerken en binnengekomen aanvragen van internationale verzamelaars.
-            </p>
-          </div>
+      {/* A. HERO WELCOME SECTION (Clean Typography, No dark box container) */}
+      <div className="flex items-center justify-between gap-6 pb-6 border-b border-[#EBE7DF] flex-wrap sm:flex-nowrap">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-[#1C1A18] tracking-tight shrink-0">
+          Welkom terug, Fabrice
+        </h1>
 
-          {/* Primary Action Area (Balanced CTAs) */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            {/* Solid Antique Gold CTA */}
-            <button
-              onClick={onCreateNewItem}
-              className="px-5 py-3 rounded-xl bg-[#C5A059] hover:bg-[#B38F48] text-[#1C1A18] text-xs font-sans font-bold shadow-lg transition-all flex items-center space-x-2 group hover:scale-[1.02] cursor-pointer"
-            >
-              <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
-              <span>+ Nieuw Stuk Invoeren</span>
-            </button>
+        {/* Primary Action Area (Balanced CTAs) */}
+        <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+          {/* Solid Antique Gold CTA */}
+          <button
+            onClick={onCreateNewItem}
+            className="px-5 py-3 rounded-xl bg-[#C5A059] hover:bg-[#B38F48] text-[#1C1A18] text-xs font-sans font-bold shadow-sm transition-all flex items-center space-x-2 group hover:scale-[1.01] cursor-pointer whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
+            <span>+ Nieuw Stuk Invoeren</span>
+          </button>
 
-            {/* Outlined Secondary CTA with High Contrast */}
-            <button
-              onClick={() => onNavigateTab('items')}
-              className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white text-xs font-sans font-bold transition-all flex items-center space-x-2 cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4 text-[#C5A059]" />
-              <span>Bekijk Collectie</span>
-            </button>
-          </div>
+          {/* Outlined Secondary CTA (Styled for light background) */}
+          <button
+            onClick={() => onNavigateTab('items')}
+            className="px-5 py-3 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#D8CEB8] text-[#1C1A18] text-xs font-sans font-bold transition-all flex items-center space-x-2 hover:border-[#C5A059] cursor-pointer whitespace-nowrap"
+          >
+            <BookOpen className="w-4 h-4 text-[#C5A059]" />
+            <span>Bekijk Collectie</span>
+          </button>
         </div>
       </div>
 
