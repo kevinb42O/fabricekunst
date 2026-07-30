@@ -220,26 +220,8 @@ export default function AdminDashboard({
         </div>
 
         {/* Sidebar Bottom Profile Snippet & Action Buttons */}
-        <div className="p-4 border-t border-[#2C2926] space-y-3 bg-[#161412]">
+        <div className="p-4 border-t border-[#2C2926] bg-[#161412]">
           
-          {/* User Profile Snippet */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#23201D] border border-[#332F2B]">
-            <div className="flex items-center space-x-3 min-w-0">
-              <img 
-                src="/images/Atelier Rembrandt.png" 
-                alt="Atelier Rembrandt" 
-                className="h-7 w-auto object-contain shrink-0 filter brightness-0 invert"
-              />
-              <div className="min-w-0">
-                <p className="text-xs font-sans font-semibold text-stone-100 truncate">Admin Console</p>
-                <p className="text-[11px] font-sans text-emerald-400 flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Online</span>
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Action Buttons: Neutral Website & Crimson Logout */}
           <div className="grid grid-cols-2 gap-2.5">
             <button
