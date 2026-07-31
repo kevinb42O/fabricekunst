@@ -67,7 +67,7 @@ export function LanguageProvider({ children }) {
         if (fallbackDict !== null) {
           dict = fallbackDict;
         } else {
-          dict = path;
+          dict = undefined;
         }
         break;
       }

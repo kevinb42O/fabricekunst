@@ -583,7 +583,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       {/* ------------------------------------------------------------- */}
       {/* MOBILE STICKY THUMB-ZONE ACTION BAR (MOBILE UX BEST PRACTICE)  */}
       {/* ------------------------------------------------------------- */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#D8CEB8] p-3.5 z-40 shadow-lg flex items-center justify-between gap-3">
+      <div className="md:hidden fixed bottom-0 inset-x-0 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#D8CEB8] p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] z-40 shadow-lg flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <span className="text-[10px] font-mono text-[#8E7035] font-bold uppercase tracking-wider block">{item.ref}</span>
           <span className="text-base font-serif font-bold text-[#111111] block leading-tight truncate">
