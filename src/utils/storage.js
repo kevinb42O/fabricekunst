@@ -639,26 +639,44 @@ export const saveItemAsync = async (item) => {
 
   if (isSupabaseConfigured() && supabase) {
     try {
+      let mainTableSuccess = false;
       const dbItem = mapFrontendItemToDb(item);
       const { error } = await supabase.from('items').upsert(dbItem, { onConflict: 'id' });
       
-      if (error) {
+      if (!error) {
+        mainTableSuccess = true;
+      } else {
         console.warn("Supabase item upsert warning (retrying with basic schema):", error.message);
         const basicDbItem = mapFrontendItemToBasicDb(item);
         const { error: fallbackErr } = await supabase.from('items').upsert(basicDbItem, { onConflict: 'id' });
-        if (fallbackErr) {
-          console.error("Supabase item save fallback error:", fallbackErr);
-          supabaseSuccess = false;
-          supabaseError = formatSupabaseErrorMessage(fallbackErr);
+        if (!fallbackErr) {
+          mainTableSuccess = true;
+        } else {
+          console.warn("Supabase basic schema upsert warning:", fallbackErr.message);
+          supabaseError = formatSupabaseErrorMessage(fallbackErr || error);
         }
       }
 
       // Save full item JSON into admin_settings as a bulletproof secondary backup
-      await supabase.from('admin_settings').upsert({
-        key: `item_ext_${item.id}`,
-        value: JSON.stringify(item),
-        updated_at: new Date().toISOString()
-      }).catch(err => console.warn("Could not save item_ext backup:", err));
+      let extBackupSuccess = false;
+      try {
+        const { error: extErr } = await supabase.from('admin_settings').upsert({
+          key: `item_ext_${item.id}`,
+          value: JSON.stringify(item),
+          updated_at: new Date().toISOString()
+        });
+        if (!extErr) extBackupSuccess = true;
+      } catch (backupErr) {
+        console.warn("Could not save item_ext backup:", backupErr);
+      }
+
+      // If either main items table OR admin_settings JSON backup succeeded, cloud save is verified!
+      if (mainTableSuccess || extBackupSuccess) {
+        supabaseSuccess = true;
+        supabaseError = null;
+      } else {
+        supabaseSuccess = false;
+      }
 
     } catch (e) {
       console.error("Supabase item save exception:", e);
