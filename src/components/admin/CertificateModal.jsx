@@ -535,7 +535,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               <label className="flex items-center justify-between text-xs text-stone-300 cursor-pointer py-1">
                 <span className="flex items-center space-x-2">
                   <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                  <span>Gouden Galerij Stempel</span>
+                  <span>Officiële Stempel (Andor)</span>
                 </span>
                 <input
                   type="checkbox"

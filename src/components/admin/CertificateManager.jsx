@@ -403,7 +403,7 @@ export default function CertificateManager({
             <div className="grid grid-cols-3 gap-2">
               {[
                 { icon: ImageIcon, label: 'Foto Tonen', checked: showImage, set: setShowImage },
-                { icon: Sparkles, label: 'Galerij Stempel', checked: showSeal, set: setShowSeal },
+                { icon: Sparkles, label: 'Officiële Stempel', checked: showSeal, set: setShowSeal },
                 { icon: CheckCircle2, label: 'Handtekening', checked: showSignature, set: setShowSignature },
               ].map(({ icon: Icon, label, checked, set }) => (
                 <label key={label} className="flex flex-col items-center space-y-1.5 p-3 rounded-xl bg-[#F4F0E8] border border-[#D8CEB8] cursor-pointer text-center hover:border-[#B8860B] transition-colors">
