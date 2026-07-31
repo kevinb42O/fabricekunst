@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
 import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
@@ -142,6 +142,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [formLang, setFormLang] = useState('nl');
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   // AI Translation Helper State
   const [showAiImportModal, setShowAiImportModal] = useState(false);
@@ -966,196 +967,271 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         </div>
       ) : (
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((item) => (
-            <div
-              key={item.id}
-              className="p-5 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm space-y-4 flex flex-col justify-between hover:border-[#111111] transition-all group"
-            >
-              <div className="space-y-3">
-                
-                {/* Header Badge Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-[10px] font-mono text-[#111111] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                      {item.ref}
-                    </span>
-                    {item.itemType === 'painting' ? (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 flex items-center space-x-1">
-                        <Palette className="w-3 h-3 text-amber-700" />
-                        <span>Schilderij</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((item) => {
+            const translationStatus = getItemTranslationStatus(item);
+            const mainImgUrl = item.images && item.images[0]?.url ? item.images[0].url : item.image || "/images/scarron-spines-white-bg.jpg";
+            const isMenuOpen = openMenuId === item.id;
+
+            return (
+              <div
+                key={item.id}
+                className="group relative bg-white border border-[#D8CEB8]/80 rounded-3xl shadow-sm hover:shadow-[0_20px_40px_rgba(17,17,17,0.1)] hover:border-[#111111] hover:-translate-y-0.5 transition-all duration-500 ease-out flex flex-col justify-between overflow-hidden"
+              >
+                {/* Top Hero Image Showcase */}
+                <div className="relative aspect-[4/3] w-full bg-[#FAF7F2] overflow-hidden border-b border-[#EAE4D8]">
+                  <img
+                    src={mainImgUrl}
+                    alt={item.title || ''}
+                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-1000 ease-out"
+                  />
+
+                  {/* Subtle Dark Vignette Overlay on Hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  {/* Top Floating Badges */}
+                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10 pointer-events-auto">
+                    {/* Left Badges */}
+                    <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                      <span className="text-[9.5px] font-mono tracking-wider font-bold text-[#111111] px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md shadow-xs border border-stone-200/90">
+                        {item.ref}
                       </span>
-                    ) : (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-stone-100 text-stone-800 border border-stone-300 flex items-center space-x-1">
-                        <BookOpen className="w-3 h-3 text-stone-600" />
-                        <span>Boek</span>
-                      </span>
-                    )}
-                    {item.featured && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] text-[#B8860B] border border-[#B8860B]/40 flex items-center space-x-1">
-                        <Star className="w-3 h-3 fill-[#B8860B]" />
-                        <span>Topstuk</span>
-                      </span>
-                    )}
+
+                      {item.itemType === 'painting' ? (
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50/90 backdrop-blur-md text-amber-950 border border-amber-300/80 flex items-center space-x-1 shadow-xs">
+                          <Palette className="w-3 h-3 text-amber-700" />
+                          <span>Kunst</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-stone-100/90 backdrop-blur-md text-stone-800 border border-stone-300/80 flex items-center space-x-1 shadow-xs">
+                          <BookOpen className="w-3 h-3 text-stone-600" />
+                          <span>Boek</span>
+                        </span>
+                      )}
+
+                      {item.featured && (
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#111111]/90 backdrop-blur-md text-[#D4AF37] border border-[#B8860B]/50 flex items-center space-x-1 shadow-xs ring-1 ring-[#D4AF37]/30">
+                          <Star className="w-3 h-3 fill-[#D4AF37]" />
+                          <span>Topstuk</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Quick Status Select Pill */}
+                    <select
+                      value={item.status}
+                      onChange={(e) => handleQuickStatusChange(item, e.target.value)}
+                      className={`text-[10px] font-bold px-3 py-1 rounded-full cursor-pointer focus:outline-none shadow-sm border transition-all duration-300 ${
+                        item.status === 'Beschikbaar'
+                          ? 'bg-emerald-700/95 text-white border-emerald-800 hover:bg-emerald-800'
+                          : item.status === 'Gereserveerd'
+                          ? 'bg-amber-700/95 text-white border-amber-800 hover:bg-amber-800'
+                          : 'bg-stone-900/95 text-white border-stone-800 hover:bg-black'
+                      }`}
+                    >
+                      <option value="Beschikbaar" className="bg-white text-stone-900 font-sans">Beschikbaar</option>
+                      <option value="Gereserveerd" className="bg-white text-stone-900 font-sans">Gereserveerd</option>
+                      <option value="Verkocht" className="bg-white text-stone-900 font-sans">Verkocht</option>
+                    </select>
                   </div>
 
-                  {/* Translation Status Badge in Grid View */}
-                  {(() => {
-                    const translationStatus = getItemTranslationStatus(item);
-                    return (
-                      <div className="relative group/tooltip inline-block">
-                        <div className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold flex items-center space-x-1 border cursor-help transition-all ${
-                          translationStatus.isComplete 
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
-                            : translationStatus.completeCount === 2
-                            ? 'bg-amber-50 text-amber-800 border-amber-300'
-                            : 'bg-rose-50 text-rose-800 border-rose-300'
-                        }`}>
-                          {translationStatus.isComplete ? (
-                            <>
-                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                              <span>3/3 Talen</span>
-                            </>
-                          ) : (
-                            <>
-                              <Globe className="w-2.5 h-2.5 text-amber-600 shrink-0" />
-                              <span>{translationStatus.completeCount}/3 Talen</span>
-                            </>
-                          )}
-                        </div>
+                  {/* Hover Quick Action Overlay on Image Bottom */}
+                  <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center justify-between z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+                    <a
+                      href={`/collectie/${item.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 rounded-full bg-white/95 text-[#111111] hover:bg-[#111111] hover:text-white transition-all duration-300 text-[11px] font-serif font-bold flex items-center space-x-1.5 shadow-lg"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Bekijk op site</span>
+                    </a>
 
-                        {/* Hover Tooltip */}
-                        <div className="absolute right-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-56 p-3 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
-                          <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
-                            <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
-                              <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
-                              <span>Vertaalstatus ({translationStatus.completeCount}/3)</span>
-                            </span>
-                            {translationStatus.isComplete ? (
-                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
-                            ) : (
-                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700">Ontbreekt</span>
-                            )}
-                          </div>
-
-                          <div className="space-y-1.5 text-[11px]">
-                            {Object.values(translationStatus.details).map((langInfo) => (
-                              <div key={langInfo.code} className="flex items-center justify-between font-mono text-[10px]">
-                                <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
-                                {langInfo.missing.length === 0 ? (
-                                  <span className="text-emerald-400 font-bold">✓ Compleet</span>
-                                ) : (
-                                  <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Quick Status Dropdown */}
-                  <select
-                    value={item.status}
-                    onChange={(e) => handleQuickStatusChange(item, e.target.value)}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full cursor-pointer focus:outline-none transition-colors ${
-                      item.status === 'Beschikbaar' ? 'bg-emerald-100 text-emerald-900 border border-emerald-500/40' :
-                      item.status === 'Gereserveerd' ? 'bg-amber-100 text-amber-900 border border-amber-500/40' :
-                      'bg-stone-200 text-stone-800 border border-stone-300'
-                    }`}
-                  >
-                    <option value="Beschikbaar">Beschikbaar</option>
-                    <option value="Gereserveerd">Gereserveerd</option>
-                    <option value="Verkocht">Verkocht</option>
-                  </select>
+                    <button
+                      onClick={() => handleToggleFeatured(item)}
+                      className={`p-2 rounded-full backdrop-blur-md shadow-lg transition-all duration-300 ${
+                        item.featured
+                          ? 'bg-amber-500 text-white shadow-amber-500/30'
+                          : 'bg-white/95 text-stone-700 hover:text-[#B8860B] hover:bg-white'
+                      }`}
+                      title={item.featured ? 'Verwijder als Topstuk' : 'Markeer als Topstuk'}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${item.featured ? 'fill-white' : ''}`} />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Main Content Row */}
-                <div className="flex items-start space-x-3">
-                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[#D8CEB8] bg-[#FAF7F2] shrink-0">
-                    <img
-                      src={item.images && item.images[0]?.url ? item.images[0].url : "/images/scarron-spines-white-bg.jpg"}
-                      alt=""
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-
-                  <div className="min-w-0 flex-grow space-y-1">
-                    <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase tracking-wider block truncate">
+                {/* Card Body Information */}
+                <div className="p-5 flex-grow flex flex-col justify-between space-y-3.5">
+                  <div className="space-y-1.5">
+                    <span className="text-[9.5px] font-mono font-bold text-[#B8860B] uppercase tracking-[0.15em] block truncate">
                       {item.category} • {item.century}
                     </span>
-                    <h4 className="text-sm font-serif font-bold text-[#111111] line-clamp-2 leading-tight">
+
+                    <h4 className="text-[15px] font-serif font-bold text-[#111111] line-clamp-2 leading-snug tracking-tight group-hover:text-[#B8860B] transition-colors duration-300" title={item.title}>
                       {item.title}
                     </h4>
-                    <p className="text-[11px] text-[#555555] truncate">
-                      {item.author} ({item.year})
+
+                    <p className="text-xs text-[#666666] line-clamp-1 font-serif italic">
+                      {item.author || item.subtitle || 'Atelier Rembrandt'} {item.year ? `(${item.year})` : ''}
                     </p>
-                    <p className="text-xs font-serif text-[#111111] font-bold">
-                      {item.price}
-                    </p>
+                  </div>
+
+                  <div className="pt-2.5 flex items-baseline justify-between border-t border-[#FAF7F2]">
+                    <span className="text-[11px] uppercase tracking-wider font-mono text-[#888888]">Prijs</span>
+                    <span className="text-sm font-serif font-bold text-[#111111] tracking-tight">
+                      {item.price || 'Prijs op aanvraag'}
+                    </span>
                   </div>
                 </div>
 
-              </div>
+                {/* Card Footer Toolbar */}
+                <div className="px-5 py-3 bg-[#FAF7F2] border-t border-[#EAE4D8] flex items-center justify-between gap-2">
+                  {/* Translation Status Badge with Hover Tooltip */}
+                  <div className="relative group/tooltip inline-block">
+                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold flex items-center space-x-1 border cursor-help transition-all duration-300 ${
+                      translationStatus.isComplete
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                        : translationStatus.completeCount === 2
+                        ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                        : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
+                    }`}>
+                      {translationStatus.isComplete ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span>3/3 Talen</span>
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span>{translationStatus.completeCount}/3 Talen</span>
+                        </>
+                      )}
+                    </div>
 
-              {/* Action Buttons Row */}
-              <div className="pt-3 border-t border-[#D8CEB8] flex items-center justify-between text-xs">
-                
-                <button
-                  onClick={() => handleToggleFeatured(item)}
-                  className={`p-2 rounded-xl border transition-colors ${
-                    item.featured
-                      ? 'bg-[#FAF7F2] border-[#B8860B] text-[#B8860B]'
-                      : 'bg-white border-[#D8CEB8] text-[#888888] hover:text-[#111111]'
-                  }`}
-                  title={item.featured ? "Verwijder topstuk markering" : "Markeer als topstuk op homepage"}
-                >
-                  <Star className={`w-3.5 h-3.5 ${item.featured ? 'fill-[#B8860B]' : ''}`} />
-                </button>
+                    {/* Hover Tooltip showing detailed language status */}
+                    <div className="absolute left-0 bottom-full mb-2.5 hidden group-hover/tooltip:block z-50 w-56 p-3.5 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
+                      <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
+                        <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
+                          <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
+                          <span>Vertaalstatus ({translationStatus.completeCount}/3)</span>
+                        </span>
+                        {translationStatus.isComplete ? (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
+                        ) : (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700">Ontbreekt</span>
+                        )}
+                      </div>
 
-                <div className="flex items-center space-x-1.5">
-                  <button
-                    onClick={() => onOpenCertificate && onOpenCertificate(item)}
-                    className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
-                    title="Echtheidscertificaat (PDF) Genereren"
-                  >
-                    <Award className="w-3.5 h-3.5" />
-                  </button>
+                      <div className="space-y-1.5 text-[11px]">
+                        {Object.values(translationStatus.details).map((langInfo) => (
+                          <div key={langInfo.code} className="flex items-center justify-between font-mono text-[10px]">
+                            <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
+                            {langInfo.missing.length === 0 ? (
+                              <span className="text-emerald-400 font-bold">✓ Compleet</span>
+                            ) : (
+                              <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={() => handleDuplicate(item)}
-                    className="p-2 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-stone-200 transition-colors"
-                    title="Dupliceer item"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
+                  {/* Action Buttons: Primary Edit Button + Contextual Menu */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#111111] text-white hover:bg-[#B8860B] text-xs font-serif font-bold transition-all duration-300 flex items-center space-x-1.5 shadow-sm active:scale-95"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>Bewerken</span>
+                    </button>
 
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="px-3.5 py-1.5 rounded-xl bg-[#111111] text-white hover:bg-stone-800 text-xs font-bold transition-colors flex items-center space-x-1 shadow-sm"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>Bewerken</span>
-                  </button>
+                    {/* Dropdown Menu for lower-frequency actions */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(isMenuOpen ? null : item.id);
+                        }}
+                        className={`p-1.5 rounded-xl border transition-all duration-200 ${
+                          isMenuOpen
+                            ? 'bg-[#111111] text-white border-[#111111]'
+                            : 'bg-white border-[#D8CEB8] text-stone-600 hover:text-[#111111] hover:border-stone-400'
+                        }`}
+                        title="Meer opties"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Weet je zeker dat je "${item.title}" wilt verwijderen?`)) {
-                        onDeleteItem(item.id);
-                        if (onShowToast) onShowToast(`"${item.title}" verwijderd.`);
-                      }
-                    }}
-                    className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-colors"
-                    title="Verwijderen"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                      {isMenuOpen && (
+                        <>
+                          {/* Backdrop click closer */}
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setOpenMenuId(null)}
+                          />
+
+                          {/* Contextual Menu Content */}
+                          <div className="absolute right-0 bottom-full mb-2 z-50 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-[#D8CEB8] py-1.5 text-xs text-[#111111] animate-in fade-in slide-in-from-bottom-2 duration-200">
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                if (onOpenCertificate) onOpenCertificate(item);
+                              }}
+                              className="w-full px-3.5 py-2 text-left hover:bg-[#FAF7F2] flex items-center space-x-2.5 text-[#B8860B] font-medium transition-colors"
+                            >
+                              <Award className="w-4 h-4 shrink-0 text-[#B8860B]" />
+                              <span>Echtheidscertificaat (PDF)</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleDuplicate(item);
+                              }}
+                              className="w-full px-3.5 py-2 text-left hover:bg-[#FAF7F2] flex items-center space-x-2.5 font-medium transition-colors"
+                            >
+                              <Copy className="w-4 h-4 shrink-0 text-stone-500" />
+                              <span>Dupliceer item</span>
+                            </button>
+
+                            <a
+                              href={`/collectie/${item.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setOpenMenuId(null)}
+                              className="w-full px-3.5 py-2 text-left hover:bg-[#FAF7F2] flex items-center space-x-2.5 font-medium transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4 shrink-0 text-stone-500" />
+                              <span>Bekijk op site</span>
+                            </a>
+
+                            <div className="my-1 border-t border-stone-100" />
+
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                if (window.confirm(`Weet je zeker dat je "${item.title}" wilt verwijderen?`)) {
+                                  onDeleteItem(item.id);
+                                  if (onShowToast) onShowToast(`"${item.title}" verwijderd.`);
+                                }
+                              }}
+                              className="w-full px-3.5 py-2 text-left hover:bg-rose-50 text-rose-700 flex items-center space-x-2.5 font-medium transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4 shrink-0 text-rose-600" />
+                              <span>Verwijderen</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
