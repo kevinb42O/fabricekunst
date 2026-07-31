@@ -62,6 +62,13 @@ export default function CertificateManager({
   const previewContainerRef = useRef(null);
   const [previewScale, setPreviewScale] = useState(1);
 
+  // Sync selectedItem state when initialItem prop changes from parent
+  useEffect(() => {
+    if (initialItem) {
+      setSelectedItem(initialItem);
+    }
+  }, [initialItem]);
+
   // Scale the certificate preview to fit its container
   useEffect(() => {
     const updateScale = () => {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink } from 'lucide-react';
 import { uploadCatalogImage } from '../../utils/storage';
 import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
@@ -142,7 +143,23 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [formLang, setFormLang] = useState('nl');
+  const [editorTab, setEditorTab] = useState('specs'); // 'specs' | 'multilingual'
   const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Global Keyboard Shortcut (Cmd+S / Ctrl+S to Save, Esc to Close)
+  useEffect(() => {
+    if (!editingItem) return;
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSaveForm();
+      } else if (e.key === 'Escape') {
+        setEditingItem(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingItem, handleSaveForm]);
 
   // AI Translation Helper State
   const [showAiImportModal, setShowAiImportModal] = useState(false);
@@ -158,6 +175,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   // Input for adding photo via URL in modal
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newImageCaption, setNewImageCaption] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   const emptyItem = {
     itemType: 'book',
@@ -468,10 +486,15 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   };
 
   const handleDuplicate = (item) => {
+    let newRef = `FB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    while (items.some(i => i.ref === newRef)) {
+      newRef = `FB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    }
+
     const duplicatedItem = {
       ...item,
       id: `item-${Date.now()}`,
-      ref: `FB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      ref: newRef,
       title: `${item.title} (Kopie)`
     };
     onSaveItem(duplicatedItem);
@@ -484,17 +507,53 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     if (onShowToast) onShowToast(`Status van "${item.title}" gewijzigd naar ${newStatus}`);
   };
 
+  const handleBatchStatusChange = (newStatus) => {
+    if (selectedItemIds.length === 0) return;
+    let updatedCount = 0;
+    items.forEach(item => {
+      if (selectedItemIds.includes(item.id)) {
+        onSaveItem({ ...item, status: newStatus });
+        updatedCount++;
+      }
+    });
+    if (onShowToast) onShowToast(`Status van ${updatedCount} geselecteerde objecten gewijzigd naar "${newStatus}"`);
+    setSelectedItemIds([]);
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedItemIds.length === 0) return;
+    if (window.confirm(`Weet u zeker dat u ${selectedItemIds.length} objecten wilt verwijderen uit de collectie?`)) {
+      const count = selectedItemIds.length;
+      selectedItemIds.forEach(id => onDeleteItem(id));
+      if (onShowToast) onShowToast(`🗑️ ${count} objecten verwijderd uit collectie.`);
+      setSelectedItemIds([]);
+    }
+  };
+
   const handleToggleFeatured = (item) => {
     const updated = { ...item, featured: !item.featured };
     onSaveItem(updated);
     if (onShowToast) onShowToast(updated.featured ? `Gemarkeerd als Topstuk!` : `Topstuk markering verwijderd.`);
   };
 
-  const handleSaveForm = (e) => {
-    e.preventDefault();
-    if (!editingItem.title.trim()) return;
-    onSaveItem(editingItem);
-    if (onShowToast) onShowToast(`"${editingItem.title}" opgeslagen in collectie!`);
+  const handleSaveForm = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!editingItem) return;
+
+    if (!editingItem.title || !editingItem.title.trim()) {
+      if (onShowToast) onShowToast("⚠️ Kan niet opslaan: Vul a.u.b. ten minste een titel in voor het object.");
+      setEditorTab('specs');
+      return;
+    }
+
+    if (onShowToast) onShowToast(`⏳ Bezig met opslaan van "${editingItem.title}" in cloud...`);
+
+    const result = await onSaveItem(editingItem);
+    if (result && result.error) {
+      if (onShowToast) onShowToast(`⚠️ Lokaal bewaard, maar cloud-synchronisatie mislukt: ${result.error}`);
+    } else {
+      if (onShowToast) onShowToast(`✨ "${editingItem.title}" succesvol opgeslagen & geverifieerd in de cloud!`);
+    }
     setEditingItem(null);
   };
 
@@ -517,23 +576,25 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         }
       } catch (err) {
         console.error("Fout bij uploaden foto:", err);
+        if (onShowToast) onShowToast("⚠️ Fout bij uploaden foto. Probeer opnieuw.", "error");
       }
     }
     setIsUploading(false);
   };
 
   const handleAddImageUrl = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!newImageUrl.trim()) return;
     setEditingItem(prev => ({
       ...prev,
       images: [
-        ...prev.images,
+        ...(prev.images || []),
         { url: newImageUrl.trim(), caption: newImageCaption.trim() || 'Afbeelding' }
       ]
     }));
     setNewImageUrl('');
     setNewImageCaption('');
+    if (onShowToast) onShowToast("📷 Afbeelding URL toegevoegd aan galerij!");
   };
 
   const removeImage = (index) => {
@@ -549,6 +610,37 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       const newImgs = [...prev.images];
       const selected = newImgs.splice(index, 1)[0];
       newImgs.unshift(selected);
+      return { ...prev, images: newImgs };
+    });
+    if (onShowToast) onShowToast("⭐ Hoofdafbeelding gewijzigd!");
+  };
+
+  const moveImageUp = (index) => {
+    if (index <= 0) return;
+    setEditingItem(prev => {
+      const newImgs = [...prev.images];
+      const temp = newImgs[index - 1];
+      newImgs[index - 1] = newImgs[index];
+      newImgs[index] = temp;
+      return { ...prev, images: newImgs };
+    });
+  };
+
+  const moveImageDown = (index) => {
+    setEditingItem(prev => {
+      if (!prev.images || index >= prev.images.length - 1) return prev;
+      const newImgs = [...prev.images];
+      const temp = newImgs[index + 1];
+      newImgs[index + 1] = newImgs[index];
+      newImgs[index] = temp;
+      return { ...prev, images: newImgs };
+    });
+  };
+
+  const updateImageCaption = (index, caption) => {
+    setEditingItem(prev => {
+      const newImgs = [...prev.images];
+      newImgs[index] = { ...newImgs[index], caption };
       return { ...prev, images: newImgs };
     });
   };
@@ -688,6 +780,30 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           </button>
         </div>
 
+        {/* Category Filter Select Dropdown */}
+        <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs">
+          <span className="text-[10px] font-mono text-[#888888] px-1 hidden md:inline">Categorie:</span>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="bg-transparent text-xs font-semibold text-[#111111] focus:outline-none cursor-pointer pr-2"
+          >
+            <option value="Alle">Alle Categorieën</option>
+            <option value="Literatuur & Filosofie">Literatuur & Filosofie</option>
+            <option value="Literatuur & Satire">Literatuur & Satire</option>
+            <option value="Wetenschap & Illustraties">Wetenschap & Illustraties</option>
+            <option value="Kartografie & Reizen">Kartografie & Reizen</option>
+            <option value="Bijbels & Religie">Bijbels & Religie</option>
+            <option value="Klassieke Oudheid">Klassieke Oudheid</option>
+            <option value="Oude Meesters">Oude Meesters</option>
+            <option value="19e-Eeuwse Schilderkunst">19e-Eeuwse Schilderkunst</option>
+            <option value="Portretten & Miniaturen">Portretten & Miniaturen</option>
+            <option value="Stillevens & Landschappen">Stillevens & Landschappen</option>
+            <option value="Religieuze Kunst & Iconen">Religieuze Kunst & Iconen</option>
+            <option value="Grafiek & Tekeningen">Grafiek & Tekeningen</option>
+          </select>
+        </div>
+
         {/* Topstuk Toggle Switch */}
         <div className="flex items-center space-x-2 border-l border-[#D8CEB8] pl-3 py-1">
           <span className="text-xs font-serif font-bold text-[#111111]">Topstuk</span>
@@ -750,10 +866,23 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
       {/* Catalog Items Section */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-[#D8CEB8] shadow-sm space-y-2">
+        <div className="text-center py-16 bg-white rounded-3xl border border-[#D8CEB8] shadow-sm space-y-3">
           <BookOpen className="w-10 h-10 text-[#B8860B] mx-auto" />
           <p className="text-sm font-serif font-bold text-[#111111]">Geen items gevonden in collectie</p>
-          <p className="text-xs text-[#888888]">Pas uw zoekopdracht of filter-opties aan.</p>
+          <p className="text-xs text-[#888888]">Er zijn geen objecten die voldoen aan het huidige zoek- of filter-criteria.</p>
+          <button
+            onClick={() => {
+              setFilterQuery('');
+              setTypeFilter('Alle');
+              setStatusFilter('Alle');
+              setCategoryFilter('Alle');
+              setOnlyTopstukken(false);
+            }}
+            className="px-4 py-2 rounded-xl bg-[#111111] hover:bg-[#B8860B] text-white text-xs font-mono font-bold transition-all shadow-xs cursor-pointer inline-flex items-center space-x-1.5"
+          >
+            <X className="w-3.5 h-3.5 text-[#C5A059]" />
+            <span>Alle Filters Wissen</span>
+          </button>
         </div>
       ) : viewMode === 'table' ? (
         /* Data Table Layout (Screenshot Style) */
@@ -954,14 +1083,45 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           </div>
 
           {/* Batch Action Bar Footer */}
-          <div className="p-3.5 bg-[#FAF7F2] border-t border-[#D8CEB8] flex items-center justify-between text-xs">
-            <div className="flex items-center space-x-2">
-              <span className="text-[#666666]">
-                Geselecteerde items ({selectedItemIds.length})
+          <div className="p-3.5 bg-[#FAF7F2] border-t border-[#D8CEB8] flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center space-x-3">
+              <span className="text-[#666666] font-medium">
+                Geselecteerd: <strong className="text-[#111111] font-mono">{selectedItemIds.length}</strong> van {filtered.length}
               </span>
+
+              {selectedItemIds.length > 0 && (
+                <div className="flex items-center space-x-2 animate-fade-in">
+                  <span className="text-[10px] font-mono text-stone-400">| Batch:</span>
+                  <button
+                    onClick={() => handleBatchStatusChange('Beschikbaar')}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold transition-all border border-emerald-300 cursor-pointer"
+                  >
+                    Set Beschikbaar
+                  </button>
+                  <button
+                    onClick={() => handleBatchStatusChange('Gereserveerd')}
+                    className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10px] font-bold transition-all border border-amber-300 cursor-pointer"
+                  >
+                    Set Gereserveerd
+                  </button>
+                  <button
+                    onClick={() => handleBatchStatusChange('Verkocht')}
+                    className="px-2.5 py-1 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-800 text-[10px] font-bold transition-all border border-stone-400 cursor-pointer"
+                  >
+                    Set Verkocht
+                  </button>
+                  <button
+                    onClick={handleBatchDelete}
+                    className="px-2.5 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold transition-all border border-red-300 cursor-pointer"
+                  >
+                    🗑️ Verwijder ({selectedItemIds.length})
+                  </button>
+                </div>
+              )}
             </div>
+
             <div className="text-[11px] font-mono text-[#888888]">
-              {filtered.length} resultaten weergegeven
+              {filtered.length} objecten in weergave
             </div>
           </div>
         </div>
@@ -1020,7 +1180,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     {/* Quick Status Select Pill */}
                     <select
                       value={item.status}
-                      onChange={(e) => handleQuickStatusChange(item, e.target.value)}
+                      onChange={(e) => handleStatusChange(item, e.target.value)}
                       className={`text-[10px] font-bold px-3 py-1 rounded-full cursor-pointer focus:outline-none shadow-sm border transition-all duration-300 ${
                         item.status === 'Beschikbaar'
                           ? 'bg-emerald-700/95 text-white border-emerald-800 hover:bg-emerald-800'
@@ -1235,168 +1395,168 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         </div>
       )}
 
-      {/* Edit / Create Form Modal (Spacious & Seamless Museum Form) */}
-      {editingItem && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in">
-          <div className="relative w-full max-w-4xl lg:max-w-5xl bg-[#FAF7F2] border border-[#D8CEB8] rounded-3xl shadow-strong max-h-[92vh] flex flex-col overflow-hidden text-[#111111]">
-            
-            {/* Modal Top Header */}
-            <div className="px-6 sm:px-8 py-4 border-b border-[#D8CEB8] bg-white flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
-              <div className="flex items-center space-x-3.5 min-w-0">
-                <div className="w-10 h-10 rounded-2xl bg-[#111111] text-white flex items-center justify-center shadow-sm shrink-0">
-                  {editingItem.itemType === 'painting' ? (
-                    <Palette className="w-5 h-5 text-[#C5A059]" />
-                  ) : (
-                    <BookOpen className="w-5 h-5 text-[#C5A059]" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 rounded bg-[#111111] text-[#FAF7F2] font-mono text-[10px] font-bold tracking-wider">
-                      {isNew ? "NIEUW" : editingItem.ref}
-                    </span>
-                    <span className="text-[11px] font-mono font-bold text-[#C5A059] uppercase tracking-wider hidden sm:inline">
-                      {editingItem.itemType === 'painting' ? "Schilderij & Kunst" : "Antiquarisch Boek"}
-                    </span>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-serif font-bold text-[#111111] truncate mt-0.5">
-                    {isNew ? "Nieuw Object Invoeren in Collectie" : editingItem.title}
+      {/* Dedicated Full-Screen Editorial Workspace (Portal for 100% Viewport Coverage) */}
+      {editingItem && createPortal(
+        <div className="fixed inset-0 z-[9999] w-screen h-screen bg-[#FAF8F5] text-[#1C1A18] flex flex-col font-sans overflow-hidden animate-fade-in">
+          
+          {/* Top Sticky Luxury Header Bar */}
+          <header className="px-5 sm:px-7 py-3.5 bg-[#161412] text-white border-b border-[#2C2926] flex items-center justify-between gap-4 shrink-0 shadow-md">
+            {/* Left section: Close & Item Title Info */}
+            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+              <button
+                type="button"
+                onClick={() => setEditingItem(null)}
+                className="p-2.5 rounded-xl bg-[#25221F] hover:bg-[#332F2B] text-stone-300 hover:text-white transition-all flex items-center space-x-1.5 cursor-pointer border border-[#3A3530]"
+                title="Sluit editor (Esc)"
+              >
+                <X className="w-4 h-4 text-stone-400" />
+                <span className="text-xs font-semibold hidden sm:inline">Sluiten</span>
+              </button>
+
+              <div className="h-6 w-[1px] bg-[#2C2926] hidden sm:block" />
+
+              <div className="min-w-0 flex items-center space-x-3">
+                <span className="px-2.5 py-1 rounded-lg bg-[#C5A059]/15 border border-[#C5A059]/30 text-[#C5A059] font-mono text-xs font-bold uppercase tracking-wider shrink-0">
+                  {isNew ? 'NIEUW OBJECT' : editingItem.ref}
+                </span>
+
+                <div className="min-w-0 hidden md:block">
+                  <h3 className="text-sm font-serif font-bold text-stone-100 truncate">
+                    {isNew ? 'Nieuw Object Invoeren in Collectie' : editingItem.title}
                   </h3>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-2">
-                {/* AI TRANSLATION HELPER HEADER BUTTONS */}
-                <div className="flex items-center space-x-1.5 bg-[#FAF7F2] p-1 rounded-2xl border border-[#D8CEB8]">
-                  <button
-                    type="button"
-                    onClick={handleCopyAiPrompt}
-                    className="px-3 py-1.5 rounded-xl bg-[#111111] text-[#FAF7F2] hover:bg-[#B8860B] hover:text-black text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
-                    title={`Kopieer velden van actieve taal [${formLang.toUpperCase()}] als AI vertaal-prompt`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                    <span className="hidden md:inline">1. Kopieer AI Prompt ({formLang === 'nl' ? '🇳🇱 NL' : formLang === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'})</span>
-                    <span className="md:hidden">Prompt ({formLang.toUpperCase()})</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowAiImportModal(true)}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-200 text-[#111111] border border-[#D8CEB8] text-xs font-mono font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
-                    title="Plak en importeer de JSON vertaling van ChatGPT / Claude in 1 klik"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#B8860B]" />
-                    <span className="hidden md:inline">2. Importeer Vertaling</span>
-                    <span className="md:hidden">Importeer</span>
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  className="p-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md border border-red-700 transition-all cursor-pointer shrink-0 flex items-center justify-center hover:scale-105 active:scale-95 ml-2"
-                  title="Venster sluiten"
-                >
-                  <X className="w-5 h-5 stroke-[2.5]" />
-                </button>
-              </div>
             </div>
 
-            {/* Modal Body Form */}
-            <form onSubmit={handleSaveForm} className="px-6 sm:px-8 py-5 overflow-y-auto space-y-6 flex-grow text-sm font-sans">
+            {/* Center section: Multi-language status indicators */}
+            <div className="hidden lg:flex items-center space-x-1.5 bg-[#23201D] p-1.5 rounded-xl border border-[#332F2B]">
+              {[
+                { id: 'nl', flag: '🇳🇱', label: 'Nederlands' },
+                { id: 'en', flag: '🇬🇧', label: 'English' },
+                { id: 'fr', flag: '🇫🇷', label: 'Français' }
+              ].map((lang) => {
+                const status = getItemTranslationStatus(editingItem).details[lang.id];
+                const isMissing = status?.missing?.length > 0;
+                const isActive = formLang === lang.id;
+
+                return (
+                  <button
+                    key={lang.id}
+                    type="button"
+                    onClick={() => setFormLang(lang.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      isActive
+                        ? 'bg-[#C5A059] text-black font-bold shadow-xs'
+                        : 'text-stone-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{lang.flag} {lang.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isActive
+                        ? 'bg-black/20 text-black'
+                        : isMissing ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
+                    }`}>
+                      {isMissing ? `${status.missing.length} open` : '✓'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right section: AI Prompt, AI Import, Save Button */}
+            <div className="flex items-center space-x-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleCopyAiPrompt}
+                className="px-3.5 py-2 rounded-xl bg-[#25221F] hover:bg-[#332F2B] text-stone-200 hover:text-white text-xs font-mono font-semibold transition-all border border-[#3A3530] flex items-center space-x-1.5 cursor-pointer"
+                title="Kopieer gegevens van actieve taal als prompt voor ChatGPT / Claude"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span className="hidden xl:inline">1. Kopieer AI Prompt ({formLang.toUpperCase()})</span>
+                <span className="xl:hidden">Prompt</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAiImportModal(true)}
+                className="px-3.5 py-2 rounded-xl bg-[#25221F] hover:bg-[#332F2B] text-stone-200 hover:text-white text-xs font-mono font-semibold transition-all border border-[#3A3530] flex items-center space-x-1.5 cursor-pointer"
+                title="Plak JSON van ChatGPT of Claude"
+              >
+                <Download className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span className="hidden xl:inline">2. Importeer Vertaling</span>
+                <span className="xl:hidden">Importeer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveForm}
+                className="px-5 py-2 rounded-xl bg-[#C5A059] hover:bg-[#B8860B] text-black font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center space-x-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <CheckCircle2 className="w-4 h-4 text-black" />
+                <span>Opslaan</span>
+                <span className="text-[10px] opacity-70 font-mono hidden sm:inline">(Cmd+S)</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Two-Column Editor Layout Workspace */}
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-[#FAF8F5]">
+
+            {/* LEFT COLUMN: Media, Type Switcher & Core Commercial Stats (4 cols) */}
+            <div className="lg:col-span-4 border-r border-[#E6E1D7] bg-[#F4F1EA] p-5 sm:p-6 space-y-6 overflow-y-auto">
               
-              {/* PURE MANUAL MULTI-LANGUAGE TAB BAR */}
-              <div className="p-4 rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border border-[#B8860B]/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
-                <div className="flex items-center space-x-3">
-                  <Globe className="w-5 h-5 text-[#B8860B]" />
-                  <div>
-                    <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center space-x-2">
-                      <span>Drietalig Handmatig Beheer</span>
-                      <span className="px-2 py-0.5 rounded bg-[#B8860B] text-black text-[10px]">
-                        Actieve taal: {formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}
-                      </span>
-                    </h4>
-                    <p className="text-[11px] text-stone-300 font-serif">
-                      Klik op een taaltabblad om de velden handmatig per taal in te voeren.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Language Tab Switcher */}
-                <div className="flex items-center space-x-1 bg-black/60 p-1.5 rounded-xl border border-stone-700 font-mono text-xs w-full sm:w-auto justify-center">
-                  {[
-                    { id: 'nl', label: '🇳🇱 Nederlands' },
-                    { id: 'en', label: '🇬🇧 English' },
-                    { id: 'fr', label: '🇫🇷 Français' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setFormLang(tab.id)}
-                      className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                        formLang === tab.id
-                          ? 'bg-[#B8860B] text-black shadow-md scale-105'
-                          : 'text-stone-300 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ITEM TYPE SWITCHER */}
-              <div className="p-6 rounded-3xl bg-[#FAF7F2] border border-[#D8CEB8] space-y-3 shadow-xs">
-                <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-widest">
-                  Type Kunstobject *
+              {/* Item Type Switcher */}
+              <div className="p-4 rounded-2xl bg-white border border-[#E0D9CC] space-y-3 shadow-xs">
+                <label className="block text-[11px] font-mono font-bold text-[#1C1A18] uppercase tracking-widest">
+                  Type Kunstobject
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setEditingItem({ 
-                      ...editingItem, 
+                    onClick={() => setEditingItem({
+                      ...editingItem,
                       itemType: 'book',
-                      category: editingItem.itemType === 'painting' ? 'Literatuur & Filosofie' : editingItem.category 
+                      category: editingItem.itemType === 'painting' ? 'Literatuur & Filosofie' : editingItem.category
                     })}
-                    className={`py-4 px-5 rounded-2xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-3 cursor-pointer ${
+                    className={`py-3 px-3 rounded-xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-2 cursor-pointer border ${
                       (editingItem.itemType || 'book') === 'book'
-                        ? 'bg-[#111111] text-white shadow-lg border-2 border-[#111111]'
-                        : 'bg-white text-[#555555] hover:text-[#111111] border-2 border-[#D8CEB8]'
+                        ? 'bg-[#1C1A18] text-white border-[#1C1A18] shadow-sm'
+                        : 'bg-[#F9F7F2] text-[#666666] hover:text-[#1C1A18] border-[#E0D9CC]'
                     }`}
                   >
-                    <BookOpen className="w-5 h-5 text-[#D4AF37]" />
-                    <span className="text-sm font-serif font-bold">Antiquarisch Boek</span>
+                    <BookOpen className="w-4 h-4 text-[#C5A059]" />
+                    <span>Antiquarisch Boek</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setEditingItem({ 
-                      ...editingItem, 
+                    onClick={() => setEditingItem({
+                      ...editingItem,
                       itemType: 'painting',
-                      category: editingItem.itemType === 'book' ? 'Oude Meesters' : editingItem.category 
+                      category: editingItem.itemType === 'book' ? 'Oude Meesters' : editingItem.category
                     })}
-                    className={`py-4 px-5 rounded-2xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-3 cursor-pointer ${
+                    className={`py-3 px-3 rounded-xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-2 cursor-pointer border ${
                       editingItem.itemType === 'painting'
-                        ? 'bg-[#111111] text-white shadow-lg border-2 border-[#111111]'
-                        : 'bg-white text-[#555555] hover:text-[#111111] border-2 border-[#D8CEB8]'
+                        ? 'bg-[#1C1A18] text-white border-[#1C1A18] shadow-sm'
+                        : 'bg-[#F9F7F2] text-[#666666] hover:text-[#1C1A18] border-[#E0D9CC]'
                     }`}
                   >
-                    <Palette className="w-5 h-5 text-[#D4AF37]" />
-                    <span className="text-sm font-serif font-bold">Schilderij & Kunstwerk</span>
+                    <Palette className="w-4 h-4 text-[#C5A059]" />
+                    <span>Schilderij & Kunst</span>
                   </button>
                 </div>
               </div>
 
-              {/* SECTION 1: BASISINFORMATIE */}
-              <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#D8CEB8] space-y-6 shadow-xs">
-                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center space-x-2.5">
-                  <Layers className="w-5 h-5 text-[#B8860B]" />
-                  <span>1. Basisinformatie &amp; Prijs</span>
+              {/* Commercial Meta */}
+              <div className="p-5 rounded-2xl bg-white border border-[#E0D9CC] space-y-4 shadow-xs">
+                <h4 className="text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider border-b border-[#E0D9CC] pb-2 flex items-center space-x-2">
+                  <Layers className="w-4 h-4 text-[#C5A059]" />
+                  <span>Commerciële Status & Prijs</span>
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">
                       Ref Code *
                     </label>
                     <input
@@ -1404,18 +1564,18 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       required
                       value={editingItem.ref}
                       onChange={(e) => setEditingItem({ ...editingItem, ref: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-mono font-bold focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs text-[#1C1A18] font-mono font-bold focus:outline-none focus:border-[#1C1A18] focus:ring-2 focus:ring-[#C5A059]/20"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">
                       Status *
                     </label>
                     <select
                       value={editingItem.status}
                       onChange={(e) => setEditingItem({ ...editingItem, status: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
                     >
                       <option value="Beschikbaar">Beschikbaar</option>
                       <option value="Gereserveerd">Gereserveerd</option>
@@ -1424,10 +1584,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider">
                         Prijs / Taxatie
                       </label>
+                      
+                      {/* Modern Switch Toggle */}
                       <button
                         type="button"
                         onClick={() => {
@@ -1437,407 +1599,553 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             price: poa ? '€ ' : 'Prijs op aanvraag'
                           });
                         }}
-                        className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-md border transition-all cursor-pointer flex items-center gap-1.5 ${
-                          isPriceOnRequest(editingItem.price)
-                            ? 'bg-[#1C1A17] text-[#B8860B] border-[#1C1A17] shadow-xs'
-                            : 'bg-[#FAF7F2] text-[#666666] border-[#D8CEB8] hover:text-[#111111] hover:border-[#111111]'
-                        }`}
-                        title="Schakel tussen 'Prijs op aanvraag' en een vast Euro bedrag"
+                        className="flex items-center space-x-1.5 cursor-pointer group"
                       >
-                        <span>{isPriceOnRequest(editingItem.price) ? '✓ Prijs op aanvraag' : '+ Prijs op aanvraag'}</span>
+                        <span className="text-[10px] font-mono text-[#666666] group-hover:text-[#1C1A18]">
+                          Prijs op aanvraag:
+                        </span>
+                        <div className={`w-8 h-4.5 rounded-full transition-colors relative p-0.5 ${
+                          isPriceOnRequest(editingItem.price) ? 'bg-[#C5A059]' : 'bg-stone-300'
+                        }`}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${
+                            isPriceOnRequest(editingItem.price) ? 'translate-x-3.5' : 'translate-x-0'
+                          }`} />
+                        </div>
                       </button>
                     </div>
+
                     <input
                       type="text"
                       value={editingItem.price}
                       onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
                       placeholder="€ 3.500 of Prijs op aanvraag"
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
-                    />
-                    <p className="text-[11px] font-serif text-[#666666] italic mt-1.5">
-                      💡 Wordt op de website automatisch gelokaliseerd: EN (&ldquo;Price on request&rdquo;) &bull; FR (&ldquo;Prix sur demande&rdquo;)
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  {renderFieldHeader(editingItem.itemType === 'painting' ? "Titel van het Schilderij / Kunstwerk" : "Titel van het Boek", "title", true)}
-                  <input
-                    type="text"
-                    required
-                    value={getFormField('title')}
-                    onChange={(e) => updateFormField('title', e.target.value)}
-                    placeholder={isFieldNvt('title', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Stilleven met Boeken en Ganzenveer" : "Bijv. Voltaire — Œuvres Complètes")}
-                    className={`w-full px-4 py-3.5 rounded-xl border text-[#111111] font-serif font-bold text-base focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 ${
-                      isFieldNvt('title', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  {renderFieldHeader("Ondertitel / Korte Subtitel", "subtitle")}
-                  <input
-                    type="text"
-                    value={getFormField('subtitle')}
-                    onChange={(e) => updateFormField('subtitle', e.target.value)}
-                    placeholder={isFieldNvt('subtitle', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Bijv. Parijs 1829 • 52 Delen Compleet"}
-                    className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111] ${
-                      isFieldNvt('subtitle', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      {editingItem.itemType === 'painting' ? "Kunstenaar / Meester" : "Auteur / Schrijver"}
-                    </label>
-                    <input
-                      type="text"
-                      value={editingItem.author}
-                      onChange={(e) => setEditingItem({ ...editingItem, author: e.target.value })}
-                      placeholder={editingItem.itemType === 'painting' ? "Bijv. School van Leiden (cirkel van H. Steenwijck)" : "Bijv. Voltaire"}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      Datering &amp; Eeuw
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={editingItem.year}
-                        onChange={(e) => setEditingItem({ ...editingItem, year: e.target.value })}
-                        placeholder="1645"
-                        className="w-full px-3 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
-                      />
-                      <select
-                        value={editingItem.century}
-                        onChange={(e) => setEditingItem({ ...editingItem, century: e.target.value })}
-                        className="w-full px-2 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
-                      >
-                        <option value="16e Eeuw">16e Eeuw</option>
-                        <option value="17e Eeuw">17e Eeuw</option>
-                        <option value="18e Eeuw">18e Eeuw</option>
-                        <option value="19e Eeuw">19e Eeuw</option>
-                        <option value="20e Eeuw">20e Eeuw</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider mb-2">
-                      Categorie
-                    </label>
-                    <select
-                      value={editingItem.category}
-                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111]"
-                    >
-                      {editingItem.itemType === 'painting' ? (
-                        <>
-                          <option value="Oude Meesters">Oude Meesters (16e-18e Eeuw)</option>
-                          <option value="19e-Eeuwse Schilderkunst">19e-Eeuwse Schilderkunst</option>
-                          <option value="Portretten & Miniaturen">Portretten & Miniaturen</option>
-                          <option value="Stillevens & Landschappen">Stillevens & Landschappen</option>
-                          <option value="Religieuze Kunst & Iconen">Religieuze Kunst & Iconen</option>
-                          <option value="Grafiek & Tekeningen">Grafiek & Tekeningen</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="Literatuur & Filosofie">Literatuur & Filosofie</option>
-                          <option value="Literatuur & Satire">Literatuur & Satire</option>
-                          <option value="Wetenschap & Illustraties">Wetenschap & Illustraties</option>
-                          <option value="Kartografie & Reizen">Kartografie & Reizen</option>
-                          <option value="Bijbels & Religie">Bijbels & Religie</option>
-                          <option value="Klassieke Oudheid">Klassieke Oudheid</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Galerie / Atelier / Werkplaats" : "Drukker / Uitgever (Publisher / Printer)", "publisher")}
-                    <input
-                      type="text"
-                      value={getFormField('publisher') || editingItem.publisher || ''}
-                      onChange={(e) => {
-                        updateFormField('publisher', e.target.value);
-                        setEditingItem(prev => ({ ...prev, publisher: e.target.value }));
-                      }}
-                      placeholder={isFieldNvt('publisher', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Atelier Rembrandt / Galerie" : "Bijv. Chez Baudouin / Elzevier")}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111] ${
-                        isFieldNvt('publisher', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                      }`}
-                    />
-                  </div>
-
-                  <div>
-                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Plaats van ontstaan (Atelier / Origine)" : "Plaats van Uitgave (Place of Printing)", "city")}
-                    <input
-                      type="text"
-                      value={getFormField('city') || editingItem.city || ''}
-                      onChange={(e) => {
-                        updateFormField('city', e.target.value);
-                        setEditingItem(prev => ({ ...prev, city: e.target.value }));
-                      }}
-                      placeholder={isFieldNvt('city', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Delft / Antwerpen" : "Bijv. Parijs / Amsterdam / Leiden")}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111] ${
-                        isFieldNvt('city', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <label className={`cursor-pointer inline-flex items-center space-x-2.5 text-xs font-bold p-3.5 rounded-xl border transition-all ${
-                    editingItem.featured 
-                      ? 'bg-[#B8860B]/10 border-[#B8860B] text-[#B8860B]' 
-                      : 'bg-[#FAF7F2] border-[#D8CEB8] text-[#111111] hover:border-[#111111]'
+                  <label className={`cursor-pointer flex items-center space-x-2.5 text-xs font-semibold p-3 rounded-xl border transition-all ${
+                    editingItem.featured
+                      ? 'bg-[#C5A059]/10 border-[#C5A059] text-[#8C6D23]'
+                      : 'bg-[#F9F7F2] border-[#E0D9CC] text-[#666666] hover:text-[#1C1A18]'
                   }`}>
                     <input
                       type="checkbox"
                       checked={editingItem.featured || false}
                       onChange={(e) => setEditingItem({ ...editingItem, featured: e.target.checked })}
-                      className="w-4 h-4 rounded border-[#D8CEB8] text-[#B8860B] focus:ring-[#B8860B]"
+                      className="w-4 h-4 rounded border-[#E0D9CC] text-[#C5A059] focus:ring-[#C5A059]"
                     />
-                    <span>⭐ Op Homepage Tonen (Recent Aanwinst / Topstuk)</span>
+                    <span>⭐ Topstuk (Homepage Highlight)</span>
                   </label>
                 </div>
               </div>
 
-              {/* SECTION 2: TECHNIEK, LIJST & PROVENANCE */}
-              <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#D8CEB8] space-y-6 shadow-xs">
-                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5">
-                    <Bookmark className="w-5 h-5 text-[#B8860B]" />
-                    <span>2. {editingItem.itemType === 'painting' ? "Techniek, Lijst & Restauratie" : "Bandstijl, Conditie & Provenance"}</span>
-                  </div>
-                  <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                    INVOERTAAL: {formLang.toUpperCase()}
-                  </span>
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)", "binding")}
-                    <textarea
-                      rows={3}
-                      value={getFormField('binding')}
-                      onChange={(e) => updateFormField('binding', e.target.value)}
-                      placeholder={isFieldNvt('binding', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst..." : "Volledige kalfslederen band met goudstempels op de rug...")}
-                      className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed ${
-                        isFieldNvt('binding', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                      }`}
-                    />
-                  </div>
-
-                  <div>
-                    {renderFieldHeader("Staat & Conditie Summary", "condition")}
-                    <textarea
-                      rows={3}
-                      value={getFormField('condition')}
-                      onChange={(e) => updateFormField('condition', e.target.value)}
-                      placeholder={isFieldNvt('condition', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Excellente museumstaat, authentiek craquelé..." : "Excellente antiquarische staat...")}
-                      className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed ${
-                        isFieldNvt('condition', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Afmetingen (doek & met lijst)" : "Formaat & Afmetingen", "dimensions")}
-                    <input
-                      type="text"
-                      value={getFormField('dimensions') || editingItem.dimensions || ''}
-                      onChange={(e) => {
-                        updateFormField('dimensions', e.target.value);
-                        setEditingItem(prev => ({ ...prev, dimensions: e.target.value }));
-                      }}
-                      placeholder={isFieldNvt('dimensions', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. 48 x 38 cm (met lijst 62 x 52 cm)" : "In-8° (21,5 x 13,5 cm)")}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-semibold focus:outline-none focus:border-[#111111] ${
-                        isFieldNvt('dimensions', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                      }`}
-                    />
-                  </div>
-
-                  <div>
-                    {renderFieldHeader(editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties", "collationSpecs")}
-                    <input
-                      type="text"
-                      value={getFormField('collationSpecs')}
-                      onChange={(e) => updateFormField('collationSpecs', e.target.value)}
-                      placeholder={isFieldNvt('collationSpecs', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Olieverf op paneel. Gesigneerd linksonder 1645." : "52 delen compleet. In-8°. Ca. 28.000 pp.")}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-mono focus:outline-none focus:border-[#111111] ${
-                        isFieldNvt('collationSpecs', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  {renderFieldHeader("Provenance (Korte Herkomst Omschrijving)", "provenance")}
-                  <input
-                    type="text"
-                    value={getFormField('provenance')}
-                    onChange={(e) => updateFormField('provenance', e.target.value)}
-                    placeholder={isFieldNvt('provenance', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Collectie Jonkheer van der Heyden • Christie's 1988..." : "Ex-Libris Vacheron-Poinsot...")}
-                    className={`w-full px-4 py-3 rounded-xl border text-sm text-[#111111] font-serif italic focus:outline-none focus:border-[#111111] ${
-                      isFieldNvt('provenance', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  {renderFieldHeader(editingItem.itemType === 'painting' ? "Restauratie & Conditierapport (Doek/Paneel Dossier)" : "Uitgebreid Conditierapport (Museum Dossier)", "conditionReport")}
-                  <textarea
-                    rows={4}
-                    value={getFormField('conditionReport')}
-                    onChange={(e) => updateFormField('conditionReport', e.target.value)}
-                    placeholder={isFieldNvt('conditionReport', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "UV-inspectie toont authentiek craquelé-netwerk. Massieve eiken drager..." : "Banden in rood Chagrin-halfleer in uitzonderlijk stevige staat...")}
-                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
-                      isFieldNvt('conditionReport', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  {renderFieldHeader("Uitgebreid Provenance Verhaal & Veilinghistorie", "provenanceDetails")}
-                  <textarea
-                    rows={4}
-                    value={getFormField('provenanceDetails')}
-                    onChange={(e) => updateFormField('provenanceDetails', e.target.value)}
-                    placeholder={isFieldNvt('provenanceDetails', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Herkomst uit de adellijke verzameling..." : "Afkomstig uit het kasteelarchief van de adellijke familie...")}
-                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
-                      isFieldNvt('provenanceDetails', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* SECTION 3: VERHAAL, HISTORISCHE CONTEXT & FOTO'S */}
-              <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#D8CEB8] space-y-6 shadow-xs">
-                <h4 className="text-base font-serif font-bold text-[#111111] border-b border-[#D8CEB8] pb-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5">
-                    <History className="w-5 h-5 text-[#B8860B]" />
-                    <span>3. Verhaal, Historische Context &amp; Fotogalerij</span>
-                  </div>
-                  <span className="text-[#B8860B] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#D8CEB8]">
-                    INVOERTAAL: {formLang.toUpperCase()}
-                  </span>
-                </h4>
-
-                <div>
-                  {renderFieldHeader("Algemene Beschrijving & Overzicht", "description")}
-                  <textarea
-                    rows={4}
-                    value={getFormField('description')}
-                    onChange={(e) => updateFormField('description', e.target.value)}
-                    placeholder={isFieldNvt('description', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Schrijf hier het overzicht achter dit meesterwerk..."}
-                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
-                      isFieldNvt('description', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  {renderFieldHeader("Diepgaande Historische & Kunsthistorische Context", "historicalContext")}
-                  <textarea
-                    rows={5}
-                    value={getFormField('historicalContext')}
-                    onChange={(e) => updateFormField('historicalContext', e.target.value)}
-                    placeholder={isFieldNvt('historicalContext', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Schrijf hier de uitgebreide historische of kunsthistorische context..."}
-                    className={`w-full px-4 py-3.5 rounded-2xl border text-sm text-[#111111] focus:outline-none focus:border-[#111111] focus:ring-2 focus:ring-[#B8860B]/20 leading-relaxed font-serif ${
-                      isFieldNvt('historicalContext', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#FAF7F2] border-[#D8CEB8]'
-                    }`}
-                  />
-                </div>
-
-                {/* File Upload & Gallery */}
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between">
-                    <label className="font-bold text-[#111111] uppercase tracking-wider text-xs font-mono">
-                      Fotogalerij ({editingItem.images?.length || 0} Afbeeldingen)
-                    </label>
-
-                    <label className="cursor-pointer px-4 py-2.5 rounded-xl bg-[#111111] text-white hover:bg-stone-800 transition-all flex items-center space-x-2 font-bold text-xs shadow-md">
-                      <Upload className="w-4 h-4 text-[#D4AF37]" />
-                      <span>Upload Foto's</span>
+              {/* Gallery / Photos */}
+              <div className="p-5 rounded-2xl bg-white border border-[#E0D9CC] space-y-4 shadow-xs">
+                <div className="flex items-center justify-between border-b border-[#E0D9CC] pb-2">
+                  <h4 className="text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider flex items-center space-x-2">
+                    <ImageIcon className="w-4 h-4 text-[#C5A059]" />
+                    <span>Fotogalerij ({editingItem.images?.length || 0})</span>
+                  </h4>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowUrlInput(!showUrlInput)}
+                      className="px-2 py-1 rounded-lg bg-[#F9F7F2] hover:bg-stone-200 text-[#1C1A18] text-[10px] font-mono font-bold border border-[#E0D9CC] transition-all cursor-pointer"
+                    >
+                      {showUrlInput ? 'Verberg URL' : '+ Via URL'}
+                    </button>
+                    <label className="cursor-pointer px-2.5 py-1 rounded-lg bg-[#1C1A18] text-white hover:bg-stone-800 text-[11px] font-mono font-bold transition-all flex items-center space-x-1">
+                      <Upload className="w-3 h-3 text-[#C5A059]" />
+                      <span>+ Upload</span>
                       <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
                     </label>
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {editingItem.images?.map((img, idx) => (
-                      <div key={idx} className="relative rounded-2xl overflow-hidden border border-[#D8CEB8] group bg-[#FAF7F2] shadow-xs">
-                        <div className="aspect-square relative overflow-hidden">
-                          <img src={img.url} alt="" className="w-full h-full object-cover" />
-                          {idx === 0 && (
-                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-[#111111] text-white text-[10px] font-mono font-bold">
-                              Hoofdafbeelding
-                            </span>
+                {/* Collapsible Photo URL Adder */}
+                {showUrlInput && (
+                  <form onSubmit={handleAddImageUrl} className="p-3 bg-[#F9F7F2] rounded-xl border border-[#E0D9CC] space-y-2 text-xs animate-fade-in">
+                    <input
+                      type="url"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="https://... (Directe Afbeelding URL)"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#E0D9CC] text-xs font-mono focus:outline-none focus:border-[#1C1A18]"
+                    />
+                    <input
+                      type="text"
+                      value={newImageCaption}
+                      onChange={(e) => setNewImageCaption(e.target.value)}
+                      placeholder="Bijschrift (bijv. Detail stempel / Rug)"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white border border-[#E0D9CC] text-xs font-sans focus:outline-none focus:border-[#1C1A18]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newImageUrl.trim()}
+                      className="w-full py-1.5 rounded-lg bg-[#1C1A18] text-white font-mono font-bold text-[11px] hover:bg-[#C5A059] hover:text-black transition-all disabled:opacity-40 cursor-pointer shadow-xs"
+                    >
+                      Voeg Afbeelding URL Toe
+                    </button>
+                  </form>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  {editingItem.images?.map((img, idx) => (
+                    <div key={idx} className="relative rounded-xl overflow-hidden border border-[#E0D9CC] group bg-[#F9F7F2] flex flex-col shadow-xs">
+                      <div className="aspect-4/3 relative overflow-hidden shrink-0">
+                        <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover" />
+                        {idx === 0 ? (
+                          <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-[#1C1A18] text-white text-[9px] font-mono font-bold">
+                            Hoofdfoto
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => makePrimaryImage(idx)}
+                            className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/70 hover:bg-[#C5A059] hover:text-black text-white text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                          >
+                            Maak Hoofd
+                          </button>
+                        )}
+
+                        {/* Reorder & Remove buttons */}
+                        <div className="absolute top-1.5 right-1.5 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {idx > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => moveImageUp(idx)}
+                              className="p-1 rounded bg-black/70 hover:bg-stone-800 text-white transition-all text-[9px] cursor-pointer"
+                              title="Verplaats omhoog in volgorde"
+                            >
+                              ▲
+                            </button>
+                          )}
+                          {idx < (editingItem.images?.length - 1) && (
+                            <button
+                              type="button"
+                              onClick={() => moveImageDown(idx)}
+                              className="p-1 rounded bg-black/70 hover:bg-stone-800 text-white transition-all text-[9px] cursor-pointer"
+                              title="Verplaats omlaag in volgorde"
+                            >
+                              ▼
+                            </button>
                           )}
                           <button
                             type="button"
                             onClick={() => removeImage(idx)}
-                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                            className="p-1 rounded bg-red-600 hover:bg-red-700 text-white transition-all shadow-xs cursor-pointer"
                             title="Verwijder Foto"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
-                    ))}
+
+                      {/* Caption editor */}
+                      <div className="p-1.5 bg-white border-t border-[#E0D9CC]">
+                        <input
+                          type="text"
+                          value={img.caption || ''}
+                          onChange={(e) => updateImageCaption(idx, e.target.value)}
+                          placeholder="Bijschrift..."
+                          className="w-full text-[10px] px-1.5 py-0.5 bg-[#F9F7F2] border border-transparent hover:border-[#E0D9CC] focus:border-[#C5A059] rounded text-[#1C1A18] font-sans focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Certificate PDF Button */}
+              {!isNew && onOpenCertificate && (
+                <button
+                  type="button"
+                  onClick={() => onOpenCertificate(editingItem)}
+                  className="w-full py-3 px-4 rounded-xl bg-amber-50 border border-amber-300 text-[#8C6D23] hover:bg-[#C5A059] hover:text-black font-serif font-bold text-xs transition-all flex items-center justify-center space-x-2 shadow-xs"
+                >
+                  <Award className="w-4 h-4" />
+                  <span>Echtheidscertificaat Genereren (PDF)</span>
+                </button>
+              )}
+
+            </div>
+
+            {/* RIGHT COLUMN: Multi-tab Editorial Form & Detailed Specs (8 cols) */}
+            <div className="lg:col-span-8 flex flex-col overflow-y-auto p-5 sm:p-8 space-y-6">
+
+              {/* Form Section Navigation Tabs */}
+              <div className="flex items-center justify-between border-b border-[#E0D9CC] pb-3 shrink-0">
+                <div className="flex items-center space-x-2">
+                  {[
+                    { id: 'specs', label: '1. Kern & Bibliografische Data' },
+                    { id: 'multilingual', label: '2. Drietalige Inhoud & Staat' }
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setEditorTab(t.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                        editorTab === t.id
+                          ? 'bg-[#1C1A18] text-white shadow-sm'
+                          : 'bg-white text-[#666666] hover:text-[#1C1A18] border border-[#E0D9CC]'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Mobile Language Tab Switcher */}
+                <div className="flex lg:hidden items-center space-x-1">
+                  {['nl', 'en', 'fr'].map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => setFormLang(lang)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+                        formLang === lang ? 'bg-[#C5A059] text-black' : 'bg-stone-200 text-stone-700'
+                      }`}
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* TAB 1: KERN & SPECIFICATIES */}
+              {editorTab === 'specs' && (
+                <div className="space-y-6 animate-fade-in">
+                  
+                  {/* Title & Subtitle */}
+                  <div className="p-6 rounded-2xl bg-white border border-[#E0D9CC] space-y-5 shadow-xs">
+                    <div>
+                      {renderFieldHeader(editingItem.itemType === 'painting' ? "Titel van het Schilderij / Kunstwerk" : "Titel van het Boek", "title", true)}
+                      <input
+                        type="text"
+                        required
+                        value={getFormField('title')}
+                        onChange={(e) => updateFormField('title', e.target.value)}
+                        placeholder={isFieldNvt('title', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Stilleven met Boeken en Ganzenveer" : "Bijv. Voltaire — Œuvres Complètes")}
+                        className={`w-full px-4 py-3 rounded-xl border text-[#1C1A18] font-serif font-bold text-base focus:outline-none focus:border-[#1C1A18] focus:ring-2 focus:ring-[#C5A059]/20 ${
+                          isFieldNvt('title', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      {renderFieldHeader("Ondertitel / Korte Subtitel", "subtitle")}
+                      <input
+                        type="text"
+                        value={getFormField('subtitle')}
+                        onChange={(e) => updateFormField('subtitle', e.target.value)}
+                        placeholder={isFieldNvt('subtitle', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Bijv. Parijs 1829 • 52 Delen Compleet"}
+                        className={`w-full px-4 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-serif italic focus:outline-none focus:border-[#1C1A18] ${
+                          isFieldNvt('subtitle', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Form Bottom Actions */}
-              <div className="pt-6 flex items-center justify-between border-t border-[#D8CEB8] shrink-0">
-                {!isNew && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenCertificate && onOpenCertificate(editingItem)}
-                    className="px-5 py-3 rounded-xl bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white font-serif font-bold text-xs transition-all flex items-center space-x-2 shadow-sm"
-                  >
-                    <Award className="w-4 h-4" />
-                    <span>Echtheidscertificaat (PDF)</span>
-                  </button>
-                )}
-                
-                <div className="flex items-center space-x-4 ml-auto">
-                  <button
-                    type="button"
-                    onClick={() => setEditingItem(null)}
-                    className="px-6 py-3.5 rounded-xl bg-[#FAF7F2] text-[#111111] font-bold text-xs uppercase tracking-wider hover:bg-stone-200 border border-[#D8CEB8] transition-colors"
-                  >
-                    Annuleren
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-8 py-3.5 rounded-xl bg-[#111111] hover:bg-[#B8860B] hover:text-[#111111] text-white font-bold text-xs uppercase tracking-widest shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4.5 h-4.5 text-[#D4AF37]" />
-                    <span>Object Opslaan in Collectie</span>
-                  </button>
-                </div>
-              </div>
+                  {/* Author, Dates & Category */}
+                  <div className="p-6 rounded-2xl bg-white border border-[#E0D9CC] space-y-5 shadow-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider mb-2">
+                          {editingItem.itemType === 'painting' ? "Kunstenaar / Meester" : "Auteur / Schrijver"}
+                        </label>
+                        <input
+                          type="text"
+                          value={editingItem.author}
+                          onChange={(e) => setEditingItem({ ...editingItem, author: e.target.value })}
+                          placeholder={editingItem.itemType === 'painting' ? "Bijv. School van Leiden" : "Bijv. Voltaire"}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
+                        />
+                      </div>
 
-            </form>
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider mb-2">
+                          Datering &amp; Eeuw
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={editingItem.year}
+                            onChange={(e) => setEditingItem({ ...editingItem, year: e.target.value })}
+                            placeholder="1645"
+                            className="w-full px-3 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
+                          />
+                          <select
+                            value={editingItem.century}
+                            onChange={(e) => setEditingItem({ ...editingItem, century: e.target.value })}
+                            className="w-full px-2 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
+                          >
+                            <option value="16e Eeuw">16e Eeuw</option>
+                            <option value="17e Eeuw">17e Eeuw</option>
+                            <option value="18e Eeuw">18e Eeuw</option>
+                            <option value="19e Eeuw">19e Eeuw</option>
+                            <option value="20e Eeuw">20e Eeuw</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider mb-2">
+                          Categorie
+                        </label>
+                        <select
+                          value={editingItem.category}
+                          onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
+                        >
+                          {editingItem.itemType === 'painting' ? (
+                            <>
+                              <option value="Oude Meesters">Oude Meesters (16e-18e Eeuw)</option>
+                              <option value="19e-Eeuwse Schilderkunst">19e-Eeuwse Schilderkunst</option>
+                              <option value="Portretten & Miniaturen">Portretten & Miniaturen</option>
+                              <option value="Stillevens & Landschappen">Stillevens & Landschappen</option>
+                              <option value="Religieuze Kunst & Iconen">Religieuze Kunst & Iconen</option>
+                              <option value="Grafiek & Tekeningen">Grafiek & Tekeningen</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="Literatuur & Filosofie">Literatuur & Filosofie</option>
+                              <option value="Literatuur & Satire">Literatuur & Satire</option>
+                              <option value="Wetenschap & Illustraties">Wetenschap & Illustraties</option>
+                              <option value="Kartografie & Reizen">Kartografie & Reizen</option>
+                              <option value="Bijbels & Religie">Bijbels & Religie</option>
+                              <option value="Klassieke Oudheid">Klassieke Oudheid</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Galerie / Atelier / Werkplaats" : "Drukker / Uitgever", "publisher")}
+                        <input
+                          type="text"
+                          value={getFormField('publisher') || editingItem.publisher || ''}
+                          onChange={(e) => {
+                            updateFormField('publisher', e.target.value);
+                            setEditingItem(prev => ({ ...prev, publisher: e.target.value }));
+                          }}
+                          placeholder={isFieldNvt('publisher', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Atelier Rembrandt / Galerie" : "Bijv. Chez Baudouin / Elzevier")}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
+                            isFieldNvt('publisher', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Plaats van ontstaan" : "Plaats van Uitgave", "city")}
+                        <input
+                          type="text"
+                          value={getFormField('city') || editingItem.city || ''}
+                          onChange={(e) => {
+                            updateFormField('city', e.target.value);
+                            setEditingItem(prev => ({ ...prev, city: e.target.value }));
+                          }}
+                          placeholder={isFieldNvt('city', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Delft / Antwerpen" : "Bijv. Parijs / Amsterdam")}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
+                            isFieldNvt('city', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 2: DRIETALIGE INHOUD & STAAT */}
+              {editorTab === 'multilingual' && (
+                <div className="space-y-6 animate-fade-in">
+
+                  {/* Active Language Bar */}
+                  <div className="p-4 rounded-2xl bg-[#1C1A18] text-white flex items-center justify-between shadow-xs">
+                    <div className="flex items-center space-x-3">
+                      <Globe className="w-5 h-5 text-[#C5A059]" />
+                      <div>
+                        <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                          Invoertaal voor onderstaande velden: <span className="text-[#C5A059]">{formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}</span>
+                        </h4>
+                        <p className="text-[11px] text-stone-400 font-serif">
+                          Geselecteerde inhoud wordt gekoppeld aan de {formLang.toUpperCase()} taalweergave.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1.5 bg-[#25221F] p-1 rounded-xl border border-[#3A3530]">
+                      {['nl', 'en', 'fr'].map((lang) => (
+                        <button
+                          key={lang}
+                          type="button"
+                          onClick={() => setFormLang(lang)}
+                          className={`px-3 py-1 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
+                            formLang === lang ? 'bg-[#C5A059] text-black shadow-xs' : 'text-stone-300 hover:text-white'
+                          }`}
+                        >
+                          {lang}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Physical & Technical Specs */}
+                  <div className="p-6 rounded-2xl bg-white border border-[#E0D9CC] space-y-5 shadow-xs">
+                    <h4 className="text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider border-b border-[#E0D9CC] pb-2 flex items-center space-x-2">
+                      <Bookmark className="w-4 h-4 text-[#C5A059]" />
+                      <span>{editingItem.itemType === 'painting' ? "Techniek & Inlijsting" : "Bandstijl, Conditie & Formaat"}</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)", "binding")}
+                        <textarea
+                          rows={3}
+                          value={getFormField('binding')}
+                          onChange={(e) => updateFormField('binding', e.target.value)}
+                          placeholder={isFieldNvt('binding', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst..." : "Volledige kalfslederen band met goudstempels...")}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed ${
+                            isFieldNvt('binding', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        {renderFieldHeader("Staat & Conditie Summary", "condition")}
+                        <textarea
+                          rows={3}
+                          value={getFormField('condition')}
+                          onChange={(e) => updateFormField('condition', e.target.value)}
+                          placeholder={isFieldNvt('condition', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Excellente museumstaat..." : "Excellente antiquarische staat...")}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed ${
+                            isFieldNvt('condition', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Afmetingen (doek & lijst)" : "Formaat & Afmetingen", "dimensions")}
+                        <input
+                          type="text"
+                          value={getFormField('dimensions') || editingItem.dimensions || ''}
+                          onChange={(e) => {
+                            updateFormField('dimensions', e.target.value);
+                            setEditingItem(prev => ({ ...prev, dimensions: e.target.value }));
+                          }}
+                          placeholder={isFieldNvt('dimensions', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Bijv. In-8° (21,5 x 13,5 cm)"}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
+                            isFieldNvt('dimensions', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties", "collationSpecs")}
+                        <input
+                          type="text"
+                          value={getFormField('collationSpecs')}
+                          onChange={(e) => updateFormField('collationSpecs', e.target.value)}
+                          placeholder={isFieldNvt('collationSpecs', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "52 delen compleet. In-8°."}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] font-mono focus:outline-none focus:border-[#1C1A18] ${
+                            isFieldNvt('collationSpecs', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Long Form Texts */}
+                  <div className="p-6 rounded-2xl bg-white border border-[#E0D9CC] space-y-5 shadow-xs">
+                    <h4 className="text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider border-b border-[#E0D9CC] pb-2 flex items-center space-x-2">
+                      <History className="w-4 h-4 text-[#C5A059]" />
+                      <span>Beschrijving &amp; Historische Context</span>
+                    </h4>
+
+                    <div>
+                      {renderFieldHeader("Algemene Beschrijving & Overzicht", "description")}
+                      <textarea
+                        rows={4}
+                        value={getFormField('description')}
+                        onChange={(e) => updateFormField('description', e.target.value)}
+                        placeholder={isFieldNvt('description', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Schrijf hier het overzicht achter dit meesterwerk..."}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed font-serif ${
+                          isFieldNvt('description', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      {renderFieldHeader("Diepgaande Historische & Kunsthistorische Context", "historicalContext")}
+                      <textarea
+                        rows={5}
+                        value={getFormField('historicalContext')}
+                        onChange={(e) => updateFormField('historicalContext', e.target.value)}
+                        placeholder={isFieldNvt('historicalContext', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Schrijf hier de uitgebreide historische context..."}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed font-serif ${
+                          isFieldNvt('historicalContext', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      {renderFieldHeader("Provenance (Korte Herkomst Omschrijving)", "provenance")}
+                      <input
+                        type="text"
+                        value={getFormField('provenance')}
+                        onChange={(e) => updateFormField('provenance', e.target.value)}
+                        placeholder={isFieldNvt('provenance', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Ex-Libris Vacheron-Poinsot..."}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] font-serif italic focus:outline-none focus:border-[#1C1A18] ${
+                          isFieldNvt('provenance', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      {renderFieldHeader(editingItem.itemType === 'painting' ? "Restauratie & Conditierapport" : "Uitgebreid Conditierapport", "conditionReport")}
+                      <textarea
+                        rows={3}
+                        value={getFormField('conditionReport')}
+                        onChange={(e) => updateFormField('conditionReport', e.target.value)}
+                        placeholder={isFieldNvt('conditionReport', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Gedetailleerd conditierapport..."}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed font-serif ${
+                          isFieldNvt('conditionReport', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      {renderFieldHeader("Uitgebreid Provenance Verhaal & Veilinghistorie", "provenanceDetails")}
+                      <textarea
+                        rows={3}
+                        value={getFormField('provenanceDetails')}
+                        onChange={(e) => updateFormField('provenanceDetails', e.target.value)}
+                        placeholder={isFieldNvt('provenanceDetails', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Afkomstig uit het kasteelarchief..."}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed font-serif ${
+                          isFieldNvt('provenanceDetails', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
 
           </div>
-        </div>
+
+        </div>,
+        document.body
       )}
 
-      {/* AI TRANSLATION IMPORT POPUP MODAL */}
-      {showAiImportModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+      {/* AI TRANSLATION IMPORT POPUP MODAL (Portal with z-[10000]) */}
+      {showAiImportModal && createPortal(
+        <div className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-[#FAF7F2] text-[#111111] rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 border border-[#D8CEB8] shadow-strong">
             <div className="flex items-center justify-between border-b border-[#D8CEB8] pb-4">
               <div className="flex items-center space-x-3">
@@ -1913,7 +2221,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

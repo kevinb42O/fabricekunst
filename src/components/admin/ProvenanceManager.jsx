@@ -23,6 +23,13 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   const [showAiImportModal, setShowAiImportModal] = useState(false);
   const [aiJsonInput, setAiJsonInput] = useState('');
 
+  // Sync formData when provenanceData prop updates asynchronously
+  React.useEffect(() => {
+    if (provenanceData) {
+      setFormData(provenanceData);
+    }
+  }, [provenanceData]);
+
   const getFieldValue = (section, field) => {
     if (!formData[section]) return '';
     if (formLang === 'nl') {

@@ -326,13 +326,21 @@ export default function App() {
   };
 
   const handleSaveItem = async (itemToSave) => {
-    const updated = await saveItemAsync(itemToSave);
-    if (updated) setCatalog(updated);
+    const res = await saveItemAsync(itemToSave);
+    if (res) {
+      const catalogData = Array.isArray(res) ? res : (res.catalog || res);
+      setCatalog(catalogData);
+    }
+    return res;
   };
 
   const handleDeleteItem = async (idToDelete) => {
-    const updated = await deleteItemAsync(idToDelete);
-    if (updated) setCatalog(updated);
+    const res = await deleteItemAsync(idToDelete);
+    if (res) {
+      const catalogData = Array.isArray(res) ? res : (res.catalog || res);
+      setCatalog(catalogData);
+    }
+    return res;
   };
 
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);

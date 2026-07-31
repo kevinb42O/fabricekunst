@@ -564,8 +564,26 @@ export const saveCatalog = (items) => {
   }
 };
 
+export const formatSupabaseErrorMessage = (error) => {
+  if (!error) return null;
+  const msg = typeof error === 'string' ? error : (error.message || '');
+  if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network')) {
+    return 'Geen verbinding met de Supabase cloud server. Controleer uw internetverbinding.';
+  }
+  if (msg.includes('duplicate key') || msg.includes('23505')) {
+    return 'Er bestaat al een meesterwerk met deze unieke referentie-code.';
+  }
+  if (msg.includes('permission denied') || msg.includes('JWT') || msg.includes('401') || msg.includes('403')) {
+    return 'Sessie verlopen of onvoldoende rechten in de database.';
+  }
+  return 'Cloud-synchronisatie kon niet worden afgerond op de server.';
+};
+
 export const saveCatalogAsync = async (items) => {
   saveCatalog(items);
+  let supabaseSuccess = true;
+  let supabaseError = null;
+
   if (isSupabaseConfigured() && supabase) {
     try {
       const dbItems = items.map(mapFrontendItemToDb);
@@ -573,7 +591,11 @@ export const saveCatalogAsync = async (items) => {
       if (error) {
         console.warn("Supabase catalog upsert warning (retrying with basic fields):", error.message);
         const baseItems = items.map(mapFrontendItemToBasicDb);
-        await supabase.from('items').upsert(baseItems, { onConflict: 'id' });
+        const { error: err2 } = await supabase.from('items').upsert(baseItems, { onConflict: 'id' });
+        if (err2) {
+          supabaseSuccess = false;
+          supabaseError = formatSupabaseErrorMessage(err2);
+        }
       }
 
       // Save extended items to admin_settings so no translation or detail is ever lost
@@ -586,8 +608,17 @@ export const saveCatalogAsync = async (items) => {
       }
     } catch (e) {
       console.error("Supabase catalog save failed", e);
+      supabaseSuccess = false;
+      supabaseError = formatSupabaseErrorMessage(e);
     }
   }
+
+  return {
+    catalog: items,
+    success: supabaseSuccess,
+    backend: isSupabaseConfigured() ? 'supabase' : 'local',
+    error: supabaseError
+  };
 };
 
 export const saveItemAsync = async (item) => {
@@ -603,6 +634,9 @@ export const saveItemAsync = async (item) => {
 
   saveCatalog(updatedCatalog);
 
+  let supabaseSuccess = true;
+  let supabaseError = null;
+
   if (isSupabaseConfigured() && supabase) {
     try {
       const dbItem = mapFrontendItemToDb(item);
@@ -610,15 +644,16 @@ export const saveItemAsync = async (item) => {
       
       if (error) {
         console.warn("Supabase item upsert warning (retrying with basic schema):", error.message);
-        // Fallback: use basic schema mapping that puts all extended data in images JSONB
         const basicDbItem = mapFrontendItemToBasicDb(item);
         const { error: fallbackErr } = await supabase.from('items').upsert(basicDbItem, { onConflict: 'id' });
         if (fallbackErr) {
           console.error("Supabase item save fallback error:", fallbackErr);
+          supabaseSuccess = false;
+          supabaseError = formatSupabaseErrorMessage(fallbackErr);
         }
       }
 
-      // Always save full item JSON into admin_settings as a bulletproof secondary backup
+      // Save full item JSON into admin_settings as a bulletproof secondary backup
       await supabase.from('admin_settings').upsert({
         key: `item_ext_${item.id}`,
         value: JSON.stringify(item),
@@ -627,9 +662,19 @@ export const saveItemAsync = async (item) => {
 
     } catch (e) {
       console.error("Supabase item save exception:", e);
+      supabaseSuccess = false;
+      supabaseError = formatSupabaseErrorMessage(e);
     }
   }
-  return updatedCatalog;
+
+  // Attach non-enumerable or direct array property for backward compatibility
+  const resultObj = updatedCatalog;
+  resultObj.catalog = updatedCatalog;
+  resultObj.success = supabaseSuccess;
+  resultObj.backend = isSupabaseConfigured() ? 'supabase' : 'local';
+  resultObj.error = supabaseError;
+
+  return resultObj;
 };
 
 export const deleteItemAsync = async (itemId) => {
@@ -637,15 +682,31 @@ export const deleteItemAsync = async (itemId) => {
   const updatedCatalog = currentCatalog.filter(i => i.id !== itemId);
   saveCatalog(updatedCatalog);
 
+  let supabaseSuccess = true;
+  let supabaseError = null;
+
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('items').delete().eq('id', itemId);
-      if (error) console.error("Supabase item delete error:", error);
+      if (error) {
+        console.error("Supabase item delete error:", error);
+        supabaseSuccess = false;
+        supabaseError = formatSupabaseErrorMessage(error);
+      }
     } catch (e) {
       console.error("Supabase item delete exception:", e);
+      supabaseSuccess = false;
+      supabaseError = formatSupabaseErrorMessage(e);
     }
   }
-  return updatedCatalog;
+
+  const resultObj = updatedCatalog;
+  resultObj.catalog = updatedCatalog;
+  resultObj.success = supabaseSuccess;
+  resultObj.backend = isSupabaseConfigured() ? 'supabase' : 'local';
+  resultObj.error = supabaseError;
+
+  return resultObj;
 };
 
 // --- IMAGE UPLOAD HELPER ---
