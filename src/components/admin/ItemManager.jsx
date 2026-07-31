@@ -146,20 +146,22 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const [editorTab, setEditorTab] = useState('specs'); // 'specs' | 'multilingual'
   const [openMenuId, setOpenMenuId] = useState(null);
 
+  const handleSaveFormRef = React.useRef();
+  
   // Global Keyboard Shortcut (Cmd+S / Ctrl+S to Save, Esc to Close)
   useEffect(() => {
     if (!editingItem) return;
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        handleSaveForm();
+        if (handleSaveFormRef.current) handleSaveFormRef.current();
       } else if (e.key === 'Escape') {
         setEditingItem(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingItem, handleSaveForm]);
+  }, [editingItem]);
 
   // AI Translation Helper State
   const [showAiImportModal, setShowAiImportModal] = useState(false);
@@ -556,6 +558,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     }
     setEditingItem(null);
   };
+  handleSaveFormRef.current = handleSaveForm;
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
