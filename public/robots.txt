@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+
+# AI Search & LLM Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Sitemap & LLM Knowledge Specification
+Sitemap: https://www.atelierrembrandt.com/sitemap.xml
+# LLM Knowledge: https://www.atelierrembrandt.com/llms.txt

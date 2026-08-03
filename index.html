@@ -8,29 +8,52 @@
     <meta name="description" content="Atelier Rembrandt — Exclusieve collectie van zeldzame antiquarische boeken, kopergravures en unieke historische kunstobjecten met bewezen herkomst (provenance)." />
     <meta name="theme-color" content="#FAF7F2" />
 
-    <link rel="canonical" href="https://atelierrembrandt.com/" />
+    <link rel="canonical" href="https://www.atelierrembrandt.com/" />
 
     <!-- Open Graph & Social / Google Metadata -->
     <meta property="og:title" content="Atelier Rembrandt — Antiquariaat & Boekenkunst" />
     <meta property="og:site_name" content="Atelier Rembrandt" />
     <meta property="og:description" content="Exclusieve collectie van zeldzame antiquarische boeken, kopergravures en unieke historische kunstobjecten met bewezen herkomst." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/images/provenience-light-cream-hero.jpg" />
+    <meta property="og:url" content="https://www.atelierrembrandt.com/" />
+    <meta property="og:image" content="https://www.atelierrembrandt.com/images/provenience-light-cream-hero.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Atelier Rembrandt — Antiquariaat & Boekenkunst" />
     <meta name="twitter:description" content="Exclusieve collectie van zeldzame antiquarische boeken, kopergravures en unieke historische kunstobjecten." />
-    <meta name="twitter:image" content="/images/provenience-light-cream-hero.jpg" />
+    <meta name="twitter:image" content="https://www.atelierrembrandt.com/images/provenience-light-cream-hero.jpg" />
 
-    <!-- Structured Data for Google (Schema.org) -->
+    <!-- Structured Data for Google & AI Models / GEO (Schema.org) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "ArtGallery",
-      "name": "Atelier Rembrandt",
-      "alternateName": "Atelier Rembrandt Antiquariaat & Kunst",
-      "description": "Exclusieve collectie en antiquariaat voor zeldzame historische boeken en kunstobjecten.",
-      "url": "https://atelierrembrandt.com",
-      "logo": "/images/andor.jpeg"
+      "@graph": [
+        {
+          "@type": ["ArtGallery", "BookStore"],
+          "@id": "https://www.atelierrembrandt.com/#organization",
+          "name": "Atelier Rembrandt",
+          "alternateName": ["Atelier Rembrandt Antiquariaat", "Atelier Rembrandt Boekenkunst"],
+          "description": "Exclusief antiquariaat en kunstkabinet gespecialiseerd in zeldzame antiquarische boeken, 17e- en 18e-eeuwse kopergravures, historische manuscripten en adellijke provenance-objecten.",
+          "url": "https://www.atelierrembrandt.com",
+          "logo": "https://www.atelierrembrandt.com/images/andor.jpeg",
+          "knowsAbout": [
+            "Antiquarische boeken",
+            "Proveniëntie en herkomst",
+            "Franse Verlichting (Voltaire, Scarron, Diderot)",
+            "Kopergravures en etsen uit de 17e en 18e eeuw",
+            "Hollands-Leidse Vanitas schilderkunst"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.atelierrembrandt.com/#website",
+          "url": "https://www.atelierrembrandt.com",
+          "name": "Atelier Rembrandt",
+          "publisher": {
+            "@id": "https://www.atelierrembrandt.com/#organization"
+          },
+          "inLanguage": "nl-BE"
+        }
+      ]
     }
     </script>
 

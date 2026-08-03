@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Main Pages -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.atelierrembrandt.com/images/provenience-light-cream-hero.jpg</image:loc>
+      <image:title>Atelier Rembrandt — Antiquariaat &amp; Boekenkunst</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.atelierrembrandt.com/topstukken</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.atelierrembrandt.com/herkomst</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Live Dynamic Items from Supabase Database (19 Items) -->
+  <!-- Item: De Werken van Monsieur Scarron -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/scarron-1713-oeuvres</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785143200299_fq58g.png</image:loc>
+      <image:title>De Werken van Monsieur Scarron</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Voltaire — De Verzamelde Werken (Nieuwe Bibliotheek van de Franse Klassieken) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/voltaire-1829-52delig</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785142305255_ahty4.png</image:loc>
+      <image:title>Voltaire — De Verzamelde Werken (Nieuwe Bibliotheek van de Franse Klassieken)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: WORDSWORTH (William). The Complete Poetical Works. -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/vanitas-stilleven-leiden-1645</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785144926013_a630x.jpg</image:loc>
+      <image:title>WORDSWORTH (William). The Complete Poetical Works.</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Victor HUGO - 1864–1867  -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785157088150</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785157750206_e24qx.png</image:loc>
+      <image:title>Victor HUGO - 1864–1867 </image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Fabels van La Fontaine -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785235246685</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785235784168_pewmi.png</image:loc>
+      <image:title>Fabels van La Fontaine</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Eugène Labiche – Volledig Theater -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785238472874</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785238952945_k04jz.png</image:loc>
+      <image:title>Eugène Labiche – Volledig Theater</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Charles-Antoine-Guillaume Pigault de l&apos;Épinoy (Pigault-Lebrun) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785239558090</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785240047888_xfi0f.png</image:loc>
+      <image:title>Charles-Antoine-Guillaume Pigault de l&apos;Épinoy (Pigault-Lebrun)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: De complete werken van Voltaire -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785240199180</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785240805903_yekz7.png</image:loc>
+      <image:title>De complete werken van Voltaire</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Les Œuvres de Maistre François Rabelais (1711) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785243166913</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785243556016_9wx0u.png</image:loc>
+      <image:title>Les Œuvres de Maistre François Rabelais (1711)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Portrait of an Old Man -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785244106630</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785251093055_i17tt.jpg</image:loc>
+      <image:title>Portrait of an Old Man</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Cabinet des Fées -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785249408043</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785249790321_ko41o.png</image:loc>
+      <image:title>Cabinet des Fées</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Les Vies des Pères, des Martyrs, et des autres principaux Saints -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785250211963</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785250952848_4ybrl.jpg</image:loc>
+      <image:title>Les Vies des Pères, des Martyrs, et des autres principaux Saints</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: De volledige werken van Jean-Pierre Claris de Florian -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785251290163</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785251727991_orob2.jpg</image:loc>
+      <image:title>De volledige werken van Jean-Pierre Claris de Florian</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Geschiedenis van Frans I, Koning van Frankrijk -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785252242956</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785252710709_ieina.png</image:loc>
+      <image:title>Geschiedenis van Frans I, Koning van Frankrijk</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Histoire Générale des Pais-Bas -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785252917049</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785253587979_68eev.jpg</image:loc>
+      <image:title>Histoire Générale des Pais-Bas</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Portrait of a Magistrate of the Dutch Golden Age  -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785566801557</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785568092310_i608t.jpg</image:loc>
+      <image:title>Portrait of a Magistrate of the Dutch Golden Age </image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Uitzonderlijke Collectie Michelin Gidsen (1904–2026) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785592303358</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785663206971_0jhnb.jpg</image:loc>
+      <image:title>Uitzonderlijke Collectie Michelin Gidsen (1904–2026)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: A Corpus of Rembrandt Paintings  -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785677241949</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785677620624_0zpyo.jpg</image:loc>
+      <image:title>A Corpus of Rembrandt Paintings </image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: Quentin Metsys (naar) – De Belastinginners (The Tax Collectors) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785679463556</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785682729161_r0wjd.png</image:loc>
+      <image:title>Quentin Metsys (naar) – De Belastinginners (The Tax Collectors)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Legal & Static Pages -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/voorwaarden</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://www.atelierrembrandt.com/privacy</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>
