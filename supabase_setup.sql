@@ -28,10 +28,15 @@ CREATE TABLE IF NOT EXISTS public.items (
     condition_report TEXT,
     provenance_details TEXT,
     collation_specs TEXT,
+    comparable_sales JSONB NOT NULL DEFAULT '[]'::jsonb,
     images JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add Comparable Sales to existing installations as well
+ALTER TABLE public.items
+ADD COLUMN IF NOT EXISTS comparable_sales JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 -- 2. Create Inquiries Table (Customer requests & bids)
 CREATE TABLE IF NOT EXISTS public.inquiries (

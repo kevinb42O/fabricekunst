@@ -5,7 +5,7 @@
   <!-- Main Pages -->
   <url>
     <loc>https://www.atelierrembrandt.com/</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -16,54 +16,30 @@
 
   <url>
     <loc>https://www.atelierrembrandt.com/collectie</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://www.atelierrembrandt.com/topstukken</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https://www.atelierrembrandt.com/herkomst</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Live Dynamic Items from Supabase Database (19 Items) -->
-  <!-- Item: De Werken van Monsieur Scarron -->
-  <url>
-    <loc>https://www.atelierrembrandt.com/collectie/scarron-1713-oeuvres</loc>
-    <lastmod>2026-08-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-    <image:image>
-      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785143200299_fq58g.png</image:loc>
-      <image:title>De Werken van Monsieur Scarron</image:title>
-    </image:image>
-  </url>
-
-  <!-- Item: Voltaire — De Verzamelde Werken (Nieuwe Bibliotheek van de Franse Klassieken) -->
-  <url>
-    <loc>https://www.atelierrembrandt.com/collectie/voltaire-1829-52delig</loc>
-    <lastmod>2026-08-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-    <image:image>
-      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785142305255_ahty4.png</image:loc>
-      <image:title>Voltaire — De Verzamelde Werken (Nieuwe Bibliotheek van de Franse Klassieken)</image:title>
-    </image:image>
-  </url>
-
+  <!-- Live Dynamic Items from Supabase Database (21 Items) -->
   <!-- Item: WORDSWORTH (William). The Complete Poetical Works. -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/vanitas-stilleven-leiden-1645</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -72,10 +48,34 @@
     </image:image>
   </url>
 
+  <!-- Item: Voltaire — De Verzamelde Werken (Nieuwe Bibliotheek van de Franse Klassieken) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/voltaire-1829-52delig</loc>
+    <lastmod>2026-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785142305255_ahty4.png</image:loc>
+      <image:title>Voltaire — De Verzamelde Werken (Nieuwe Bibliotheek van de Franse Klassieken)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: De Werken van Monsieur Scarron -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/scarron-1713-oeuvres</loc>
+    <lastmod>2026-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785143200299_fq58g.png</image:loc>
+      <image:title>De Werken van Monsieur Scarron</image:title>
+    </image:image>
+  </url>
+
   <!-- Item: Victor HUGO - 1864–1867  -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785157088150</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -87,7 +87,7 @@
   <!-- Item: Fabels van La Fontaine -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785235246685</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -99,7 +99,7 @@
   <!-- Item: Eugène Labiche – Volledig Theater -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785238472874</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -111,7 +111,7 @@
   <!-- Item: Charles-Antoine-Guillaume Pigault de l&apos;Épinoy (Pigault-Lebrun) -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785239558090</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -123,7 +123,7 @@
   <!-- Item: De complete werken van Voltaire -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785240199180</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -135,7 +135,7 @@
   <!-- Item: Les Œuvres de Maistre François Rabelais (1711) -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785243166913</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -147,7 +147,7 @@
   <!-- Item: Portrait of an Old Man -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785244106630</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -159,7 +159,7 @@
   <!-- Item: Cabinet des Fées -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785249408043</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -171,7 +171,7 @@
   <!-- Item: Les Vies des Pères, des Martyrs, et des autres principaux Saints -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785250211963</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -183,7 +183,7 @@
   <!-- Item: De volledige werken van Jean-Pierre Claris de Florian -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785251290163</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -195,7 +195,7 @@
   <!-- Item: Geschiedenis van Frans I, Koning van Frankrijk -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785252242956</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -207,7 +207,7 @@
   <!-- Item: Histoire Générale des Pais-Bas -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785252917049</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -219,7 +219,7 @@
   <!-- Item: Portrait of a Magistrate of the Dutch Golden Age  -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785566801557</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -231,7 +231,7 @@
   <!-- Item: Uitzonderlijke Collectie Michelin Gidsen (1904–2026) -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785592303358</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -243,7 +243,7 @@
   <!-- Item: A Corpus of Rembrandt Paintings  -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785677241949</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -255,7 +255,7 @@
   <!-- Item: Quentin Metsys (naar) – De Belastinginners (The Tax Collectors) -->
   <url>
     <loc>https://www.atelierrembrandt.com/collectie/item-1785679463556</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <image:image>
@@ -264,17 +264,41 @@
     </image:image>
   </url>
 
+  <!-- Item: Meesterwerk: Een gesigneerde katana van Tadahiro (1592–1675) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785997854984</loc>
+    <lastmod>2026-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1785999187876_jlnf8.jpg</image:loc>
+      <image:title>Meesterwerk: Een gesigneerde katana van Tadahiro (1592–1675)</image:title>
+    </image:image>
+  </url>
+
+  <!-- Item: TANTO - Gesigneerd door KANEMOTO (1504-1538) -->
+  <url>
+    <loc>https://www.atelierrembrandt.com/collectie/item-1785999482553</loc>
+    <lastmod>2026-08-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://xbqgyijkwwvdooohygcn.supabase.co/storage/v1/object/public/catalog-images/catalog/1786002853436_af9ll.jpg</image:loc>
+      <image:title>TANTO - Gesigneerd door KANEMOTO (1504-1538)</image:title>
+    </image:image>
+  </url>
+
   <!-- Legal & Static Pages -->
   <url>
     <loc>https://www.atelierrembrandt.com/voorwaarden</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
     <loc>https://www.atelierrembrandt.com/privacy</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>

@@ -5,6 +5,7 @@ import {
   ArrowRight, BookOpen, ScrollText, CheckCircle2, History, PhoneCall
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
+import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 
@@ -331,6 +332,8 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 </div>
               </section>
             )}
+
+            <ComparableSalesSection sales={item.comparableSales} compact />
 
           </div>
 

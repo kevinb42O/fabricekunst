@@ -6,6 +6,7 @@ import {
   ArrowRight, FileText
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
+import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedStatus, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 
@@ -350,6 +351,8 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   </div>
                 </section>
               )}
+
+              <ComparableSalesSection sales={item.comparableSales} />
 
             </div>
 

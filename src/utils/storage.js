@@ -225,6 +225,7 @@ const mapDbItemToFrontend = (dbItem) => {
   const conditionReport = dbItem.condition_report || dbItem.conditionReport || extPayload.conditionReport || '';
   const provenanceDetails = dbItem.provenance_details || dbItem.provenanceDetails || extPayload.provenanceDetails || '';
   const collationSpecs = dbItem.collation_specs || dbItem.collationSpecs || extPayload.collationSpecs || '';
+  const comparableSales = dbItem.comparable_sales || dbItem.comparableSales || extPayload.comparableSales || [];
   const emptyFields = dbItem.emptyFields || dbItem.empty_fields || extPayload.emptyFields || extPayload.empty_fields || {};
 
   return {
@@ -252,6 +253,7 @@ const mapDbItemToFrontend = (dbItem) => {
     conditionReport,
     provenanceDetails,
     collationSpecs,
+    comparableSales: Array.isArray(comparableSales) ? comparableSales : [],
     emptyFields,
     empty_fields: emptyFields,
     images: cleanImages,
@@ -306,6 +308,7 @@ const mapFrontendItemToDb = (item) => {
       conditionReport: item.conditionReport || '',
       provenanceDetails: item.provenanceDetails || '',
       collationSpecs: item.collationSpecs || '',
+      comparableSales: Array.isArray(item.comparableSales) ? item.comparableSales : [],
       title_en: item.title_en || '',
       title_fr: item.title_fr || '',
       subtitle_en: item.subtitle_en || '',
@@ -358,6 +361,7 @@ const mapFrontendItemToDb = (item) => {
     condition_report: item.conditionReport || item.condition_report || '',
     provenance_details: item.provenanceDetails || item.provenance_details || '',
     collation_specs: item.collationSpecs || item.collation_specs || '',
+    comparable_sales: Array.isArray(item.comparableSales) ? item.comparableSales : [],
     images: cleanImages,
     
     // Multi-Language Fields (EN & FR)
@@ -396,6 +400,7 @@ const mapFrontendItemToBasicDb = (item) => {
       conditionReport: item.conditionReport || '',
       provenanceDetails: item.provenanceDetails || '',
       collationSpecs: item.collationSpecs || '',
+      comparableSales: Array.isArray(item.comparableSales) ? item.comparableSales : [],
       title_en: item.title_en || '',
       title_fr: item.title_fr || '',
       subtitle_en: item.subtitle_en || '',

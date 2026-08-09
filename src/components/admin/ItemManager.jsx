@@ -4,6 +4,41 @@ import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image
 import { uploadCatalogImage } from '../../utils/storage';
 import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
+const createComparableSale = () => ({
+  id: `sale-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  published: false,
+  imageUrl: '',
+  imageCaption: '',
+  description: '',
+  description_en: '',
+  description_fr: '',
+  seller: '',
+  saleDate: '',
+  lotNumber: '',
+  realizedPrice: '',
+  priceType: 'unknown',
+  saleUrl: ''
+});
+
+const isSafeHttpUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const isComparableSaleComplete = (sale) => (
+  isSafeHttpUrl(sale?.imageUrl)
+  && Boolean(sale?.description?.trim())
+  && Boolean(sale?.seller?.trim())
+  && Boolean(sale?.saleDate)
+  && Boolean(sale?.realizedPrice?.trim())
+  && (!sale.saleUrl || isSafeHttpUrl(sale.saleUrl))
+  && new Date(`${sale.saleDate}T12:00:00`) <= new Date()
+);
+
 export const getItemTranslationStatus = (item) => {
   if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
 
@@ -125,6 +160,15 @@ export const getItemTranslationStatus = (item) => {
     }
   }
 
+  const publishedComparableSales = Array.isArray(item.comparableSales)
+    ? item.comparableSales.filter(sale => sale?.published)
+    : [];
+  publishedComparableSales.forEach((sale, index) => {
+    if (!sale.description?.trim()) details.nl.missing.push(`Comparable Sale ${index + 1}`);
+    if (!sale.description_en?.trim()) details.en.missing.push(`Comparable Sale ${index + 1}`);
+    if (!sale.description_fr?.trim()) details.fr.missing.push(`Comparable Sale ${index + 1}`);
+  });
+
   let completeCount = 0;
   if (details.nl.missing.length === 0) completeCount++;
   if (details.en.missing.length === 0) completeCount++;
@@ -203,6 +247,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     conditionReport: '',
     provenanceDetails: '',
     collationSpecs: '',
+    comparableSales: [],
     images: [
       { url: '/images/scarron-spines-white-bg.jpg', caption: 'Hoofdafbeelding' }
     ]
@@ -214,7 +259,13 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   };
 
   const handleEdit = (item) => {
-    setEditingItem({ ...item, images: item.images ? [...item.images] : [] });
+    setEditingItem({
+      ...item,
+      images: item.images ? [...item.images] : [],
+      comparableSales: Array.isArray(item.comparableSales)
+        ? item.comparableSales.map(sale => ({ ...sale }))
+        : []
+    });
     setIsNew(false);
     setFormLang('nl');
   };
@@ -548,6 +599,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       return;
     }
 
+    const invalidPublishedSaleIndex = (editingItem.comparableSales || [])
+      .findIndex(sale => sale.published && !isComparableSaleComplete(sale));
+    if (invalidPublishedSaleIndex !== -1) {
+      if (onShowToast) onShowToast(`⚠️ Comparable Sale ${invalidPublishedSaleIndex + 1} is nog onvolledig of bevat een ongeldige URL/datum.`, 'error');
+      setEditorTab('comparable-sales');
+      return;
+    }
+
     if (onShowToast) onShowToast(`⏳ Bezig met opslaan van "${editingItem.title}" in cloud...`);
 
     const result = await onSaveItem(editingItem);
@@ -583,6 +642,59 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       }
     }
     setIsUploading(false);
+  };
+
+  const addComparableSale = () => {
+    setEditingItem(prev => ({
+      ...prev,
+      comparableSales: [...(prev.comparableSales || []), createComparableSale()]
+    }));
+  };
+
+  const updateComparableSale = (index, field, value) => {
+    setEditingItem(prev => ({
+      ...prev,
+      comparableSales: (prev.comparableSales || []).map((sale, saleIndex) => (
+        saleIndex === index ? { ...sale, [field]: value } : sale
+      ))
+    }));
+  };
+
+  const removeComparableSale = (index) => {
+    if (!window.confirm('Deze comparable sale verwijderen?')) return;
+    setEditingItem(prev => ({
+      ...prev,
+      comparableSales: (prev.comparableSales || []).filter((_, saleIndex) => saleIndex !== index)
+    }));
+  };
+
+  const moveComparableSale = (index, direction) => {
+    setEditingItem(prev => {
+      const comparableSales = [...(prev.comparableSales || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= comparableSales.length) return prev;
+      [comparableSales[index], comparableSales[targetIndex]] = [comparableSales[targetIndex], comparableSales[index]];
+      return { ...prev, comparableSales };
+    });
+  };
+
+  const handleComparableImageUpload = async (index, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const publicUrl = await uploadCatalogImage(file);
+      if (publicUrl) {
+        updateComparableSale(index, 'imageUrl', publicUrl);
+        updateComparableSale(index, 'imageCaption', file.name);
+      }
+    } catch (err) {
+      console.error('Fout bij uploaden comparable sale foto:', err);
+      if (onShowToast) onShowToast('⚠️ Fout bij uploaden foto. Probeer opnieuw.', 'error');
+    } finally {
+      setIsUploading(false);
+      event.target.value = '';
+    }
   };
 
   const handleAddImageUrl = (e) => {
@@ -1781,7 +1893,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 <div className="flex items-center space-x-2">
                   {[
                     { id: 'specs', label: '1. Kern & Bibliografische Data' },
-                    { id: 'multilingual', label: '2. Drietalige Inhoud & Staat' }
+                    { id: 'multilingual', label: '2. Drietalige Inhoud & Staat' },
+                    { id: 'comparable-sales', label: '3. Comparable Sales' }
                   ].map((t) => (
                     <button
                       key={t.id}
@@ -2135,6 +2248,242 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* TAB 3: COMPARABLE SALES */}
+              {editorTab === 'comparable-sales' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="p-5 rounded-2xl bg-[#1C1A18] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                    <div className="flex items-start space-x-3">
+                      <Award className="w-5 h-5 text-[#C5A059] shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-serif font-bold">Comparable Sales</h4>
+                        <p className="text-[11px] text-stone-400 font-serif mt-1">
+                          Voeg gerealiseerde verkopen van vergelijkbare objecten toe. Alleen complete referenties met “Tonen op website” verschijnen publiek.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addComparableSale}
+                      className="min-h-11 px-4 py-2.5 rounded-xl bg-[#C5A059] hover:bg-white text-black text-xs font-mono font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Comparable Sale toevoegen</span>
+                    </button>
+                  </div>
+
+                  {(editingItem.comparableSales || []).length === 0 && (
+                    <div className="py-14 px-6 text-center rounded-2xl border border-dashed border-[#CFC6B6] bg-white">
+                      <Award className="w-9 h-9 text-[#C5A059] mx-auto mb-3" />
+                      <h4 className="text-base font-serif font-bold text-[#1C1A18]">Nog geen vergelijkbare verkopen</h4>
+                      <p className="text-xs font-serif text-[#666666] mt-1">Dit onderdeel blijft onzichtbaar op de productpagina.</p>
+                    </div>
+                  )}
+
+                  {(editingItem.comparableSales || []).map((sale, index) => {
+                    const descriptionField = formLang === 'nl' ? 'description' : `description_${formLang}`;
+                    const isComplete = isComparableSaleComplete(sale);
+
+                    return (
+                      <section key={sale.id} className="rounded-2xl bg-white border border-[#E0D9CC] shadow-xs overflow-hidden">
+                        <header className="px-5 py-4 bg-[#F4F1EA] border-b border-[#E0D9CC] flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-[#1C1A18] text-[#C5A059] font-mono font-bold text-xs flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <h4 className="text-sm font-serif font-bold text-[#1C1A18]">
+                                {sale.seller || `Comparable Sale ${index + 1}`}
+                              </h4>
+                              <span className={`text-[10px] font-mono font-bold uppercase ${isComplete ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                {isComplete ? 'Compleet' : 'Concept — verplichte gegevens ontbreken'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <label className={`min-h-9 px-3 rounded-lg border flex items-center gap-2 text-[11px] font-mono font-bold cursor-pointer ${
+                              sale.published ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white border-[#D8CEB8] text-[#666666]'
+                            }`}>
+                              <input
+                                type="checkbox"
+                                checked={Boolean(sale.published)}
+                                onChange={(event) => updateComparableSale(index, 'published', event.target.checked)}
+                                className="w-4 h-4 rounded text-[#C5A059] focus:ring-[#C5A059]"
+                              />
+                              <span>Tonen op website</span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => moveComparableSale(index, -1)}
+                              disabled={index === 0}
+                              title="Naar boven"
+                              className="w-9 h-9 rounded-lg border border-[#D8CEB8] bg-white hover:border-[#C5A059] disabled:opacity-30 cursor-pointer"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveComparableSale(index, 1)}
+                              disabled={index === editingItem.comparableSales.length - 1}
+                              title="Naar beneden"
+                              className="w-9 h-9 rounded-lg border border-[#D8CEB8] bg-white hover:border-[#C5A059] disabled:opacity-30 cursor-pointer"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeComparableSale(index)}
+                              title="Comparable sale verwijderen"
+                              className="w-9 h-9 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </header>
+
+                        <div className="p-5 sm:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6">
+                          <div className="xl:col-span-5 space-y-4">
+                            <div className="aspect-4/3 rounded-xl border border-[#E0D9CC] bg-[#F4F1EA] overflow-hidden flex items-center justify-center">
+                              {sale.imageUrl ? (
+                                <img src={sale.imageUrl} alt={sale.imageCaption || ''} className="w-full h-full object-contain" />
+                              ) : (
+                                <div className="text-center text-[#888888]">
+                                  <ImageIcon className="w-8 h-8 mx-auto mb-2 text-[#C5A059]" />
+                                  <span className="text-xs font-serif">Nog geen referentieafbeelding</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                              <input
+                                type="url"
+                                value={sale.imageUrl || ''}
+                                onChange={(event) => updateComparableSale(index, 'imageUrl', event.target.value)}
+                                placeholder="https://... afbeeldings-URL"
+                                className="min-w-0 px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-mono focus:outline-none focus:border-[#1C1A18]"
+                              />
+                              <label className="min-h-10 px-3.5 py-2.5 rounded-xl bg-[#1C1A18] hover:bg-[#C5A059] text-white hover:text-black text-xs font-mono font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors">
+                                <Upload className="w-4 h-4" />
+                                <span>{isUploading ? 'Uploaden...' : 'Upload'}</span>
+                                <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={(event) => handleComparableImageUpload(index, event)} />
+                              </label>
+                            </div>
+
+                            <input
+                              type="text"
+                              value={sale.imageCaption || ''}
+                              onChange={(event) => updateComparableSale(index, 'imageCaption', event.target.value)}
+                              placeholder="Afbeeldingsbijschrift / alternatieve tekst"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-serif focus:outline-none focus:border-[#1C1A18]"
+                            />
+                          </div>
+
+                          <div className="xl:col-span-7 space-y-5">
+                            <div>
+                              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <label className="text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider">
+                                  Korte omschrijving ({formLang.toUpperCase()}) *
+                                </label>
+                                <div className="flex items-center gap-1 bg-[#F4F1EA] p-1 rounded-lg">
+                                  {['nl', 'en', 'fr'].map(lang => (
+                                    <button
+                                      key={lang}
+                                      type="button"
+                                      onClick={() => setFormLang(lang)}
+                                      className={`px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase ${formLang === lang ? 'bg-[#C5A059] text-black' : 'text-[#666666]'}`}
+                                    >
+                                      {lang}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <textarea
+                                rows={3}
+                                value={sale[descriptionField] || ''}
+                                onChange={(event) => updateComparableSale(index, descriptionField, event.target.value)}
+                                placeholder="Omschrijf kort waarom dit een relevant vergelijkbaar object is..."
+                                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm font-serif leading-relaxed focus:outline-none focus:border-[#1C1A18]"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Veilinghuis / Verkoper *</label>
+                                <input
+                                  type="text"
+                                  value={sale.seller || ''}
+                                  onChange={(event) => updateComparableSale(index, 'seller', event.target.value)}
+                                  placeholder="Bijv. Bonhams London"
+                                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-semibold focus:outline-none focus:border-[#1C1A18]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Verkoopdatum *</label>
+                                <input
+                                  type="date"
+                                  max={new Date().toISOString().slice(0, 10)}
+                                  value={sale.saleDate || ''}
+                                  onChange={(event) => updateComparableSale(index, 'saleDate', event.target.value)}
+                                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-mono focus:outline-none focus:border-[#1C1A18]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Lotnummer</label>
+                                <input
+                                  type="text"
+                                  value={sale.lotNumber || ''}
+                                  onChange={(event) => updateComparableSale(index, 'lotNumber', event.target.value)}
+                                  placeholder="Bijv. 194"
+                                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-mono focus:outline-none focus:border-[#1C1A18]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Gerealiseerde prijs *</label>
+                                <input
+                                  type="text"
+                                  value={sale.realizedPrice || ''}
+                                  onChange={(event) => updateComparableSale(index, 'realizedPrice', event.target.value)}
+                                  placeholder="Bijv. GBP 15,000"
+                                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-semibold focus:outline-none focus:border-[#1C1A18]"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Prijssoort</label>
+                                <select
+                                  value={sale.priceType || 'unknown'}
+                                  onChange={(event) => updateComparableSale(index, 'priceType', event.target.value)}
+                                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs focus:outline-none focus:border-[#1C1A18]"
+                                >
+                                  <option value="unknown">Niet gespecificeerd</option>
+                                  <option value="hammer">Hamerprijs</option>
+                                  <option value="including-premium">Inclusief opgeld</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Link naar verkoop</label>
+                                <div className="relative">
+                                  <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#C5A059]" />
+                                  <input
+                                    type="url"
+                                    value={sale.saleUrl || ''}
+                                    onChange={(event) => updateComparableSale(index, 'saleUrl', event.target.value)}
+                                    placeholder="https://..."
+                                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs font-mono focus:outline-none focus:border-[#1C1A18]"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    );
+                  })}
                 </div>
               )}
 
