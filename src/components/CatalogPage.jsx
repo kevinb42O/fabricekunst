@@ -196,7 +196,10 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState(() => getInitialParam('q', ''));
   const [selectedGroup, setSelectedGroup] = useState(() => getInitialParam('group', DEFAULT_FILTER_VALUE));
-  const [selectedType, setSelectedType] = useState(() => getInitialParam('type', DEFAULT_FILTER_VALUE));
+  const [selectedType, setSelectedType] = useState(() => {
+    const initialType = getInitialParam('type', DEFAULT_FILTER_VALUE);
+    return initialType === 'sword' ? DEFAULT_FILTER_VALUE : initialType;
+  });
   const [selectedStatus, setSelectedStatus] = useState(() => getInitialParam('status', DEFAULT_FILTER_VALUE));
   const [selectedCentury, setSelectedCentury] = useState(() => getInitialParam('century', DEFAULT_FILTER_VALUE));
   const [selectedCategory, setSelectedCategory] = useState(() => {
@@ -220,7 +223,8 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
   );
 
   const typeOptions = useMemo(() => {
-    const discoveredTypes = getUniqueValues(normalizedItems, (item) => item.typeValue);
+    const discoveredTypes = getUniqueValues(normalizedItems, (item) => item.typeValue)
+      .filter((type) => type !== 'sword');
     const configuredTypes = ITEM_TYPES.map((type) => type.slug).filter((type) => discoveredTypes.includes(type));
     const customTypes = discoveredTypes.filter((type) => !configuredTypes.includes(type));
     return [DEFAULT_FILTER_VALUE, ...configuredTypes, ...customTypes];
@@ -538,6 +542,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                 </div>
               </div>
 
+              {selectedGroup !== 'japanese-art' && (
               <div className="border-t border-[#E8DFCF]/50 pt-5">
                 <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
                   {t('catalog.typeFilter')}
@@ -575,6 +580,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                   })}
                 </div>
               </div>
+              )}
 
               <div className="border-t border-[#E8DFCF]/50 pt-5">
                 <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
@@ -808,7 +814,9 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                         {/* Top Micro-Header */}
                         <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-[#8E7035]">
                           <span>
-                            {getLocalizedItemType(item.typeValue, language)}
+                            {item.collectionGroupValue === 'japanese-art'
+                              ? getLocalizedCollectionGroup('japanese-art', language)
+                              : getLocalizedItemType(item.typeValue, language)}
                             <span className="mx-1.5 text-[#B8860B]/40">·</span>
                             {getLocalizedCentury(item.century, language)}
                           </span>
