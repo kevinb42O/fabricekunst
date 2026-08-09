@@ -51,7 +51,7 @@ export const ITEM_TYPES = [
     collectionGroup: 'historical-objects',
     labels: label('Japanse kunst', 'Japanese Art', 'Art japonais'),
     shortLabels: label('Japanse kunst', 'Japanese Art', 'Art japonais'),
-    defaultCategory: 'other-japanese-art',
+    defaultCategory: 'japanese-swords',
     fieldLabels: {
       title: 'Naam / Omschrijving van het kunstobject',
       author: 'Kunstenaar / Maker / School',
@@ -97,8 +97,7 @@ export const CATEGORIES = [
   { slug: 'still-lifes-landscapes', group: 'art', labels: label('Stillevens & Landschappen', 'Still Lifes & Landscapes', 'Natures mortes & Paysages') },
   { slug: 'religious-art-icons', group: 'art', labels: label('Religieuze Kunst & Iconen', 'Religious Art & Icons', 'Art religieux & Icônes') },
   { slug: 'prints-drawings', group: 'art', labels: label('Grafiek & Tekeningen', 'Prints & Drawings', 'Estampes & Dessins') },
-  { slug: 'japanese-swords', group: 'historical-objects', labels: label('Japanse wapenkunst', 'Japanese Arms', 'Armes japonaises') },
-  { slug: 'other-japanese-art', group: 'historical-objects', labels: label('Overige Japanse kunst', 'Other Japanese Art', 'Autres arts japonais') },
+  { slug: 'japanese-swords', group: 'historical-objects', labels: label('Japanse kunst', 'Japanese Art', 'Art japonais') },
   { slug: 'other-historical-objects', group: 'historical-objects', labels: label('Overige historische objecten', 'Other Historical Objects', 'Autres objets historiques') }
 ];
 
