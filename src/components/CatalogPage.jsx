@@ -878,7 +878,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                       transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.24) }}
                       className={index === 0 ? "pt-2" : "border-t border-[#D8CEB8]/70 pt-12"}
                     >
-                      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 lg:items-start">
+                      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 lg:items-center">
                         <div className={`lg:col-span-5 ${mediaOnRight ? 'lg:order-2' : ''}`}>
                           <button
                             type="button"
