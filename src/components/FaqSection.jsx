@@ -68,7 +68,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
             {t('faq.badge')}
           </span>
           
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
+          <h2 className="display-section-wide text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
             {t('faq.title')}
           </h2>
 

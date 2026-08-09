@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
+import { rememberImagePresentation } from '../utils/imagePresentation';
 
 export default function TopstukkenShowcase({ 
   items = [], 
@@ -50,7 +51,7 @@ export default function TopstukkenShowcase({
         {/* Section Header (Sotheby's / Christie's Gallery Style) */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-[#D8CEB8] pb-10">
           <div className="space-y-4 max-w-3xl">
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
+            <h2 className="display-section-wide text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.1]">
               {t('topstukken.title')}
             </h2>
             <p className="text-base sm:text-lg text-[#444444] font-serif italic leading-relaxed">
@@ -93,6 +94,7 @@ export default function TopstukkenShowcase({
                   loading="lazy"
                   decoding="async"
                   draggable="false"
+                  onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
                   style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkImageTransitionName(spotlightItem.id) : 'none' }}
                   className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
                 />
@@ -108,7 +110,7 @@ export default function TopstukkenShowcase({
 
                 <h3
                   style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkTitleTransitionName(spotlightItem.id) : 'none' }}
-                  className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
+                  className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
                 >
                   {getItemField(spotlightItem, 'title', language)}
                 </h3>
@@ -199,6 +201,7 @@ export default function TopstukkenShowcase({
                         loading="lazy"
                         decoding="async"
                         draggable="false"
+                        onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
                         className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
                       />
@@ -216,7 +219,7 @@ export default function TopstukkenShowcase({
 
                       <h3
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
-                        className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
+                        className="display-editorial-card-wide text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
                       >
                         {itemTitle}
                       </h3>

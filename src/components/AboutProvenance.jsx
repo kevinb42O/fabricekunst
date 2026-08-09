@@ -89,7 +89,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
               {t('provenance.heroBadge')}
             </span>
             
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.08]">
+            <h2 className="display-section-wide text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.08]">
               {t('provenance.heroTitle')}
             </h2>
           </div>

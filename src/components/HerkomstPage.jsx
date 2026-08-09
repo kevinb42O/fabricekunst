@@ -147,11 +147,11 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
             {/* Headline */}
             <motion.h1 
               variants={itemVariants}
-              className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-[#4A1521] tracking-tight leading-[1.06]"
+              className="heritage-hero-title text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-[#4A1521] tracking-tight leading-[1.06]"
             >
               <span className="block">{heroTitle1}</span>
               {heroTitle2 && (
-                <span className="text-[#8E7035] italic font-normal block mt-2 text-3xl sm:text-5xl lg:text-6xl font-serif">
+                <span className="heritage-hero-subtitle text-[#8E7035] italic font-normal block mt-2 text-3xl sm:text-5xl lg:text-6xl font-serif">
                   {heroTitle2}
                 </span>
               )}
@@ -160,7 +160,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
             {/* Lead Paragraph */}
             <motion.p 
               variants={itemVariants}
-              className="text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
+              className="heritage-lead-copy text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
             >
               {heroSubtitle}
             </motion.p>
@@ -188,7 +188,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
                   {protocolBadge}
                 </span>
                 
-                <h2 className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
+                <h2 className="display-section-wide text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
                   {protocolTitle}
                 </h2>
                 

@@ -11,6 +11,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
 import { getItemField, getLocalizedStatus, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
+import { getImagePresentation, rememberImagePresentation } from '../utils/imagePresentation';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
   const { t, language } = useLanguage();
@@ -18,12 +19,23 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
   const [zoomModalData, setZoomModalData] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const currentImage = item?.images?.[selectedImageIndex] || item?.images?.[0] || { url: "/images/scarron-spines-white-bg.jpg", caption: "" };
+  const [imagePresentation, setImagePresentation] = useState(() => getImagePresentation(currentImage.url));
+  const stageHeightLimit = imagePresentation.orientation === 'portrait' ? 82 : imagePresentation.orientation === 'square' ? 78 : 72;
+  const imageStageStyle = {
+    '--detail-image-ratio': imagePresentation.ratio,
+    '--detail-stage-width-cap': `${imagePresentation.ratio * stageHeightLimit}svh`,
+  };
 
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setSelectedImageIndex(0);
   }, [item]);
+
+  useEffect(() => {
+    setImagePresentation(getImagePresentation(currentImage.url));
+  }, [currentImage.url]);
 
   if (!item) {
     return (
@@ -50,7 +62,6 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   const prevItem = currentIndex > 0 ? catalog[currentIndex - 1] : null;
   const nextItem = currentIndex >= 0 && currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : null;
 
-  const currentImage = item.images?.[selectedImageIndex] || item.images?.[0] || { url: "/images/scarron-spines-white-bg.jpg", caption: "" };
   const detailLabels = getLocalizedItemDetailLabels(item.itemType, language);
 
   const handlePrevImage = () => {
@@ -118,16 +129,19 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       {/* ------------------------------------------------------------- */}
       <div className="page-shell-detail">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
+        <div className="detail-hero-grid grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
           
           {/* ========================================================= */}
           {/* LEFT COLUMN: PHOTOGRAPHY & CONTINUOUS EDITORIAL DOSSIER   */}
           {/* ========================================================= */}
-          <div className="lg:col-span-7 space-y-8 sm:space-y-12 order-2 lg:order-1">
+          <div className="detail-media-column lg:col-span-7 space-y-8 sm:space-y-12 order-2 lg:order-1">
             
             {/* Primary High-Res Gallery Frame */}
             <div className="space-y-4">
-              <div className="relative aspect-[3/4] sm:aspect-[4/5] rounded-xl sm:rounded-2xl bg-white border border-[#D8CEB8] overflow-hidden group shadow-sm">
+              <div
+                className={`detail-image-stage detail-image-stage--${imagePresentation.orientation} relative rounded-lg bg-[#F4F1EB] border border-[#D8CEB8]/80 overflow-hidden group shadow-sm`}
+                style={imageStageStyle}
+              >
                 <img
                   src={currentImage.url}
                   alt={currentImage.caption || getItemField(item, 'title', language)}
@@ -135,8 +149,9 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   decoding="async"
                   fetchPriority="high"
                   draggable="false"
+                  onLoad={(event) => setImagePresentation(rememberImagePresentation(currentImage.url, event.currentTarget))}
                   style={{ viewTransitionName: selectedImageIndex === 0 ? getArtworkImageTransitionName(item.id) : 'none' }}
-                  className="w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.015]"
                   onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: getItemField(item, 'title', language) })}
                 />
 
@@ -172,7 +187,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               {/* Thumbnail Gallery Strip */}
               {item.images && item.images.length > 1 && (
-                <div className="flex items-center space-x-2 sm:space-x-3 overflow-x-auto mobile-scroll-x pb-2 snap-x snap-mandatory">
+                <div
+                  className={`detail-thumbnail-rail detail-thumbnail-rail--${imagePresentation.orientation} flex items-center space-x-2 sm:space-x-3 overflow-x-auto mobile-scroll-x pb-2 snap-x snap-mandatory`}
+                  style={imageStageStyle}
+                >
                   {item.images.map((img, idx) => (
                     <button
                       key={idx}
@@ -191,7 +209,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             {/* --------------------------------------------------------- */}
             {/* CONTINUOUS EDITORIAL DOSSIER (CLEAN, NO OVERLAPPING BARS) */}
             {/* --------------------------------------------------------- */}
-            <div className="space-y-10 sm:space-y-14 text-[#111111]">
+            <div className="detail-dossier-copy max-w-4xl space-y-10 sm:space-y-14 text-[#111111]">
               
               {/* SECTION I: BESCHRIJVING */}
               {getItemField(item, 'description', language) && (
@@ -369,7 +387,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           {/* ========================================================= */}
           {/* RIGHT COLUMN: STICKY TITEL, METADATA & CONSULTATIE CARD    */}
           {/* ========================================================= */}
-          <div className="lg:col-span-5 space-y-5 sm:space-y-8 lg:sticky lg:top-28 lg:self-start order-1 lg:order-2">
+          <div className="detail-summary-column lg:col-span-5 space-y-5 sm:space-y-8 lg:sticky lg:top-28 lg:self-start order-1 lg:order-2">
             
             {/* Header Titles */}
             <div className="space-y-3 border-b border-[#D8CEB8]/70 pb-6">
@@ -380,7 +398,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               <h1
                 style={{ viewTransitionName: getArtworkTitleTransitionName(item.id) }}
-                className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
+                className="display-detail-wide text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
               >
                 {getItemField(item, 'title', language)}
               </h1>

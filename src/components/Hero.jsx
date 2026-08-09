@@ -92,7 +92,7 @@ export default function Hero({ heroImage, onExploreCatalog, onRequestConsultatio
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-xl lg:max-w-2xl space-y-6 text-left"
+          className="hero-copy-shell max-w-xl lg:max-w-2xl space-y-6 text-left"
         >
           
           {/* Category Tag (Antique Gold Accent) */}
@@ -123,7 +123,7 @@ export default function Hero({ heroImage, onExploreCatalog, onRequestConsultatio
           <div className="overflow-hidden">
             <motion.p 
               variants={itemVariants}
-              className="text-sm sm:text-base text-[#554326] font-serif font-light leading-relaxed max-w-lg"
+              className="hero-lead-copy text-sm sm:text-base text-[#554326] font-serif font-light leading-relaxed max-w-lg"
             >
               {t('hero.description')}
             </motion.p>

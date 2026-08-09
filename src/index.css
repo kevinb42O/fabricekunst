@@ -31,6 +31,226 @@
   }
 }
 
+@media (min-width: 120rem) and (min-height: 56.25rem) {
+  :root {
+    --text-hero: 7rem;
+    --text-hero-sub: 4.5rem;
+  }
+
+  .hero-copy-shell.hero-copy-shell {
+    max-width: 45rem;
+  }
+
+  .hero-lead-copy.hero-lead-copy {
+    max-width: 36rem;
+    font-size: 1.125rem;
+  }
+
+  .heritage-hero-title.heritage-hero-title {
+    font-size: 5rem;
+  }
+
+  .heritage-hero-subtitle.heritage-hero-subtitle {
+    font-size: 4.25rem;
+  }
+
+  .display-section-wide.display-section-wide {
+    font-size: 4rem;
+  }
+
+  .display-feature-wide.display-feature-wide,
+  .display-detail-wide.display-detail-wide {
+    font-size: 3.25rem;
+  }
+
+  .display-editorial-card-wide.display-editorial-card-wide {
+    font-size: 2rem;
+  }
+
+  .heritage-lead-copy.heritage-lead-copy {
+    font-size: 1.375rem;
+  }
+
+  .page-shell-detail.page-shell-detail {
+    max-width: none;
+  }
+
+  .detail-hero-grid.detail-hero-grid {
+    width: 100%;
+    max-width: 240rem;
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 3fr) minmax(24rem, 2fr);
+  }
+
+  .detail-media-column.detail-media-column,
+  .detail-summary-column.detail-summary-column {
+    grid-column: auto;
+  }
+
+  .detail-summary-column.detail-summary-column {
+    width: 100%;
+    max-width: 42rem;
+    justify-self: center;
+  }
+}
+
+@media (min-width: 160rem) and (min-height: 62.5rem) {
+  :root {
+    --text-hero: 7.5rem;
+    --text-hero-sub: 4.875rem;
+  }
+
+  .hero-copy-shell.hero-copy-shell {
+    max-width: 50rem;
+  }
+
+  .hero-lead-copy.hero-lead-copy {
+    max-width: 38rem;
+    font-size: 1.1875rem;
+  }
+
+  .heritage-hero-title.heritage-hero-title {
+    font-size: 5.375rem;
+  }
+
+  .heritage-hero-subtitle.heritage-hero-subtitle {
+    font-size: 4.5rem;
+  }
+
+  .display-section-wide.display-section-wide {
+    font-size: 4.25rem;
+  }
+
+  .display-feature-wide.display-feature-wide,
+  .display-detail-wide.display-detail-wide {
+    font-size: 3.5rem;
+  }
+
+  .display-editorial-card-wide.display-editorial-card-wide {
+    font-size: 2.125rem;
+  }
+}
+
+@media (min-width: 215rem) and (min-height: 68.75rem) {
+  :root {
+    --text-hero: 8rem;
+    --text-hero-sub: 5.125rem;
+  }
+
+  .hero-copy-shell.hero-copy-shell {
+    max-width: 53.75rem;
+  }
+
+  .hero-lead-copy.hero-lead-copy {
+    max-width: 38.75rem;
+    font-size: 1.25rem;
+  }
+
+  .heritage-hero-title.heritage-hero-title {
+    font-size: 5.5rem;
+  }
+
+  .heritage-hero-subtitle.heritage-hero-subtitle {
+    font-size: 4.75rem;
+  }
+
+  .display-section-wide.display-section-wide {
+    font-size: 4.5rem;
+  }
+
+  .display-feature-wide.display-feature-wide {
+    font-size: 3.75rem;
+  }
+
+  .display-detail-wide.display-detail-wide {
+    font-size: 3.5rem;
+  }
+
+  .display-editorial-card-wide.display-editorial-card-wide {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 137.5rem) {
+  .catalog-card-title-wide.catalog-card-title-wide {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 200rem) {
+  .catalog-card-title-wide.catalog-card-title-wide {
+    font-size: 1.375rem;
+  }
+}
+
+.heritage-hero-title,
+.heritage-hero-subtitle,
+.display-section-wide,
+.display-feature-wide,
+.display-detail-wide,
+.display-editorial-card-wide,
+.catalog-card-title-wide {
+  text-wrap: balance;
+}
+
+.detail-image-stage {
+  width: 100%;
+  max-width: 120rem;
+  margin-inline: auto;
+  aspect-ratio: var(--detail-image-ratio, 1.5);
+}
+
+.detail-image-stage--square {
+  max-width: 72rem;
+}
+
+.detail-image-stage--portrait {
+  max-width: 52rem;
+}
+
+.detail-thumbnail-rail {
+  width: 100%;
+  max-width: 120rem;
+  margin-inline: auto;
+}
+
+.detail-thumbnail-rail--square {
+  max-width: 72rem;
+}
+
+.detail-thumbnail-rail--portrait {
+  max-width: 52rem;
+}
+
+@media (min-width: 64rem) {
+  .detail-image-stage {
+    max-width: min(120rem, var(--detail-stage-width-cap));
+    max-height: 72svh;
+  }
+
+  .detail-image-stage--square {
+    max-width: min(72rem, var(--detail-stage-width-cap));
+    max-height: 78svh;
+  }
+
+  .detail-image-stage--portrait {
+    max-width: min(52rem, var(--detail-stage-width-cap));
+    max-height: 82svh;
+  }
+
+  .detail-thumbnail-rail {
+    max-width: min(120rem, var(--detail-stage-width-cap));
+  }
+
+  .detail-thumbnail-rail--square {
+    max-width: min(72rem, var(--detail-stage-width-cap));
+  }
+
+  .detail-thumbnail-rail--portrait {
+    max-width: min(52rem, var(--detail-stage-width-cap));
+  }
+}
+
 @layer base {
   html, body {
     background-color: #FFFFFF;
