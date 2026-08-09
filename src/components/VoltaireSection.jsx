@@ -61,7 +61,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16"
+        className="page-shell-wide space-y-16"
       >
         
         {/* Section Header */}

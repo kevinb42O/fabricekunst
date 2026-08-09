@@ -79,7 +79,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 1.0, ease: LUXURY_EASE }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16"
+        className="page-shell-wide relative z-10 space-y-16"
       >
         
         {/* SECOND HERO HEADER BAR */}

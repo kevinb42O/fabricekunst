@@ -121,7 +121,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           />
         </div>
         {/* Hero Content */}
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full my-auto">
+        <div className="relative z-20 page-shell-wide my-auto">
           <motion.div 
             variants={containerVariants}
             initial="hidden"
@@ -181,7 +181,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           {/* 2. HET 4-STAPPEN PROTOCOL VAN AUTHENTICITEIT                  */}
           {/* ------------------------------------------------------------- */}
           <section className="py-16 sm:py-24 lg:py-32 select-none">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-16">
+            <div className="page-shell-wide space-y-10 sm:space-y-16">
               
               <div className="text-center max-w-3xl mx-auto space-y-4">
                 <span className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#B8860B] block">
@@ -307,7 +307,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           {/* 3. VISUELE BLIKVANGER & UITGELICHT TOPSTUK SHOWCASE           */}
           {/* ------------------------------------------------------------- */}
           <section className="py-16 sm:py-24 lg:py-32">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+            <div className="page-shell-wide space-y-16">
               
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
                 
@@ -390,7 +390,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
           {/* 4. AFSLUITING & PRIVÉ CONSULTATIE CTA                         */}
           {/* ------------------------------------------------------------- */}
           <section className="py-16 sm:py-24 lg:py-32">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="page-shell-wide">
               
               <div className="bg-[#1C1A17] text-[#FAF7F2] rounded-2xl p-6 sm:p-10 lg:p-14 border border-[#B8860B]/50 shadow-2xl flex flex-col items-center text-center lg:flex-row lg:text-left lg:items-center justify-between gap-6 sm:gap-10">
                 <div className="space-y-4 text-center lg:text-left max-w-2xl">

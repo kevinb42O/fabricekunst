@@ -57,7 +57,7 @@ export default function Catalog({ items, onSelectItem, onRequestInquiry }) {
 
   return (
     <section id="catalogus" className="py-24 bg-charcoal relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-shell-wide">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">

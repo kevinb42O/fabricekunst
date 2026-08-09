@@ -82,7 +82,7 @@ export default function Hero({ heroImage, onExploreCatalog, onRequestConsultatio
       {/* ------------------------------------------------------------- */}
       <motion.div 
         style={{ y: textY, opacity: textOpacity }}
-        className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full my-auto text-[#111111]"
+        className="relative z-20 page-shell-wide my-auto text-[#111111]"
       >
         <motion.div 
           variants={containerVariants}

@@ -72,7 +72,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       {/* ------------------------------------------------------------- */}
       {/* BREADCRUMB & HEADER CONTROL STRIP                             */}
       {/* ------------------------------------------------------------- */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4 sm:mb-8">
+      <div className="page-shell-detail mb-4 sm:mb-8">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D8CEB8]/70 pb-4">
           
           {/* Back button & Breadcrumbs */}
@@ -115,7 +115,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       {/* ------------------------------------------------------------- */}
       {/* MAIN TWO-COLUMN UNBOXED GALLERY & DOSSIER LAYOUT              */}
       {/* ------------------------------------------------------------- */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-shell-detail">
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
           

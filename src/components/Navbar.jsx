@@ -77,11 +77,11 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           : 'bg-transparent border-none text-[#111111]'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="flex items-center justify-between min-h-[76px] sm:min-h-[88px] py-3">
+      <div className="nav-shell relative">
+        <div className="flex lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between gap-4 lg:gap-8 xl:gap-12 min-h-[76px] sm:min-h-[88px] py-3">
           
           {/* LEFT ZONE: Navigation Links */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-10 w-1/3">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-10 2xl:gap-12 min-w-0">
             {navLinks.slice(0, 3).map((link) => (
               <button
                 key={link.id}
@@ -103,7 +103,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           </div>
 
           {/* CENTER ZONE: Brand Logo - DEAD CENTER (Louis Vuitton Architecture) */}
-          <div className="flex-1 md:flex-initial md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 flex justify-center text-center">
+          <div className="flex-1 lg:flex-initial flex justify-center text-center">
             <motion.button 
               whileHover={{ scale: 1.015 }}
               whileTap={{ scale: 0.985 }}
@@ -122,7 +122,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           </div>
 
           {/* RIGHT ZONE: Contact Link & Ultra-Sleek Language Switcher */}
-          <div className="hidden md:flex items-center justify-end space-x-6 lg:space-x-10 w-1/3">
+          <div className="hidden lg:flex items-center justify-end gap-6 xl:gap-10 2xl:gap-12 min-w-0">
             <button
               onClick={() => handleNavClick('contact')}
               className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
@@ -154,7 +154,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="lg:hidden flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm focus:outline-none text-[#111111]`}
@@ -173,7 +173,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden fixed inset-0 top-[72px] bg-black/30 backdrop-blur-sm z-30"
+            className="lg:hidden fixed inset-0 top-[72px] bg-black/30 backdrop-blur-sm z-30"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
@@ -187,7 +187,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.3, ease: LUXURY_EASE }}
-            className="md:hidden bg-white border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
+            className="lg:hidden bg-white border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
           >
             {/* Navigation links */}
             <div className="space-y-1">

@@ -43,7 +43,7 @@ export default function TopstukkenShowcase({
   return (
     <section id="topstukken" className="py-28 sm:py-36 lg:py-40 bg-white relative overflow-hidden">
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12 sm:space-y-20">
+      <div className="page-shell-wide relative z-10 space-y-12 sm:space-y-20">
         
         {/* Section Header (Sotheby's / Christie's Gallery Style) */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-[#D8CEB8] pb-10">

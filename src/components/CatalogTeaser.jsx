@@ -48,7 +48,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12"
+        className="page-shell-wide space-y-12"
       >
         
         {/* Section Header */}

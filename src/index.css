@@ -11,10 +11,24 @@
   --text-body: clamp(0.95rem, 1.15vw, 1.15rem);
   --text-micro: clamp(0.7rem, 0.8vw, 0.85rem);
 
+  /* Shared responsive page geometry */
+  --page-gutter: clamp(1rem, 3vw, 5rem);
+  --page-wide-gutter: clamp(1rem, 3vw, 2rem);
+  --nav-gutter: clamp(1rem, 3vw, 4rem);
+  --page-max: 100rem;
+  --page-detail-max: 140rem;
+  --page-reading-max: 56rem;
+
   /* Physics-Based Custom Easing Curves */
   --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-reveal: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-architectural: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --page-wide-gutter: clamp(3rem, 8vw, 10rem);
+  }
 }
 
 @layer base {
@@ -116,6 +130,37 @@
 }
 
 @layer components {
+  .page-shell,
+  .page-shell-wide,
+  .page-shell-detail,
+  .reading-shell {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: var(--page-gutter);
+  }
+
+  .page-shell {
+    max-width: var(--page-max);
+  }
+
+  .page-shell-wide {
+    padding-inline: var(--page-wide-gutter);
+  }
+
+  .page-shell-detail {
+    max-width: var(--page-detail-max);
+    padding-inline: var(--page-wide-gutter);
+  }
+
+  .reading-shell {
+    max-width: var(--page-reading-max);
+  }
+
+  .nav-shell {
+    width: 100%;
+    padding-inline: var(--nav-gutter);
+  }
+
   /* Minimum 44x44px touch target for mobile accessibility */
   .touch-target {
     min-height: 44px;

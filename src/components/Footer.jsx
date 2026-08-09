@@ -14,7 +14,7 @@ export default function Footer({ onNavigate }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.9, ease: LUXURY_EASE }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        className="page-shell-wide"
       >
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 pb-8 sm:pb-12 border-b border-[#D8CEB8]">
