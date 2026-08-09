@@ -49,19 +49,19 @@ export const ITEM_TYPES = [
   {
     slug: 'sword',
     collectionGroup: 'historical-objects',
-    labels: label('Japans zwaard', 'Japanese Sword', 'Sabre japonais'),
-    shortLabels: label('Zwaard', 'Sword', 'Sabre'),
-    defaultCategory: 'japanese-swords',
+    labels: label('Japanse kunst', 'Japanese Art', 'Art japonais'),
+    shortLabels: label('Japanse kunst', 'Japanese Art', 'Art japonais'),
+    defaultCategory: 'other-japanese-art',
     fieldLabels: {
-      title: 'Naam / Omschrijving van het zwaard',
-      author: 'Zwaardsmid / School',
+      title: 'Naam / Omschrijving van het kunstobject',
+      author: 'Kunstenaar / Maker / School',
       publisher: 'Periode / Traditie',
-      city: 'Plaats van vervaardiging',
-      binding: 'Koshirae / Montuur',
-      dimensions: 'Lemmet & Afmetingen',
-      collationSpecs: 'Signatuur, Mei & Technische Specificaties',
-      conditionReport: 'Conditierapport lemmet & montuur',
-      section: 'Lemmet, Montuur & Conditie'
+      city: 'Plaats van oorsprong / vervaardiging',
+      binding: 'Materialen & Uitvoering',
+      dimensions: 'Afmetingen',
+      collationSpecs: 'Signatuur & Technische Specificaties',
+      conditionReport: 'Uitgebreid conditierapport',
+      section: 'Materialen, Uitvoering & Conditie'
     }
   },
   {
@@ -98,6 +98,7 @@ export const CATEGORIES = [
   { slug: 'religious-art-icons', group: 'art', labels: label('Religieuze Kunst & Iconen', 'Religious Art & Icons', 'Art religieux & Icônes') },
   { slug: 'prints-drawings', group: 'art', labels: label('Grafiek & Tekeningen', 'Prints & Drawings', 'Estampes & Dessins') },
   { slug: 'japanese-swords', group: 'historical-objects', labels: label('Japanse wapenkunst', 'Japanese Arms', 'Armes japonaises') },
+  { slug: 'other-japanese-art', group: 'historical-objects', labels: label('Overige Japanse kunst', 'Other Japanese Art', 'Autres arts japonais') },
   { slug: 'other-historical-objects', group: 'historical-objects', labels: label('Overige historische objecten', 'Other Historical Objects', 'Autres objets historiques') }
 ];
 
@@ -124,13 +125,13 @@ const DETAIL_LABELS = {
   },
   sword: {
     descriptionSection: label('Beschrijving', 'Description', 'Description'),
-    maker: label('Zwaardsmid / School', 'Swordsmith / School', 'Forgeron / École'),
+    maker: label('Kunstenaar / Maker / School', 'Artist / Maker / School', 'Artiste / Créateur / École'),
     publisher: label('Periode / Traditie', 'Period / Tradition', 'Période / Tradition'),
-    city: label('Plaats van vervaardiging', 'Place of Manufacture', 'Lieu de fabrication'),
-    physicalSection: label('Lemmet, Montuur & Conditie', 'Blade, Mounting & Condition', 'Lame, Monture & État'),
-    binding: label('Koshirae / Montuur', 'Koshirae / Mounting', 'Koshirae / Monture'),
-    conditionReport: label('Conditierapport lemmet & montuur', 'Blade & Mounting Condition Report', 'Rapport d’état de la lame & monture'),
-    specifications: label('Mei & Technische Specificaties', 'Mei & Technical Specifications', 'Mei & Spécifications techniques')
+    city: label('Plaats van oorsprong / vervaardiging', 'Place of Origin / Manufacture', 'Lieu d’origine / de fabrication'),
+    physicalSection: label('Materialen, Uitvoering & Conditie', 'Materials, Construction & Condition', 'Matériaux, Fabrication & État'),
+    binding: label('Materialen & Uitvoering', 'Materials & Construction', 'Matériaux & Fabrication'),
+    conditionReport: label('Uitgebreid conditierapport', 'Detailed Condition Report', 'Rapport d’état détaillé'),
+    specifications: label('Signatuur & Technische Specificaties', 'Signature & Technical Specifications', 'Signature & Spécifications techniques')
   },
   'historical-object': {
     descriptionSection: label('Beschrijving', 'Description', 'Description'),
