@@ -237,9 +237,11 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
             {getItemField(item, 'description', language) && (
               <section className="space-y-3">
                 <div className="flex items-center space-x-2 text-[#B8860B]">
-                  <BookOpen className="w-4 h-4" />
+                  {item.itemType === 'book'
+                    ? <BookOpen className="w-4 h-4" />
+                    : <ScrollText className="w-4 h-4" />}
                   <h3 className="text-[#111111] font-serif font-bold text-lg">
-                    {t('item_detail.descriptionBiblio')}
+                    {detailLabels.descriptionSection}
                   </h3>
                 </div>
                 <p className="text-base text-[#222222] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3">

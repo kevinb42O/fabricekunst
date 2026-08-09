@@ -103,6 +103,7 @@ export const CATEGORIES = [
 
 const DETAIL_LABELS = {
   book: {
+    descriptionSection: label('Beschrijving & Bibliografie', 'Description & Bibliography', 'Description & Bibliographie'),
     maker: label('Auteur', 'Author', 'Auteur'),
     publisher: label('Drukker / Uitgever', 'Printer / Publisher', 'Imprimeur / Éditeur'),
     city: label('Plaats van uitgave', 'Place of Publication', 'Lieu de publication'),
@@ -112,6 +113,7 @@ const DETAIL_LABELS = {
     specifications: label('Collatie & Formaat', 'Collation & Format', 'Collation & Format')
   },
   painting: {
+    descriptionSection: label('Beschrijving', 'Description', 'Description'),
     maker: label('Kunstenaar', 'Artist', 'Artiste'),
     publisher: label('Techniek / Medium', 'Technique / Medium', 'Technique / Médium'),
     city: label('Plaats van ontstaan', 'Place of Origin', 'Lieu de création'),
@@ -121,6 +123,7 @@ const DETAIL_LABELS = {
     specifications: label('Signatuur & Medium', 'Signature & Medium', 'Signature & Médium')
   },
   sword: {
+    descriptionSection: label('Beschrijving', 'Description', 'Description'),
     maker: label('Zwaardsmid / School', 'Swordsmith / School', 'Forgeron / École'),
     publisher: label('Periode / Traditie', 'Period / Tradition', 'Période / Tradition'),
     city: label('Plaats van vervaardiging', 'Place of Manufacture', 'Lieu de fabrication'),
@@ -130,6 +133,7 @@ const DETAIL_LABELS = {
     specifications: label('Mei & Technische Specificaties', 'Mei & Technical Specifications', 'Mei & Spécifications techniques')
   },
   'historical-object': {
+    descriptionSection: label('Beschrijving', 'Description', 'Description'),
     maker: label('Maker / Atelier', 'Maker / Workshop', 'Créateur / Atelier'),
     publisher: label('Traditie / Werkplaats', 'Tradition / Workshop', 'Tradition / Atelier'),
     city: label('Plaats van vervaardiging', 'Place of Manufacture', 'Lieu de fabrication'),

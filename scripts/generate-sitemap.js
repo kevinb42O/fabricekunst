@@ -43,7 +43,8 @@ async function generateSitemap() {
       const { data, error } = await supabase
         .from('items')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true });
 
       if (!error && data && data.length > 0) {
         catalogItems = data;

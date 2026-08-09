@@ -191,9 +191,11 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               {getItemField(item, 'description', language) && (
                 <section className="space-y-3">
                   <div className="flex items-center space-x-3 text-[#B8860B]">
-                    <BookOpen className="w-5 h-5" />
+                    {item.itemType === 'book'
+                      ? <BookOpen className="w-5 h-5" />
+                      : <FileText className="w-5 h-5" />}
                     <h3 className="text-xl font-serif font-bold text-[#111111]">
-                      {t('item_detail.descriptionBiblio')}
+                      {detailLabels.descriptionSection}
                     </h3>
                   </div>
                   <div className="border-t border-[#D8CEB8]/70 pt-4 space-y-4">

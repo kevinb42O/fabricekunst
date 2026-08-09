@@ -30,6 +30,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 import { INITIAL_CATALOG } from '../src/data/initialCatalog.js';
+import { getLocalizedCategoryLabel } from '../src/data/catalogTaxonomy.js';
 
 export async function generateLlmsContent() {
   let catalogItems = [];
@@ -40,7 +41,8 @@ export async function generateLlmsContent() {
       const { data, error } = await supabase
         .from('items')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true });
 
       if (!error && data && data.length > 0) {
         catalogItems = data;
@@ -58,9 +60,9 @@ export async function generateLlmsContent() {
     const url = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(item.id)}`;
     const priceStr = item.price ? ` | Prijs: ${item.price}` : '';
     const statusStr = item.status ? ` | Status: ${item.status}` : '';
-    const authorStr = item.author ? `\n- **Auteur/Kunstenaar**: ${item.author}` : '';
+    const authorStr = item.author ? `\n- **Auteur/Kunstenaar**: ${item.author.trim()}` : '';
     const yearStr = item.year ? `\n- **Jaar/Periode**: ${item.year} (${item.century || ''})` : '';
-    const categoryStr = item.category ? `\n- **Categorie**: ${item.category}` : '';
+    const categoryStr = item.category ? `\n- **Categorie**: ${getLocalizedCategoryLabel(item.category, 'nl')}` : '';
     const provenanceStr = item.provenance ? `\n- **Herkomst (Provenance)**: ${item.provenance}` : '';
     const descStr = item.description ? `\n- **Beschrijving**: ${item.description}` : '';
 
