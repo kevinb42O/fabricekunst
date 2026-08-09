@@ -11,6 +11,7 @@ export default function DashboardOverview({
 }) {
   const booksCount = items.filter((item) => getCollectionGroupForItem(item) === 'books').length;
   const artCount = items.filter((item) => getCollectionGroupForItem(item) === 'art').length;
+  const japaneseArtCount = items.filter((item) => getCollectionGroupForItem(item) === 'japanese-art').length;
   const historicalObjectsCount = items.filter((item) => getCollectionGroupForItem(item) === 'historical-objects').length;
   const featuredCount = items.filter(i => i.featured).length;
 
@@ -69,7 +70,7 @@ export default function DashboardOverview({
               {items.length}
             </div>
             <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">
-              {booksCount} boeken · {artCount} kunst · {historicalObjectsCount} historische objecten
+              {booksCount} boeken · {artCount} kunst · {japaneseArtCount} Japanse kunst · {historicalObjectsCount} historische objecten
             </div>
           </div>
         </div>

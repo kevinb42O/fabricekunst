@@ -8,6 +8,8 @@ import {
   getCategoriesForGroup,
   getCategorySlug,
   getCollectionGroupForItem,
+  getDefaultCategoryForGroup,
+  getItemTypesForGroup,
   getItemTypeDefinition,
   getLocalizedCategoryLabel,
   getLocalizedCollectionGroup,
@@ -468,7 +470,9 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       targetKeys = (fKey) => [fKey, `${fKey}_en`];
     }
 
-    let promptText = `Vertaal de onderstaande gegevens van een historisch verzamelobject van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
+    const objectTypeLabel = getLocalizedItemType(editingItem.itemType, 'nl');
+    const collectionGroupLabel = getLocalizedCollectionGroup(getCollectionGroupForItem(editingItem), 'nl');
+    let promptText = `Vertaal de onderstaande gegevens van een ${objectTypeLabel} binnen de collectie ${collectionGroupLabel} van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
     promptText += `Gebruik hoogwaardig vakjargon dat past bij het opgegeven objecttype.\n`;
     promptText += `Als een sectie "Niet ingevuld / Bewust leeg" is, vul dan in de JSON voor de corresponderende sleutels een lege string "" in.\n\n`;
     promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst, geen markdown opmaak rond de code):\n\n`;
@@ -825,6 +829,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     ...counts,
     [group.slug]: items.filter((item) => getCollectionGroupForItem(item) === group.slug).length
   }), {});
+  const editingCollectionGroup = getCollectionGroupForItem(editingItem || { itemType: 'book' });
+  const editingTypeOptions = getItemTypesForGroup(editingCollectionGroup);
   const editingTypeDefinition = getItemTypeDefinition(editingItem?.itemType || 'book');
   const editingFieldLabels = editingTypeDefinition.fieldLabels;
 
@@ -1626,6 +1632,51 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
             {/* LEFT COLUMN: Media, Type Switcher & Core Commercial Stats (4 cols) */}
             <div className="lg:col-span-4 border-r border-[#E6E1D7] bg-[#F4F1EA] p-5 sm:p-6 space-y-6 overflow-y-auto">
+
+              {/* Collection Group Switcher */}
+              <div className="p-4 rounded-2xl bg-white border border-[#E0D9CC] space-y-3 shadow-xs">
+                <label className="block text-[11px] font-mono font-bold text-[#1C1A18] uppercase tracking-widest">
+                  Collectiedomein
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {COLLECTION_GROUPS.map((group) => {
+                    const isActive = editingCollectionGroup === group.slug;
+
+                    return (
+                      <button
+                        key={group.slug}
+                        type="button"
+                        onClick={() => {
+                          const allowedTypes = getItemTypesForGroup(group.slug);
+                          const currentType = editingItem.itemType || 'book';
+                          const nextType = allowedTypes.some((itemType) => itemType.slug === currentType)
+                            ? currentType
+                            : allowedTypes[0]?.slug || currentType;
+                          const currentCategory = getCategorySlug(editingItem.category);
+                          const categoryIsValid = getCategoriesForGroup(group.slug)
+                            .some((category) => category.slug === currentCategory);
+
+                          setEditingItem({
+                            ...editingItem,
+                            itemType: nextType,
+                            collectionGroup: group.slug,
+                            category: categoryIsValid
+                              ? currentCategory
+                              : getDefaultCategoryForGroup(group.slug, nextType)
+                          });
+                        }}
+                        className={`py-2.5 px-3 rounded-xl text-xs font-serif font-bold transition-all cursor-pointer border ${
+                          isActive
+                            ? 'bg-[#1C1A18] text-white border-[#1C1A18] shadow-sm'
+                            : 'bg-[#F9F7F2] text-[#666666] hover:text-[#1C1A18] border-[#E0D9CC]'
+                        }`}
+                      >
+                        {getLocalizedCollectionGroup(group.slug, 'nl')}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               
               {/* Item Type Switcher */}
               <div className="p-4 rounded-2xl bg-white border border-[#E0D9CC] space-y-3 shadow-xs">
@@ -1633,7 +1684,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   Objecttype
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {ITEM_TYPES.map((itemType) => {
+                  {editingTypeOptions.map((itemType) => {
                     const Icon = getItemTypeIcon(itemType.slug);
                     const isActive = (editingItem.itemType || 'book') === itemType.slug;
 
@@ -1644,10 +1695,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                         onClick={() => setEditingItem({
                           ...editingItem,
                           itemType: itemType.slug,
-                          collectionGroup: itemType.collectionGroup,
-                          category: getCollectionGroupForItem(editingItem) === itemType.collectionGroup
+                          collectionGroup: editingCollectionGroup,
+                          category: getCategoriesForGroup(editingCollectionGroup)
+                            .some((category) => category.slug === getCategorySlug(editingItem.category))
                             ? getCategorySlug(editingItem.category)
-                            : itemType.defaultCategory
+                            : getDefaultCategoryForGroup(editingCollectionGroup, itemType.slug)
                         })}
                         className={`py-3 px-3 rounded-xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-2 cursor-pointer border ${
                           isActive
@@ -2014,7 +2066,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                           onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
                           className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
                         >
-                          {getCategoriesForGroup(editingTypeDefinition.collectionGroup).map((category) => (
+                          {getCategoriesForGroup(editingCollectionGroup).map((category) => (
                             <option key={category.slug} value={category.slug}>
                               {getLocalizedCategoryLabel(category.slug, 'nl')}
                             </option>

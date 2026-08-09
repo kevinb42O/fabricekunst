@@ -558,10 +558,6 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                         onClick={() => {
                           setSelectedType(option);
                           setSelectedCategory(DEFAULT_FILTER_VALUE);
-                          if (!isAllOption) {
-                            const configuredType = ITEM_TYPES.find((itemType) => itemType.slug === option);
-                            if (configuredType) setSelectedGroup(configuredType.collectionGroup);
-                          }
                         }}
                         className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
                           isActive

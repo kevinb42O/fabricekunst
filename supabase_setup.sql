@@ -46,6 +46,12 @@ ADD COLUMN IF NOT EXISTS collection_group TEXT NOT NULL DEFAULT 'books';
 ALTER TABLE public.items
 ADD COLUMN IF NOT EXISTS attributes JSONB NOT NULL DEFAULT '{}'::jsonb;
 
+-- The old category was exclusively used for swords. Convert that exact legacy
+-- value without inferring object types from titles or descriptions.
+UPDATE public.items
+SET item_type = 'sword'
+WHERE category IN ('japanese-swords', 'Japanse wapenkunst');
+
 -- Canonical, language-independent category slugs for existing records.
 UPDATE public.items
 SET category = CASE category
@@ -61,25 +67,27 @@ SET category = CASE category
     WHEN 'Stillevens & Landschappen' THEN 'still-lifes-landscapes'
     WHEN 'Religieuze Kunst & Iconen' THEN 'religious-art-icons'
     WHEN 'Grafiek & Tekeningen' THEN 'prints-drawings'
+    WHEN 'japanese-swords' THEN 'japanese-art'
+    WHEN 'Japanse wapenkunst' THEN 'japanese-art'
     ELSE category
 END;
 
 UPDATE public.items
 SET collection_group = CASE
+    WHEN item_type = 'sword' OR category = 'japanese-art' THEN 'japanese-art'
     WHEN item_type = 'book' THEN 'books'
     WHEN item_type = 'painting' THEN 'art'
-    WHEN item_type IN ('sword', 'historical-object') THEN 'historical-objects'
+    WHEN item_type = 'historical-object' THEN 'historical-objects'
     ELSE collection_group
 END;
 
--- Reclassify recognisable Japanese swords that were previously entered as art.
+-- Keep explicit sword records in Japanese Art. Object type always wins over keywords:
+-- a painting depicting a katana must remain a painting.
 UPDATE public.items
-SET item_type = 'sword',
-    collection_group = 'historical-objects',
-    category = 'japanese-swords'
-WHERE lower(concat_ws(' ', title, subtitle, category, description))
-    ~ '(katana|nihonto|nihontō|wakizashi|tanto|tantō)'
-  AND item_type <> 'book';
+SET collection_group = 'japanese-art',
+    category = 'japanese-art'
+WHERE item_type = 'sword';
+
 
 -- 2. Create Inquiries Table (Customer requests & bids)
 CREATE TABLE IF NOT EXISTS public.inquiries (

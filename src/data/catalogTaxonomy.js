@@ -3,6 +3,7 @@ const label = (nl, en, fr) => ({ nl, en, fr });
 export const COLLECTION_GROUPS = [
   { slug: 'books', labels: label('Boeken', 'Books', 'Livres') },
   { slug: 'art', labels: label('Kunst', 'Art', 'Art') },
+  { slug: 'japanese-art', labels: label('Japanse kunst', 'Japanese Art', 'Art japonais') },
   {
     slug: 'historical-objects',
     labels: label('Historische objecten', 'Historical Objects', 'Objets historiques')
@@ -13,6 +14,7 @@ export const ITEM_TYPES = [
   {
     slug: 'book',
     collectionGroup: 'books',
+    collectionGroups: ['books'],
     labels: label('Antiquarisch boek', 'Antiquarian Book', 'Livre ancien'),
     shortLabels: label('Boek', 'Book', 'Livre'),
     defaultCategory: 'literature-philosophy',
@@ -31,6 +33,7 @@ export const ITEM_TYPES = [
   {
     slug: 'painting',
     collectionGroup: 'art',
+    collectionGroups: ['art', 'japanese-art'],
     labels: label('Schilderij & kunst', 'Painting & Art', 'Peinture & Art'),
     shortLabels: label('Kunst', 'Art', 'Art'),
     defaultCategory: 'old-masters',
@@ -48,25 +51,27 @@ export const ITEM_TYPES = [
   },
   {
     slug: 'sword',
-    collectionGroup: 'historical-objects',
-    labels: label('Japanse kunst', 'Japanese Art', 'Art japonais'),
-    shortLabels: label('Japanse kunst', 'Japanese Art', 'Art japonais'),
-    defaultCategory: 'japanese-swords',
+    collectionGroup: 'japanese-art',
+    collectionGroups: ['japanese-art'],
+    labels: label('Japans zwaard', 'Japanese Sword', 'Sabre japonais'),
+    shortLabels: label('Zwaard', 'Sword', 'Sabre'),
+    defaultCategory: 'japanese-art',
     fieldLabels: {
-      title: 'Naam / Omschrijving van het kunstobject',
-      author: 'Kunstenaar / Maker / School',
+      title: 'Naam / Omschrijving van het zwaard',
+      author: 'Zwaardsmid / School',
       publisher: 'Periode / Traditie',
-      city: 'Plaats van oorsprong / vervaardiging',
-      binding: 'Materialen & Uitvoering',
-      dimensions: 'Afmetingen',
-      collationSpecs: 'Signatuur & Technische Specificaties',
-      conditionReport: 'Uitgebreid conditierapport',
-      section: 'Materialen, Uitvoering & Conditie'
+      city: 'Plaats van vervaardiging',
+      binding: 'Koshirae / Montuur',
+      dimensions: 'Lemmet & Afmetingen',
+      collationSpecs: 'Signatuur, Mei & Technische Specificaties',
+      conditionReport: 'Conditierapport lemmet & montuur',
+      section: 'Lemmet, Montuur & Conditie'
     }
   },
   {
     slug: 'historical-object',
     collectionGroup: 'historical-objects',
+    collectionGroups: ['historical-objects', 'japanese-art'],
     labels: label('Historisch object', 'Historical Object', 'Objet historique'),
     shortLabels: label('Object', 'Object', 'Objet'),
     defaultCategory: 'other-historical-objects',
@@ -97,7 +102,7 @@ export const CATEGORIES = [
   { slug: 'still-lifes-landscapes', group: 'art', labels: label('Stillevens & Landschappen', 'Still Lifes & Landscapes', 'Natures mortes & Paysages') },
   { slug: 'religious-art-icons', group: 'art', labels: label('Religieuze Kunst & Iconen', 'Religious Art & Icons', 'Art religieux & Icônes') },
   { slug: 'prints-drawings', group: 'art', labels: label('Grafiek & Tekeningen', 'Prints & Drawings', 'Estampes & Dessins') },
-  { slug: 'japanese-swords', group: 'historical-objects', labels: label('Japanse kunst', 'Japanese Art', 'Art japonais') },
+  { slug: 'japanese-art', group: 'japanese-art', labels: label('Japanse kunst', 'Japanese Art', 'Art japonais') },
   { slug: 'other-historical-objects', group: 'historical-objects', labels: label('Overige historische objecten', 'Other Historical Objects', 'Autres objets historiques') }
 ];
 
@@ -124,13 +129,13 @@ const DETAIL_LABELS = {
   },
   sword: {
     descriptionSection: label('Beschrijving', 'Description', 'Description'),
-    maker: label('Kunstenaar / Maker / School', 'Artist / Maker / School', 'Artiste / Créateur / École'),
+    maker: label('Zwaardsmid / School', 'Swordsmith / School', 'Forgeron / École'),
     publisher: label('Periode / Traditie', 'Period / Tradition', 'Période / Tradition'),
-    city: label('Plaats van oorsprong / vervaardiging', 'Place of Origin / Manufacture', 'Lieu d’origine / de fabrication'),
-    physicalSection: label('Materialen, Uitvoering & Conditie', 'Materials, Construction & Condition', 'Matériaux, Fabrication & État'),
-    binding: label('Materialen & Uitvoering', 'Materials & Construction', 'Matériaux & Fabrication'),
-    conditionReport: label('Uitgebreid conditierapport', 'Detailed Condition Report', 'Rapport d’état détaillé'),
-    specifications: label('Signatuur & Technische Specificaties', 'Signature & Technical Specifications', 'Signature & Spécifications techniques')
+    city: label('Plaats van vervaardiging', 'Place of Manufacture', 'Lieu de fabrication'),
+    physicalSection: label('Lemmet, Montuur & Conditie', 'Blade, Mounting & Condition', 'Lame, Monture & État'),
+    binding: label('Koshirae / Montuur', 'Koshirae / Mounting', 'Koshirae / Monture'),
+    conditionReport: label('Conditierapport lemmet & montuur', 'Blade & Mounting Condition Report', 'Rapport d’état de la lame & monture'),
+    specifications: label('Mei & Technische Specificaties', 'Mei & Technical Specifications', 'Mei & Spécifications techniques')
   },
   'historical-object': {
     descriptionSection: label('Beschrijving', 'Description', 'Description'),
@@ -154,6 +159,8 @@ CATEGORIES.forEach((category) => {
     categoryAliases.set(normalizeValue(categoryLabel), category.slug);
   });
 });
+categoryAliases.set('japanese-swords', 'japanese-art');
+categoryAliases.set('japanse wapenkunst', 'japanese-art');
 
 export function getLocalizedLabel(entry, language = 'nl') {
   if (!entry) return '';
@@ -179,28 +186,7 @@ export function getCategoryDefinition(value) {
   return CATEGORIES.find((category) => category.slug === slug);
 }
 
-export function isLikelyJapaneseSword(item) {
-  const itemType = item?.itemType || item?.item_type;
-  if (itemType === 'book') return false;
-
-  const searchText = [item?.title, item?.subtitle, item?.category, item?.description]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-
-  return /\b(katana|nihonto|nihontō|wakizashi|tanto|tantō)\b/i.test(searchText);
-}
-
 export function normalizeCatalogItemTaxonomy(item) {
-  if (isLikelyJapaneseSword(item)) {
-    return {
-      ...item,
-      itemType: 'sword',
-      collectionGroup: 'historical-objects',
-      category: 'japanese-swords'
-    };
-  }
-
   const normalizedItem = {
     ...item,
     category: getCategorySlug(item?.category)
@@ -214,20 +200,35 @@ export function normalizeCatalogItemTaxonomy(item) {
 
 export function getCollectionGroupForItem(item) {
   const explicitGroup = item?.collectionGroup || item?.collection_group;
-  if (getCollectionGroupDefinition(explicitGroup)) return explicitGroup;
-
   const rawItemType = item?.itemType || item?.item_type;
   const configuredItemType = ITEM_TYPES.find((itemType) => itemType.slug === rawItemType);
-  if (configuredItemType) return configuredItemType.collectionGroup;
+  const allowedGroups = configuredItemType?.collectionGroups || [configuredItemType?.collectionGroup].filter(Boolean);
+
+  if (getCollectionGroupDefinition(explicitGroup) && (!configuredItemType || allowedGroups.includes(explicitGroup))) {
+    return explicitGroup;
+  }
 
   const categoryGroup = getCategoryDefinition(item?.category)?.group;
-  if (categoryGroup) return categoryGroup;
+  if (categoryGroup && (!configuredItemType || allowedGroups.includes(categoryGroup))) return categoryGroup;
+
+  if (configuredItemType) return configuredItemType.collectionGroup;
 
   return 'books';
 }
 
 export function getCategoriesForGroup(group) {
   return CATEGORIES.filter((category) => category.group === group);
+}
+
+export function getItemTypesForGroup(group) {
+  return ITEM_TYPES.filter((itemType) => (itemType.collectionGroups || [itemType.collectionGroup]).includes(group));
+}
+
+export function getDefaultCategoryForGroup(group, type) {
+  const typeDefinition = getItemTypeDefinition(type);
+  const typeDefault = getCategoryDefinition(typeDefinition?.defaultCategory);
+  if (typeDefault?.group === group) return typeDefault.slug;
+  return getCategoriesForGroup(group)[0]?.slug || '';
 }
 
 export function getLocalizedCollectionGroup(group, language = 'nl') {
