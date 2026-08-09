@@ -79,7 +79,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   };
 
   return (
-    <div className="bg-white min-h-screen text-[#111111] pt-22 sm:pt-28 pb-16 sm:pb-24 selection:bg-[#B8860B]/20">
+    <div className="item-detail-page bg-white min-h-screen text-[#111111] pt-28 pb-16 sm:pb-24 selection:bg-[#B8860B]/20">
       
       {/* ------------------------------------------------------------- */}
       {/* BREADCRUMB & HEADER CONTROL STRIP                             */}
@@ -187,16 +187,13 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               {/* Thumbnail Gallery Strip */}
               {item.images && item.images.length > 1 && (
-                <div
-                  className={`detail-thumbnail-rail detail-thumbnail-rail--${imagePresentation.orientation} flex items-center space-x-2 sm:space-x-3 overflow-x-auto mobile-scroll-x pb-2 snap-x snap-mandatory`}
-                  style={imageStageStyle}
-                >
+                <div className="detail-thumbnail-rail flex items-center space-x-2 sm:space-x-3 overflow-x-auto mobile-scroll-x pb-2 snap-x snap-mandatory">
                   {item.images.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImageIndex(idx)}
                       className={`relative w-18 h-14 sm:w-24 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden shrink-0 border transition-all cursor-pointer snap-start ${
-                        selectedImageIndex === idx ? 'border-[#B8860B] ring-2 ring-[#B8860B]/30 scale-105 shadow-sm' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
+                        selectedImageIndex === idx ? 'border-[#B8860B] ring-2 ring-[#B8860B]/30 opacity-100 shadow-sm' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
                       }`}
                     >
                       <img src={img.url} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover" />
@@ -213,7 +210,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               
               {/* SECTION I: BESCHRIJVING */}
               {getItemField(item, 'description', language) && (
-                <section className="space-y-3">
+                <section className="detail-dossier-section space-y-3">
                   <div className="flex items-center space-x-3 text-[#B8860B]">
                     {item.itemType === 'book'
                       ? <BookOpen className="w-5 h-5" />
@@ -232,7 +229,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               {/* SECTION II: HISTORISCHE CONTEXT */}
               {getItemField(item, 'historicalContext', language) && (
-                <section className="space-y-3">
+                <section className="detail-dossier-section space-y-3">
                   <div className="flex items-center space-x-3 text-[#B8860B]">
                     <History className="w-5 h-5" />
                     <h3 className="text-xl font-serif font-bold text-[#111111]">
@@ -272,7 +269,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               {/* SECTION III: FYSIEKE BANDANALYSE & CONDITIERAPPORT */}
               {(getItemField(item, 'binding', language) || getItemField(item, 'condition', language) || getItemField(item, 'conditionReport', language)) && (
-                <section className="space-y-3">
+                <section className="detail-dossier-section space-y-3">
                   <div className="flex items-center space-x-3 text-[#B8860B]">
                     <Bookmark className="w-5 h-5" />
                     <h3 className="text-xl font-serif font-bold text-[#111111]">
@@ -329,7 +326,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               {/* SECTION IV: PROVENANCEDOSSIER */}
               {(getItemField(item, 'provenance', language) || getItemField(item, 'provenanceDetails', language)) && (
-                <section className="space-y-3">
+                <section className="detail-dossier-section space-y-3">
                   <div className="flex items-center space-x-3 text-[#B8860B]">
                     <Award className="w-5 h-5" />
                     <h3 className="text-xl font-serif font-bold text-[#111111]">
@@ -390,7 +387,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           <div className="detail-summary-column lg:col-span-5 space-y-5 sm:space-y-8 lg:sticky lg:top-28 lg:self-start order-1 lg:order-2">
             
             {/* Header Titles */}
-            <div className="space-y-3 border-b border-[#D8CEB8]/70 pb-6">
+            <div className="detail-summary-heading space-y-3 border-b border-[#D8CEB8]/70 pb-6">
               <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] font-mono">
                 <Award className="w-3.5 h-3.5" />
                 <span>{t('item_detail.topstukBadge')}</span>
@@ -420,7 +417,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </div>
 
             {/* Price & Status Display */}
-            <div className="flex items-center justify-between border-b border-[#D8CEB8]/70 pb-6">
+            <div className="detail-summary-price flex items-center justify-between border-b border-[#D8CEB8]/70 pb-6">
               <div>
                 <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
                 <span className="text-3xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
@@ -438,7 +435,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </div>
 
             {/* Quick Bibliographic Specs Grid */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs font-mono">
+            <div className="detail-summary-specs grid grid-cols-2 gap-2 sm:gap-3 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
                 <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.format')}</span>
                 <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{item.dimensions || "In-8°"}</span>
@@ -459,7 +456,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </div>
 
             {/* Primary Action Consultation Block */}
-            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border-2 border-[#B8860B]/40 shadow-xl space-y-3 sm:space-y-4">
+            <div className="detail-summary-action p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border-2 border-[#B8860B]/40 shadow-xl space-y-3 sm:space-y-4">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase tracking-wider">
@@ -501,7 +498,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             </div>
 
             {/* Buyer Process Card: How Purchasing Works */}
-            <div className="p-5 rounded-2xl bg-white border border-[#D8CEB8] space-y-3 shadow-xs">
+            <div className="detail-summary-process p-5 rounded-2xl bg-white border border-[#D8CEB8] space-y-3 shadow-xs">
               <h4 className="text-xs font-mono font-bold text-[#111111] uppercase tracking-wider border-b border-[#D8CEB8]/60 pb-2">
                 {t('item_detail.howPurchaseWorks')}
               </h4>

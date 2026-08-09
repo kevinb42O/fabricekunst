@@ -84,7 +84,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onNavigate
   const ctaButtonText = getLocalizedField(cta, 'buttonText', language) || "Privé Consultatie Aanvragen";
 
   return (
-    <div className="bg-white min-h-screen text-[#111111] overflow-hidden">
+    <div className="editorial-readable bg-white min-h-screen text-[#111111] overflow-hidden">
       
       {/* ------------------------------------------------------------- */}
       {/* 1. HERO SECTION WITH HERO PHOTO SHOWCASE                      */}

@@ -71,7 +71,7 @@ export default function AboutProvenance({ onRequestConsultation }) {
     <section 
       ref={sectionRef} 
       id="herkomst" 
-      className="relative bg-white text-[#111111] py-28 sm:py-40 lg:py-48 overflow-hidden"
+      className="editorial-readable relative bg-white text-[#111111] py-28 sm:py-40 lg:py-48 overflow-hidden"
     >
 
       <motion.div 

@@ -44,7 +44,7 @@ export default function TopstukkenShowcase({
   };
 
   return (
-    <section id="topstukken" className="py-28 sm:py-36 lg:py-40 bg-white relative overflow-hidden">
+    <section id="topstukken" className="masterpieces-showcase py-28 sm:py-36 lg:py-40 bg-white relative overflow-hidden">
 
       <div className="page-shell-wide relative z-10 space-y-12 sm:space-y-20">
         

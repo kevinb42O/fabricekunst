@@ -214,15 +214,66 @@
   margin-inline: auto;
 }
 
-.detail-thumbnail-rail--square {
-  max-width: 72rem;
-}
+@media (max-width: 63.999rem) {
+  .detail-media-column,
+  .detail-summary-column {
+    display: contents;
+  }
 
-.detail-thumbnail-rail--portrait {
-  max-width: 52rem;
+  .detail-summary-heading {
+    grid-row: 1;
+  }
+
+  .detail-summary-price {
+    grid-row: 2;
+  }
+
+  .detail-media-column > :first-child {
+    grid-row: 3;
+    min-width: 0;
+  }
+
+  .detail-summary-specs {
+    grid-row: 4;
+  }
+
+  .detail-summary-action {
+    grid-row: 5;
+  }
+
+  .detail-summary-process {
+    grid-row: 6;
+  }
+
+  .detail-dossier-copy {
+    grid-row: 7;
+    min-width: 0;
+  }
 }
 
 @media (min-width: 64rem) {
+  .detail-hero-grid.detail-hero-grid {
+    grid-template-columns: minmax(0, 7fr) minmax(20rem, 5fr);
+  }
+
+  .detail-media-column.detail-media-column {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .detail-summary-column.detail-summary-column {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .detail-dossier-copy.detail-dossier-copy {
+    width: 100%;
+    max-width: 100%;
+  }
+
   .detail-image-stage {
     max-width: min(120rem, var(--detail-stage-width-cap));
     max-height: 72svh;
@@ -239,15 +290,247 @@
   }
 
   .detail-thumbnail-rail {
-    max-width: min(120rem, var(--detail-stage-width-cap));
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 120rem) and (min-height: 56.25rem) {
+  .detail-dossier-copy h3 {
+    font-size: 1.75rem;
   }
 
-  .detail-thumbnail-rail--square {
-    max-width: min(72rem, var(--detail-stage-width-cap));
+  .detail-dossier-copy p {
+    max-width: 72ch;
+    font-size: 1.125rem;
+    line-height: 1.72;
   }
 
-  .detail-thumbnail-rail--portrait {
-    max-width: min(52rem, var(--detail-stage-width-cap));
+  .detail-dossier-copy .font-mono,
+  .detail-summary-column .font-mono {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .detail-summary-column p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .masterpieces-showcase .page-shell-wide {
+    max-width: 180rem;
+  }
+
+  .masterpieces-showcase .text-xs {
+    font-size: 0.9375rem;
+  }
+
+  .masterpieces-showcase .text-sm {
+    font-size: 1rem;
+  }
+
+  .masterpieces-showcase .text-base {
+    font-size: 1.125rem;
+  }
+
+  .masterpieces-showcase .font-mono,
+  .item-detail-page .font-mono {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .item-detail-page .text-xs {
+    font-size: 0.9375rem;
+  }
+
+  .item-detail-page .text-sm {
+    font-size: 1rem;
+  }
+
+  .editorial-readable .text-xs,
+  .catalog-page .text-xs {
+    font-size: 0.9375rem;
+  }
+
+  .editorial-readable .text-sm,
+  .catalog-page .text-sm {
+    font-size: 1rem;
+  }
+
+  .editorial-readable .text-base {
+    font-size: 1.125rem;
+  }
+
+  .catalog-page .font-mono {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .catalog-layout.catalog-layout {
+    grid-template-columns: 22rem minmax(0, 1fr);
+  }
+
+  .faq-reading-shell.faq-reading-shell {
+    max-width: 72rem;
+  }
+}
+
+@media (min-width: 160rem) and (min-height: 62.5rem) {
+  .detail-dossier-copy.detail-dossier-copy {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(4rem, 6vw, 8rem);
+    row-gap: 5rem;
+  }
+
+  .detail-dossier-copy.detail-dossier-copy > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0;
+  }
+
+  .detail-dossier-copy > :not(.detail-dossier-section) {
+    grid-column: 1 / -1;
+  }
+
+  .detail-dossier-copy h3 {
+    font-size: 1.875rem;
+  }
+
+  .detail-dossier-copy p {
+    font-size: 1.1875rem;
+  }
+
+  .detail-dossier-copy .font-mono,
+  .detail-summary-column .font-mono {
+    font-size: 0.875rem;
+  }
+
+  .detail-summary-column p {
+    font-size: 1.0625rem;
+  }
+
+  .masterpieces-showcase .text-xs {
+    font-size: 1rem;
+  }
+
+  .masterpieces-showcase .text-sm {
+    font-size: 1.0625rem;
+  }
+
+  .masterpieces-showcase .text-base {
+    font-size: 1.1875rem;
+  }
+
+  .masterpieces-showcase .font-mono,
+  .item-detail-page .font-mono {
+    font-size: 0.875rem;
+  }
+
+  .item-detail-page .text-xs {
+    font-size: 1rem;
+  }
+
+  .item-detail-page .text-sm {
+    font-size: 1.0625rem;
+  }
+
+  .editorial-readable .text-xs,
+  .catalog-page .text-xs {
+    font-size: 1rem;
+  }
+
+  .editorial-readable .text-sm,
+  .catalog-page .text-sm {
+    font-size: 1.0625rem;
+  }
+
+  .editorial-readable .text-base {
+    font-size: 1.1875rem;
+  }
+
+  .catalog-page .font-mono {
+    font-size: 0.875rem;
+  }
+
+  .catalog-layout.catalog-layout {
+    grid-template-columns: 24rem minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 215rem) and (min-height: 68.75rem) {
+  .detail-media-column.detail-media-column {
+    display: contents;
+  }
+
+  .detail-media-column > :first-child {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .detail-dossier-copy.detail-dossier-copy {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: 120rem;
+    margin: clamp(4rem, 8vh, 7rem) auto 0;
+  }
+
+  .detail-dossier-copy h3 {
+    font-size: 2rem;
+  }
+
+  .detail-dossier-copy p {
+    font-size: 1.25rem;
+  }
+
+  .detail-dossier-copy .font-mono,
+  .detail-summary-column .font-mono {
+    font-size: 0.9375rem;
+  }
+
+  .detail-summary-column p {
+    font-size: 1.125rem;
+  }
+
+  .masterpieces-showcase .text-xs {
+    font-size: 1.0625rem;
+  }
+
+  .masterpieces-showcase .text-sm {
+    font-size: 1.125rem;
+  }
+
+  .masterpieces-showcase .text-base {
+    font-size: 1.25rem;
+  }
+
+  .masterpieces-showcase .font-mono,
+  .item-detail-page .font-mono {
+    font-size: 0.9375rem;
+  }
+
+  .item-detail-page .text-xs {
+    font-size: 1.0625rem;
+  }
+
+  .item-detail-page .text-sm {
+    font-size: 1.125rem;
+  }
+
+  .editorial-readable .text-xs,
+  .catalog-page .text-xs {
+    font-size: 1.0625rem;
+  }
+
+  .editorial-readable .text-sm,
+  .catalog-page .text-sm {
+    font-size: 1.125rem;
+  }
+
+  .editorial-readable .text-base {
+    font-size: 1.25rem;
+  }
+
+  .catalog-page .font-mono {
+    font-size: 0.9375rem;
   }
 }
 

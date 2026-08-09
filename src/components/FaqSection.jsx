@@ -53,8 +53,8 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
   };
 
   return (
-    <section id="faq" className="py-24 sm:py-32 bg-white relative overflow-hidden">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12 sm:space-y-16">
+    <section id="faq" className="editorial-readable py-24 sm:py-32 bg-white relative overflow-hidden">
+      <div className="faq-reading-shell max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12 sm:space-y-16">
         
         {/* Header */}
         <motion.div 

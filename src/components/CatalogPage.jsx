@@ -460,9 +460,9 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#111111]">
+    <div className="catalog-page min-h-screen bg-white text-[#111111]">
       <section className="page-shell-wide pt-28 pb-10 sm:pt-32 sm:pb-12 lg:pt-36 lg:pb-14">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[280px,minmax(0,1fr)] xl:grid-cols-[300px,minmax(0,1fr)]">
+        <div className="catalog-layout grid grid-cols-1 gap-12 lg:grid-cols-[280px,minmax(0,1fr)] xl:grid-cols-[300px,minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-28 lg:self-start lg:pr-8 lg:border-r lg:border-[#E8DFCF]/40">
             <div className="flex items-center justify-between border-b border-[#E8DFCF]/60 pb-3.5">
               <span className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[#8E7035]">
@@ -777,7 +777,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3 min-[2200px]:grid-cols-4 min-[3200px]:grid-cols-5 items-stretch">
+              <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3 min-[2200px]:grid-cols-4 min-[4400px]:grid-cols-5 items-stretch">
                 {filteredItems.map((item, index) => {
                   const primaryMeta = getPrimaryMeta(item);
                   const statusTone = getStatusTone(item.status);
