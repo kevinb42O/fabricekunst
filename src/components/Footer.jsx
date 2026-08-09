@@ -25,6 +25,8 @@ export default function Footer({ onNavigate }) {
               <img 
                 src="/images/Atelier Rembrandt.png" 
                 alt="Atelier Rembrandt" 
+                loading="lazy"
+                decoding="async"
                 className="h-10 sm:h-12 md:h-13 w-auto object-contain filter contrast-[1.05]"
               />
               <span className="text-xs tracking-[0.24em] text-[#8E7035] uppercase font-serif font-medium leading-none pl-[0.24em]">
@@ -104,7 +106,7 @@ export default function Footer({ onNavigate }) {
         <div className="pt-6 sm:pt-8 flex flex-col items-center justify-center text-center sm:flex-row sm:justify-between text-xs text-[#666666] space-y-3 sm:space-y-0 font-serif">
           <div className="flex flex-col sm:flex-row items-center space-y-1.5 sm:space-y-0 sm:space-x-3">
             <p>© {new Date().getFullYear()} Atelier Rembrandt (Andor Comm V.). {t('footer.rights')}</p>
-            <img src="/images/andor.jpeg" alt="Andor Comm V." className="h-5 w-auto object-contain opacity-75 filter contrast-105" />
+            <img src="/images/andor.jpeg" alt="Andor Comm V." loading="lazy" decoding="async" className="h-5 w-auto object-contain opacity-75 filter contrast-105" />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-serif">
             <button 

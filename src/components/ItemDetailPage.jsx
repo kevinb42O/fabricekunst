@@ -10,6 +10,7 @@ import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
 import { getItemField, getLocalizedStatus, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
+import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
   const { t, language } = useLanguage();
@@ -130,6 +131,11 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 <img
                   src={currentImage.url}
                   alt={currentImage.caption || getItemField(item, 'title', language)}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                  draggable="false"
+                  style={{ viewTransitionName: selectedImageIndex === 0 ? getArtworkImageTransitionName(item.id) : 'none' }}
                   className="w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-105"
                   onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: getItemField(item, 'title', language) })}
                 />
@@ -175,7 +181,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                         selectedImageIndex === idx ? 'border-[#B8860B] ring-2 ring-[#B8860B]/30 scale-105 shadow-sm' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      <img src={img.url} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -372,7 +378,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 <span>{t('item_detail.topstukBadge')}</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]">
+              <h1
+                style={{ viewTransitionName: getArtworkTitleTransitionName(item.id) }}
+                className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
+              >
                 {getItemField(item, 'title', language)}
               </h1>
 
@@ -521,7 +530,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 className="group p-5 rounded-2xl bg-white border border-[#D8CEB8] hover:border-[#111111] transition-all flex items-center space-x-4 cursor-pointer shadow-sm hover:shadow-md"
               >
                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-[#FAF7F2] border border-[#D8CEB8]">
-                  <img src={prevItem.images[0]?.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={prevItem.images[0]?.url} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="space-y-1 min-w-0 flex-1">
                   <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase tracking-wider flex items-center space-x-1">
@@ -561,7 +570,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   </p>
                 </div>
                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-[#FAF7F2] border border-[#D8CEB8]">
-                  <img src={nextItem.images[0]?.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={nextItem.images[0]?.url} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
               </div>
             ) : (

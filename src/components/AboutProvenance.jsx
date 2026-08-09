@@ -108,6 +108,9 @@ export default function AboutProvenance({ onRequestConsultation }) {
               <img
                 src="/images/white-gloves-conservator.jpg"
                 alt="Conservering met witte handschoenen"
+                loading="lazy"
+                decoding="async"
+                draggable="false"
                 className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.02]"
               />
             </div>

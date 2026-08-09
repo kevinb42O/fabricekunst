@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -47,6 +48,7 @@ export default function App() {
   
   const [currentPage, setCurrentPage] = useState('home'); // 'home' | 'catalogus' | 'herkomst' | 'item-detail'
   const [selectedDetailItemId, setSelectedDetailItemId] = useState(null);
+  const [transitionItemId, setTransitionItemId] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
@@ -204,23 +206,33 @@ export default function App() {
 
   const transitionPageChange = (updateStateFn) => {
     if (document.startViewTransition && typeof document.startViewTransition === 'function') {
-      document.startViewTransition(() => {
-        updateStateFn();
+      return document.startViewTransition(() => {
+        flushSync(updateStateFn);
         window.scrollTo(0, 0);
       });
     } else {
       updateStateFn();
       window.scrollTo(0, 0);
+      return null;
     }
   };
 
   const handleOpenItemDetail = (item) => {
     if (!item) return;
-    transitionPageChange(() => {
+    const supportsViewTransitions = typeof document.startViewTransition === 'function';
+    if (supportsViewTransitions) {
+      flushSync(() => setTransitionItemId(item.id));
+    }
+
+    const transition = transitionPageChange(() => {
       setSelectedDetailItemId(item.id);
       setCurrentPage('item-detail');
       setActiveTab('catalogus');
     });
+    transition?.finished.then(
+      () => setTransitionItemId(null),
+      () => setTransitionItemId(null)
+    );
     const newPath = `/collectie/${item.id}`;
     if (window.location.pathname !== newPath) {
       window.history.pushState({ page: 'item', id: item.id }, '', newPath);
@@ -228,13 +240,19 @@ export default function App() {
   };
 
   const handleNavigate = (targetId) => {
+    const returningDetailItemId = currentPage === 'item-detail' ? selectedDetailItemId : null;
     setActiveTab(targetId);
     setSelectedDetailItemId(null);
 
     if (targetId === 'catalogus' || targetId === 'collectie') {
-      transitionPageChange(() => {
+      const transition = transitionPageChange(() => {
         setCurrentPage('catalogus');
+        if (returningDetailItemId) setTransitionItemId(returningDetailItemId);
       });
+      transition?.finished.then(
+        () => setTransitionItemId(null),
+        () => setTransitionItemId(null)
+      );
       if (window.location.pathname !== '/collectie') {
         window.history.pushState({ page: 'collectie' }, '', '/collectie');
       }
@@ -433,6 +451,7 @@ export default function App() {
           /* Dedicated Luxury Catalog Page (/collectie) */
           <CatalogPage
             items={catalog}
+            transitionItemId={transitionItemId}
             onNavigateHome={() => handleNavigate('home')}
             onOpenItemDetail={handleOpenItemDetail}
             onRequestInquiry={(item) => handleOpenConsultation(item)}
@@ -471,6 +490,7 @@ export default function App() {
             {/* Dynamic Recent Aanwinsten & Topstukken Showcase (CMS Controlled via 'featured' toggle) */}
             <TopstukkenShowcase
               items={catalog}
+              transitionItemId={transitionItemId}
               onOpenFullCatalog={() => handleNavigate('catalogus')}
               onOpenItemDetail={handleOpenItemDetail}
               onRequestInquiry={(item) => handleOpenConsultation(item)}

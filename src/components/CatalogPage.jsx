@@ -28,6 +28,7 @@ import {
   getLocalizedPrice,
   getLocalizedStatus
 } from '../utils/translationService';
+import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 
 const DEFAULT_FILTER_VALUE = 'Alle';
 const DEFAULT_VIEW_MODE = 'grid';
@@ -192,7 +193,7 @@ function getStatusOrderIndex(status) {
   return index === -1 ? STATUS_ORDER.length : index;
 }
 
-export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, onRequestInquiry }) {
+export default function CatalogPage({ items, transitionItemId, onNavigateHome, onOpenItemDetail, onRequestInquiry }) {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState(() => getInitialParam('q', ''));
   const [selectedGroup, setSelectedGroup] = useState(() => getInitialParam('group', DEFAULT_FILTER_VALUE));
@@ -794,6 +795,11 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                         <img
                           src={item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                           alt={getItemField(item, 'title', language)}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                          decoding="async"
+                          fetchPriority={index === 0 ? 'high' : 'auto'}
+                          draggable="false"
+                          style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
                           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                         />
                         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#111111]/25 to-transparent pointer-events-none" />
@@ -824,7 +830,10 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                         </div>
 
                         {/* Title (Clamped to 2 lines max with fixed height baseline) */}
-                        <h2 className="text-lg font-serif font-bold leading-snug text-[#111111] transition-colors duration-300 group-hover:text-[#8E7035] line-clamp-2 min-h-[2.75rem]">
+                        <h2
+                          style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
+                          className="text-lg font-serif font-bold leading-snug text-[#111111] transition-colors duration-300 group-hover:text-[#8E7035] line-clamp-2 min-h-[2.75rem]"
+                        >
                           {getItemField(item, 'title', language)}
                         </h2>
 
@@ -878,6 +887,11 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                               <img
                                 src={item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                                 alt={getItemField(item, 'title', language)}
+                                loading={index === 0 ? 'eager' : 'lazy'}
+                                decoding="async"
+                                fetchPriority={index === 0 ? 'high' : 'auto'}
+                                draggable="false"
+                                style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
                                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                               />
                             </div>
@@ -895,6 +909,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
 
                           <h2 
                             onClick={() => onOpenItemDetail(item)}
+                            style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
                             className="mt-3 text-2xl font-serif font-bold leading-[1.18] text-[#111111] transition-colors duration-300 hover:text-[#8E7035] cursor-pointer lg:text-3xl"
                           >
                             {getItemField(item, 'title', language)}

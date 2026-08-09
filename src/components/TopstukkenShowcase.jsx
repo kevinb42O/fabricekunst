@@ -4,9 +4,11 @@ import { Award, BookOpen, Mail, ArrowRight, ShieldCheck, Truck, FileCheck, Phone
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 import { LUXURY_EASE } from '../utils/motion';
+import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 
 export default function TopstukkenShowcase({ 
   items = [], 
+  transitionItemId,
   onOpenFullCatalog = () => {}, 
   onOpenItemDetail = () => {}, 
   onRequestInquiry = () => {} 
@@ -88,6 +90,10 @@ export default function TopstukkenShowcase({
                 <img
                   src={spotlightItem.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                   alt={getItemField(spotlightItem, 'title', language)}
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                  style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkImageTransitionName(spotlightItem.id) : 'none' }}
                   className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
                 />
               </div>
@@ -100,7 +106,10 @@ export default function TopstukkenShowcase({
                   <span>{getLocalizedCategory(spotlightItem.category, language)}</span>
                 </div>
 
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300">
+                <h3
+                  style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkTitleTransitionName(spotlightItem.id) : 'none' }}
+                  className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
+                >
                   {getItemField(spotlightItem, 'title', language)}
                 </h3>
 
@@ -187,6 +196,10 @@ export default function TopstukkenShowcase({
                       <img
                         src={mainImage}
                         alt={itemTitle}
+                        loading="lazy"
+                        decoding="async"
+                        draggable="false"
+                        style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
                         className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
                       />
                       <div className="absolute inset-0 bg-[#111111]/0 group-hover:bg-[#111111]/5 transition-colors duration-500 pointer-events-none" />
@@ -201,7 +214,10 @@ export default function TopstukkenShowcase({
                         )}
                       </div>
 
-                      <h3 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300">
+                      <h3
+                        style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
+                        className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
+                      >
                         {itemTitle}
                       </h3>
 

@@ -79,8 +79,17 @@
   /* Native View Transitions API Styling */
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 0.45s;
+    animation-duration: 0.55s;
     animation-timing-function: var(--ease-luxury);
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: 0.72s;
+    animation-timing-function: var(--ease-luxury);
+  }
+
+  ::view-transition-image-pair(*) {
+    isolation: auto;
   }
 
   /* Safe area insets for iPhone notch / Dynamic Island */
@@ -111,6 +120,12 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 0.01ms !important;
     }
   }
 

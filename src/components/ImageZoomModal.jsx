@@ -18,6 +18,14 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
     setPosition({ x: 0, y: 0 });
   }, [initialIndex]);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   // Reset pan position when zoom goes back to 1
   useEffect(() => {
     if (zoomLevel === 1) {
@@ -94,6 +102,38 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
     setIsDragging(false);
     dragStart.current = null;
   }, []);
+
+  const onWheel = useCallback((event) => {
+    event.preventDefault();
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const zoomDelta = event.deltaY < 0 ? 0.25 : -0.25;
+    setZoomLevel((previousZoom) => {
+      const nextZoom = Math.min(Math.max(previousZoom + zoomDelta, 1), 4);
+      if (nextZoom === previousZoom) return previousZoom;
+      if (nextZoom === 1) {
+        setPosition({ x: 0, y: 0 });
+        return nextZoom;
+      }
+
+      const pointerX = event.clientX - (rect.left + rect.width / 2);
+      const pointerY = event.clientY - (rect.top + rect.height / 2);
+      const ratio = nextZoom / previousZoom;
+      setPosition((previousPosition) => ({
+        x: pointerX - (pointerX - previousPosition.x) * ratio,
+        y: pointerY - (pointerY - previousPosition.y) * ratio,
+      }));
+      return nextZoom;
+    });
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, [onWheel]);
 
   // ── Touch drag handlers ──────────────────────────────────────────────────
   const onTouchStart = useCallback((e) => {
@@ -240,6 +280,9 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
           <img
             src={activeImage.url || activeImage}
             alt={activeImage.caption || title}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             draggable={false}
             className="max-w-[88vw] max-h-[80vh] object-contain rounded-md shadow-2xl border border-white/10"
           />
@@ -266,7 +309,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
                 idx === currentIndex ? 'border-[#D4AF37] scale-110 shadow-lg' : 'border-white/20 opacity-50 hover:opacity-100'
               }`}
             >
-              <img src={img.url || img} alt="" className="w-full h-full object-cover" />
+              <img src={img.url || img} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

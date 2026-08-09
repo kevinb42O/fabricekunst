@@ -55,6 +55,10 @@ export default function Hero({ heroImage, onExploreCatalog, onRequestConsultatio
           <img
             src={currentHeroImage}
             alt="Atelier Rembrandt Provenience Collectie"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            draggable="false"
             className="w-full h-full object-cover object-right md:object-center filter brightness-[1.01] contrast-[1.02] transform-gpu"
           />
         </motion.div>
