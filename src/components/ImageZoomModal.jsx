@@ -172,7 +172,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md select-none animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md select-none animate-fade-in"
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
