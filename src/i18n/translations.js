@@ -2,7 +2,7 @@ export const translations = {
   nl: {
     nav: {
       brandTitle: 'Atelier Rembrandt',
-      brandSubtitle: 'Antiquariaat & Kunst',
+      brandSubtitle: 'Antiquariaat, Kunst & Historische Objecten',
       topstukken: 'Topstukken',
       collectie: 'Collectie',
       herkomst: 'Herkomst',
@@ -105,6 +105,7 @@ export const translations = {
       searchPlaceholder: 'Zoek op auteur, titel, trefwoord of referentie...',
       refineTitle: 'Filters',
       refineDescription: 'Zoek, filter en vergelijk op type, periode en beschikbaarheid.',
+      collectionGroupFilter: 'Collectiedomein',
       typeFilter: 'Type',
       statusFilter: 'Status',
       all: 'Alle',
@@ -270,7 +271,7 @@ export const translations = {
     },
     inquiry: {
       modalTitle: 'Aanvraag & Privé Consultatie',
-      subtitle: 'Atelier Rembrandt — Antiquariaat & Kunsthandel',
+      subtitle: 'Atelier Rembrandt — Antiquariaat, Kunst & Historische Objecten',
       typeLabel: 'Type Aanvraag',
       tabViewing: 'Privé-Bezichtiging',
       tabOffer: 'Formeel Bod',
@@ -361,7 +362,7 @@ export const translations = {
   en: {
     nav: {
       brandTitle: 'Atelier Rembrandt',
-      brandSubtitle: 'Antiquarian & Fine Art',
+      brandSubtitle: 'Antiquarian Books, Art & Historical Objects',
       topstukken: 'Masterpieces',
       collectie: 'Collection',
       herkomst: 'Provenance',
@@ -464,6 +465,7 @@ export const translations = {
       searchPlaceholder: 'Search by author, title, keyword or reference...',
       refineTitle: 'Filters',
       refineDescription: 'Search, filter, and compare by type, period, and availability.',
+      collectionGroupFilter: 'Collection',
       typeFilter: 'Type',
       statusFilter: 'Status',
       all: 'All',
@@ -651,7 +653,7 @@ export const translations = {
     },
     inquiry: {
       modalTitle: 'Inquiry & Private Consultation',
-      subtitle: 'Atelier Rembrandt — Antiquarian & Fine Art',
+      subtitle: 'Atelier Rembrandt — Antiquarian Books, Art & Historical Objects',
       typeLabel: 'Inquiry Type',
       tabViewing: 'Private Viewing',
       tabOffer: 'Formal Offer',
@@ -720,7 +722,7 @@ export const translations = {
   fr: {
     nav: {
       brandTitle: 'Atelier Rembrandt',
-      brandSubtitle: 'Antiquariat & Beaux-Arts',
+      brandSubtitle: 'Livres Anciens, Art & Objets Historiques',
       topstukken: 'Chefs-d’œuvre',
       collectie: 'Collection',
       herkomst: 'Provenance',
@@ -823,6 +825,7 @@ export const translations = {
       searchPlaceholder: 'Rechercher par auteur, titre, mot-clé ou référence...',
       refineTitle: 'Filtres',
       refineDescription: 'Rechercher, filtrer et comparer par type, période et disponibilité.',
+      collectionGroupFilter: 'Collection',
       typeFilter: 'Type',
       statusFilter: 'Statut',
       all: 'Tous',
@@ -1010,7 +1013,7 @@ export const translations = {
     },
     inquiry: {
       modalTitle: 'Demande & Consultation Privée',
-      subtitle: 'Atelier Rembrandt — Antiquariat & Beaux-Arts',
+      subtitle: 'Atelier Rembrandt — Livres Anciens, Art & Objets Historiques',
       typeLabel: 'Type de Demande',
       tabViewing: 'Visite Privée',
       tabOffer: 'Offre Formelle',

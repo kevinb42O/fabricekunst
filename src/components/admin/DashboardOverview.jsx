@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen, Mail, Plus, ArrowRight, Users, Star, Inbox } from 'lucide-react';
+import { getCollectionGroupForItem } from '../../data/catalogTaxonomy';
 
 export default function DashboardOverview({
   items = [],
@@ -8,8 +9,9 @@ export default function DashboardOverview({
   onCreateNewItem = () => {},
   onOpenLiveSite = () => {}
 }) {
-  const booksCount = items.filter(i => (i.itemType || 'book') === 'book').length;
-  const paintingsCount = items.filter(i => i.itemType === 'painting').length;
+  const booksCount = items.filter((item) => getCollectionGroupForItem(item) === 'books').length;
+  const artCount = items.filter((item) => getCollectionGroupForItem(item) === 'art').length;
+  const historicalObjectsCount = items.filter((item) => getCollectionGroupForItem(item) === 'historical-objects').length;
   const featuredCount = items.filter(i => i.featured).length;
 
   const newInquiries = inquiries.filter(i => i.status === 'Nieuw');
@@ -66,7 +68,9 @@ export default function DashboardOverview({
             <div className="text-2xl sm:text-3xl font-bold text-[#1C1A18] tracking-tight">
               {items.length}
             </div>
-            <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">{booksCount}b · {paintingsCount}k</div>
+            <div className="text-[10px] sm:text-xs text-[#8C8478] mt-0.5">
+              {booksCount} boeken · {artCount} kunst · {historicalObjectsCount} historische objecten
+            </div>
           </div>
         </div>
 

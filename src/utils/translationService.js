@@ -1,3 +1,5 @@
+import { getLocalizedCategoryLabel } from '../data/catalogTaxonomy';
+
 /**
  * Atelier Rembrandt — Antiquarian Translation Service
  * Specialized multi-language translation engine with bibliofilie glossary support
@@ -89,37 +91,6 @@ export const CENTURY_TRANSLATIONS = {
   }
 };
 
-export const CATEGORY_TRANSLATIONS = {
-  en: {
-    'Literatuur & Filosofie': 'Literature & Philosophy',
-    'Literatuur & Satire': 'Literature & Satire',
-    'Wetenschap & Illustraties': 'Science & Illustrations',
-    'Kartografie & Reizen': 'Cartography & Travels',
-    'Bijbels & Religie': 'Bibles & Religion',
-    'Klassieke Oudheid': 'Classical Antiquity',
-    'Oude Meesters': 'Old Masters',
-    '19e-Eeuwse Schilderkunst': '19th-Century Painting',
-    'Portretten & Miniaturen': 'Portraits & Miniatures',
-    'Stillevens & Landschappen': 'Still Lifes & Landscapes',
-    'Religieuze Kunst & Iconen': 'Religious Art & Icons',
-    'Grafiek & Tekeningen': 'Prints & Drawings',
-  },
-  fr: {
-    'Literatuur & Filosofie': 'Littérature & Philosophie',
-    'Literatuur & Satire': 'Littérature & Satire',
-    'Wetenschap & Illustraties': 'Science & Illustrations',
-    'Kartografie & Reizen': 'Cartographie & Voyages',
-    'Bijbels & Religie': 'Bibles & Religion',
-    'Klassieke Oudheid': 'Antiquité Classique',
-    'Oude Meesters': 'Maîtres Anciens',
-    '19e-Eeuwse Schilderkunst': 'Peinture du XIXe Siècle',
-    'Portretten & Miniaturen': 'Portraits & Miniatures',
-    'Stillevens & Landschappen': 'Natures Mortes & Paysages',
-    'Religieuze Kunst & Iconen': 'Art Religieux & Icônes',
-    'Grafiek & Tekeningen': 'Estampes & Dessins',
-  }
-};
-
 export const STATUS_TRANSLATIONS = {
   en: {
     'Beschikbaar': 'Available',
@@ -140,9 +111,7 @@ export function getLocalizedCentury(century, language = 'nl') {
 }
 
 export function getLocalizedCategory(category, language = 'nl') {
-  if (!category) return '';
-  if (language === 'nl') return category;
-  return CATEGORY_TRANSLATIONS[language]?.[category] || category;
+  return getLocalizedCategoryLabel(category, language);
 }
 
 export function getLocalizedStatus(status, language = 'nl') {

@@ -8,6 +8,7 @@ import {
 import ImageZoomModal from './ImageZoomModal';
 import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
 import { getItemField, getLocalizedStatus, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
@@ -49,6 +50,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   const nextItem = currentIndex >= 0 && currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : null;
 
   const currentImage = item.images?.[selectedImageIndex] || item.images?.[0] || { url: "/images/scarron-spines-white-bg.jpg", caption: "" };
+  const detailLabels = getLocalizedItemDetailLabels(item.itemType, language);
 
   const handlePrevImage = () => {
     setSelectedImageIndex((prev) => (prev === 0 ? item.images.length - 1 : prev - 1));
@@ -223,13 +225,13 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-[#D8CEB8]/60 mt-4 sm:mt-6 font-sans">
                       <div>
                         <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
-                          {item.itemType === 'painting' ? t('item_detail.techniqueMedium') : t('item_detail.printerPublisher')}
+                          {detailLabels.publisher}
                         </span>
                         <span className="text-sm font-serif font-bold text-[#111111] mt-1 block">{item.publisher}</span>
                       </div>
                       <div>
                         <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
-                          {item.itemType === 'painting' ? t('item_detail.signatureDate') : t('item_detail.placeOfPrint')}
+                          {detailLabels.city}
                         </span>
                         <span className="text-sm font-serif font-bold text-[#111111] mt-1 block">{item.city || "Europa"}</span>
                       </div>
@@ -248,7 +250,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   <div className="flex items-center space-x-3 text-[#B8860B]">
                     <Bookmark className="w-5 h-5" />
                     <h3 className="text-xl font-serif font-bold text-[#111111]">
-                      {item.itemType === 'painting' ? t('item_detail.canvasConditionReport') : t('item_detail.bindingConditionReport')}
+                      {detailLabels.physicalSection}
                     </h3>
                   </div>
                   
@@ -258,7 +260,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       {getItemField(item, 'binding', language) && (
                         <div className="border-l-2 border-[#B8860B] pl-4 space-y-1">
                           <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
-                            {item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.bindingMaterials')}
+                            {detailLabels.binding}
                           </span>
                           <p className="text-sm font-serif font-bold text-[#111111]">{getItemField(item, 'binding', language)}</p>
                         </div>
@@ -274,7 +276,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                     {getItemField(item, 'conditionReport', language) && (
                       <div className="space-y-3 pt-2">
                         <h4 className="text-xs font-mono font-bold text-[#111111] uppercase tracking-wider">
-                          {item.itemType === 'painting' ? t('item_detail.canvasRestorationReport') : t('item_detail.detailedPaperReport')}
+                          {detailLabels.conditionReport}
                         </h4>
                         <div className="text-sm text-[#333333] font-serif leading-relaxed space-y-3">
                           {getItemField(item, 'conditionReport', language)
@@ -290,9 +292,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                       <div className="pt-2 text-xs font-mono text-[#555555] border-t border-[#D8CEB8]/60 flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-[#B8860B]" />
                         <span>
-                          {item.itemType === 'painting' 
-                            ? `${t('item_detail.specsMedium')}: ${getItemField(item, 'collationSpecs', language)}`
-                            : `${t('item_detail.collationFormat')}: ${getItemField(item, 'collationSpecs', language)}`}
+                          {detailLabels.specifications}: {getItemField(item, 'collationSpecs', language)}
                         </span>
                       </div>
                     )}
@@ -376,10 +376,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               <div className="text-sm font-serif italic text-[#555555] space-y-1">
                 <p className="text-base font-bold text-[#111111] not-italic">
-                  {item.itemType === 'painting' ? `${t('item_detail.artist')}: ${item.author}` : `${item.author} (${item.year})`}
+                  {detailLabels.maker}: {item.author}
                 </p>
                 <p>
-                  {item.itemType === 'painting' ? `${t('item_detail.technique')}: ${item.publisher}` : `${t('item_detail.publisherTechnique')}: ${item.publisher} (${item.city || "Europa"})`}
+                  {detailLabels.publisher}: {item.publisher}{item.city ? ` (${item.city})` : ''}
                 </p>
               </div>
 
@@ -421,7 +421,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs col-span-2">
                 <div className="flex justify-between items-baseline mb-1">
                   <span className="text-[#666666] uppercase text-[10px]">
-                    {item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}
+                    {detailLabels.binding}
                   </span>
                   <span className="text-[10px] text-[#B8860B] font-bold">{item.ref}</span>
                 </div>

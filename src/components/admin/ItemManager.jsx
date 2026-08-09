@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink, Landmark } from 'lucide-react';
+import {
+  CATEGORIES,
+  COLLECTION_GROUPS,
+  ITEM_TYPES,
+  getCategoriesForGroup,
+  getCategorySlug,
+  getCollectionGroupForItem,
+  getItemTypeDefinition,
+  getLocalizedCategoryLabel,
+  getLocalizedCollectionGroup,
+  getLocalizedItemType
+} from '../../data/catalogTaxonomy';
 import { uploadCatalogImage } from '../../utils/storage';
 import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
@@ -38,6 +50,12 @@ const isComparableSaleComplete = (sale) => (
   && (!sale.saleUrl || isSafeHttpUrl(sale.saleUrl))
   && new Date(`${sale.saleDate}T12:00:00`) <= new Date()
 );
+
+const getItemTypeIcon = (type) => {
+  if (type === 'book') return BookOpen;
+  if (type === 'painting') return Palette;
+  return Landmark;
+};
 
 export const getItemTranslationStatus = (item) => {
   if (!item) return { isComplete: false, completeCount: 0, totalLangs: 3, details: { nl: { missing: [] }, en: { missing: [] }, fr: { missing: [] } } };
@@ -77,16 +95,16 @@ export const getItemTranslationStatus = (item) => {
     return '';
   };
 
-  const isPainting = item.itemType === 'painting';
+  const fieldLabels = getItemTypeDefinition(item.itemType).fieldLabels;
 
   const keyLabels = {
-    title: isPainting ? 'Titel van het schilderij' : 'Titel',
+    title: fieldLabels.title,
     subtitle: 'Subtitel',
-    author: isPainting ? 'Kunstenaar / Meester' : 'Auteur / Schrijver',
-    publisher: isPainting ? 'Galerie / Atelier / Werkplaats' : 'Drukker / Uitgever',
-    city: isPainting ? 'Plaats van ontstaan' : 'Plaats van Uitgave',
-    dimensions: isPainting ? 'Afmetingen' : 'Formaat & Afmetingen',
-    binding: isPainting ? 'Lijst & Inlijsting' : 'Boekband / Lijst',
+    author: fieldLabels.author,
+    publisher: fieldLabels.publisher,
+    city: fieldLabels.city,
+    dimensions: fieldLabels.dimensions,
+    binding: fieldLabels.binding,
     condition: 'Staat & Conditie',
     provenance: 'Herkomst Summary',
     description: 'Beschrijving',
@@ -225,6 +243,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
   const emptyItem = {
     itemType: 'book',
+    collectionGroup: 'books',
     id: '',
     ref: `FB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
     title: '',
@@ -234,7 +253,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     city: '',
     year: new Date().getFullYear().toString(),
     century: '18e Eeuw',
-    category: 'Literatuur & Filosofie',
+    category: 'literature-philosophy',
     price: 'Prijs op aanvraag',
     status: 'Beschikbaar',
     featured: false,
@@ -248,6 +267,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     provenanceDetails: '',
     collationSpecs: '',
     comparableSales: [],
+    attributes: {},
     images: [
       { url: '/images/scarron-spines-white-bg.jpg', caption: 'Hoofdafbeelding' }
     ]
@@ -417,17 +437,19 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const handleCopyAiPrompt = async () => {
     if (!editingItem) return;
 
+    const fieldLabels = getItemTypeDefinition(editingItem.itemType).fieldLabels;
+
     const fieldsToTranslate = [
-      { key: 'title', label: editingItem.itemType === 'painting' ? 'Titel van het Schilderij' : 'Titel van het Boek' },
+      { key: 'title', label: fieldLabels.title },
       { key: 'subtitle', label: 'Ondertitel / Korte Subtitel' },
-      { key: 'publisher', label: editingItem.itemType === 'painting' ? 'Galerie / Atelier' : 'Drukker / Uitgever (Publisher / Printer)' },
-      { key: 'city', label: editingItem.itemType === 'painting' ? 'Plaats van ontstaan' : 'Plaats van Uitgave (Place of Printing)' },
+      { key: 'publisher', label: fieldLabels.publisher },
+      { key: 'city', label: fieldLabels.city },
       { key: 'description', label: 'Algemene Beschrijving & Overzicht' },
-      { key: 'binding', label: editingItem.itemType === 'painting' ? 'Lijst & Inlijsting' : 'Bandstijl (Binding)' },
+      { key: 'binding', label: fieldLabels.binding },
       { key: 'condition', label: 'Staat & Conditie Summary' },
-      { key: 'collationSpecs', label: editingItem.itemType === 'painting' ? 'Signatuur & Medium' : 'Collatie & Specificaties' },
+      { key: 'collationSpecs', label: fieldLabels.collationSpecs },
       { key: 'provenance', label: 'Provenance (Korte Herkomst Omschrijving)' },
-      { key: 'conditionReport', label: editingItem.itemType === 'painting' ? 'Restauratie & Conditierapport' : 'Uitgebreid Conditierapport' },
+      { key: 'conditionReport', label: fieldLabels.conditionReport },
       { key: 'provenanceDetails', label: 'Uitgebreid Provenance Verhaal & Veilinghistorie' },
       { key: 'historicalContext', label: 'Diepgaande Historische & Kunsthistorische Context' }
     ];
@@ -446,8 +468,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       targetKeys = (fKey) => [fKey, `${fKey}_en`];
     }
 
-    let promptText = `Vertaal de onderstaande gegevens van een antiquarisch/kunst object van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
-    promptText += `Gebruik hoogwaardig antiquarisch, bibliofiel en kunsthistorisch jargon.\n`;
+    let promptText = `Vertaal de onderstaande gegevens van een historisch verzamelobject van het ${sourceLangName} naar ${targetLangInstruction}.\n`;
+    promptText += `Gebruik hoogwaardig vakjargon dat past bij het opgegeven objecttype.\n`;
     promptText += `Als een sectie "Niet ingevuld / Bewust leeg" is, vul dan in de JSON voor de corresponderende sleutels een lege string "" in.\n\n`;
     promptText += `Retourneer UITSLUITEND een geldig JSON object (geen inleidende tekst, geen markdown opmaak rond de code):\n\n`;
 
@@ -790,7 +812,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     const itemTypeVal = item.itemType || 'book';
     const matchesType = typeFilter === 'Alle' || itemTypeVal === typeFilter;
     const matchesStatus = statusFilter === 'Alle' || item.status === statusFilter;
-    const matchesCategory = categoryFilter === 'Alle' || item.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'Alle' || getCategorySlug(item.category) === categoryFilter;
     const matchesTopstuk = !onlyTopstukken || Boolean(item.featured);
 
     return matchesSearch && matchesType && matchesStatus && matchesCategory && matchesTopstuk;
@@ -799,8 +821,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const availableCount = items.filter(i => i.status === 'Beschikbaar').length;
   const reservedCount = items.filter(i => i.status === 'Gereserveerd').length;
   const soldCount = items.filter(i => i.status === 'Verkocht').length;
-  const booksCount = items.filter(i => (i.itemType || 'book') === 'book').length;
-  const paintingsCount = items.filter(i => i.itemType === 'painting').length;
+  const groupCounts = COLLECTION_GROUPS.reduce((counts, group) => ({
+    ...counts,
+    [group.slug]: items.filter((item) => getCollectionGroupForItem(item) === group.slug).length
+  }), {});
+  const editingTypeDefinition = getItemTypeDefinition(editingItem?.itemType || 'book');
+  const editingFieldLabels = editingTypeDefinition.fieldLabels;
 
   return (
     <div className="space-y-6 text-[#111111] animate-fade-in">
@@ -848,22 +874,17 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           >
             All
           </button>
-          <button
-            onClick={() => setTypeFilter('book')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              typeFilter === 'book' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-            }`}
-          >
-            Boek
-          </button>
-          <button
-            onClick={() => setTypeFilter('painting')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              typeFilter === 'painting' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-            }`}
-          >
-            Kunst
-          </button>
+          {ITEM_TYPES.map((itemType) => (
+            <button
+              key={itemType.slug}
+              onClick={() => setTypeFilter(itemType.slug)}
+              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                typeFilter === itemType.slug ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
+              }`}
+            >
+              {getLocalizedItemType(itemType.slug, 'nl', true)}
+            </button>
+          ))}
         </div>
 
         {/* Status Filter Buttons */}
@@ -904,18 +925,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
             className="bg-transparent text-xs font-semibold text-[#111111] focus:outline-none cursor-pointer pr-2"
           >
             <option value="Alle">Alle Categorieën</option>
-            <option value="Literatuur & Filosofie">Literatuur & Filosofie</option>
-            <option value="Literatuur & Satire">Literatuur & Satire</option>
-            <option value="Wetenschap & Illustraties">Wetenschap & Illustraties</option>
-            <option value="Kartografie & Reizen">Kartografie & Reizen</option>
-            <option value="Bijbels & Religie">Bijbels & Religie</option>
-            <option value="Klassieke Oudheid">Klassieke Oudheid</option>
-            <option value="Oude Meesters">Oude Meesters</option>
-            <option value="19e-Eeuwse Schilderkunst">19e-Eeuwse Schilderkunst</option>
-            <option value="Portretten & Miniaturen">Portretten & Miniaturen</option>
-            <option value="Stillevens & Landschappen">Stillevens & Landschappen</option>
-            <option value="Religieuze Kunst & Iconen">Religieuze Kunst & Iconen</option>
-            <option value="Grafiek & Tekeningen">Grafiek & Tekeningen</option>
+            {CATEGORIES.map((category) => (
+              <option key={category.slug} value={category.slug}>
+                {getLocalizedCategoryLabel(category.slug, 'nl')}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -946,15 +960,15 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           <div className="flex items-center space-x-3 text-xs font-sans text-[#666666] mt-1">
             <span>Totaal: <strong className="text-[#111111] font-mono">{items.length}</strong> objecten</span>
             <span>•</span>
-            <span className="flex items-center space-x-1">
-              <BookOpen className="w-3.5 h-3.5 text-[#B8860B]" />
-              <span><strong className="text-[#111111] font-mono">{booksCount}</strong> Boeken</span>
-            </span>
-            <span>•</span>
-            <span className="flex items-center space-x-1">
-              <Palette className="w-3.5 h-3.5 text-[#4A6B5D]" />
-              <span><strong className="text-[#111111] font-mono">{paintingsCount}</strong> Kunst</span>
-            </span>
+            {COLLECTION_GROUPS.map((group) => (
+              <React.Fragment key={group.slug}>
+                <span>•</span>
+                <span>
+                  <strong className="text-[#111111] font-mono">{groupCounts[group.slug] || 0}</strong>{' '}
+                  {getLocalizedCollectionGroup(group.slug, 'nl')}
+                </span>
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
@@ -1065,7 +1079,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       </td>
 
                       <td className="p-3.5 font-serif">
-                        {item.itemType === 'painting' ? 'Schilderij' : 'Boek'}
+                        {getLocalizedItemType(item.itemType, 'nl')}
                       </td>
 
                       {/* Translation Status Badge with Hover Tooltip */}
@@ -1272,17 +1286,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                         {item.ref}
                       </span>
 
-                      {item.itemType === 'painting' ? (
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50/90 backdrop-blur-md text-amber-950 border border-amber-300/80 flex items-center space-x-1 shadow-xs">
-                          <Palette className="w-3 h-3 text-amber-700" />
-                          <span>Kunst</span>
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-stone-100/90 backdrop-blur-md text-stone-800 border border-stone-300/80 flex items-center space-x-1 shadow-xs">
-                          <BookOpen className="w-3 h-3 text-stone-600" />
-                          <span>Boek</span>
-                        </span>
-                      )}
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-stone-100/90 backdrop-blur-md text-stone-800 border border-stone-300/80 flex items-center space-x-1 shadow-xs">
+                        {React.createElement(getItemTypeIcon(item.itemType), { className: 'w-3 h-3 text-stone-600' })}
+                        <span>{getLocalizedItemType(item.itemType, 'nl', true)}</span>
+                      </span>
 
                       {item.featured && (
                         <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#111111]/90 backdrop-blur-md text-[#D4AF37] border border-[#B8860B]/50 flex items-center space-x-1 shadow-xs ring-1 ring-[#D4AF37]/30">
@@ -1340,7 +1347,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                 <div className="p-5 flex-grow flex flex-col justify-between space-y-3.5">
                   <div className="space-y-1.5">
                     <span className="text-[9.5px] font-mono font-bold text-[#B8860B] uppercase tracking-[0.15em] block truncate">
-                      {item.category} • {item.century}
+                      {getLocalizedCategoryLabel(item.category, 'nl')} • {item.century}
                     </span>
 
                     <h4 className="text-[15px] font-serif font-bold text-[#111111] line-clamp-2 leading-snug tracking-tight group-hover:text-[#B8860B] transition-colors duration-300" title={item.title}>
@@ -1623,42 +1630,36 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
               {/* Item Type Switcher */}
               <div className="p-4 rounded-2xl bg-white border border-[#E0D9CC] space-y-3 shadow-xs">
                 <label className="block text-[11px] font-mono font-bold text-[#1C1A18] uppercase tracking-widest">
-                  Type Kunstobject
+                  Objecttype
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingItem({
-                      ...editingItem,
-                      itemType: 'book',
-                      category: editingItem.itemType === 'painting' ? 'Literatuur & Filosofie' : editingItem.category
-                    })}
-                    className={`py-3 px-3 rounded-xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-2 cursor-pointer border ${
-                      (editingItem.itemType || 'book') === 'book'
-                        ? 'bg-[#1C1A18] text-white border-[#1C1A18] shadow-sm'
-                        : 'bg-[#F9F7F2] text-[#666666] hover:text-[#1C1A18] border-[#E0D9CC]'
-                    }`}
-                  >
-                    <BookOpen className="w-4 h-4 text-[#C5A059]" />
-                    <span>Antiquarisch Boek</span>
-                  </button>
+                  {ITEM_TYPES.map((itemType) => {
+                    const Icon = getItemTypeIcon(itemType.slug);
+                    const isActive = (editingItem.itemType || 'book') === itemType.slug;
 
-                  <button
-                    type="button"
-                    onClick={() => setEditingItem({
-                      ...editingItem,
-                      itemType: 'painting',
-                      category: editingItem.itemType === 'book' ? 'Oude Meesters' : editingItem.category
-                    })}
-                    className={`py-3 px-3 rounded-xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-2 cursor-pointer border ${
-                      editingItem.itemType === 'painting'
-                        ? 'bg-[#1C1A18] text-white border-[#1C1A18] shadow-sm'
-                        : 'bg-[#F9F7F2] text-[#666666] hover:text-[#1C1A18] border-[#E0D9CC]'
-                    }`}
-                  >
-                    <Palette className="w-4 h-4 text-[#C5A059]" />
-                    <span>Schilderij & Kunst</span>
-                  </button>
+                    return (
+                      <button
+                        key={itemType.slug}
+                        type="button"
+                        onClick={() => setEditingItem({
+                          ...editingItem,
+                          itemType: itemType.slug,
+                          collectionGroup: itemType.collectionGroup,
+                          category: getCollectionGroupForItem(editingItem) === itemType.collectionGroup
+                            ? getCategorySlug(editingItem.category)
+                            : itemType.defaultCategory
+                        })}
+                        className={`py-3 px-3 rounded-xl text-xs font-serif font-bold transition-all flex items-center justify-center space-x-2 cursor-pointer border ${
+                          isActive
+                            ? 'bg-[#1C1A18] text-white border-[#1C1A18] shadow-sm'
+                            : 'bg-[#F9F7F2] text-[#666666] hover:text-[#1C1A18] border-[#E0D9CC]'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 text-[#C5A059]" />
+                        <span>{getLocalizedItemType(itemType.slug, 'nl')}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1935,13 +1936,13 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   {/* Title & Subtitle */}
                   <div className="p-6 rounded-2xl bg-white border border-[#E0D9CC] space-y-5 shadow-xs">
                     <div>
-                      {renderFieldHeader(editingItem.itemType === 'painting' ? "Titel van het Schilderij / Kunstwerk" : "Titel van het Boek", "title", true)}
+                      {renderFieldHeader(editingFieldLabels.title, "title", true)}
                       <input
                         type="text"
                         required
                         value={getFormField('title')}
                         onChange={(e) => updateFormField('title', e.target.value)}
-                        placeholder={isFieldNvt('title', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Stilleven met Boeken en Ganzenveer" : "Bijv. Voltaire — Œuvres Complètes")}
+                        placeholder={isFieldNvt('title', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : editingFieldLabels.title}
                         className={`w-full px-4 py-3 rounded-xl border text-[#1C1A18] font-serif font-bold text-base focus:outline-none focus:border-[#1C1A18] focus:ring-2 focus:ring-[#C5A059]/20 ${
                           isFieldNvt('title', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
                         }`}
@@ -1967,13 +1968,13 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                       <div>
                         <label className="block text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider mb-2">
-                          {editingItem.itemType === 'painting' ? "Kunstenaar / Meester" : "Auteur / Schrijver"}
+                          {editingFieldLabels.author}
                         </label>
                         <input
                           type="text"
                           value={editingItem.author}
                           onChange={(e) => setEditingItem({ ...editingItem, author: e.target.value })}
-                          placeholder={editingItem.itemType === 'painting' ? "Bijv. School van Leiden" : "Bijv. Voltaire"}
+                          placeholder={editingFieldLabels.author}
                           className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
                         />
                       </div>
@@ -2013,32 +2014,18 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                           onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
                           className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
                         >
-                          {editingItem.itemType === 'painting' ? (
-                            <>
-                              <option value="Oude Meesters">Oude Meesters (16e-18e Eeuw)</option>
-                              <option value="19e-Eeuwse Schilderkunst">19e-Eeuwse Schilderkunst</option>
-                              <option value="Portretten & Miniaturen">Portretten & Miniaturen</option>
-                              <option value="Stillevens & Landschappen">Stillevens & Landschappen</option>
-                              <option value="Religieuze Kunst & Iconen">Religieuze Kunst & Iconen</option>
-                              <option value="Grafiek & Tekeningen">Grafiek & Tekeningen</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="Literatuur & Filosofie">Literatuur & Filosofie</option>
-                              <option value="Literatuur & Satire">Literatuur & Satire</option>
-                              <option value="Wetenschap & Illustraties">Wetenschap & Illustraties</option>
-                              <option value="Kartografie & Reizen">Kartografie & Reizen</option>
-                              <option value="Bijbels & Religie">Bijbels & Religie</option>
-                              <option value="Klassieke Oudheid">Klassieke Oudheid</option>
-                            </>
-                          )}
+                          {getCategoriesForGroup(editingTypeDefinition.collectionGroup).map((category) => (
+                            <option key={category.slug} value={category.slug}>
+                              {getLocalizedCategoryLabel(category.slug, 'nl')}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
-                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Galerie / Atelier / Werkplaats" : "Drukker / Uitgever", "publisher")}
+                        {renderFieldHeader(editingFieldLabels.publisher, "publisher")}
                         <input
                           type="text"
                           value={getFormField('publisher') || editingItem.publisher || ''}
@@ -2046,7 +2033,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             updateFormField('publisher', e.target.value);
                             setEditingItem(prev => ({ ...prev, publisher: e.target.value }));
                           }}
-                          placeholder={isFieldNvt('publisher', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Atelier Rembrandt / Galerie" : "Bijv. Chez Baudouin / Elzevier")}
+                          placeholder={isFieldNvt('publisher', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : editingFieldLabels.publisher}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
                             isFieldNvt('publisher', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
                           }`}
@@ -2054,7 +2041,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       </div>
 
                       <div>
-                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Plaats van ontstaan" : "Plaats van Uitgave", "city")}
+                        {renderFieldHeader(editingFieldLabels.city, "city")}
                         <input
                           type="text"
                           value={getFormField('city') || editingItem.city || ''}
@@ -2062,7 +2049,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             updateFormField('city', e.target.value);
                             setEditingItem(prev => ({ ...prev, city: e.target.value }));
                           }}
-                          placeholder={isFieldNvt('city', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Delft / Antwerpen" : "Bijv. Parijs / Amsterdam")}
+                          placeholder={isFieldNvt('city', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : editingFieldLabels.city}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
                             isFieldNvt('city', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
                           }`}
@@ -2112,17 +2099,17 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   <div className="p-6 rounded-2xl bg-white border border-[#E0D9CC] space-y-5 shadow-xs">
                     <h4 className="text-xs font-mono font-bold text-[#1C1A18] uppercase tracking-wider border-b border-[#E0D9CC] pb-2 flex items-center space-x-2">
                       <Bookmark className="w-4 h-4 text-[#C5A059]" />
-                      <span>{editingItem.itemType === 'painting' ? "Techniek & Inlijsting" : "Bandstijl, Conditie & Formaat"}</span>
+                      <span>{editingFieldLabels.section}</span>
                     </h4>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
-                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Lijst & Inlijsting" : "Bandstijl (Binding)", "binding")}
+                        {renderFieldHeader(editingFieldLabels.binding, "binding")}
                         <textarea
                           rows={3}
                           value={getFormField('binding')}
                           onChange={(e) => updateFormField('binding', e.target.value)}
-                          placeholder={isFieldNvt('binding', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Originele 17e-eeuwse vergulde baroklijst..." : "Volledige kalfslederen band met goudstempels...")}
+                          placeholder={isFieldNvt('binding', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : editingFieldLabels.binding}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed ${
                             isFieldNvt('binding', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
                           }`}
@@ -2135,7 +2122,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                           rows={3}
                           value={getFormField('condition')}
                           onChange={(e) => updateFormField('condition', e.target.value)}
-                          placeholder={isFieldNvt('condition', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : (editingItem.itemType === 'painting' ? "Bijv. Excellente museumstaat..." : "Excellente antiquarische staat...")}
+                          placeholder={isFieldNvt('condition', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Beschrijf de actuele staat en eventuele restauraties"}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] leading-relaxed ${
                             isFieldNvt('condition', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
                           }`}
@@ -2145,7 +2132,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
-                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Afmetingen (doek & lijst)" : "Formaat & Afmetingen", "dimensions")}
+                        {renderFieldHeader(editingFieldLabels.dimensions, "dimensions")}
                         <input
                           type="text"
                           value={getFormField('dimensions') || editingItem.dimensions || ''}
@@ -2161,7 +2148,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       </div>
 
                       <div>
-                        {renderFieldHeader(editingItem.itemType === 'painting' ? "Signatuur & Medium" : "Collatie & Specificaties", "collationSpecs")}
+                        {renderFieldHeader(editingFieldLabels.collationSpecs, "collationSpecs")}
                         <input
                           type="text"
                           value={getFormField('collationSpecs')}
@@ -2222,7 +2209,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     </div>
 
                     <div>
-                      {renderFieldHeader(editingItem.itemType === 'painting' ? "Restauratie & Conditierapport" : "Uitgebreid Conditierapport", "conditionReport")}
+                      {renderFieldHeader(editingFieldLabels.conditionReport, "conditionReport")}
                       <textarea
                         rows={3}
                         value={getFormField('conditionReport')}

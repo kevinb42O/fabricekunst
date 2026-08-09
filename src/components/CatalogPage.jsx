@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BookOpen,
   ChevronDown,
+  Landmark,
   LayoutGrid,
   Palette,
   RotateCcw,
@@ -12,6 +13,14 @@ import {
   X
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import {
+  COLLECTION_GROUPS,
+  ITEM_TYPES,
+  getCategorySlug,
+  getCollectionGroupForItem,
+  getLocalizedCollectionGroup,
+  getLocalizedItemType
+} from '../data/catalogTaxonomy';
 import {
   getItemField,
   getLocalizedCategory,
@@ -39,6 +48,12 @@ function extractYearNumber(value) {
 
 function getTypeValue(item) {
   return item?.itemType || 'book';
+}
+
+function getTypeIcon(type) {
+  if (type === 'painting') return Palette;
+  if (type === 'book') return BookOpen;
+  return Landmark;
 }
 
 function getUniqueValues(items, selector) {
@@ -98,6 +113,10 @@ function matchesFilters(item, filters, ignoredKey = null) {
     return false;
   }
 
+  if (ignoredKey !== 'group' && filters.group !== DEFAULT_FILTER_VALUE && item.collectionGroupValue !== filters.group) {
+    return false;
+  }
+
   if (ignoredKey !== 'status' && filters.status !== DEFAULT_FILTER_VALUE && item.status !== filters.status) {
     return false;
   }
@@ -106,7 +125,7 @@ function matchesFilters(item, filters, ignoredKey = null) {
     return false;
   }
 
-  if (ignoredKey !== 'category' && filters.category !== DEFAULT_FILTER_VALUE && item.category !== filters.category) {
+  if (ignoredKey !== 'category' && filters.category !== DEFAULT_FILTER_VALUE && item.categorySlug !== filters.category) {
     return false;
   }
 
@@ -176,10 +195,14 @@ function getStatusOrderIndex(status) {
 export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, onRequestInquiry }) {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState(() => getInitialParam('q', ''));
+  const [selectedGroup, setSelectedGroup] = useState(() => getInitialParam('group', DEFAULT_FILTER_VALUE));
   const [selectedType, setSelectedType] = useState(() => getInitialParam('type', DEFAULT_FILTER_VALUE));
   const [selectedStatus, setSelectedStatus] = useState(() => getInitialParam('status', DEFAULT_FILTER_VALUE));
   const [selectedCentury, setSelectedCentury] = useState(() => getInitialParam('century', DEFAULT_FILTER_VALUE));
-  const [selectedCategory, setSelectedCategory] = useState(() => getInitialParam('category', DEFAULT_FILTER_VALUE));
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    const category = getInitialParam('category', DEFAULT_FILTER_VALUE);
+    return category === DEFAULT_FILTER_VALUE ? category : getCategorySlug(category);
+  });
   const [sortBy, setSortBy] = useState(() => getInitialParam('sort', 'standaard'));
   const [viewMode, setViewMode] = useState(getInitialViewMode);
 
@@ -188,6 +211,8 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
       items.map((item) => ({
         ...item,
         typeValue: getTypeValue(item),
+        collectionGroupValue: getCollectionGroupForItem(item),
+        categorySlug: getCategorySlug(item.category),
         sortYear: extractYearNumber(item.year),
         searchDocument: buildSearchDocument(item)
       })),
@@ -196,8 +221,16 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
 
   const typeOptions = useMemo(() => {
     const discoveredTypes = getUniqueValues(normalizedItems, (item) => item.typeValue);
-    const orderedTypes = ['book', 'painting'].filter((type) => discoveredTypes.includes(type));
-    return [DEFAULT_FILTER_VALUE, ...orderedTypes];
+    const configuredTypes = ITEM_TYPES.map((type) => type.slug).filter((type) => discoveredTypes.includes(type));
+    const customTypes = discoveredTypes.filter((type) => !configuredTypes.includes(type));
+    return [DEFAULT_FILTER_VALUE, ...configuredTypes, ...customTypes];
+  }, [normalizedItems]);
+
+  const groupOptions = useMemo(() => {
+    const discoveredGroups = getUniqueValues(normalizedItems, (item) => item.collectionGroupValue);
+    const configuredGroups = COLLECTION_GROUPS.map((group) => group.slug).filter((group) => discoveredGroups.includes(group));
+    const customGroups = discoveredGroups.filter((group) => !configuredGroups.includes(group));
+    return [DEFAULT_FILTER_VALUE, ...configuredGroups, ...customGroups];
   }, [normalizedItems]);
 
   const statusOptions = useMemo(() => {
@@ -215,9 +248,15 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
   );
 
   const categoryOptions = useMemo(
-    () => [DEFAULT_FILTER_VALUE, ...getUniqueValues(normalizedItems, (item) => item.category)],
+    () => [DEFAULT_FILTER_VALUE, ...getUniqueValues(normalizedItems, (item) => item.categorySlug)],
     [normalizedItems]
   );
+
+  useEffect(() => {
+    if (selectedGroup !== DEFAULT_FILTER_VALUE && !groupOptions.includes(selectedGroup)) {
+      setSelectedGroup(DEFAULT_FILTER_VALUE);
+    }
+  }, [selectedGroup, groupOptions]);
 
   useEffect(() => {
     if (selectedType !== DEFAULT_FILTER_VALUE && !typeOptions.includes(selectedType)) {
@@ -256,6 +295,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
     const trimmedSearch = searchQuery.trim();
 
     if (trimmedSearch) params.set('q', trimmedSearch);
+    if (selectedGroup !== DEFAULT_FILTER_VALUE) params.set('group', selectedGroup);
     if (selectedType !== DEFAULT_FILTER_VALUE) params.set('type', selectedType);
     if (selectedStatus !== DEFAULT_FILTER_VALUE) params.set('status', selectedStatus);
     if (selectedCentury !== DEFAULT_FILTER_VALUE) params.set('century', selectedCentury);
@@ -266,17 +306,18 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
     const queryString = params.toString();
     const nextUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
     window.history.replaceState(window.history.state, '', nextUrl);
-  }, [searchQuery, selectedType, selectedStatus, selectedCentury, selectedCategory, sortBy, viewMode]);
+  }, [searchQuery, selectedGroup, selectedType, selectedStatus, selectedCentury, selectedCategory, sortBy, viewMode]);
 
   const filters = useMemo(
     () => ({
       query: searchQuery,
+      group: selectedGroup,
       type: selectedType,
       status: selectedStatus,
       century: selectedCentury,
       category: selectedCategory
     }),
-    [searchQuery, selectedType, selectedStatus, selectedCentury, selectedCategory]
+    [searchQuery, selectedGroup, selectedType, selectedStatus, selectedCentury, selectedCategory]
   );
 
   const filteredItems = useMemo(() => {
@@ -334,19 +375,16 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
   }, [filters, language, normalizedItems, sortBy]);
 
   const typePool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'type')), [normalizedItems, filters]);
+  const groupPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'group')), [normalizedItems, filters]);
   const statusPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'status')), [normalizedItems, filters]);
   const centuryPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'century')), [normalizedItems, filters]);
   const categoryPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'category')), [normalizedItems, filters]);
 
   const typeCounts = useMemo(() => countBy(typePool, (item) => item.typeValue), [typePool]);
+  const groupCounts = useMemo(() => countBy(groupPool, (item) => item.collectionGroupValue), [groupPool]);
   const statusCounts = useMemo(() => countBy(statusPool, (item) => item.status), [statusPool]);
   const centuryCounts = useMemo(() => countBy(centuryPool, (item) => item.century), [centuryPool]);
-  const categoryCounts = useMemo(() => countBy(categoryPool, (item) => item.category), [categoryPool]);
-
-  const totalItems = normalizedItems.length;
-  const totalBooks = normalizedItems.filter((item) => item.typeValue === 'book').length;
-  const totalPaintings = normalizedItems.filter((item) => item.typeValue === 'painting').length;
-  const availableItems = normalizedItems.filter((item) => item.status === 'Beschikbaar').length;
+  const categoryCounts = useMemo(() => countBy(categoryPool, (item) => item.categorySlug), [categoryPool]);
 
   const activeFilters = useMemo(() => {
     const chips = [];
@@ -355,10 +393,18 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
       chips.push({ key: 'query', label: `"${searchQuery.trim()}"`, clear: () => setSearchQuery('') });
     }
 
+    if (selectedGroup !== DEFAULT_FILTER_VALUE) {
+      chips.push({
+        key: 'group',
+        label: getLocalizedCollectionGroup(selectedGroup, language),
+        clear: () => setSelectedGroup(DEFAULT_FILTER_VALUE)
+      });
+    }
+
     if (selectedType !== DEFAULT_FILTER_VALUE) {
       chips.push({
         key: 'type',
-        label: selectedType === 'painting' ? t('catalog.paintings') : t('catalog.books'),
+        label: getLocalizedItemType(selectedType, language),
         clear: () => setSelectedType(DEFAULT_FILTER_VALUE)
       });
     }
@@ -388,12 +434,13 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
     }
 
     return chips;
-  }, [language, searchQuery, selectedCategory, selectedCentury, selectedStatus, selectedType, t]);
+  }, [language, searchQuery, selectedCategory, selectedCentury, selectedGroup, selectedStatus, selectedType]);
 
   const hasActiveFilters = activeFilters.length > 0 || sortBy !== 'standaard';
 
   const resetFilters = () => {
     setSearchQuery('');
+    setSelectedGroup(DEFAULT_FILTER_VALUE);
     setSelectedType(DEFAULT_FILTER_VALUE);
     setSelectedStatus(DEFAULT_FILTER_VALUE);
     setSelectedCentury(DEFAULT_FILTER_VALUE);
@@ -402,8 +449,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
   };
 
   const renderTypeLabel = (value) => {
-    if (value === 'painting') return t('catalog.paintings');
-    if (value === 'book') return t('catalog.books');
+    if (value !== DEFAULT_FILTER_VALUE) return getLocalizedItemType(value, language);
     return t('catalog.all');
   };
 
@@ -457,6 +503,43 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             <div className="space-y-6 pt-6">
               <div>
                 <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
+                  {t('catalog.collectionGroupFilter')}
+                </div>
+                <div className="space-y-0.5">
+                  {groupOptions.map((option) => {
+                    const isAllOption = option === DEFAULT_FILTER_VALUE;
+                    const count = isAllOption ? groupPool.length : (groupCounts[option] || 0);
+                    const isActive = selectedGroup === option;
+                    const isDisabled = !isActive && count === 0;
+
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => {
+                          setSelectedGroup(option);
+                          setSelectedType(DEFAULT_FILTER_VALUE);
+                          setSelectedCategory(DEFAULT_FILTER_VALUE);
+                        }}
+                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
+                          isActive
+                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
+                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
+                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
+                      >
+                        <span className="text-sm">
+                          {isAllOption ? t('catalog.all') : getLocalizedCollectionGroup(option, language)}
+                        </span>
+                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-t border-[#E8DFCF]/50 pt-5">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
                   {t('catalog.typeFilter')}
                 </div>
                 <div className="space-y-0.5">
@@ -465,14 +548,21 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                     const count = isAllOption ? typePool.length : (typeCounts[option] || 0);
                     const isActive = selectedType === option;
                     const isDisabled = !isActive && count === 0;
-                    const Icon = option === 'painting' ? Palette : BookOpen;
+                    const Icon = getTypeIcon(option);
 
                     return (
                       <button
                         key={option}
                         type="button"
                         disabled={isDisabled}
-                        onClick={() => setSelectedType(option)}
+                        onClick={() => {
+                          setSelectedType(option);
+                          setSelectedCategory(DEFAULT_FILTER_VALUE);
+                          if (!isAllOption) {
+                            const configuredType = ITEM_TYPES.find((itemType) => itemType.slug === option);
+                            if (configuredType) setSelectedGroup(configuredType.collectionGroup);
+                          }
+                        }}
                         className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
                           isActive
                             ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
@@ -685,7 +775,6 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3 items-stretch">
                 {filteredItems.map((item, index) => {
-                  const isPainting = item.typeValue === 'painting';
                   const primaryMeta = getPrimaryMeta(item);
                   const statusTone = getStatusTone(item.status);
 
@@ -723,7 +812,7 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                         {/* Top Micro-Header */}
                         <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-[#8E7035]">
                           <span>
-                            {isPainting ? t('catalog.paintings') : t('catalog.books')}
+                            {getLocalizedItemType(item.typeValue, language)}
                             <span className="mx-1.5 text-[#B8860B]/40">·</span>
                             {getLocalizedCentury(item.century, language)}
                           </span>
@@ -764,7 +853,6 @@ export default function CatalogPage({ items, onNavigateHome, onOpenItemDetail, o
                   const primaryMeta = getPrimaryMeta(item);
                   const secondaryMeta = getSecondaryMeta(item);
                   const statusTone = getStatusTone(item.status);
-                  const isPainting = item.typeValue === 'painting';
                   const mediaOnRight = index % 2 === 1;
 
                   return (

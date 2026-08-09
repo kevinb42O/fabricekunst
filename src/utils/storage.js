@@ -1,4 +1,5 @@
 import { INITIAL_CATALOG } from '../data/initialCatalog';
+import { getCategorySlug, getCollectionGroupForItem, normalizeCatalogItemTaxonomy } from '../data/catalogTaxonomy';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const CATALOG_KEY = 'atelier_rembrandt_catalog';
@@ -227,11 +228,14 @@ const mapDbItemToFrontend = (dbItem) => {
   const collationSpecs = dbItem.collation_specs || dbItem.collationSpecs || extPayload.collationSpecs || '';
   const comparableSales = dbItem.comparable_sales || dbItem.comparableSales || extPayload.comparableSales || [];
   const emptyFields = dbItem.emptyFields || dbItem.empty_fields || extPayload.emptyFields || extPayload.empty_fields || {};
+  const collectionGroup = dbItem.collection_group || dbItem.collectionGroup || extPayload.collectionGroup;
+  const attributes = dbItem.attributes || extPayload.attributes || {};
 
-  return {
+  const item = {
     ...dbItem,
     id: dbItem.id,
     itemType: dbItem.item_type || dbItem.itemType || 'book',
+    collectionGroup,
     ref: dbItem.ref || '',
     title: dbItem.title || '',
     subtitle: dbItem.subtitle || '',
@@ -240,7 +244,7 @@ const mapDbItemToFrontend = (dbItem) => {
     city: dbItem.city || '',
     year: dbItem.year || '',
     century: dbItem.century || '',
-    category: dbItem.category || '',
+    category: getCategorySlug(dbItem.category || ''),
     price: dbItem.price || '',
     status: dbItem.status || 'Beschikbaar',
     featured: Boolean(dbItem.featured),
@@ -254,6 +258,7 @@ const mapDbItemToFrontend = (dbItem) => {
     provenanceDetails,
     collationSpecs,
     comparableSales: Array.isArray(comparableSales) ? comparableSales : [],
+    attributes: attributes && typeof attributes === 'object' && !Array.isArray(attributes) ? attributes : {},
     emptyFields,
     empty_fields: emptyFields,
     images: cleanImages,
@@ -295,6 +300,8 @@ const mapDbItemToFrontend = (dbItem) => {
     collationSpecs_en: extPayload.collationSpecs_en || extractFieldValue(dbItem, 'collationSpecs', 'en'),
     collationSpecs_fr: extPayload.collationSpecs_fr || extractFieldValue(dbItem, 'collationSpecs', 'fr')
   };
+
+  return normalizeCatalogItemTaxonomy(item);
 };
 
 // Map frontend item object (camelCase) to database column names (snake_case)
@@ -333,6 +340,8 @@ const mapFrontendItemToDb = (item) => {
       publisher_fr: item.publisher_fr || '',
       city_en: item.city_en || '',
       city_fr: item.city_fr || '',
+      collectionGroup: getCollectionGroupForItem(item),
+      attributes: item.attributes || {},
       emptyFields: item.emptyFields || item.empty_fields || {}
     }
   });
@@ -340,6 +349,7 @@ const mapFrontendItemToDb = (item) => {
   return {
     id: item.id,
     item_type: item.itemType || item.item_type || 'book',
+    collection_group: getCollectionGroupForItem(item),
     ref: item.ref,
     title: item.title,
     subtitle: item.subtitle,
@@ -348,7 +358,7 @@ const mapFrontendItemToDb = (item) => {
     city: item.city,
     year: item.year,
     century: item.century,
-    category: item.category,
+    category: getCategorySlug(item.category),
     price: item.price,
     status: item.status,
     featured: Boolean(item.featured),
@@ -362,6 +372,7 @@ const mapFrontendItemToDb = (item) => {
     provenance_details: item.provenanceDetails || item.provenance_details || '',
     collation_specs: item.collationSpecs || item.collation_specs || '',
     comparable_sales: Array.isArray(item.comparableSales) ? item.comparableSales : [],
+    attributes: item.attributes || {},
     images: cleanImages,
     
     // Multi-Language Fields (EN & FR)
@@ -425,6 +436,8 @@ const mapFrontendItemToBasicDb = (item) => {
       publisher_fr: item.publisher_fr || '',
       city_en: item.city_en || '',
       city_fr: item.city_fr || '',
+      collectionGroup: getCollectionGroupForItem(item),
+      attributes: item.attributes || {},
       emptyFields: item.emptyFields || item.empty_fields || {}
     }
   });
@@ -440,7 +453,7 @@ const mapFrontendItemToBasicDb = (item) => {
     city: item.city,
     year: item.year,
     century: item.century,
-    category: item.category,
+    category: getCategorySlug(item.category),
     price: item.price,
     status: item.status,
     featured: Boolean(item.featured),
@@ -527,10 +540,10 @@ export const fetchCatalogAsync = async () => {
           const frontendItem = mapDbItemToFrontend(dbItem);
           const extData = extMap[dbItem.id];
           if (extData) {
-            return {
+            return normalizeCatalogItemTaxonomy({
               ...frontendItem,
               ...extData
-            };
+            });
           }
           return frontendItem;
         });

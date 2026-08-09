@@ -73,15 +73,15 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       certNo: "Certificaat Nr.",
       date: "Datum van uitgifte",
       itemTitle: "Titel / Omschrijving",
-      authorPublisher: "Auteur / Drukker / Uitgever",
+      authorPublisher: "Maker / Auteur / Atelier",
       period: "Datering / Eeuw",
-      bindingMedium: "Band / Medium",
+      bindingMedium: "Materiaal / Uitvoering",
       dimensions: "Formaat & Afmetingen",
       provenance: "Geverifieerde Herkomst (Provenance)",
       condition: "Staat & Inscripties",
       guaranteeHeader: "ECHTHEIDSGARANTIE",
       guaranteeText: "Ondergetekende, namens Atelier Rembrandt, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
-      expertTitle: "Expert Oude Boeken, Prenten & Kunst",
+      expertTitle: "Expert Boeken, Kunst & Historische Objecten",
       galleryLocation: "ATELIER REMBRANDT",
       verifyNotice: "Geregistreerd in het archief van Atelier Rembrandt onder de bovenstaande unieke referentie."
     },
@@ -92,15 +92,15 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       certNo: "N° de Certificat",
       date: "Date d'émission",
       itemTitle: "Titre / Description",
-      authorPublisher: "Auteur / Imprimeur / Éditeur",
+      authorPublisher: "Créateur / Auteur / Atelier",
       period: "Datation / Époque",
-      bindingMedium: "Reliure / Médium",
+      bindingMedium: "Matériau / Fabrication",
       dimensions: "Collation & Dimensions",
       provenance: "Provenance Historique Vérifiée",
       condition: "État & Particularités",
       guaranteeHeader: "GARANTIE D'AUTHENTICITÉ",
       guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
-      expertTitle: "Expert en Livres Rares, Gravures & Œuvres d'Art",
+      expertTitle: "Expert en Livres Rares, Art & Objets Historiques",
       galleryLocation: "ATELIER REMBRANDT",
       verifyNotice: "Ce certificat est immatriculé dans les archives de l'Atelier Rembrandt sous la référence unique ci-dessus."
     },
@@ -111,9 +111,9 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       certNo: "Certificate No.",
       date: "Date of Issue",
       itemTitle: "Title / Description",
-      authorPublisher: "Author / Publisher / Artist",
+      authorPublisher: "Maker / Author / Workshop",
       period: "Date / Period",
-      bindingMedium: "Binding / Medium",
+      bindingMedium: "Material / Construction",
       dimensions: "Collation & Dimensions",
       provenance: "Verified Provenance",
       condition: "Condition & Specs",
@@ -274,7 +274,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
             {items.length > 1 && (
               <div>
                 <label className="block text-xs font-semibold text-[#C5A059] uppercase tracking-wider mb-1.5">
-                  Selecteer Kunstwerk / Boek
+                  Selecteer Verzamelobject
                 </label>
                 <select
                   value={selectedItem.id}
@@ -396,7 +396,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               {/* Author & Publisher */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">Auteur / Kunstenaar</label>
+                  <label className="block text-[11px] text-stone-400 mb-1">Maker / Auteur / Kunstenaar</label>
                   <input
                     type="text"
                     value={customAuthor}
@@ -405,7 +405,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">Uitgever / Drukker</label>
+                  <label className="block text-[11px] text-stone-400 mb-1">Uitgever / Atelier / Traditie</label>
                   <input
                     type="text"
                     value={customPublisher}

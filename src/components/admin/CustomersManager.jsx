@@ -48,7 +48,7 @@ export default function CustomersManager({ inquiries = [] }) {
             <span>Klanten &amp; Verzamelaars Index</span>
           </h2>
           <p className="text-xs text-[#6E675E] mt-1 font-medium">
-            Overzicht van alle contacten en hun getoonde interesse in uw antiquarische boeken en kunst.
+            Overzicht van alle contacten en hun getoonde interesse in uw boeken, kunst en historische objecten.
           </p>
         </div>
 

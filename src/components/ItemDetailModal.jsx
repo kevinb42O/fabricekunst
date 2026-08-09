@@ -8,9 +8,11 @@ import ImageZoomModal from './ImageZoomModal';
 import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
+import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
 
 export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
   const { t, language } = useLanguage();
+  const detailLabels = getLocalizedItemDetailLabels(item?.itemType, language);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const [zoomModalData, setZoomModalData] = useState(null);
@@ -185,7 +187,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                   <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{getLocalizedCentury(item.century, language)}</span>
                 </div>
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8] col-span-2">
-                  <span className="text-[#666666] uppercase block text-[10px]">{item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}</span>
+                  <span className="text-[#666666] uppercase block text-[10px]">{detailLabels.binding}</span>
                   <span className="font-bold text-[#111111] font-serif text-xs leading-snug block mt-0.5">{getItemField(item, 'binding', language) || item.binding || "Origineel"}</span>
                 </div>
               </div>
@@ -271,12 +273,12 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 <div className="flex items-center space-x-2 text-[#B8860B]">
                   <Bookmark className="w-4 h-4" />
                   <h3 className="text-[#111111] font-serif font-bold text-lg">
-                    {item.itemType === 'painting' ? t('item_detail.canvasConditionReport') : t('item_detail.bindingConditionReport')}
+                    {detailLabels.physicalSection}
                   </h3>
                 </div>
                 <div className="text-sm text-[#333333] font-serif leading-relaxed border-t border-[#D8CEB8]/70 pt-3 space-y-3">
                   {getItemField(item, 'binding', language) && (
-                    <p><strong>{item.itemType === 'painting' ? t('item_detail.frameBinding') : t('item_detail.binding')}:</strong> {getItemField(item, 'binding', language)}</p>
+                    <p><strong>{detailLabels.binding}:</strong> {getItemField(item, 'binding', language)}</p>
                   )}
                   {getItemField(item, 'condition', language) && (
                     <p><strong>{t('item_detail.conservationState')}:</strong> {getItemField(item, 'condition', language)}</p>

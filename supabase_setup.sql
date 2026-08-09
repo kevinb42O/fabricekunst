@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.items (
     city TEXT,
     year TEXT,
     century TEXT,
+    collection_group TEXT NOT NULL DEFAULT 'books',
     category TEXT,
     price TEXT,
     status TEXT DEFAULT 'Beschikbaar',
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.items (
     condition_report TEXT,
     provenance_details TEXT,
     collation_specs TEXT,
+    attributes JSONB NOT NULL DEFAULT '{}'::jsonb,
     comparable_sales JSONB NOT NULL DEFAULT '[]'::jsonb,
     images JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -37,6 +39,47 @@ CREATE TABLE IF NOT EXISTS public.items (
 -- Add Comparable Sales to existing installations as well
 ALTER TABLE public.items
 ADD COLUMN IF NOT EXISTS comparable_sales JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE public.items
+ADD COLUMN IF NOT EXISTS collection_group TEXT NOT NULL DEFAULT 'books';
+
+ALTER TABLE public.items
+ADD COLUMN IF NOT EXISTS attributes JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+-- Canonical, language-independent category slugs for existing records.
+UPDATE public.items
+SET category = CASE category
+    WHEN 'Literatuur & Filosofie' THEN 'literature-philosophy'
+    WHEN 'Literatuur & Satire' THEN 'literature-satire'
+    WHEN 'Wetenschap & Illustraties' THEN 'science-illustrations'
+    WHEN 'Kartografie & Reizen' THEN 'cartography-travel'
+    WHEN 'Bijbels & Religie' THEN 'bibles-religion'
+    WHEN 'Klassieke Oudheid' THEN 'classical-antiquity'
+    WHEN 'Oude Meesters' THEN 'old-masters'
+    WHEN '19e-Eeuwse Schilderkunst' THEN '19th-century-painting'
+    WHEN 'Portretten & Miniaturen' THEN 'portraits-miniatures'
+    WHEN 'Stillevens & Landschappen' THEN 'still-lifes-landscapes'
+    WHEN 'Religieuze Kunst & Iconen' THEN 'religious-art-icons'
+    WHEN 'Grafiek & Tekeningen' THEN 'prints-drawings'
+    ELSE category
+END;
+
+UPDATE public.items
+SET collection_group = CASE
+    WHEN item_type = 'book' THEN 'books'
+    WHEN item_type = 'painting' THEN 'art'
+    WHEN item_type IN ('sword', 'historical-object') THEN 'historical-objects'
+    ELSE collection_group
+END;
+
+-- Reclassify recognisable Japanese swords that were previously entered as art.
+UPDATE public.items
+SET item_type = 'sword',
+    collection_group = 'historical-objects',
+    category = 'japanese-swords'
+WHERE lower(concat_ws(' ', title, subtitle, category, description))
+    ~ '(katana|nihonto|nihontō|wakizashi|tanto|tantō)'
+  AND item_type <> 'book';
 
 -- 2. Create Inquiries Table (Customer requests & bids)
 CREATE TABLE IF NOT EXISTS public.inquiries (
