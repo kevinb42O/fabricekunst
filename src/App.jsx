@@ -6,23 +6,25 @@ import Hero from './components/Hero';
 import TopstukkenShowcase from './components/TopstukkenShowcase';
 import AboutProvenance from './components/AboutProvenance';
 import FaqSection from './components/FaqSection';
-import CatalogPage from './components/CatalogPage';
-import HerkomstPage from './components/HerkomstPage';
-import ItemDetailPage from './components/ItemDetailPage';
-import PrivacyPage from './components/PrivacyPage';
-import TermsPage from './components/TermsPage';
 import Footer from './components/Footer';
-import InquiryModal from './components/InquiryModal';
 import MobileNavbar from './mobile/MobileNavbar';
 import MobileHero from './mobile/MobileHero';
 import MobileHomeSections from './mobile/MobileHomeSections';
 import MobileFooter from './mobile/MobileFooter';
-import MobileItemDetailPage from './mobile/MobileItemDetailPage';
 import { useResponsiveMode } from './hooks/useResponsiveMode';
 import { getItemSlug, itemMatchesRoute } from './utils/itemSlug';
+import { useLanguage } from './context/LanguageContext';
+import { applySeoToDocument, buildPageSeo, getPageKind } from './utils/seo';
 
 const AdminLoginModal = lazy(() => import('./components/admin/AdminLoginModal'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
+const CatalogPage = lazy(() => import('./components/CatalogPage'));
+const HerkomstPage = lazy(() => import('./components/HerkomstPage'));
+const ItemDetailPage = lazy(() => import('./components/ItemDetailPage'));
+const PrivacyPage = lazy(() => import('./components/PrivacyPage'));
+const TermsPage = lazy(() => import('./components/TermsPage'));
+const MobileItemDetailPage = lazy(() => import('./mobile/MobileItemDetailPage'));
+const InquiryModal = lazy(() => import('./components/InquiryModal'));
 
 import { 
   getCatalog, 
@@ -52,6 +54,7 @@ import {
 
 export default function App() {
   const { isMobile } = useResponsiveMode();
+  const { language } = useLanguage();
   const [catalog, setCatalog] = useState(getCatalog());
   const [inquiries, setInquiries] = useState([]);
   const [heroImage, setHeroImage] = useState(getHeroImage());
@@ -171,7 +174,7 @@ export default function App() {
           const el = document.getElementById('topstukken');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }, 150);
-      } else {
+      } else if (path === '/') {
         setCurrentPage('home');
         setSelectedDetailItemId(null);
         if (hash) {
@@ -179,6 +182,10 @@ export default function App() {
         } else {
           setActiveTab('home');
         }
+      } else {
+        setCurrentPage('not-found');
+        setActiveTab('home');
+        setSelectedDetailItemId(null);
       }
     };
 
@@ -423,46 +430,16 @@ export default function App() {
 
   useEffect(() => {
     const selectedItem = catalog.find((item) => itemMatchesRoute(item, selectedDetailItemId));
-    const metadata = {
-      home: {
-        title: 'Atelier Rembrandt — Antiquarische boeken, kunst & historische objecten',
-        description: 'Ontdek een zorgvuldig geselecteerde collectie antiquarische boeken, kunst en historische objecten.'
-      },
-      catalogus: {
-        title: 'Collectie — Atelier Rembrandt',
-        description: 'Bekijk de actuele selectie antiquarische boeken, kunst en historische objecten van Atelier Rembrandt.'
-      },
-      herkomst: {
-        title: 'Herkomst & onderzoek — Atelier Rembrandt',
-        description: 'Lees hoe Atelier Rembrandt objecten onderzoekt, documenteert en beschrijft.'
-      },
-      privacy: { title: 'Privacy — Atelier Rembrandt', description: 'Privacyverklaring van Atelier Rembrandt.' },
-      voorwaarden: { title: 'Voorwaarden — Atelier Rembrandt', description: 'Algemene voorwaarden van Atelier Rembrandt.' }
-    };
-    const pageMeta = currentPage === 'item-detail' && selectedItem
-      ? {
-          title: `${selectedItem.title} — Atelier Rembrandt`,
-          description: (selectedItem.description || selectedItem.subtitle || '').slice(0, 155)
-        }
-      : metadata[currentPage] || metadata.home;
-
-    document.title = pageMeta.title;
-    let description = document.querySelector('meta[name="description"]');
-    if (!description) {
-      description = document.createElement('meta');
-      description.setAttribute('name', 'description');
-      document.head.appendChild(description);
-    }
-    description.setAttribute('content', pageMeta.description);
-
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', `${window.location.origin}${window.location.pathname}`);
-  }, [catalog, currentPage, selectedDetailItemId]);
+    const page = getPageKind(window.location.pathname, currentPage);
+    const seo = buildPageSeo({
+      page,
+      item: selectedItem || null,
+      language,
+      pathname: window.location.pathname,
+      items: catalog
+    });
+    applySeoToDocument(seo);
+  }, [catalog, currentPage, language, selectedDetailItemId]);
 
   const refreshInquiries = async () => {
     const inqs = await fetchInquiriesAsync();
@@ -539,7 +516,7 @@ export default function App() {
 
       {/* Main Page Layout */}
       <main className="flex-grow">
-        
+        <Suspense fallback={<div className="min-h-[70vh] bg-[#FFFEFC]" aria-label="Pagina laden" />}>
         {currentPage === 'item-detail' ? (
           /* Dedicated High-End Museum Item Detail Page (/collectie/:id) */
           isMobile ? (
@@ -598,6 +575,21 @@ export default function App() {
             onNavigateHome={() => handleNavigate('home')}
             onRequestConsultation={() => handleOpenConsultation(null)}
           />
+        ) : currentPage === 'not-found' ? (
+          <section className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 pt-28 text-center">
+            <p className="mb-3 font-mono text-xs uppercase tracking-[0.24em] text-[#8A6A25]">404</p>
+            <h1 className="font-serif text-4xl font-bold text-[#111111] sm:text-5xl">Pagina niet gevonden</h1>
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-[#666666]">
+              Deze pagina bestaat niet meer of het adres is niet correct.
+            </p>
+            <button
+              type="button"
+              onClick={() => handleNavigate('home')}
+              className="mt-8 rounded-sm bg-[#1C1A17] px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#B8860B]"
+            >
+              Terug naar home
+            </button>
+          </section>
         ) : (
           /* Pure Storytelling Homepage */
           <>
@@ -650,7 +642,7 @@ export default function App() {
             )}
           </>
         )}
-
+        </Suspense>
       </main>
 
       {/* Footer */}
@@ -665,13 +657,15 @@ export default function App() {
 
       {/* Inquiry Modal */}
       {inquiryModalOpen && (
-        <InquiryModal
-          item={inquiryTargetItem}
-          catalog={catalog}
-          initialRequestType={inquiryRequestType}
-          onClose={() => setInquiryModalOpen(false)}
-          onSuccess={refreshInquiries}
-        />
+        <Suspense fallback={null}>
+          <InquiryModal
+            item={inquiryTargetItem}
+            catalog={catalog}
+            initialRequestType={inquiryRequestType}
+            onClose={() => setInquiryModalOpen(false)}
+            onSuccess={refreshInquiries}
+          />
+        </Suspense>
       )}
 
     </div>

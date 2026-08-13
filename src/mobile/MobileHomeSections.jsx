@@ -3,6 +3,7 @@ import { ArrowRight, BookOpenCheck, ChevronDown, FileCheck2, ShieldCheck, Truck 
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_FAQ_ITEMS } from '../utils/storage';
 import { getItemField, getLocalizedCategory, getLocalizedPrice, getLocalizedStatus } from '../utils/translationService';
+import { getItemSlug } from '../utils/itemSlug';
 
 const COPY = {
   nl: {
@@ -90,10 +91,13 @@ export default function MobileHomeSections({
               const status = getLocalizedStatus(item.status, language);
               const isAvailable = String(item.status || '').toLowerCase() === 'beschikbaar';
               return (
-                <button
+                <a
                   key={item.id}
-                  type="button"
-                  onClick={() => onOpenItemDetail(item)}
+                  href={`/collectie/${getItemSlug(item)}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onOpenItemDetail(item);
+                  }}
                   className={`block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80 ${index === 0 ? 'min-[600px]:col-span-2' : ''}`}
                 >
                   <span className="block aspect-[4/3] w-full overflow-hidden bg-[#F1ECE3]">
@@ -129,19 +133,22 @@ export default function MobileHomeSections({
                       <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6D5A3A]">{status}</span>
                     )}
                   </span>
-                </button>
+                </a>
               );
             })}
           </div>
 
-          <button
-            type="button"
-            onClick={onOpenFullCatalog}
+          <a
+            href="/collectie"
+            onClick={(event) => {
+              event.preventDefault();
+              onOpenFullCatalog();
+            }}
             className="mt-10 flex min-h-12 w-full items-center justify-between bg-[#1C1A17] px-5 font-sans text-[11px] font-bold uppercase tracking-[0.14em] text-white active:bg-[#8E7035]"
           >
             <span>{labels.all}</span>
             <ArrowRight className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
-          </button>
+          </a>
         </div>
       </section>
 

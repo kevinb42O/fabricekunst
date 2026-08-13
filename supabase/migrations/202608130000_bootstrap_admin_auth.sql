@@ -13,11 +13,12 @@ begin
   from auth.users
   where lower(email) in (
     'admin@atelierrembrandt.com',
-    'admin@rareartbooks.com'
+    'admin@rareartbooks.com',
+    'kevin@webaanzee.be'
   );
 
-  if required_admin_count <> 2 then
-    raise exception 'Auth bootstrap stopped: both required administrator accounts must exist first.';
+  if required_admin_count <> 3 then
+    raise exception 'Auth bootstrap stopped: all three required administrator accounts must exist first.';
   end if;
 end
 $$;
@@ -46,14 +47,19 @@ select
   case lower(email)
     when 'admin@atelierrembrandt.com' then 'Atelier Rembrandt Admin'
     when 'admin@rareartbooks.com' then 'Fabrice Goffin'
+    when 'kevin@webaanzee.be' then 'Kevin'
   end,
-  'admin',
+  case lower(email)
+    when 'kevin@webaanzee.be' then 'developer'
+    else 'admin'
+  end,
   true,
   now()
 from auth.users
 where lower(email) in (
   'admin@atelierrembrandt.com',
-  'admin@rareartbooks.com'
+  'admin@rareartbooks.com',
+  'kevin@webaanzee.be'
 )
 on conflict (user_id) do update set
   email = excluded.email,

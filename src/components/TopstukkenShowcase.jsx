@@ -6,6 +6,7 @@ import { getItemField, getLocalizedCategory, getLocalizedPrice } from '../utils/
 import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
+import { getItemSlug } from '../utils/itemSlug';
 
 export default function TopstukkenShowcase({ 
   items = [], 
@@ -121,7 +122,16 @@ export default function TopstukkenShowcase({
                   style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkTitleTransitionName(spotlightItem.id) : 'none' }}
                   className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
                 >
-                  {getItemField(spotlightItem, 'title', language)}
+                  <a
+                    href={`/collectie/${getItemSlug(spotlightItem)}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onOpenItemDetail(spotlightItem);
+                    }}
+                  >
+                    {getItemField(spotlightItem, 'title', language)}
+                  </a>
                 </h3>
 
                 {spotlightItem.author && (
@@ -235,7 +245,16 @@ export default function TopstukkenShowcase({
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
                         className="display-editorial-card-wide text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
                       >
-                        {itemTitle}
+                        <a
+                          href={`/collectie/${getItemSlug(item)}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            onOpenItemDetail(item);
+                          }}
+                        >
+                          {itemTitle}
+                        </a>
                       </h3>
 
                       {item.author && (

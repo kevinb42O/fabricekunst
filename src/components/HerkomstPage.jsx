@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Feather } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PROVENANCE_DATA } from '../utils/storage';
+import FaqSection from './FaqSection';
 
 const getLocalizedField = (obj, field, lang = 'nl') => {
   if (!obj) return '';
@@ -14,51 +15,35 @@ const getLocalizedField = (obj, field, lang = 'nl') => {
   return obj[field] || '';
 };
 
-const RESEARCH_COPY = {
-  nl: {
-    badge: 'Herkomst & onderzoek',
-    title1: 'Onderzoek & documentatie',
-    title2: '',
-    subtitle: 'We beschrijven per object welke materiële kenmerken, eigendomssporen en bronnen aan de catalogisering ten grondslag liggen.',
-    storyTitle: 'Eigendomssporen als bewijsstuk',
-    storyNarrative: 'Ex-libris, inscripties, etiketten en marginalia worden afzonderlijk vastgelegd. We presenteren alleen de herkomststappen die door het beschikbare materiaal of een bron worden ondersteund.',
-    bullets: ['Fysieke eigendomssporen vastgelegd', 'Bronnen en onzekerheden onderscheiden'],
-    steps: [
-      ['Objectgericht onderzoek', 'Inspectie van materiaal, constructie, techniek en conditie, afgestemd op het type object.'],
-      ['Eigendomssporen', 'Registratie van ex-libris, inscripties, etiketten en andere fysieke aanwijzingen.'],
-      ['Bronvergelijking', 'Vergelijking met relevante bibliografie, catalogi, archieven en andere beschikbare bronnen.'],
-      ['Dossier & begrenzing', 'Heldere scheiding tussen waarneming, bron, interpretatie en eventuele onzekerheid.']
-    ]
-  },
-  en: {
-    badge: 'Provenance & research', title1: 'Research & documentation', title2: '',
-    subtitle: 'For each object, we describe the material features, ownership marks and sources underlying its cataloguing.',
-    storyTitle: 'Ownership marks as evidence',
-    storyNarrative: 'Bookplates, inscriptions, labels and marginalia are recorded separately. We present only those provenance steps supported by the available material or a source.',
-    bullets: ['Physical ownership marks recorded', 'Sources and uncertainties distinguished'],
-    steps: [['Object-specific examination','Inspection of material, construction, technique and condition, tailored to the object type.'],['Ownership marks','Recording bookplates, inscriptions, labels and other physical evidence.'],['Source comparison','Comparison with relevant bibliography, catalogues, archives and other available sources.'],['File & limitations','A clear distinction between observation, source, interpretation and any uncertainty.']]
-  },
-  fr: {
-    badge: 'Provenance & recherche', title1: 'Recherche & documentation', title2: '',
-    subtitle: 'Pour chaque objet, nous décrivons les caractéristiques matérielles, les marques de propriété et les sources qui fondent son catalogage.',
-    storyTitle: 'Les marques de propriété comme preuves',
-    storyNarrative: 'Ex-libris, inscriptions, étiquettes et marginalia sont relevés séparément. Nous ne présentons que les étapes de provenance étayées par le matériau disponible ou par une source.',
-    bullets: ['Marques physiques de propriété relevées', 'Sources et incertitudes distinguées'],
-    steps: [['Examen adapté à l’objet','Inspection du matériau, de la construction, de la technique et de l’état selon le type d’objet.'],['Marques de propriété','Relevé des ex-libris, inscriptions, étiquettes et autres indices matériels.'],['Comparaison des sources','Comparaison avec la bibliographie, les catalogues, les archives et les autres sources disponibles.'],['Dossier & limites','Distinction claire entre observation, source, interprétation et éventuelle incertitude.']]
-  }
+const getLocalizedArray = (obj, field, lang = 'nl') => {
+  if (!obj) return [];
+  if (lang === 'nl') return obj[field] || [];
+  const localized = obj[`${field}_${lang}`];
+  if (Array.isArray(localized)) return localized;
+  return obj[field] || [];
 };
 
-export default function HerkomstPage({ provenanceData, onRequestConsultation }) {
+const splitEditorialTitle = (title = '') => {
+  const separatorIndex = title.indexOf('&');
+  if (separatorIndex <= 0) {
+    return { primary: title, secondary: '' };
+  }
+  return {
+    primary: title.slice(0, separatorIndex).trim(),
+    secondary: `& ${title.slice(separatorIndex + 1).trim()}`
+  };
+};
+
+export default function HerkomstPage({ provenanceData, faqItems = [], onRequestConsultation }) {
   const { language } = useLanguage();
   const heroRef = useRef(null);
 
   const data = provenanceData || DEFAULT_PROVENANCE_DATA;
-  const researchCopy = RESEARCH_COPY[language] || RESEARCH_COPY.en;
   const hero = data.hero || DEFAULT_PROVENANCE_DATA.hero;
   const protocol = data.protocol || DEFAULT_PROVENANCE_DATA.protocol;
   const story = data.story || DEFAULT_PROVENANCE_DATA.story;
   const cta = data.cta || DEFAULT_PROVENANCE_DATA.cta;
-  const verificationSteps = researchCopy.steps.map(([title, description], index) => ({ step: `0${index + 1}`, title, description }));
+  const verificationSteps = protocol.steps || DEFAULT_PROVENANCE_DATA.protocol.steps;
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -84,25 +69,22 @@ export default function HerkomstPage({ provenanceData, onRequestConsultation }) 
     }
   };
 
-  const heroBadge = researchCopy.badge;
-  const heroTitle = researchCopy.title1;
-  const heroTitle1 = researchCopy.title1;
-  const heroTitle2 = researchCopy.title2;
-  const heroSubtitle = researchCopy.subtitle;
+  const heroBadge = getLocalizedField(hero, 'badge', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.hero, 'badge', language);
+  const heroTitle = getLocalizedField(hero, 'title', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.hero, 'title', language);
+  const { primary: heroTitle1, secondary: heroTitle2 } = splitEditorialTitle(heroTitle);
+  const heroSubtitle = getLocalizedField(hero, 'subtitle', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.hero, 'subtitle', language);
 
-  const protocolBadge = language === 'fr' ? 'Recherche & documentation' : language === 'en' ? 'Research & documentation' : 'Onderzoek & documentatie';
-  const protocolTitle = language === 'fr' ? 'Notre méthode, étape par étape' : language === 'en' ? 'Our method, step by step' : 'Onze werkwijze, stap voor stap';
-  const protocolSubtitle = language === 'fr'
-    ? 'Chaque objet est examiné selon sa catégorie. Nous distinguons les observations, les sources et les interprétations.'
-    : language === 'en'
-      ? 'Each object is examined according to its category. We distinguish observations, sources and interpretations.'
-      : 'Elk object wordt volgens zijn categorie onderzocht. Daarbij onderscheiden we observaties, bronnen en interpretaties.';
+  const protocolBadge = getLocalizedField(protocol, 'badge', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.protocol, 'badge', language);
+  const protocolTitle = getLocalizedField(protocol, 'title', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.protocol, 'title', language);
+  const protocolSubtitle = getLocalizedField(protocol, 'subtitle', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.protocol, 'subtitle', language);
 
   const storyBadge = getLocalizedField(story, 'badge', language) || "Ex-Libris & Eigendomssporen";
-  const storyTitle = researchCopy.storyTitle;
-  const storyNarrative = researchCopy.storyNarrative;
+  const storyTitle = getLocalizedField(story, 'title', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.story, 'title', language);
+  const storyQuote = getLocalizedField(story, 'quote', language);
+  const storyQuoteAuthor = getLocalizedField(story, 'quoteAuthor', language) || 'Atelier Rembrandt';
+  const storyNarrative = getLocalizedField(story, 'narrative', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.story, 'narrative', language);
   const storyImageCaption = getLocalizedField(story, 'imageCaption', language) || "Ex-Libris Vacheron-Poinsot op handgemaakt gemarmerd schutblad (1829).";
-  const storyBullets = researchCopy.bullets;
+  const storyBullets = getLocalizedArray(story, 'bullets', language);
 
   const ctaBadge = getLocalizedField(cta, 'badge', language) || "Particuliere Expertise & Consultatie";
   const ctaTitle = getLocalizedField(cta, 'title', language) || "Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?";
@@ -340,6 +322,18 @@ export default function HerkomstPage({ provenanceData, onRequestConsultation }) 
                     {storyNarrative}
                   </p>
 
+                  {storyQuote && (
+                    <blockquote className="border-l border-[#9A7938] pl-5">
+                      <Feather className="mb-3 h-4 w-4 text-[#9A7938]" aria-hidden="true" />
+                      <p className="font-serif text-base italic leading-7 text-[#29231D]">
+                        “{storyQuote}”
+                      </p>
+                      <cite className="mt-3 block font-serif text-[11px] not-italic uppercase tracking-[0.16em] text-[#795B16]">
+                        {storyQuoteAuthor}
+                      </cite>
+                    </blockquote>
+                  )}
+
                   {Array.isArray(storyBullets) && storyBullets.length > 0 && (
                     <div className="pt-2 flex flex-col space-y-3 text-xs font-mono text-[#333333]">
                       {storyBullets.map((bullet, idx) => (
@@ -389,6 +383,8 @@ export default function HerkomstPage({ provenanceData, onRequestConsultation }) 
 
             </div>
           </section>
+
+          <FaqSection items={faqItems} onRequestConsultation={onRequestConsultation} />
 
         </div>
       </div>

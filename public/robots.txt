@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /admin/
 
 # AI Search & LLM Crawlers
 User-agent: GPTBot
@@ -18,6 +19,6 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-# Sitemap & LLM Knowledge Specification
+# Discovery files
 Sitemap: https://www.atelierrembrandt.com/sitemap.xml
-# LLM Knowledge: https://www.atelierrembrandt.com/llms.txt
+# LLM knowledge: https://www.atelierrembrandt.com/llms.txt

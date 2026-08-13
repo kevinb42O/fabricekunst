@@ -1,0 +1,326 @@
+import { getItemSlug } from './itemSlug.js';
+
+export const SITE_URL = 'https://www.atelierrembrandt.com';
+export const SITE_NAME = 'Atelier Rembrandt';
+export const DEFAULT_SHARE_IMAGE = `${SITE_URL}/images/provenience-light-cream-hero.jpg`;
+
+const PAGE_COPY = {
+  nl: {
+    home: {
+      title: 'Atelier Rembrandt — Antiquarische boeken & kunst',
+      description: 'Ontdek zeldzame antiquarische boeken, prenten en historische kunstobjecten, zorgvuldig geselecteerd en gedocumenteerd op herkomst.'
+    },
+    catalogus: {
+      title: 'Collectie antiquarische boeken & kunst — Atelier Rembrandt',
+      description: 'Bekijk de actuele collectie zeldzame boeken, prenten, schilderijen en historische objecten van Atelier Rembrandt.'
+    },
+    topstukken: {
+      title: 'Topstukken — Atelier Rembrandt',
+      description: 'Ontdek de topstukken uit de collectie van Atelier Rembrandt: uitzonderlijke boeken en kunstobjecten met gedocumenteerde herkomst.'
+    },
+    herkomst: {
+      title: 'Herkomstonderzoek & provenance — Atelier Rembrandt',
+      description: 'Lees hoe Atelier Rembrandt de herkomst, authenticiteit en historische context van ieder boek en kunstobject onderzoekt.'
+    },
+    privacy: {
+      title: 'Privacyverklaring — Atelier Rembrandt',
+      description: 'Lees hoe Atelier Rembrandt persoonsgegevens verwerkt en beschermt.'
+    },
+    voorwaarden: {
+      title: 'Algemene voorwaarden — Atelier Rembrandt',
+      description: 'Lees de algemene voorwaarden van Atelier Rembrandt.'
+    },
+    notFound: {
+      title: 'Pagina niet gevonden — Atelier Rembrandt',
+      description: 'Deze pagina of dit object kon niet worden gevonden.'
+    }
+  },
+  en: {
+    home: {
+      title: 'Atelier Rembrandt — Rare books & works of art',
+      description: 'Discover rare antiquarian books, prints and historic works of art, carefully selected and documented for provenance.'
+    },
+    catalogus: {
+      title: 'Rare books & art collection — Atelier Rembrandt',
+      description: 'Explore the current collection of rare books, prints, paintings and historic objects at Atelier Rembrandt.'
+    },
+    topstukken: {
+      title: 'Highlights — Atelier Rembrandt',
+      description: 'Discover outstanding rare books and works of art from the Atelier Rembrandt collection, each with documented provenance.'
+    },
+    herkomst: {
+      title: 'Provenance research — Atelier Rembrandt',
+      description: 'Learn how Atelier Rembrandt researches the provenance, authenticity and historical context of every book and work of art.'
+    },
+    privacy: {
+      title: 'Privacy notice — Atelier Rembrandt',
+      description: 'Learn how Atelier Rembrandt processes and protects personal information.'
+    },
+    voorwaarden: {
+      title: 'Terms and conditions — Atelier Rembrandt',
+      description: 'Read the terms and conditions of Atelier Rembrandt.'
+    },
+    notFound: {
+      title: 'Page not found — Atelier Rembrandt',
+      description: 'This page or object could not be found.'
+    }
+  },
+  fr: {
+    home: {
+      title: 'Atelier Rembrandt — Livres rares & œuvres d’art',
+      description: 'Découvrez des livres anciens, estampes et œuvres d’art historiques, sélectionnés avec soin et documentés par leur provenance.'
+    },
+    catalogus: {
+      title: 'Collection de livres rares & d’art — Atelier Rembrandt',
+      description: 'Parcourez la collection actuelle de livres rares, estampes, tableaux et objets historiques de l’Atelier Rembrandt.'
+    },
+    topstukken: {
+      title: 'Chefs-d’œuvre — Atelier Rembrandt',
+      description: 'Découvrez les pièces majeures de la collection Atelier Rembrandt, des livres rares et œuvres d’art à la provenance documentée.'
+    },
+    herkomst: {
+      title: 'Recherche de provenance — Atelier Rembrandt',
+      description: 'Découvrez comment Atelier Rembrandt étudie la provenance, l’authenticité et le contexte historique de chaque objet.'
+    },
+    privacy: {
+      title: 'Confidentialité — Atelier Rembrandt',
+      description: 'Découvrez comment Atelier Rembrandt traite et protège les données personnelles.'
+    },
+    voorwaarden: {
+      title: 'Conditions générales — Atelier Rembrandt',
+      description: 'Consultez les conditions générales de l’Atelier Rembrandt.'
+    },
+    notFound: {
+      title: 'Page introuvable — Atelier Rembrandt',
+      description: 'Cette page ou cet objet est introuvable.'
+    }
+  }
+};
+
+const LANGUAGE_TAGS = { nl: 'nl-BE', en: 'en', fr: 'fr' };
+
+function localizedField(item, field, language) {
+  if (!item) return '';
+  if (language !== 'nl' && item[`${field}_${language}`]) return item[`${field}_${language}`];
+  return item[field] || item[`${field}_en`] || item[`${field}_fr`] || '';
+}
+
+function cleanText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function truncate(value, maxLength) {
+  const text = cleanText(value);
+  if (text.length <= maxLength) return text;
+  const shortened = text.slice(0, maxLength + 1).replace(/\s+\S*$/, '').replace(/[\s,;:.-]+$/, '');
+  return `${shortened || text.slice(0, maxLength).trim()}…`;
+}
+
+function absoluteUrl(value) {
+  if (!value) return '';
+  try {
+    return new URL(value, SITE_URL).href;
+  } catch {
+    return '';
+  }
+}
+
+function normalizePath(pathname) {
+  const path = String(pathname || '/').split('?')[0].split('#')[0];
+  if (path === '/') return '/';
+  return `/${path.replace(/^\/+|\/+$/g, '')}`;
+}
+
+function parsePrice(value) {
+  const raw = cleanText(value);
+  if (!raw || !/[0-9]/.test(raw)) return null;
+  const numeric = raw
+    .replace(/[^0-9,.-]/g, '')
+    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.');
+  const price = Number.parseFloat(numeric);
+  return Number.isFinite(price) && price > 0 ? price : null;
+}
+
+function availabilityFor(status) {
+  const value = cleanText(status).toLowerCase();
+  if (/verkocht|sold|vendu/.test(value)) return 'https://schema.org/SoldOut';
+  if (/gereserveerd|reserved|réservé/.test(value)) return 'https://schema.org/LimitedAvailability';
+  if (/niet beschikbaar|unavailable|indisponible/.test(value)) return 'https://schema.org/OutOfStock';
+  return 'https://schema.org/InStock';
+}
+
+export function getPageKind(pathname, currentPage = 'home') {
+  const path = normalizePath(pathname).toLowerCase();
+  if (path === '/topstukken') return 'topstukken';
+  if (currentPage === 'item-detail') return 'item';
+  if (currentPage === 'not-found') return 'notFound';
+  return currentPage;
+}
+
+export function buildPageSeo({ page = 'home', item = null, language = 'nl', pathname = '/', items = [] } = {}) {
+  const lang = PAGE_COPY[language] ? language : 'nl';
+  const copy = PAGE_COPY[lang];
+  const pageKind = page === 'item' && !item ? 'notFound' : (page === 'item' ? 'item' : (copy[page] ? page : 'home'));
+  const itemTitle = localizedField(item, 'title', lang);
+  const itemDescription = localizedField(item, 'description', lang) || localizedField(item, 'subtitle', lang);
+  const itemImage = absoluteUrl(item?.images?.find((image) => image?.url)?.url);
+  const canonicalPath = pageKind === 'item' && item
+    ? `/collectie/${getItemSlug(item)}`
+    : normalizePath(pathname);
+  const canonical = `${SITE_URL}${canonicalPath === '/' ? '/' : canonicalPath}`;
+
+  const title = pageKind === 'item' && itemTitle
+    ? truncate(`${itemTitle} — ${SITE_NAME}`, 72)
+    : copy[pageKind]?.title || copy.home.title;
+  const description = pageKind === 'item'
+    ? truncate(itemDescription || `${itemTitle} uit de collectie van ${SITE_NAME}.`, 158)
+    : copy[pageKind]?.description || copy.home.description;
+
+  return {
+    title,
+    description,
+    canonical,
+    image: itemImage || DEFAULT_SHARE_IMAGE,
+    imageAlt: pageKind === 'item' ? itemTitle : title,
+    type: pageKind === 'item' ? 'product' : 'website',
+    language: lang,
+    locale: LANGUAGE_TAGS[lang],
+    robots: pageKind === 'notFound'
+      ? 'noindex, nofollow'
+      : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    structuredData: buildStructuredData({ page: pageKind, item, language: lang, canonical, items })
+  };
+}
+
+export function buildStructuredData({ page, item, language = 'nl', canonical, items = [] }) {
+  const inLanguage = LANGUAGE_TAGS[language] || LANGUAGE_TAGS.nl;
+  const graph = [
+    {
+      '@type': 'WebPage',
+      '@id': `${canonical}#webpage`,
+      url: canonical,
+      name: page === 'item' && item ? localizedField(item, 'title', language) : PAGE_COPY[language]?.[page]?.title,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      about: { '@id': `${SITE_URL}/#organization` },
+      inLanguage
+    }
+  ];
+
+  if (page !== 'home' && page !== 'notFound') {
+    const labels = language === 'fr'
+      ? { home: 'Accueil', collection: 'Collection' }
+      : language === 'en'
+        ? { home: 'Home', collection: 'Collection' }
+        : { home: 'Home', collection: 'Collectie' };
+    const breadcrumbItems = [
+      { '@type': 'ListItem', position: 1, name: labels.home, item: `${SITE_URL}/` }
+    ];
+    if (page === 'item') {
+      breadcrumbItems.push({ '@type': 'ListItem', position: 2, name: labels.collection, item: `${SITE_URL}/collectie` });
+      breadcrumbItems.push({ '@type': 'ListItem', position: 3, name: localizedField(item, 'title', language), item: canonical });
+    } else {
+      breadcrumbItems.push({ '@type': 'ListItem', position: 2, name: PAGE_COPY[language]?.[page]?.title || SITE_NAME, item: canonical });
+    }
+    graph.push({
+      '@type': 'BreadcrumbList',
+      '@id': `${canonical}#breadcrumb`,
+      itemListElement: breadcrumbItems
+    });
+  }
+
+  if (page === 'catalogus' && items.length) {
+    graph.push({
+      '@type': 'ItemList',
+      '@id': `${canonical}#collection`,
+      name: PAGE_COPY[language].catalogus.title,
+      numberOfItems: items.length,
+      itemListElement: items.map((catalogItem, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: localizedField(catalogItem, 'title', language),
+        url: `${SITE_URL}/collectie/${getItemSlug(catalogItem)}`
+      }))
+    });
+  }
+
+  if (page === 'item' && item) {
+    const price = parsePrice(item.price);
+    const images = (Array.isArray(item.images) ? item.images : [])
+      .filter((image) => image?.url && !image.__ext__)
+      .map((image) => absoluteUrl(image.url))
+      .filter(Boolean);
+    const product = {
+      '@type': 'Product',
+      '@id': `${canonical}#product`,
+      url: canonical,
+      name: localizedField(item, 'title', language),
+      description: truncate(localizedField(item, 'description', language) || localizedField(item, 'subtitle', language), 5000),
+      image: images,
+      sku: item.ref || item.id,
+      category: localizedField(item, 'category', language) || item.category,
+      itemCondition: 'https://schema.org/UsedCondition',
+      brand: { '@type': 'Brand', name: SITE_NAME },
+      seller: { '@id': `${SITE_URL}/#organization` }
+    };
+    if (price) {
+      product.offers = {
+        '@type': 'Offer',
+        url: canonical,
+        price,
+        priceCurrency: 'EUR',
+        availability: availabilityFor(item.status),
+        itemCondition: 'https://schema.org/UsedCondition',
+        seller: { '@id': `${SITE_URL}/#organization` }
+      };
+    }
+    graph.push(product);
+  }
+
+  return { '@context': 'https://schema.org', '@graph': graph };
+}
+
+function setMeta(selector, attribute, value, keyAttribute, keyValue) {
+  let element = document.head.querySelector(selector);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(keyAttribute, keyValue);
+    document.head.appendChild(element);
+  }
+  element.setAttribute(attribute, value);
+}
+
+export function applySeoToDocument(seo) {
+  document.title = seo.title;
+  document.documentElement.lang = seo.language === 'nl' ? 'nl-BE' : seo.language;
+  setMeta('meta[name="description"]', 'content', seo.description, 'name', 'description');
+  setMeta('meta[name="robots"]', 'content', seo.robots, 'name', 'robots');
+  setMeta('meta[property="og:title"]', 'content', seo.title, 'property', 'og:title');
+  setMeta('meta[property="og:description"]', 'content', seo.description, 'property', 'og:description');
+  setMeta('meta[property="og:type"]', 'content', seo.type, 'property', 'og:type');
+  setMeta('meta[property="og:url"]', 'content', seo.canonical, 'property', 'og:url');
+  setMeta('meta[property="og:image"]', 'content', seo.image, 'property', 'og:image');
+  setMeta('meta[property="og:image:alt"]', 'content', seo.imageAlt, 'property', 'og:image:alt');
+  setMeta('meta[property="og:locale"]', 'content', seo.locale.replace('-', '_'), 'property', 'og:locale');
+  setMeta('meta[name="twitter:title"]', 'content', seo.title, 'name', 'twitter:title');
+  setMeta('meta[name="twitter:description"]', 'content', seo.description, 'name', 'twitter:description');
+  setMeta('meta[name="twitter:image"]', 'content', seo.image, 'name', 'twitter:image');
+  setMeta('meta[name="twitter:image:alt"]', 'content', seo.imageAlt, 'name', 'twitter:image:alt');
+
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.href = seo.canonical;
+
+  let structuredData = document.getElementById('page-structured-data');
+  if (!structuredData) {
+    structuredData = document.createElement('script');
+    structuredData.id = 'page-structured-data';
+    structuredData.type = 'application/ld+json';
+    document.head.appendChild(structuredData);
+  }
+  structuredData.textContent = JSON.stringify(seo.structuredData);
+}

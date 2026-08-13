@@ -28,6 +28,7 @@ import {
 } from '../utils/translationService';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
+import { getItemSlug } from '../utils/itemSlug';
 import MobileCatalogControls from '../mobile/MobileCatalogControls';
 
 const DEFAULT_FILTER_VALUE = 'Alle';
@@ -740,21 +741,17 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                   const statusTone = getStatusTone(item.status);
 
                   return (
-                    <motion.article
+                    <motion.a
                       key={item.id}
+                      href={`/collectie/${getItemSlug(item)}`}
                       initial={{ opacity: 0, y: 18 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.24) }}
                       className="group flex flex-col h-full cursor-pointer"
-                      onClick={() => onOpenItemDetail(item)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          onOpenItemDetail(item);
-                        }
+                      onClick={(event) => {
+                        event.preventDefault();
+                        onOpenItemDetail(item);
                       }}
-                      role="link"
-                      tabIndex={0}
                       aria-label={getItemField(item, 'title', language)}
                     >
                       {/* Image Frame */}
@@ -819,7 +816,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
 
                         </div>
                       </div>
-                    </motion.article>
+                    </motion.a>
                   );
                 })}
               </div>
@@ -842,9 +839,12 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                     >
                       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 lg:items-center">
                         <div className={`lg:col-span-5 ${mediaOnRight ? 'lg:order-2' : ''}`}>
-                          <button
-                            type="button"
-                            onClick={() => onOpenItemDetail(item)}
+                          <a
+                            href={`/collectie/${getItemSlug(item)}`}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              onOpenItemDetail(item);
+                            }}
                             className="block w-full overflow-hidden bg-[#F1ECE3] text-left group"
                           >
                             <div className="aspect-[4/3] overflow-hidden relative">
@@ -860,7 +860,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                               />
                             </div>
-                          </button>
+                          </a>
                         </div>
 
                         <div className={`lg:col-span-7 ${mediaOnRight ? 'lg:order-1' : ''}`}>
@@ -872,12 +872,19 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             <span>{getLocalizedCategory(item.category, language)}</span>
                           </div>
 
-                          <h2 
-                            onClick={() => onOpenItemDetail(item)}
+                          <h2
                             style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
-                            className="display-editorial-card-wide mt-3 text-2xl font-serif font-bold leading-[1.18] text-[#111111] transition-colors duration-300 hover:text-[#8E7035] cursor-pointer lg:text-3xl"
+                            className="display-editorial-card-wide mt-3 text-2xl font-serif font-bold leading-[1.18] text-[#111111] transition-colors duration-300 hover:text-[#8E7035] lg:text-3xl"
                           >
-                            {getItemField(item, 'title', language)}
+                            <a
+                              href={`/collectie/${getItemSlug(item)}`}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                onOpenItemDetail(item);
+                              }}
+                            >
+                              {getItemField(item, 'title', language)}
+                            </a>
                           </h2>
 
                           {primaryMeta && (
@@ -909,14 +916,17 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             </div>
 
                             <div className="flex items-center gap-x-6">
-                              <button
-                                type="button"
-                                onClick={() => onOpenItemDetail(item)}
+                              <a
+                                href={`/collectie/${getItemSlug(item)}`}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  onOpenItemDetail(item);
+                                }}
                                 className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:text-[#B8860B]"
                               >
                                 <span>{t('topstukken.viewDetails')}</span>
                                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-                              </button>
+                              </a>
                               {item.status !== 'Verkocht' && (
                                 <button
                                   type="button"

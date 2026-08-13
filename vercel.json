@@ -26,6 +26,18 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/catalogus",
+      "destination": "/collectie",
+      "permanent": true
+    },
+    {
+      "source": "/algemene-voorwaarden",
+      "destination": "/voorwaarden",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -40,7 +52,11 @@
       "destination": "/admin.html"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/collectie/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/item/:path*",
       "destination": "/index.html"
     }
   ]
