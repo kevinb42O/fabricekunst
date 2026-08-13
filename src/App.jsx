@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
+import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import TopstukkenShowcase from './components/TopstukkenShowcase';
@@ -654,6 +655,8 @@ export default function App() {
         </Suspense>
       )}
 
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
