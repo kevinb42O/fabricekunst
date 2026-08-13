@@ -59,6 +59,21 @@
       "permanent": true
     },
     {
+      "source": "/item/:path*",
+      "destination": "/collectie/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/en/item/:path*",
+      "destination": "/en/collectie/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/fr/item/:path*",
+      "destination": "/fr/collectie/:path*",
+      "permanent": true
+    },
+    {
       "source": "/nl",
       "destination": "/",
       "permanent": true
@@ -77,30 +92,6 @@
     {
       "source": "/llms.txt",
       "destination": "/api/llms"
-    },
-    {
-      "source": "/collectie/:path*",
-      "destination": "/"
-    },
-    {
-      "source": "/en/collectie/:path*",
-      "destination": "/"
-    },
-    {
-      "source": "/fr/collectie/:path*",
-      "destination": "/"
-    },
-    {
-      "source": "/item/:path*",
-      "destination": "/"
-    },
-    {
-      "source": "/en/item/:path*",
-      "destination": "/"
-    },
-    {
-      "source": "/fr/item/:path*",
-      "destination": "/"
     }
   ]
 }
