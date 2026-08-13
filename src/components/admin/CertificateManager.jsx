@@ -18,7 +18,9 @@ import {
   ArrowLeft,
   Award,
   BookOpen,
-  ChevronLeft
+  ChevronLeft,
+  Eye,
+  SlidersHorizontal
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -33,6 +35,7 @@ export default function CertificateManager({
 }) {
   const [selectedItem, setSelectedItem] = useState(initialItem || (items.length > 0 ? items[0] : null));
   const [lang, setLang] = useState('nl');
+  const [mobilePanel, setMobilePanel] = useState('details');
 
   const [certNumber, setCertNumber] = useState('');
   const [issuedTo, setIssuedTo] = useState('Particuliere Collectie');
@@ -224,12 +227,12 @@ export default function CertificateManager({
 
   return (
     /* Fixed full-viewport overlay — covers the sidebar completely */
-    <div className="fixed inset-0 z-[60] bg-[#F8F6F2] flex flex-col overflow-hidden print:static print:overflow-visible">
+    <div className="admin-certificate fixed inset-0 z-[60] bg-[#F8F6F2] flex flex-col overflow-hidden print:static print:overflow-visible" role="dialog" aria-modal="true" aria-label="Echtheidscertificaat maken">
 
       {/* ============================================================ */}
       {/* TOP HEADER BAR                                               */}
       {/* ============================================================ */}
-      <div className="flex-none bg-white border-b border-[#D8CEB8] shadow-sm px-6 py-3.5 flex items-center justify-between gap-4 print:hidden">
+      <div className="admin-certificate__header flex-none bg-white border-b border-[#D8CEB8] shadow-sm px-6 py-3.5 flex items-center justify-between gap-4 print:hidden">
         <div className="flex items-center space-x-4">
           <button
             onClick={onBackToItems}
@@ -245,14 +248,14 @@ export default function CertificateManager({
             <div className="p-2 rounded-xl bg-[#111111]">
               <Award className="w-4 h-4 text-[#C5A059]" />
             </div>
-            <h1 className="text-sm font-serif font-bold text-[#111111]">Echtheidscertificaat Genereren</h1>
+            <h1 className="text-sm font-serif font-bold text-[#111111]">Echtheidscertificaat</h1>
           </div>
         </div>
 
         <div className="flex items-center space-x-2.5">
           {/* Language */}
           <div className="flex items-center space-x-1 bg-[#F4F0E8] p-1 rounded-xl border border-[#D8CEB8]">
-            {[{ code: 'nl', label: '🇳🇱 NL' }, { code: 'fr', label: '🇫🇷 FR' }, { code: 'en', label: '🇬🇧 EN' }].map(l => (
+            {[{ code: 'nl', label: 'NL' }, { code: 'fr', label: 'FR' }, { code: 'en', label: 'EN' }].map(l => (
               <button
                 key={l.code}
                 onClick={() => setLang(l.code)}
@@ -284,12 +287,21 @@ export default function CertificateManager({
       {/* ============================================================ */}
       {/* BODY: LEFT FORM + RIGHT PREVIEW                              */}
       {/* ============================================================ */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="admin-certificate__mobile-switch print:hidden" aria-label="Mobiele certificaatweergave">
+        <button type="button" className={mobilePanel === 'details' ? 'is-active' : ''} onClick={() => setMobilePanel('details')}>
+          <SlidersHorizontal aria-hidden="true" /> Gegevens
+        </button>
+        <button type="button" className={mobilePanel === 'preview' ? 'is-active' : ''} onClick={() => setMobilePanel('preview')}>
+          <Eye aria-hidden="true" /> Voorbeeld
+        </button>
+      </div>
+
+      <div className="admin-certificate__body flex-1 flex overflow-hidden">
 
         {/* ---------------------------------------------------------- */}
         {/* LEFT: SPACIOUS EDITING FORM (Scrollable)                   */}
         {/* ---------------------------------------------------------- */}
-        <div className="w-[460px] flex-none bg-white border-r border-[#D8CEB8] overflow-y-auto p-7 space-y-7 print:hidden">
+        <div className={`admin-certificate__form ${mobilePanel === 'details' ? 'is-mobile-active' : ''} w-[460px] flex-none bg-white border-r border-[#D8CEB8] overflow-y-auto p-7 space-y-7 print:hidden`}>
           
           {/* Object Selector */}
           <div className="space-y-2">
@@ -427,11 +439,11 @@ export default function CertificateManager({
         {/* ---------------------------------------------------------- */}
         {/* RIGHT: LIVE CERTIFICATE PREVIEW (Full remaining width)     */}
         {/* ---------------------------------------------------------- */}
-        <div ref={previewContainerRef} className="flex-1 bg-[#1C1A18] overflow-y-auto flex flex-col items-center py-8 px-6 print:p-0 print:bg-white">
+        <div ref={previewContainerRef} className={`admin-certificate__preview ${mobilePanel === 'preview' ? 'is-mobile-active' : ''} flex-1 bg-[#1C1A18] overflow-y-auto flex flex-col items-center py-8 px-6 print:p-0 print:bg-white`}>
           
           <div className="w-full flex items-center justify-between mb-4 print:hidden">
             <span className="text-xs font-mono uppercase font-bold text-[#C5A059] tracking-wider">
-              LIVE CERTIFICAAT PREVIEW
+              Certificaatvoorbeeld
             </span>
             <span className="text-[11px] text-stone-400">
               A4 Portrait — schaal {Math.round(previewScale * 100)}%

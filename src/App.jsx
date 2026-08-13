@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Navbar from './components/Navbar';
@@ -13,8 +13,16 @@ import PrivacyPage from './components/PrivacyPage';
 import TermsPage from './components/TermsPage';
 import Footer from './components/Footer';
 import InquiryModal from './components/InquiryModal';
-import AdminLoginModal from './components/admin/AdminLoginModal';
-import AdminDashboard from './components/admin/AdminDashboard';
+import MobileNavbar from './mobile/MobileNavbar';
+import MobileHero from './mobile/MobileHero';
+import MobileHomeSections from './mobile/MobileHomeSections';
+import MobileFooter from './mobile/MobileFooter';
+import MobileItemDetailPage from './mobile/MobileItemDetailPage';
+import { useResponsiveMode } from './hooks/useResponsiveMode';
+import { getItemSlug, itemMatchesRoute } from './utils/itemSlug';
+
+const AdminLoginModal = lazy(() => import('./components/admin/AdminLoginModal'));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 
 import { 
   getCatalog, 
@@ -22,11 +30,15 @@ import {
   saveCatalogAsync,
   saveItemAsync,
   deleteItemAsync,
-  getInquiries, 
   fetchInquiriesAsync,
+  getCurrentAdminSessionAsync,
+  signOutAdminAsync,
   getHeroImage,
   fetchHeroImageAsync,
   saveHeroImageAsync,
+  getMobileHeroImage,
+  fetchMobileHeroImageAsync,
+  saveMobileHeroImageAsync,
   getHeroSlides,
   fetchHeroSlidesAsync,
   saveHeroSlidesAsync,
@@ -39,9 +51,11 @@ import {
 } from './utils/storage';
 
 export default function App() {
+  const { isMobile } = useResponsiveMode();
   const [catalog, setCatalog] = useState(getCatalog());
-  const [inquiries, setInquiries] = useState(getInquiries());
+  const [inquiries, setInquiries] = useState([]);
   const [heroImage, setHeroImage] = useState(getHeroImage());
+  const [mobileHeroImage, setMobileHeroImage] = useState(getMobileHeroImage());
   const [heroSlides, setHeroSlides] = useState(getHeroSlides());
   const [provenanceData, setProvenanceData] = useState(getProvenanceData());
   const [faqItems, setFaqItems] = useState(getFaqItems());
@@ -58,6 +72,11 @@ export default function App() {
   const handleSaveHeroImage = async (updatedImage) => {
     setHeroImage(updatedImage);
     await saveHeroImageAsync(updatedImage);
+  };
+
+  const handleSaveMobileHeroImage = async (updatedImage) => {
+    setMobileHeroImage(updatedImage);
+    await saveMobileHeroImageAsync(updatedImage);
   };
 
   const handleSaveHeroSlides = async (updatedSlides) => {
@@ -92,12 +111,12 @@ export default function App() {
       if (items && items.length > 0) setCatalog(items);
     });
 
-    fetchInquiriesAsync().then(inqs => {
-      if (inqs) setInquiries(inqs);
-    });
-
     fetchHeroImageAsync().then(img => {
       if (img) setHeroImage(img);
+    });
+
+    fetchMobileHeroImageAsync().then(img => {
+      if (img) setMobileHeroImage(img);
     });
 
     fetchHeroSlidesAsync().then(slides => {
@@ -172,33 +191,64 @@ export default function App() {
 
     checkRoutes();
 
+    let sessionCheckActive = true;
+    getCurrentAdminSessionAsync().then(async (result) => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      const isAdminRoute = path === '/admin' || hash === '#admin';
+      if (!sessionCheckActive || !isAdminRoute || !result.success) return;
+
+      setAdminUser(result.user);
+      setAdminLoggedIn(true);
+      setAdminLoginOpen(false);
+
+      const inqs = await fetchInquiriesAsync();
+      if (sessionCheckActive && inqs) setInquiries(inqs);
+    });
+
     window.addEventListener('popstate', checkRoutes);
     window.addEventListener('hashchange', checkRoutes);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
+      sessionCheckActive = false;
       window.removeEventListener('popstate', checkRoutes);
       window.removeEventListener('hashchange', checkRoutes);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
-  const handleOpenAdmin = () => {
-    setAdminLoginOpen(true);
+  const handleOpenAdmin = async () => {
     if (window.location.pathname !== '/admin') {
       window.history.pushState({}, '', '/admin');
     }
+
+    const result = await getCurrentAdminSessionAsync();
+    if (result.success) {
+      setAdminUser(result.user);
+      setAdminLoggedIn(true);
+      setAdminLoginOpen(false);
+      await refreshInquiries();
+      return;
+    }
+
+    setAdminLoginOpen(true);
   };
 
   const handleCloseAdmin = () => {
     setAdminLoginOpen(false);
     setAdminLoggedIn(false);
+    setAdminUser(null);
+    setInquiries([]);
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
       window.history.pushState({}, '', '/');
     }
   };
 
-  const handleLogoutAdmin = () => {
+  const handleLogoutAdmin = async () => {
+    await signOutAdminAsync();
     setAdminLoggedIn(false);
+    setAdminUser(null);
+    setInquiries([]);
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
       window.history.pushState({}, '', '/');
     }
@@ -233,7 +283,7 @@ export default function App() {
       () => setTransitionItemId(null),
       () => setTransitionItemId(null)
     );
-    const newPath = `/collectie/${item.id}`;
+    const newPath = `/collectie/${getItemSlug(item)}`;
     if (window.location.pathname !== newPath) {
       window.history.pushState({ page: 'item', id: item.id }, '', newPath);
     }
@@ -363,11 +413,56 @@ export default function App() {
 
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
   const [inquiryTargetItem, setInquiryTargetItem] = useState(null);
+  const [inquiryRequestType, setInquiryRequestType] = useState('general_query');
 
-  const handleOpenConsultation = (item = null) => {
+  const handleOpenConsultation = (item = null, requestType = item ? 'make_offer' : 'general_query') => {
     setInquiryTargetItem(item);
+    setInquiryRequestType(requestType);
     setInquiryModalOpen(true);
   };
+
+  useEffect(() => {
+    const selectedItem = catalog.find((item) => itemMatchesRoute(item, selectedDetailItemId));
+    const metadata = {
+      home: {
+        title: 'Atelier Rembrandt — Antiquarische boeken, kunst & historische objecten',
+        description: 'Ontdek een zorgvuldig geselecteerde collectie antiquarische boeken, kunst en historische objecten.'
+      },
+      catalogus: {
+        title: 'Collectie — Atelier Rembrandt',
+        description: 'Bekijk de actuele selectie antiquarische boeken, kunst en historische objecten van Atelier Rembrandt.'
+      },
+      herkomst: {
+        title: 'Herkomst & onderzoek — Atelier Rembrandt',
+        description: 'Lees hoe Atelier Rembrandt objecten onderzoekt, documenteert en beschrijft.'
+      },
+      privacy: { title: 'Privacy — Atelier Rembrandt', description: 'Privacyverklaring van Atelier Rembrandt.' },
+      voorwaarden: { title: 'Voorwaarden — Atelier Rembrandt', description: 'Algemene voorwaarden van Atelier Rembrandt.' }
+    };
+    const pageMeta = currentPage === 'item-detail' && selectedItem
+      ? {
+          title: `${selectedItem.title} — Atelier Rembrandt`,
+          description: (selectedItem.description || selectedItem.subtitle || '').slice(0, 155)
+        }
+      : metadata[currentPage] || metadata.home;
+
+    document.title = pageMeta.title;
+    let description = document.querySelector('meta[name="description"]');
+    if (!description) {
+      description = document.createElement('meta');
+      description.setAttribute('name', 'description');
+      document.head.appendChild(description);
+    }
+    description.setAttribute('content', pageMeta.description);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', `${window.location.origin}${window.location.pathname}`);
+  }, [catalog, currentPage, selectedDetailItemId]);
 
   const refreshInquiries = async () => {
     const inqs = await fetchInquiriesAsync();
@@ -381,11 +476,13 @@ export default function App() {
   // Dedicated Admin Screen Mode
   if (adminLoggedIn) {
     return (
-      <AdminDashboard
+      <Suspense fallback={<div className="min-h-screen bg-[#111111]" aria-label="Beheer laden" />}>
+        <AdminDashboard
         items={catalog}
         catalog={catalog}
         inquiries={inquiries}
         heroImage={heroImage}
+        mobileHeroImage={mobileHeroImage}
         heroSlides={heroSlides}
         provenanceData={provenanceData}
         faqItems={faqItems}
@@ -394,19 +491,22 @@ export default function App() {
         onDeleteItem={handleDeleteItem}
         onUpdateInquiries={handleUpdateInquiries}
         onSaveHeroImage={handleSaveHeroImage}
+        onSaveMobileHeroImage={handleSaveMobileHeroImage}
         onSaveHeroSlides={handleSaveHeroSlides}
         onSaveProvenance={handleSaveProvenance}
         onSaveFaqItems={handleSaveFaqItems}
         onLogout={handleLogoutAdmin}
         onCloseAdmin={handleCloseAdmin}
         onClose={handleCloseAdmin}
-      />
+        />
+      </Suspense>
     );
   }
 
   if (adminLoginOpen) {
     return (
-      <AdminLoginModal
+      <Suspense fallback={<div className="min-h-screen bg-[#111111]" aria-label="Aanmelden laden" />}>
+        <AdminLoginModal
         onClose={handleCloseAdmin}
         onLoginSuccess={(user) => {
           setAdminUser(user);
@@ -414,7 +514,8 @@ export default function App() {
           refreshInquiries();
           fetchCatalogAsync().then(items => { if (items) setCatalog(items); });
         }}
-      />
+        />
+      </Suspense>
     );
   }
 
@@ -422,31 +523,52 @@ export default function App() {
     <div className="min-h-screen bg-transparent text-[#111111] flex flex-col font-sans selection:bg-[#111111]/10 selection:text-[#111111]">
       
       {/* Navigation Header */}
-      <Navbar
-        onNavigate={handleNavigate}
-        activeTab={currentPage}
-        onRequestConsultation={() => handleOpenConsultation(null)}
-      />
+      {isMobile ? (
+        <MobileNavbar
+          onNavigate={handleNavigate}
+          activeTab={activeTab}
+          onRequestConsultation={() => handleOpenConsultation(null)}
+        />
+      ) : (
+        <Navbar
+          onNavigate={handleNavigate}
+          activeTab={currentPage}
+          onRequestConsultation={() => handleOpenConsultation(null)}
+        />
+      )}
 
       {/* Main Page Layout */}
       <main className="flex-grow">
         
         {currentPage === 'item-detail' ? (
           /* Dedicated High-End Museum Item Detail Page (/collectie/:id) */
-          <ItemDetailPage
-            item={
-              catalog.find(
-                i =>
-                  i.id === selectedDetailItemId ||
-                  i.id?.toLowerCase() === selectedDetailItemId?.toLowerCase() ||
-                  i.ref?.toLowerCase() === selectedDetailItemId?.toLowerCase()
-              ) || null
-            }
-            catalog={catalog}
-            onOpenItemDetail={handleOpenItemDetail}
-            onNavigateBack={() => handleNavigate('catalogus')}
-            onRequestInquiry={(item) => handleOpenConsultation(item)}
-          />
+          isMobile ? (
+            <MobileItemDetailPage
+              item={
+                catalog.find(
+                  i =>
+                  itemMatchesRoute(i, selectedDetailItemId)
+                ) || null
+              }
+              catalog={catalog}
+              onOpenItemDetail={handleOpenItemDetail}
+              onNavigateBack={() => handleNavigate('catalogus')}
+              onRequestInquiry={(item) => handleOpenConsultation(item)}
+            />
+          ) : (
+            <ItemDetailPage
+              item={
+                catalog.find(
+                  i =>
+                  itemMatchesRoute(i, selectedDetailItemId)
+                ) || null
+              }
+              catalog={catalog}
+              onOpenItemDetail={handleOpenItemDetail}
+              onNavigateBack={() => handleNavigate('catalogus')}
+              onRequestInquiry={(item) => handleOpenConsultation(item)}
+            />
+          )
         ) : currentPage === 'catalogus' ? (
           /* Dedicated Luxury Catalog Page (/collectie) */
           <CatalogPage
@@ -480,48 +602,73 @@ export default function App() {
           /* Pure Storytelling Homepage */
           <>
             {/* Full-Width Hero Entry */}
-            <Hero
-              heroImage={heroImage}
-              slides={heroSlides}
-              onExploreCatalog={() => handleNavigate('catalogus')}
-              onRequestConsultation={() => handleOpenConsultation(null)}
-            />
+            {isMobile ? (
+              <MobileHero
+                heroImage={heroImage}
+                mobileHeroImage={mobileHeroImage}
+                onExploreCatalog={() => handleNavigate('catalogus')}
+                onRequestConsultation={() => handleOpenConsultation(null)}
+              />
+            ) : (
+              <Hero
+                heroImage={heroImage}
+                slides={heroSlides}
+                onExploreCatalog={() => handleNavigate('catalogus')}
+                onRequestConsultation={() => handleOpenConsultation(null)}
+              />
+            )}
 
-            {/* Dynamic Recent Aanwinsten & Topstukken Showcase (CMS Controlled via 'featured' toggle) */}
-            <TopstukkenShowcase
-              items={catalog}
-              transitionItemId={transitionItemId}
-              onOpenFullCatalog={() => handleNavigate('catalogus')}
-              onOpenItemDetail={handleOpenItemDetail}
-              onRequestInquiry={(item) => handleOpenConsultation(item)}
-            />
+            {isMobile ? (
+              <MobileHomeSections
+                items={catalog}
+                faqItems={faqItems}
+                onOpenFullCatalog={() => handleNavigate('catalogus')}
+                onOpenItemDetail={handleOpenItemDetail}
+                onNavigateProvenance={() => handleNavigate('herkomst')}
+                onRequestConsultation={() => handleOpenConsultation(null)}
+              />
+            ) : (
+              <>
+                {/* Dynamic Recent Aanwinsten & Topstukken Showcase (CMS Controlled via 'featured' toggle) */}
+                <TopstukkenShowcase
+                  items={catalog}
+                  transitionItemId={transitionItemId}
+                  onOpenFullCatalog={() => handleNavigate('catalogus')}
+                  onOpenItemDetail={handleOpenItemDetail}
+                  onRequestInquiry={(item) => handleOpenConsultation(item)}
+                />
 
-            {/* Museum Herkomst & Provenance Showcase */}
-            <AboutProvenance
-              onRequestConsultation={() => handleOpenConsultation(null)}
-            />
+                {/* Museum Herkomst & Provenance Showcase */}
+                <AboutProvenance />
 
-            {/* Interactive Collector FAQ Section */}
-            <FaqSection
-              items={faqItems}
-              onRequestConsultation={() => handleOpenConsultation(null)}
-            />
+                {/* Interactive Collector FAQ Section */}
+                <FaqSection
+                  items={faqItems}
+                  onRequestConsultation={() => handleOpenConsultation(null)}
+                />
+              </>
+            )}
           </>
         )}
 
       </main>
 
       {/* Footer */}
-      <Footer
-        onNavigate={handleNavigate}
-        onRequestConsultation={() => handleOpenConsultation(null)}
-      />
+      {isMobile ? (
+        <MobileFooter onNavigate={handleNavigate} />
+      ) : (
+        <Footer
+          onNavigate={handleNavigate}
+          onRequestConsultation={() => handleOpenConsultation(null)}
+        />
+      )}
 
       {/* Inquiry Modal */}
       {inquiryModalOpen && (
         <InquiryModal
           item={inquiryTargetItem}
           catalog={catalog}
+          initialRequestType={inquiryRequestType}
           onClose={() => setInquiryModalOpen(false)}
           onSuccess={refreshInquiries}
         />

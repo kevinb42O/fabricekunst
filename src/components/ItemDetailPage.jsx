@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, ShieldCheck, Award, Maximize2, ChevronLeft, ChevronRight, 
-  Bookmark, History, BookOpen, Share2, CheckCircle2, PhoneCall,
+  Bookmark, History, BookOpen, Share2, PhoneCall,
   ArrowRight, FileText
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
@@ -100,17 +100,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             <span className="text-xs font-mono text-[#B8860B] font-bold uppercase tracking-wider">
               {getLocalizedCentury(item.century, language)}
             </span>
-            <span className="text-[#D8CEB8] font-mono text-xs hidden sm:inline">/</span>
-            <span className="text-xs font-mono text-[#666666] hidden sm:inline">
-              {item.ref}
-            </span>
           </div>
 
           {/* Action pills */}
           <div className="flex items-center space-x-3 text-xs font-mono">
-            <span className="px-3 py-1 rounded bg-[#1C1A17] text-white font-bold tracking-wider">
-              {item.ref}
-            </span>
             <button
               onClick={handleCopyLink}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white border border-[#D8CEB8] text-[#111111] hover:border-[#B8860B] hover:text-[#B8860B] transition-colors cursor-pointer text-[11px] min-h-[36px]"
@@ -128,6 +121,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       {/* MAIN TWO-COLUMN UNBOXED GALLERY & DOSSIER LAYOUT              */}
       {/* ------------------------------------------------------------- */}
       <div className="page-shell-detail">
+        <h1 className="sr-only">{getItemField(item, 'title', language)}</h1>
         
         <div className="detail-hero-grid grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
           
@@ -158,6 +152,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 {/* Click to Zoom indicator */}
                 <button
                   onClick={() => setZoomModalData({ images: item.images, initialIndex: selectedImageIndex, title: getItemField(item, 'title', language) })}
+                  aria-label={t('item_detail.zoomImage') || 'Vergroot afbeelding'}
                   className="absolute top-4 right-4 p-2.5 rounded-full bg-white/90 text-[#111111] hover:text-[#B8860B] border border-[#D8CEB8] transition-all shadow-sm opacity-80 group-hover:opacity-100 cursor-pointer"
                   title="Bekijk in hoge resolutie"
                 >
@@ -169,12 +164,14 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   <>
                     <button
                       onClick={handlePrevImage}
+                      aria-label={t('item_detail.previousImage') || 'Vorige afbeelding'}
                       className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 text-[#111111] hover:text-[#B8860B] border border-[#D8CEB8] transition-colors shadow-md cursor-pointer"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                       onClick={handleNextImage}
+                      aria-label={t('item_detail.nextImage') || 'Volgende afbeelding'}
                       className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 text-[#111111] hover:text-[#B8860B] border border-[#D8CEB8] transition-colors shadow-md cursor-pointer"
                     >
                       <ChevronRight className="w-5 h-5" />
@@ -192,6 +189,8 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                     <button
                       key={idx}
                       onClick={() => setSelectedImageIndex(idx)}
+                      aria-label={`${t('item_detail.image') || 'Afbeelding'} ${idx + 1}: ${img.caption || getItemField(item, 'title', language)}`}
+                      aria-current={selectedImageIndex === idx ? 'true' : undefined}
                       className={`relative w-18 h-14 sm:w-24 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden shrink-0 border transition-all cursor-pointer snap-start ${
                         selectedImageIndex === idx ? 'border-[#B8860B] ring-2 ring-[#B8860B]/30 opacity-100 shadow-sm' : 'border-[#D8CEB8] opacity-70 hover:opacity-100'
                       }`}
@@ -339,8 +338,8 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                     {getItemField(item, 'provenance', language) && (
                       <div className="border-l-2 border-[#B8860B] pl-4 py-1 space-y-1">
                         <span className="text-[11px] font-mono font-bold text-[#B8860B] uppercase block">{t('item_detail.verifiedProvenance')}</span>
-                        <p className="text-base font-serif italic text-[#111111] leading-relaxed">
-                          "{getItemField(item, 'provenance', language)}"
+                        <p className="text-base font-serif text-[#111111] leading-relaxed">
+                          {getItemField(item, 'provenance', language)}
                         </p>
                       </div>
                     )}
@@ -388,17 +387,12 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             
             {/* Header Titles */}
             <div className="detail-summary-heading space-y-3 border-b border-[#D8CEB8]/70 pb-6">
-              <div className="inline-flex items-center space-x-2 text-[#B8860B] text-xs font-bold uppercase tracking-[0.25em] font-mono">
-                <Award className="w-3.5 h-3.5" />
-                <span>{t('item_detail.topstukBadge')}</span>
-              </div>
-
-              <h1
+              <h2
                 style={{ viewTransitionName: getArtworkTitleTransitionName(item.id) }}
                 className="display-detail-wide text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
               >
                 {getItemField(item, 'title', language)}
-              </h1>
+              </h2>
 
               <div className="text-sm font-serif italic text-[#555555] space-y-1">
                 <p className="text-base font-bold text-[#111111] not-italic">
@@ -409,11 +403,6 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 </p>
               </div>
 
-              {(getItemField(item, 'subtitle', language) || item.subtitle) && (
-                <p className="text-xs font-serif text-[#666666] leading-relaxed border-l-2 border-[#B8860B] pl-3 italic pt-1">
-                  {getItemField(item, 'subtitle', language) || item.subtitle}
-                </p>
-              )}
             </div>
 
             {/* Price & Status Display */}
@@ -444,30 +433,15 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                 <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.century')}</span>
                 <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{getLocalizedCentury(item.century, language)}</span>
               </div>
-              <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs col-span-2">
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-[#666666] uppercase text-[10px]">
-                    {detailLabels.binding}
-                  </span>
-                  <span className="text-[10px] text-[#B8860B] font-bold">{item.ref}</span>
-                </div>
-                <span className="font-bold text-[#111111] font-serif text-xs leading-snug block">{getItemField(item, 'binding', language) || item.binding || "Origineel"}</span>
-              </div>
             </div>
 
             {/* Primary Action Consultation Block */}
-            <div className="detail-summary-action p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-[#1C1A17] text-[#FAF7F2] border-2 border-[#B8860B]/40 shadow-xl space-y-3 sm:space-y-4">
+            <div className="detail-summary-action border-y border-[#D8CEB8] py-5 sm:py-6 space-y-4">
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-[#B8860B] font-mono font-bold text-xs uppercase tracking-wider">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>{t('item_detail.directAvailable')}</span>
-                  </div>
-                </div>
-                <h3 className="text-xl font-serif font-bold text-white">
+                <h3 className="text-xl font-serif font-bold text-[#111111]">
                   {t('item_detail.addToCollection')}
                 </h3>
-                <p className="text-xs text-stone-300 font-serif leading-relaxed">
+                <p className="text-sm text-[#555555] font-serif leading-relaxed">
                   {t('item_detail.inquiryContactText')}
                 </p>
               </div>
@@ -475,48 +449,16 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               <button
                 onClick={() => onRequestInquiry(item)}
                 disabled={item.status === 'Verkocht'}
-                className={`w-full py-3.5 sm:py-4 rounded-lg sm:rounded-xl text-xs font-mono font-bold uppercase tracking-widest shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer min-h-[48px] ${
+                className={`w-full py-3.5 text-xs font-serif font-semibold uppercase tracking-[0.16em] transition-colors flex items-center justify-center space-x-2 cursor-pointer min-h-[48px] ${
                   item.status === 'Verkocht'
-                    ? 'bg-[#333333] text-stone-500 cursor-not-allowed border border-stone-600'
-                    : 'bg-[#B8860B] hover:bg-white text-[#111111] border border-[#B8860B]'
+                    ? 'bg-[#E8E3DA] text-[#777777] cursor-not-allowed border border-[#D8CEB8]'
+                    : 'bg-[#1C1A17] hover:bg-[#4A1521] text-white border border-[#1C1A17]'
                 }`}
               >
                 <PhoneCall className="w-4 h-4" />
                 <span>{item.status === 'Verkocht' ? t('item_detail.soldArchive') : t('item_detail.requestPurchaseBtn')}</span>
               </button>
 
-              <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 pt-2 border-t border-stone-800">
-                <div className="flex items-center space-x-1">
-                  <CheckCircle2 className="w-3 h-3 text-[#B8860B]" />
-                  <span>{t('item_detail.officialCert')}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <CheckCircle2 className="w-3 h-3 text-[#B8860B]" />
-                  <span>{t('item_detail.insuredCourier')}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Buyer Process Card: How Purchasing Works */}
-            <div className="detail-summary-process p-5 rounded-2xl bg-white border border-[#D8CEB8] space-y-3 shadow-xs">
-              <h4 className="text-xs font-mono font-bold text-[#111111] uppercase tracking-wider border-b border-[#D8CEB8]/60 pb-2">
-                {t('item_detail.howPurchaseWorks')}
-              </h4>
-              
-              <div className="space-y-2.5 text-xs font-serif text-[#444444]">
-                <div className="flex items-start space-x-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#B8860B] text-[#B8860B] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
-                  <p><strong className="text-[#111111]">{t('item_detail.step1Title')}</strong> {t('item_detail.step1Desc')}</p>
-                </div>
-                <div className="flex items-start space-x-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#B8860B] text-[#B8860B] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
-                  <p><strong className="text-[#111111]">{t('item_detail.step2Title')}</strong> {t('item_detail.step2Desc')}</p>
-                </div>
-                <div className="flex items-start space-x-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#B8860B] text-[#B8860B] font-mono text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
-                  <p><strong className="text-[#111111]">{t('item_detail.step3Title')}</strong> {t('item_detail.step3Desc')}</p>
-                </div>
-              </div>
             </div>
 
           </div>

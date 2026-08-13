@@ -28,7 +28,7 @@ const PROVENANCE_VISUALS = [
   }
 ];
 
-export default function AboutProvenance({ onRequestConsultation }) {
+export default function AboutProvenance() {
   const { t } = useLanguage();
   const [activeVisualIndex, setActiveVisualIndex] = useState(0);
 
@@ -150,13 +150,13 @@ export default function AboutProvenance({ onRequestConsultation }) {
 
             {/* Subtiele Haarlijn Knop */}
             <div className="pt-4">
-              <button
-                onClick={onRequestConsultation}
-                className="inline-flex items-center space-x-2 text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] border-b border-[#111111] pb-1 hover:opacity-60 transition-opacity duration-300 cursor-pointer"
+              <a
+                href="/herkomst"
+                className="inline-flex min-h-12 items-center justify-center space-x-2 border-b border-[#1C1A17] text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] hover:text-[#4A1521] transition-colors duration-300"
               >
-                <span>{t('provenance.btnHome')}</span>
+                <span>{t('nav.herkomst')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </a>
             </div>
 
           </div>

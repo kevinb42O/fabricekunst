@@ -236,7 +236,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
   const primaryImage = selectedItem.images && selectedItem.images.length > 0 ? selectedItem.images[0].url : null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md p-2 sm:p-4 md:p-6 flex items-start justify-center min-h-screen print:p-0 print:bg-white print:static">
+    <div className="admin-certificate-modal fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md p-2 sm:p-4 md:p-6 flex items-start justify-center min-h-screen print:p-0 print:bg-white print:static">
       
       {/* ALWAYS VISIBLE FLOATING CLOSE BUTTON (Top Right) */}
       <button 
@@ -298,9 +298,9 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
               </label>
               <div className="grid grid-cols-3 gap-1.5 bg-[#1C1A18] p-1 rounded-xl border border-[#38332E]">
                 {[
-                  { code: 'nl', label: '🇳🇱 NL' },
-                  { code: 'fr', label: '🇫🇷 FR' },
-                  { code: 'en', label: '🇬🇧 EN' }
+                  { code: 'nl', label: 'NL' },
+                  { code: 'fr', label: 'FR' },
+                  { code: 'en', label: 'EN' }
                 ].map((l) => (
                   <button
                     key={l.code}

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, ChevronDown, Mail } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField } from '../utils/translationService';
 import { DEFAULT_FAQ_ITEMS } from '../utils/storage';
 import { LUXURY_EASE } from '../utils/motion';
 
-export default function FaqSection({ items = [], onRequestConsultation = () => {} }) {
+export default function FaqSection({ items = [] }) {
   const { t, language } = useLanguage();
   const [openIndex, setOpenIndex] = useState(null);
 
-  const displayItems = Array.isArray(items) && items.length > 0 ? items : DEFAULT_FAQ_ITEMS;
+  const displayItems = (Array.isArray(items) && items.length > 0 ? items : DEFAULT_FAQ_ITEMS).slice(0, 3);
 
   const toggleAccordion = (idx) => {
     setOpenIndex(openIndex === idx ? null : idx);
@@ -97,8 +97,12 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                 className="py-6 transition-colors"
               >
                 <button
+                  type="button"
                   onClick={() => toggleAccordion(idx)}
-                  className="w-full text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none py-2"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${item.id || idx}`}
+                  id={`faq-question-${item.id || idx}`}
+                  className="w-full min-h-[56px] text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none py-2"
                 >
                   <span className="font-serif font-bold text-lg sm:text-xl text-[#111111] flex items-center gap-3">
                     <span className="text-xs font-serif font-semibold text-[#8E7035]">
@@ -120,6 +124,9 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
                   {isOpen && (
                     <motion.div
                       key="content"
+                      id={`faq-answer-${item.id || idx}`}
+                      role="region"
+                      aria-labelledby={`faq-question-${item.id || idx}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -139,23 +146,7 @@ export default function FaqSection({ items = [], onRequestConsultation = () => {
           })}
         </motion.div>
 
-        {/* Still have questions CTA */}
-        <div className="pt-8 border-t border-[#D8CEB8] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <h4 className="text-xl font-serif font-bold text-[#111111]">{t('faq.cta.title')}</h4>
-            <p className="text-xs sm:text-sm text-[#555555] font-serif italic">{t('faq.cta.subtitle')}</p>
-          </div>
-
-          <button
-            onClick={onRequestConsultation}
-            className="inline-flex items-center space-x-2 text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] border-b border-[#111111] pb-1 hover:text-[#B8860B] hover:border-[#B8860B] transition-colors duration-300 cursor-pointer shrink-0"
-          >
-            <span>{t('faq.cta.btn')}</span>
-          </button>
-        </div>
-
       </div>
     </section>
   );
 }
-

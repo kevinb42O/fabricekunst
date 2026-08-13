@@ -71,6 +71,14 @@
   </head>
   <body class="bg-cream text-ink font-sans antialiased selection:bg-gold/20 selection:text-gold overflow-x-hidden">
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module">
+      (async () => {
+        if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
+        await import('/src/main.jsx');
+      })();
+    </script>
   </body>
 </html>

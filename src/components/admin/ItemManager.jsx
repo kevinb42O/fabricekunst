@@ -139,9 +139,9 @@ export const getItemTranslationStatus = (item) => {
   ];
 
   const details = {
-    nl: { code: 'nl', flag: '🇳🇱', label: 'Nederlands', missing: [] },
-    en: { code: 'en', flag: '🇬🇧', label: 'English', missing: [] },
-    fr: { code: 'fr', flag: '🇫🇷', label: 'Français', missing: [] }
+    nl: { code: 'nl', label: 'Nederlands', missing: [] },
+    en: { code: 'en', label: 'English', missing: [] },
+    fr: { code: 'fr', label: 'Français', missing: [] }
   };
 
   // 1. Check Dutch [NL] master form fields
@@ -202,7 +202,28 @@ export const getItemTranslationStatus = (item) => {
   };
 };
 
-export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToast, onOpenCertificate }) {
+const getTranslationTooltip = (translationStatus) => {
+  if (translationStatus.isComplete) {
+    return 'Vertalingen compleet · Nederlands, Engels en Frans';
+  }
+
+  const missingSummary = Object.values(translationStatus.details)
+    .filter((language) => language.missing.length > 0)
+    .map((language) => `${language.label}: ${language.missing.length} ${language.missing.length === 1 ? 'veld' : 'velden'}`)
+    .join(' · ');
+
+  return `Vertaalstatus ${translationStatus.completeCount}/3 · ${missingSummary}`;
+};
+
+export default function ItemManager({
+  items,
+  onSaveItem,
+  onDeleteItem,
+  onShowToast,
+  onOpenCertificate,
+  createRequestKey = 0,
+  onCreateRequestHandled = () => {}
+}) {
   const [editingItem, setEditingItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -280,6 +301,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     setIsNew(true);
   };
 
+  useEffect(() => {
+    if (!createRequestKey) return;
+    handleCreateNew();
+    onCreateRequestHandled();
+  }, [createRequestKey]);
+
   const handleEdit = (item) => {
     setEditingItem({
       ...item,
@@ -290,6 +317,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     });
     setIsNew(false);
     setFormLang('nl');
+  };
+
+  const handleItemSurfaceClick = (event, item) => {
+    if (event.target.closest('button, a, input, select, textarea, label, [role="menu"]')) return;
+    handleEdit(item);
   };
 
   const getFormField = (field) => {
@@ -494,7 +526,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
     const success = await copyTextToClipboard(promptText);
     if (success && onShowToast) {
-      onShowToast(`📋 AI Vertaal-prompt (bron: ${sourceLangName}) gekopieerd naar klembord!`);
+      onShowToast(`AI-vertaalprompt met ${sourceLangName} als bron is gekopieerd.`, 'info');
     }
   };
 
@@ -536,7 +568,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
     const data = parseAiJsonTranslation(aiJsonInput);
     if (!data) {
-      if (onShowToast) onShowToast("⚠️ Ongeldige JSON code. Controleer het resultaat van de AI.", "error");
+      if (onShowToast) onShowToast("Ongeldige JSON. Controleer het resultaat van de AI.", "error");
       return;
     }
 
@@ -561,7 +593,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     setEditingItem(updatedItem);
     setShowAiImportModal(false);
     setAiJsonInput('');
-    if (onShowToast) onShowToast(`✨ Success! ${count} vertaalvelden geïmporteerd.`);
+    if (onShowToast) onShowToast(`${count} vertaalvelden zijn geïmporteerd.`);
   };
 
   const handleDuplicate = (item) => {
@@ -586,26 +618,31 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     if (onShowToast) onShowToast(`Status van "${item.title}" gewijzigd naar ${newStatus}`);
   };
 
-  const handleBatchStatusChange = (newStatus) => {
+  const handleBatchStatusChange = async (newStatus) => {
     if (selectedItemIds.length === 0) return;
-    let updatedCount = 0;
-    items.forEach(item => {
-      if (selectedItemIds.includes(item.id)) {
-        onSaveItem({ ...item, status: newStatus });
-        updatedCount++;
-      }
-    });
-    if (onShowToast) onShowToast(`Status van ${updatedCount} geselecteerde objecten gewijzigd naar "${newStatus}"`);
-    setSelectedItemIds([]);
+    const selectedItems = items.filter((item) => selectedItemIds.includes(item.id));
+    try {
+      await Promise.all(selectedItems.map((item) => onSaveItem({ ...item, status: newStatus })));
+      if (onShowToast) onShowToast(`Status van ${selectedItems.length} objecten gewijzigd naar "${newStatus}"`);
+      setSelectedItemIds([]);
+    } catch (error) {
+      console.error('Batch status update failed:', error);
+      if (onShowToast) onShowToast('Niet alle statussen konden worden opgeslagen.', 'error');
+    }
   };
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (selectedItemIds.length === 0) return;
     if (window.confirm(`Weet u zeker dat u ${selectedItemIds.length} objecten wilt verwijderen uit de collectie?`)) {
       const count = selectedItemIds.length;
-      selectedItemIds.forEach(id => onDeleteItem(id));
-      if (onShowToast) onShowToast(`🗑️ ${count} objecten verwijderd uit collectie.`);
-      setSelectedItemIds([]);
+      try {
+        await Promise.all(selectedItemIds.map((id) => onDeleteItem(id)));
+        if (onShowToast) onShowToast(`${count} objecten verwijderd uit de collectie.`);
+        setSelectedItemIds([]);
+      } catch (error) {
+        console.error('Batch delete failed:', error);
+        if (onShowToast) onShowToast('Niet alle objecten konden worden verwijderd.', 'error');
+      }
     }
   };
 
@@ -620,7 +657,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     if (!editingItem) return;
 
     if (!editingItem.title || !editingItem.title.trim()) {
-      if (onShowToast) onShowToast("⚠️ Kan niet opslaan: Vul a.u.b. ten minste een titel in voor het object.");
+      if (onShowToast) onShowToast("Kan niet opslaan: vul ten minste een titel in.", 'error');
       setEditorTab('specs');
       return;
     }
@@ -628,18 +665,18 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     const invalidPublishedSaleIndex = (editingItem.comparableSales || [])
       .findIndex(sale => sale.published && !isComparableSaleComplete(sale));
     if (invalidPublishedSaleIndex !== -1) {
-      if (onShowToast) onShowToast(`⚠️ Comparable Sale ${invalidPublishedSaleIndex + 1} is nog onvolledig of bevat een ongeldige URL/datum.`, 'error');
+      if (onShowToast) onShowToast(`Comparable sale ${invalidPublishedSaleIndex + 1} is onvolledig of bevat een ongeldige URL of datum.`, 'error');
       setEditorTab('comparable-sales');
       return;
     }
 
-    if (onShowToast) onShowToast(`⏳ Bezig met opslaan van "${editingItem.title}" in cloud...`);
+    if (onShowToast) onShowToast(`"${editingItem.title}" wordt opgeslagen...`, 'loading');
 
     const result = await onSaveItem(editingItem);
     if (result && result.error) {
-      if (onShowToast) onShowToast(`⚠️ Lokaal bewaard, maar cloud-synchronisatie mislukt: ${result.error}`);
+      if (onShowToast) onShowToast(`Cloudsynchronisatie mislukt: ${result.error}`, 'error');
     } else {
-      if (onShowToast) onShowToast(`✨ "${editingItem.title}" succesvol opgeslagen & geverifieerd in de cloud!`);
+      if (onShowToast) onShowToast(`"${editingItem.title}" is opgeslagen.`);
     }
     setEditingItem(null);
   };
@@ -664,7 +701,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         }
       } catch (err) {
         console.error("Fout bij uploaden foto:", err);
-        if (onShowToast) onShowToast("⚠️ Fout bij uploaden foto. Probeer opnieuw.", "error");
+        if (onShowToast) onShowToast("De foto kon niet worden geüpload. Probeer opnieuw.", "error");
       }
     }
     setIsUploading(false);
@@ -716,7 +753,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       }
     } catch (err) {
       console.error('Fout bij uploaden comparable sale foto:', err);
-      if (onShowToast) onShowToast('⚠️ Fout bij uploaden foto. Probeer opnieuw.', 'error');
+      if (onShowToast) onShowToast('De foto kon niet worden geüpload. Probeer opnieuw.', 'error');
     } finally {
       setIsUploading(false);
       event.target.value = '';
@@ -735,7 +772,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
     }));
     setNewImageUrl('');
     setNewImageCaption('');
-    if (onShowToast) onShowToast("📷 Afbeelding URL toegevoegd aan galerij!");
+    if (onShowToast) onShowToast("Afbeeldings-URL toegevoegd aan de galerij.");
   };
 
   const removeImage = (index) => {
@@ -753,7 +790,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       newImgs.unshift(selected);
       return { ...prev, images: newImgs };
     });
-    if (onShowToast) onShowToast("⭐ Hoofdafbeelding gewijzigd!");
+    if (onShowToast) onShowToast("Hoofdafbeelding gewijzigd.");
   };
 
   const moveImageUp = (index) => {
@@ -789,6 +826,17 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   // Add Topstuk filter toggle state & view mode ('table' | 'grid')
   const [onlyTopstukken, setOnlyTopstukken] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
+  const [isCompactView, setIsCompactView] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  ));
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const updateCompactView = (event) => setIsCompactView(event.matches);
+    setIsCompactView(mediaQuery.matches);
+    mediaQuery.addEventListener('change', updateCompactView);
+    return () => mediaQuery.removeEventListener('change', updateCompactView);
+  }, []);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
 
   const handleSelectAll = (e) => {
@@ -835,10 +883,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
   const editingFieldLabels = editingTypeDefinition.fieldLabels;
 
   return (
-    <div className="space-y-6 text-[#111111] animate-fade-in">
+    <div className="admin-items space-y-6 text-[#111111] animate-fade-in">
       
       {/* Top Filter & Toolbar Bar (Screenshot Style) */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div className="admin-items__toolbar p-4 sm:p-5 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm flex flex-wrap items-center justify-between gap-3">
         
         {/* Left: Primary Action Button */}
         <button
@@ -846,7 +894,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#111111] to-[#2A2825] hover:from-[#B8860B] hover:to-[#D4AF37] text-white text-xs font-serif font-bold transition-all shadow-md flex items-center space-x-2 shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4 text-[#D4AF37]" />
-          <span>+ Nieuw Stuk Invoeren</span>
+          <span>Nieuw object</span>
         </button>
 
         {/* Center: Search Box */}
@@ -958,12 +1006,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
       </div>
 
       {/* Collection Sub-header & Metrics Summary */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+      <div className="admin-items__summary flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
         <div>
           <h2 className="text-xl font-serif font-bold text-[#111111]">
             Collectie &amp; Catalogus Beheer
           </h2>
-          <div className="flex items-center space-x-3 text-xs font-sans text-[#666666] mt-1">
+          <div className="admin-items__counts flex items-center space-x-3 text-xs font-sans text-[#666666] mt-1">
             <span>Totaal: <strong className="text-[#111111] font-mono">{items.length}</strong> objecten</span>
             <span>•</span>
             {COLLECTION_GROUPS.map((group) => (
@@ -979,7 +1027,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
         </div>
 
         {/* View Mode Toggle (Table vs Grid) */}
-        <div className="flex items-center space-x-1 p-1 rounded-xl bg-white border border-[#D8CEB8] text-xs self-start sm:self-auto">
+        <div className="admin-view-toggle flex items-center space-x-1 p-1 rounded-xl bg-white border border-[#D8CEB8] text-xs self-start sm:self-auto">
           <button
             onClick={() => setViewMode('table')}
             className={`px-3 py-1.5 rounded-lg font-serif font-bold transition-all ${
@@ -1019,7 +1067,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
             <span>Alle Filters Wissen</span>
           </button>
         </div>
-      ) : viewMode === 'table' ? (
+      ) : viewMode === 'table' && !isCompactView ? (
         /* Data Table Layout (Screenshot Style) */
         <div className="bg-white rounded-3xl border border-[#D8CEB8] shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -1052,9 +1100,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                   const translationStatus = getItemTranslationStatus(item);
 
                   return (
-                    <tr 
+                    <tr
                       key={item.id} 
-                      className={`hover:bg-[#FAF7F2]/80 transition-colors ${isSelected ? 'bg-amber-50/40' : ''}`}
+                      onClick={(event) => handleItemSurfaceClick(event, item)}
+                      data-admin-tooltip="Klik om te bewerken"
+                      className={`admin-item-row transition-colors ${isSelected ? 'bg-amber-50/40' : ''}`}
                     >
                       <td className="p-3.5 text-center">
                         <input 
@@ -1076,9 +1126,14 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       </td>
 
                       <td className="p-3.5 max-w-xs">
-                        <div className="font-serif font-bold text-[#111111] line-clamp-1">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(item)}
+                          className="admin-item-title-button font-serif font-bold text-[#111111] line-clamp-1"
+                          data-admin-tooltip="Open in de editor"
+                        >
                           {item.title}
-                        </div>
+                        </button>
                         <div className="text-[11px] text-[#666666] line-clamp-1">
                           {item.author || item.subtitle || 'Atelier Rembrandt'}
                         </div>
@@ -1088,9 +1143,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                         {getLocalizedItemType(item.itemType, 'nl')}
                       </td>
 
-                      {/* Translation Status Badge with Hover Tooltip */}
+                      {/* Translation status with the shared cursor-following tooltip */}
                       <td className="p-3.5 whitespace-nowrap">
-                        <div className="relative group/tooltip inline-block">
+                        <div
+                          className="relative inline-block"
+                          data-admin-tooltip={getTranslationTooltip(translationStatus)}
+                        >
                           <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold flex items-center space-x-1 border cursor-help transition-all ${
                             translationStatus.isComplete 
                               ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100' 
@@ -1111,33 +1169,6 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             )}
                           </div>
 
-                          {/* Hover Tooltip showing missing field counts */}
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block z-50 w-56 p-3 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
-                            <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
-                              <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
-                                <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
-                                <span>Vertaalstatus ({translationStatus.completeCount}/3)</span>
-                              </span>
-                              {translationStatus.isComplete ? (
-                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
-                              ) : (
-                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700">Ontbreekt</span>
-                              )}
-                            </div>
-
-                            <div className="space-y-1.5 text-[11px]">
-                              {Object.values(translationStatus.details).map((langInfo) => (
-                                <div key={langInfo.code} className="flex items-center justify-between font-mono text-[10px]">
-                                  <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
-                                  {langInfo.missing.length === 0 ? (
-                                    <span className="text-emerald-400 font-bold">✓ Compleet</span>
-                                  ) : (
-                                    <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
                         </div>
                       </td>
 
@@ -1164,17 +1195,21 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       <td className="p-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end space-x-1.5">
                           <button
+                            type="button"
                             onClick={() => onOpenCertificate && onOpenCertificate(item)}
                             className="p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
-                            title="Echtheidscertificaat (PDF) Genereren"
+                            aria-label="Certificaat maken"
+                            data-admin-tooltip="Certificaat maken"
                           >
                             <Award className="w-3.5 h-3.5" />
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => handleEdit(item)}
                             className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
-                            title="Bewerken"
+                            aria-label="Object bewerken"
+                            data-admin-tooltip="Bewerken"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
@@ -1184,27 +1219,32 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
-                            title="Bekijk op site"
+                            aria-label="Object op de website bekijken"
+                            data-admin-tooltip="Bekijken op de website"
                           >
                             <ImageIcon className="w-3.5 h-3.5" />
                           </a>
 
                           <button
+                            type="button"
                             onClick={() => onDeleteItem(item.id)}
                             className="p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                            title="Verwijderen"
+                            aria-label="Object verwijderen"
+                            data-admin-tooltip="Verwijderen"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => handleToggleFeatured(item)}
                             className={`p-1.5 rounded-lg border transition-colors ${
                               item.featured
                                 ? 'bg-amber-100 border-amber-300 text-[#B8860B]'
                                 : 'bg-[#FAF7F2] border-[#D8CEB8] text-stone-400 hover:text-[#B8860B]'
                             }`}
-                            title={item.featured ? 'Gemarkeerd als Topstuk' : 'Markeer als Topstuk'}
+                            aria-label={item.featured ? 'Topstukmarkering verwijderen' : 'Als topstuk markeren'}
+                            data-admin-tooltip={item.featured ? 'Topstukmarkering verwijderen' : 'Als topstuk markeren'}
                           >
                             <Star className={`w-3.5 h-3.5 ${item.featured ? 'fill-current' : ''}`} />
                           </button>
@@ -1249,7 +1289,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     onClick={handleBatchDelete}
                     className="px-2.5 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold transition-all border border-red-300 cursor-pointer"
                   >
-                    🗑️ Verwijder ({selectedItemIds.length})
+                    Verwijder ({selectedItemIds.length})
                   </button>
                 </div>
               )}
@@ -1271,7 +1311,9 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
             return (
               <div
                 key={item.id}
-                className="group relative bg-white border border-[#D8CEB8]/80 rounded-3xl shadow-sm hover:shadow-[0_20px_40px_rgba(17,17,17,0.1)] hover:border-[#111111] hover:-translate-y-0.5 transition-all duration-500 ease-out flex flex-col justify-between overflow-hidden"
+                onClick={(event) => handleItemSurfaceClick(event, item)}
+                data-admin-tooltip="Klik om te bewerken"
+                className="admin-item-card group relative bg-white border border-[#D8CEB8]/80 rounded-3xl shadow-sm hover:shadow-[0_20px_40px_rgba(17,17,17,0.1)] hover:border-[#111111] transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden"
               >
                 {/* Top Hero Image Showcase */}
                 <div className="relative aspect-[4/3] w-full bg-[#FAF7F2] overflow-hidden border-b border-[#EAE4D8]">
@@ -1336,13 +1378,15 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     </a>
 
                     <button
+                      type="button"
                       onClick={() => handleToggleFeatured(item)}
                       className={`p-2 rounded-full backdrop-blur-md shadow-lg transition-all duration-300 ${
                         item.featured
                           ? 'bg-amber-500 text-white shadow-amber-500/30'
                           : 'bg-white/95 text-stone-700 hover:text-[#B8860B] hover:bg-white'
                       }`}
-                      title={item.featured ? 'Verwijder als Topstuk' : 'Markeer als Topstuk'}
+                      aria-label={item.featured ? 'Topstukmarkering verwijderen' : 'Als topstuk markeren'}
+                      data-admin-tooltip={item.featured ? 'Topstukmarkering verwijderen' : 'Als topstuk markeren'}
                     >
                       <Star className={`w-3.5 h-3.5 ${item.featured ? 'fill-white' : ''}`} />
                     </button>
@@ -1356,8 +1400,15 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       {getLocalizedCategoryLabel(item.category, 'nl')} • {item.century}
                     </span>
 
-                    <h4 className="text-[15px] font-serif font-bold text-[#111111] line-clamp-2 leading-snug tracking-tight group-hover:text-[#B8860B] transition-colors duration-300" title={item.title}>
-                      {item.title}
+                    <h4 className="text-[15px] font-serif font-bold text-[#111111] line-clamp-2 leading-snug tracking-tight transition-colors duration-300">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(item)}
+                        className="admin-item-title-button text-left"
+                        data-admin-tooltip="Open in de editor"
+                      >
+                        {item.title}
+                      </button>
                     </h4>
 
                     <p className="text-xs text-[#666666] line-clamp-1 font-serif italic">
@@ -1375,8 +1426,11 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
                 {/* Card Footer Toolbar */}
                 <div className="px-5 py-3 bg-[#FAF7F2] border-t border-[#EAE4D8] flex items-center justify-between gap-2">
-                  {/* Translation Status Badge with Hover Tooltip */}
-                  <div className="relative group/tooltip inline-block">
+                  {/* Translation status with the shared cursor-following tooltip */}
+                  <div
+                    className="relative inline-block"
+                    data-admin-tooltip={getTranslationTooltip(translationStatus)}
+                  >
                     <div className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold flex items-center space-x-1 border cursor-help transition-all duration-300 ${
                       translationStatus.isComplete
                         ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
@@ -1397,38 +1451,12 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       )}
                     </div>
 
-                    {/* Hover Tooltip showing detailed language status */}
-                    <div className="absolute left-0 bottom-full mb-2.5 hidden group-hover/tooltip:block z-50 w-56 p-3.5 bg-[#111111] text-white rounded-2xl shadow-2xl border border-[#B8860B]/40 text-xs font-sans pointer-events-none animate-fade-in">
-                      <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
-                        <span className="font-serif font-bold text-xs text-[#D4AF37] flex items-center space-x-1.5">
-                          <Globe className="w-3.5 h-3.5 text-[#B8860B]" />
-                          <span>Vertaalstatus ({translationStatus.completeCount}/3)</span>
-                        </span>
-                        {translationStatus.isComplete ? (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">100% OK</span>
-                        ) : (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700">Ontbreekt</span>
-                        )}
-                      </div>
-
-                      <div className="space-y-1.5 text-[11px]">
-                        {Object.values(translationStatus.details).map((langInfo) => (
-                          <div key={langInfo.code} className="flex items-center justify-between font-mono text-[10px]">
-                            <span className="font-bold">{langInfo.flag} {langInfo.label}</span>
-                            {langInfo.missing.length === 0 ? (
-                              <span className="text-emerald-400 font-bold">✓ Compleet</span>
-                            ) : (
-                              <span className="text-amber-400 font-bold">{langInfo.missing.length} ontbrekend</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
 
                   {/* Action Buttons: Primary Edit Button + Contextual Menu */}
                   <div className="flex items-center space-x-2">
                     <button
+                      type="button"
                       onClick={() => handleEdit(item)}
                       className="px-3.5 py-1.5 rounded-xl bg-[#111111] text-white hover:bg-[#B8860B] text-xs font-serif font-bold transition-all duration-300 flex items-center space-x-1.5 shadow-sm active:scale-95"
                     >
@@ -1439,6 +1467,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                     {/* Dropdown Menu for lower-frequency actions */}
                     <div className="relative">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setOpenMenuId(isMenuOpen ? null : item.id);
@@ -1448,7 +1477,8 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                             ? 'bg-[#111111] text-white border-[#111111]'
                             : 'bg-white border-[#D8CEB8] text-stone-600 hover:text-[#111111] hover:border-stone-400'
                         }`}
-                        title="Meer opties"
+                        aria-label="Meer acties voor dit object"
+                        data-admin-tooltip="Meer acties"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -1525,10 +1555,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
       {/* Dedicated Full-Screen Editorial Workspace (Portal for 100% Viewport Coverage) */}
       {editingItem && createPortal(
-        <div className="fixed inset-0 z-[9999] w-screen h-screen bg-[#FAF8F5] text-[#1C1A18] flex flex-col font-sans overflow-hidden animate-fade-in">
+        <div className="admin-item-editor fixed inset-0 z-[9999] w-screen h-screen bg-[#FAF8F5] text-[#1C1A18] flex flex-col font-sans overflow-hidden animate-fade-in" role="dialog" aria-modal="true" aria-label={isNew ? 'Nieuw object invoeren' : `${editingItem.title} bewerken`}>
           
           {/* Top Sticky Luxury Header Bar */}
-          <header className="px-5 sm:px-7 py-3.5 bg-[#161412] text-white border-b border-[#2C2926] flex items-center justify-between gap-4 shrink-0 shadow-md">
+          <header className="admin-item-editor__header px-5 sm:px-7 py-3.5 bg-[#161412] text-white border-b border-[#2C2926] flex items-center justify-between gap-4 shrink-0 shadow-md">
             {/* Left section: Close & Item Title Info */}
             <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
               <button
@@ -1543,25 +1573,19 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
               <div className="h-6 w-[1px] bg-[#2C2926] hidden sm:block" />
 
-              <div className="min-w-0 flex items-center space-x-3">
-                <span className="px-2.5 py-1 rounded-lg bg-[#C5A059]/15 border border-[#C5A059]/30 text-[#C5A059] font-mono text-xs font-bold uppercase tracking-wider shrink-0">
-                  {isNew ? 'NIEUW OBJECT' : editingItem.ref}
-                </span>
-
-                <div className="min-w-0 hidden md:block">
-                  <h3 className="text-sm font-serif font-bold text-stone-100 truncate">
-                    {isNew ? 'Nieuw Object Invoeren in Collectie' : editingItem.title}
-                  </h3>
-                </div>
+              <div className="min-w-0 hidden md:block">
+                <h3 className="text-sm font-serif font-bold text-stone-100 truncate">
+                  {isNew ? 'Nieuw object invoeren' : editingItem.title}
+                </h3>
               </div>
             </div>
 
             {/* Center section: Multi-language status indicators */}
             <div className="hidden lg:flex items-center space-x-1.5 bg-[#23201D] p-1.5 rounded-xl border border-[#332F2B]">
               {[
-                { id: 'nl', flag: '🇳🇱', label: 'Nederlands' },
-                { id: 'en', flag: '🇬🇧', label: 'English' },
-                { id: 'fr', flag: '🇫🇷', label: 'Français' }
+                { id: 'nl', label: 'Nederlands' },
+                { id: 'en', label: 'English' },
+                { id: 'fr', label: 'Français' }
               ].map((lang) => {
                 const status = getItemTranslationStatus(editingItem).details[lang.id];
                 const isMissing = status?.missing?.length > 0;
@@ -1578,13 +1602,18 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                         : 'text-stone-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <span>{lang.flag} {lang.label}</span>
+                    <span>{lang.label}</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                       isActive
                         ? 'bg-black/20 text-black'
                         : isMissing ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
                     }`}>
-                      {isMissing ? `${status.missing.length} open` : '✓'}
+                      {isMissing ? `${status.missing.length} open` : (
+                        <>
+                          <Check className="w-3 h-3" aria-hidden="true" />
+                          <span className="sr-only">Compleet</span>
+                        </>
+                      )}
                     </span>
                   </button>
                 );
@@ -1628,10 +1657,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
           </header>
 
           {/* Two-Column Editor Layout Workspace */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-[#FAF8F5]">
+          <div className="admin-item-editor__body flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-[#FAF8F5]">
 
             {/* LEFT COLUMN: Media, Type Switcher & Core Commercial Stats (4 cols) */}
-            <div className="lg:col-span-4 border-r border-[#E6E1D7] bg-[#F4F1EA] p-5 sm:p-6 space-y-6 overflow-y-auto">
+            <div className="admin-item-editor__sidebar lg:col-span-4 border-r border-[#E6E1D7] bg-[#F4F1EA] p-5 sm:p-6 space-y-6 overflow-y-auto">
 
               {/* Collection Group Switcher */}
               <div className="p-4 rounded-2xl bg-white border border-[#E0D9CC] space-y-3 shadow-xs">
@@ -1802,7 +1831,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       onChange={(e) => setEditingItem({ ...editingItem, featured: e.target.checked })}
                       className="w-4 h-4 rounded border-[#E0D9CC] text-[#C5A059] focus:ring-[#C5A059]"
                     />
-                    <span>⭐ Topstuk (Homepage Highlight)</span>
+                    <span>Topstuk op de homepage</span>
                   </label>
                 </div>
               </div>
@@ -1939,10 +1968,10 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
             </div>
 
             {/* RIGHT COLUMN: Multi-tab Editorial Form & Detailed Specs (8 cols) */}
-            <div className="lg:col-span-8 flex flex-col overflow-y-auto p-5 sm:p-8 space-y-6">
+            <div className="admin-item-editor__content lg:col-span-8 flex flex-col overflow-y-auto p-5 sm:p-8 space-y-6">
 
               {/* Form Section Navigation Tabs */}
-              <div className="flex items-center justify-between border-b border-[#E0D9CC] pb-3 shrink-0">
+              <div className="admin-item-editor__tabs flex items-center justify-between border-b border-[#E0D9CC] pb-3 shrink-0">
                 <div className="flex items-center space-x-2">
                   {[
                     { id: 'specs', label: '1. Kern & Bibliografische Data' },
@@ -2123,7 +2152,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
                       <Globe className="w-5 h-5 text-[#C5A059]" />
                       <div>
                         <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                          Invoertaal voor onderstaande velden: <span className="text-[#C5A059]">{formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}</span>
+                          Invoertaal voor onderstaande velden: <span className="text-[#C5A059]">{formLang === 'nl' ? 'Nederlands' : formLang === 'en' ? 'English' : 'Français'}</span>
                         </h4>
                         <p className="text-[11px] text-stone-400 font-serif">
                           Geselecteerde inhoud wordt gekoppeld aan de {formLang.toUpperCase()} taalweergave.
@@ -2536,7 +2565,7 @@ export default function ItemManager({ items, onSaveItem, onDeleteItem, onShowToa
 
       {/* AI TRANSLATION IMPORT POPUP MODAL (Portal with z-[10000]) */}
       {showAiImportModal && createPortal(
-        <div className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+        <div className="admin-item-dialog fixed inset-0 z-[10000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-[#FAF7F2] text-[#111111] rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 border border-[#D8CEB8] shadow-strong">
             <div className="flex items-center justify-between border-b border-[#D8CEB8] pb-4">
               <div className="flex items-center space-x-3">

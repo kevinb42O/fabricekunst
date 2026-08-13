@@ -5,10 +5,8 @@ import {
   BookOpen,
   ChevronDown,
   Landmark,
-  LayoutGrid,
   Palette,
   RotateCcw,
-  Rows3,
   Search,
   X
 } from 'lucide-react';
@@ -30,10 +28,11 @@ import {
 } from '../utils/translationService';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
+import MobileCatalogControls from '../mobile/MobileCatalogControls';
 
 const DEFAULT_FILTER_VALUE = 'Alle';
 const DEFAULT_VIEW_MODE = 'grid';
-const VALID_VIEW_MODES = ['grid', 'editorial'];
+const VALID_VIEW_MODES = ['grid'];
 const STATUS_ORDER = ['Beschikbaar', 'Gereserveerd', 'Verkocht'];
 
 function normalizeText(value) {
@@ -210,6 +209,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
   });
   const [sortBy, setSortBy] = useState(() => getInitialParam('sort', 'standaard'));
   const [viewMode, setViewMode] = useState(getInitialViewMode);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const normalizedItems = useMemo(
     () =>
@@ -459,11 +459,55 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
     return t('catalog.all');
   };
 
+  const mobileFilterSections = [
+    {
+      key: 'group',
+      title: t('catalog.collectionGroupFilter'),
+      value: selectedGroup,
+      onSelect: (value) => {
+        setSelectedGroup(value);
+        setSelectedType(DEFAULT_FILTER_VALUE);
+        setSelectedCategory(DEFAULT_FILTER_VALUE);
+      },
+      options: groupOptions.map((value) => ({
+        value,
+        label: value === DEFAULT_FILTER_VALUE ? t('catalog.all') : getLocalizedCollectionGroup(value, language),
+        count: value === DEFAULT_FILTER_VALUE ? groupPool.length : (groupCounts[value] || 0),
+        disabled: value !== selectedGroup && value !== DEFAULT_FILTER_VALUE && !groupCounts[value]
+      }))
+    },
+    {
+      key: 'status',
+      title: t('catalog.statusFilter'),
+      value: selectedStatus,
+      onSelect: setSelectedStatus,
+      options: statusOptions.map((value) => ({
+        value,
+        label: value === DEFAULT_FILTER_VALUE ? t('catalog.all') : getLocalizedStatus(value, language),
+        count: value === DEFAULT_FILTER_VALUE ? statusPool.length : (statusCounts[value] || 0),
+        disabled: value !== selectedStatus && value !== DEFAULT_FILTER_VALUE && !statusCounts[value]
+      }))
+    },
+    {
+      key: 'century',
+      title: t('catalog.centuryFilter'),
+      value: selectedCentury,
+      onSelect: setSelectedCentury,
+      options: centuryOptions.map((value) => ({
+        value,
+        label: value === DEFAULT_FILTER_VALUE ? t('catalog.all') : getLocalizedCentury(value, language),
+        count: value === DEFAULT_FILTER_VALUE ? centuryPool.length : (centuryCounts[value] || 0),
+        disabled: value !== selectedCentury && value !== DEFAULT_FILTER_VALUE && !centuryCounts[value]
+      }))
+    }
+  ];
+
   return (
     <div className="catalog-page min-h-screen bg-white text-[#111111]">
-      <section className="page-shell-wide pt-28 pb-10 sm:pt-32 sm:pb-12 lg:pt-36 lg:pb-14">
-        <div className="catalog-layout grid grid-cols-1 gap-12 lg:grid-cols-[280px,minmax(0,1fr)] xl:grid-cols-[300px,minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-28 lg:self-start lg:pr-8 lg:border-r lg:border-[#E8DFCF]/40">
+      <h1 className="sr-only">{t('catalog.resultsLabel')}</h1>
+      <section className="page-shell-wide pb-10 pt-[calc(5.5rem+env(safe-area-inset-top,0px))] sm:pb-12 lg:pt-36 lg:pb-14">
+        <div className="catalog-layout grid grid-cols-1 gap-8 lg:grid-cols-[280px,minmax(0,1fr)] lg:gap-12 xl:grid-cols-[300px,minmax(0,1fr)]">
+          <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start lg:pr-8 lg:border-r lg:border-[#E8DFCF]/40">
             <div className="flex items-center justify-between border-b border-[#E8DFCF]/60 pb-3.5">
               <span className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[#8E7035]">
                 {t('catalog.refineTitle')}
@@ -537,52 +581,11 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                         <span className="text-sm">
                           {isAllOption ? t('catalog.all') : getLocalizedCollectionGroup(option, language)}
                         </span>
-                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
-
-              {selectedGroup !== 'japanese-art' && (
-              <div className="border-t border-[#E8DFCF]/50 pt-5">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
-                  {t('catalog.typeFilter')}
-                </div>
-                <div className="space-y-0.5">
-                  {typeOptions.map((option) => {
-                    const isAllOption = option === DEFAULT_FILTER_VALUE;
-                    const count = isAllOption ? typePool.length : (typeCounts[option] || 0);
-                    const isActive = selectedType === option;
-                    const isDisabled = !isActive && count === 0;
-                    const Icon = getTypeIcon(option);
-
-                    return (
-                      <button
-                        key={option}
-                        type="button"
-                        disabled={isDisabled}
-                        onClick={() => {
-                          setSelectedType(option);
-                          setSelectedCategory(DEFAULT_FILTER_VALUE);
-                        }}
-                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
-                          isActive
-                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
-                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
-                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
-                      >
-                        <span className="inline-flex items-center space-x-2">
-                          {!isAllOption && <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#B8860B]' : 'text-[#9C8B66]'}`} />}
-                          <span className="text-sm">{renderTypeLabel(option)}</span>
-                        </span>
-                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              )}
 
               <div className="border-t border-[#E8DFCF]/50 pt-5">
                 <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
@@ -610,7 +613,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                         <span className="text-sm">
                           {isAllOption ? t('catalog.all') : getLocalizedStatus(option, language)}
                         </span>
-                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
                       </button>
                     );
                   })}
@@ -643,55 +645,36 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                         <span className="text-sm">
                           {isAllOption ? t('catalog.all') : getLocalizedCentury(option, language)}
                         </span>
-                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="border-t border-[#E8DFCF]/50 pt-5">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8E7035] mb-2">
-                  {t('catalog.categoryFilter')}
-                </div>
-                <div className="space-y-0.5">
-                  {categoryOptions.map((option) => {
-                    const isAllOption = option === DEFAULT_FILTER_VALUE;
-                    const count = isAllOption ? categoryPool.length : (categoryCounts[option] || 0);
-                    const isActive = selectedCategory === option;
-                    const isDisabled = !isActive && count === 0;
-
-                    return (
-                      <button
-                        key={option}
-                        type="button"
-                        disabled={isDisabled}
-                        onClick={() => setSelectedCategory(option)}
-                        className={`flex w-full items-center justify-between py-2 px-2.5 rounded text-left transition-all ${
-                          isActive
-                            ? 'bg-[#F1ECE3] text-[#111111] font-semibold'
-                            : 'text-[#555555] hover:bg-[#F6F2EB]/70 hover:text-[#111111]'
-                        } ${isDisabled ? 'cursor-not-allowed opacity-35' : ''}`}
-                      >
-                        <span className="pr-3 text-sm">
-                          {isAllOption ? t('catalog.all') : getLocalizedCategory(option, language)}
-                        </span>
-                        <span className={`text-xs font-mono ${isActive ? 'text-[#8E7035]' : 'text-[#8C8174]'}`}>{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           </aside>
 
           <div className="min-w-0 space-y-8">
-            <div className="border-b border-[#D8CEB8]/70 pb-5">
+            <MobileCatalogControls
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              activeFilters={activeFilters}
+              resetFilters={resetFilters}
+              hasActiveFilters={hasActiveFilters}
+              resultCount={filteredItems.length}
+              sections={mobileFilterSections}
+              isOpen={mobileFiltersOpen}
+              setIsOpen={setMobileFiltersOpen}
+            />
+
+            <div className="hidden border-b border-[#D8CEB8]/70 pb-5 lg:block">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div>
-                  <h1 className="text-2xl font-serif font-bold text-[#111111] sm:text-3xl">
+                  <div className="text-2xl font-serif font-bold text-[#111111] sm:text-3xl">
                     {t('catalog.resultsLabel')}
-                  </h1>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -714,32 +697,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 pt-2 sm:pt-0">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('grid')}
-                      className={`inline-flex items-center space-x-2 border-b pb-1 text-xs font-mono font-bold uppercase tracking-[0.14em] transition-colors ${
-                        viewMode === 'grid'
-                          ? 'border-[#111111] text-[#111111]'
-                          : 'border-transparent text-[#8C8174] hover:text-[#111111]'
-                      }`}
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                      <span>{t('catalog.gridView')}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('editorial')}
-                      className={`inline-flex items-center space-x-2 border-b pb-1 text-xs font-mono font-bold uppercase tracking-[0.14em] transition-colors ${
-                        viewMode === 'editorial'
-                          ? 'border-[#111111] text-[#111111]'
-                          : 'border-transparent text-[#8C8174] hover:text-[#111111]'
-                      }`}
-                    >
-                      <Rows3 className="w-4 h-4" />
-                      <span>{t('catalog.editorialView')}</span>
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -776,7 +733,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                   {t('catalog.noItemsReset')}
                 </button>
               </div>
-            ) : viewMode === 'grid' ? (
+            ) : (
               <div className="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 xl:grid-cols-3 min-[2200px]:grid-cols-4 min-[4400px]:grid-cols-5 items-stretch">
                 {filteredItems.map((item, index) => {
                   const primaryMeta = getPrimaryMeta(item);
@@ -790,6 +747,15 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                       transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.24) }}
                       className="group flex flex-col h-full cursor-pointer"
                       onClick={() => onOpenItemDetail(item)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onOpenItemDetail(item);
+                        }
+                      }}
+                      role="link"
+                      tabIndex={0}
+                      aria-label={getItemField(item, 'title', language)}
                     >
                       {/* Image Frame */}
                       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F1ECE3]">
@@ -820,7 +786,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                       {/* Content Card Body */}
                       <div className="mt-4 flex flex-col flex-1 border-t border-[#E8DFCF]/70 pt-3.5 space-y-2">
                         {/* Top Micro-Header */}
-                        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-[#8E7035]">
+                        <div className="flex items-center text-[11px] font-serif uppercase tracking-[0.14em] text-[#8E7035]">
                           <span>
                             {item.collectionGroupValue === 'japanese-art'
                               ? getLocalizedCollectionGroup('japanese-art', language)
@@ -828,7 +794,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             <span className="mx-1.5 text-[#B8860B]/40">·</span>
                             {getLocalizedCentury(item.century, language)}
                           </span>
-                          <span className="text-[#888888] font-light">{item.ref}</span>
                         </div>
 
                         {/* Title (Clamped to 2 lines max with fixed height baseline) */}
@@ -852,17 +817,14 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             </span>
                           </div>
 
-                          <div className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-[#111111] transition-colors group-hover:text-[#8E7035]">
-                            <span>{t('topstukken.viewDetails')}</span>
-                            <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
-                          </div>
                         </div>
                       </div>
                     </motion.article>
                   );
                 })}
               </div>
-            ) : (
+            )}
+            {viewMode === 'editorial' && (
               <div className="space-y-12">
                 {filteredItems.map((item, index) => {
                   const primaryMeta = getPrimaryMeta(item);

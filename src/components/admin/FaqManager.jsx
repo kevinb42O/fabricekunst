@@ -112,7 +112,7 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
 
     const success = await copyTextToClipboard(promptText);
     if (success && onShowToast) {
-      onShowToast(`📋 AI Vertaal-prompt voor FAQ (bron: ${sourceLangName}) gekopieerd naar klembord!`);
+      onShowToast(`AI-vertaalprompt voor FAQ met ${sourceLangName} als bron is gekopieerd.`, 'info');
     }
   };
 
@@ -121,7 +121,7 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
 
     const data = parseAiJsonTranslation(aiJsonInput);
     if (!data) {
-      if (onShowToast) onShowToast("⚠️ Ongeldige JSON code. Controleer het resultaat van de AI.", "error");
+      if (onShowToast) onShowToast("Ongeldige JSON. Controleer het resultaat van de AI.", "error");
       return;
     }
 
@@ -137,11 +137,11 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
 
     setShowAiImportModal(false);
     setAiJsonInput('');
-    if (onShowToast) onShowToast("✨ Success! FAQ vertalingen geïmporteerd.");
+    if (onShowToast) onShowToast("FAQ-vertalingen zijn geïmporteerd.");
   };
 
   return (
-    <div className="space-y-8">
+    <div className="admin-module-legacy admin-faq space-y-8">
       
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-white border border-[#D8CEB8] shadow-xs">
@@ -263,7 +263,7 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
                     title="Kopieer FAQ als AI vertaal-prompt"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                    <span>Prompt ({formLang === 'nl' ? '🇳🇱 NL' : formLang === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'})</span>
+                    <span>Prompt ({formLang.toUpperCase()})</span>
                   </button>
 
                   <button
@@ -292,9 +292,9 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
             <div className="p-3 rounded-2xl bg-white border border-[#D8CEB8]">
               <div className="flex items-center space-x-2">
                 {[
-                  { code: 'nl', label: '🇳🇱 Nederlands' },
-                  { code: 'en', label: '🇬🇧 Engels' },
-                  { code: 'fr', label: '🇫🇷 Frans' }
+                  { code: 'nl', label: 'NL · Nederlands' },
+                  { code: 'en', label: 'EN · Engels' },
+                  { code: 'fr', label: 'FR · Frans' }
                 ].map(lang => (
                   <button
                     key={lang.code}

@@ -12,8 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
-// Register Progressive Web App Service Worker
-if ('serviceWorker' in navigator) {
+// Register the PWA worker only in production. In development, remove stale
+// registrations so browser QA always reflects the current Vite source.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
@@ -23,5 +24,8 @@ if ('serviceWorker' in navigator) {
         console.error('Service Worker registratie mislukt:', err);
       });
   });
+} else if ('serviceWorker' in navigator && import.meta.env.DEV) {
+  navigator.serviceWorker.getRegistrations()
+    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    .catch(() => {});
 }
-

@@ -52,7 +52,9 @@ export const DEFAULT_HERO_SLIDES = [
 ];
 
 const HERO_IMAGE_KEY = 'atelier_rembrandt_hero_image';
+const MOBILE_HERO_IMAGE_KEY = 'atelier_rembrandt_mobile_hero_image';
 export const DEFAULT_HERO_IMAGE = '/images/provenience-light-cream-hero.jpg';
+export const DEFAULT_MOBILE_HERO_IMAGE = '/images/hero/hero-scarron-engraving.jpg';
 
 export const getHeroImage = () => {
   try {
@@ -101,6 +103,57 @@ export const saveHeroImageAsync = async (imageUrl) => {
       });
     } catch (e) {
       console.error("Supabase hero image save exception:", e);
+    }
+  }
+  return imageUrl;
+};
+
+export const getMobileHeroImage = () => {
+  try {
+    const saved = localStorage.getItem(MOBILE_HERO_IMAGE_KEY);
+    return saved && saved.trim() ? saved : DEFAULT_MOBILE_HERO_IMAGE;
+  } catch (err) {
+    console.error("Fout bij ophalen mobiele hero image:", err);
+    return DEFAULT_MOBILE_HERO_IMAGE;
+  }
+};
+
+export const fetchMobileHeroImageAsync = async () => {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .eq('key', 'mobile_hero_image')
+        .maybeSingle();
+
+      if (!error && data?.value) {
+        localStorage.setItem(MOBILE_HERO_IMAGE_KEY, data.value);
+        return data.value;
+      }
+    } catch (err) {
+      console.error("Fout bij ophalen mobiele hero image van Supabase:", err);
+    }
+  }
+  return getMobileHeroImage();
+};
+
+export const saveMobileHeroImageAsync = async (imageUrl) => {
+  try {
+    localStorage.setItem(MOBILE_HERO_IMAGE_KEY, imageUrl);
+  } catch (err) {
+    console.error("Fout bij opslaan mobiele hero image:", err);
+  }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      await supabase.from('admin_settings').upsert({
+        key: 'mobile_hero_image',
+        value: imageUrl,
+        updated_at: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error("Supabase mobiele hero image save exception:", err);
     }
   }
   return imageUrl;
@@ -794,34 +847,12 @@ export const uploadCatalogImage = async (file) => {
 // --- INQUIRIES MANAGEMENT ---
 
 export const getInquiries = () => {
+  // Personal inquiry data is never restored from browser storage in production.
+  if (isSupabaseConfigured()) return [];
+
   try {
     const saved = localStorage.getItem(INQUIRIES_KEY) || localStorage.getItem(OLD_INQUIRIES_KEY_2) || localStorage.getItem(OLD_INQUIRIES_KEY);
-    return saved ? JSON.parse(saved) : [
-      {
-        id: "inq-1",
-        date: new Date(Date.now() - 86400000 * 2).toISOString(),
-        itemTitle: "Voltaire — Œuvres Complètes (52 delen)",
-        itemRef: "FB-1829-VOL",
-        name: "Graaf De Limburg Stirum",
-        email: "d.limburg@heritage-collection.be",
-        phone: "+32 475 88 12 34",
-        type: "Privé-bezichtiging aanvragen",
-        message: "Goedendag, ik zou graag een afspraak maken voor een privé-bezichtiging van de 52-delige Voltaire reeks met ex-libris Vacheron-Poinsot. Bent u aanstaande donderdag beschikbaar?",
-        status: "Nieuw"
-      },
-      {
-        id: "inq-2",
-        date: new Date(Date.now() - 86400000 * 5).toISOString(),
-        itemTitle: "Les Œuvres de Monsieur Scarron (1713)",
-        itemRef: "FB-1713-SCA",
-        name: "Jean-Pierre Vacheron",
-        email: "jp.vacheron@antiquariat-paris.fr",
-        phone: "+33 6 12 34 56 78",
-        type: "Doe een bod",
-        message: "Beste, hartelijke groeten uit Parijs. Ik bied € 2.600 voor de 3-delige Scarron uit 1713. Is verzending naar Frankrijk in een geconditioneerde verpakking mogelijk?",
-        status: "In behandeling"
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.error("Fout bij ophalen aanvragen", e);
     return [];
@@ -833,9 +864,10 @@ export const fetchInquiriesAsync = async () => {
     try {
       const { data, error } = await supabase.from('inquiries').select('*').order('date', { ascending: false });
       if (!error && data) {
-        const mapped = data.map(mapDbInquiryToFrontend);
-        localStorage.setItem(INQUIRIES_KEY, JSON.stringify(mapped));
-        return mapped;
+        localStorage.removeItem(INQUIRIES_KEY);
+        localStorage.removeItem(OLD_INQUIRIES_KEY_2);
+        localStorage.removeItem(OLD_INQUIRIES_KEY);
+        return data.map(mapDbInquiryToFrontend);
       }
     } catch (e) {
       console.error("Supabase inquiries fetch error", e);
@@ -848,7 +880,7 @@ export const saveInquiry = (inquiry) => {
   try {
     const current = getInquiries();
     const newInquiry = {
-      id: `inq-${Date.now()}`,
+      id: `inq-${crypto.randomUUID()}`,
       date: new Date().toISOString(),
       status: "Nieuw",
       ...inquiry
@@ -863,30 +895,38 @@ export const saveInquiry = (inquiry) => {
 };
 
 export const saveInquiryAsync = async (inquiry) => {
-  const newInquiry = saveInquiry(inquiry);
-  if (newInquiry && isSupabaseConfigured() && supabase) {
+  if (isSupabaseConfigured() && supabase) {
+    const newInquiry = {
+      id: `inq-${crypto.randomUUID()}`,
+      date: new Date().toISOString(),
+      status: 'Nieuw',
+      ...inquiry
+    };
+
     try {
       const dbInq = mapFrontendInquiryToDb(newInquiry);
       const { error } = await supabase.from('inquiries').insert(dbInq);
       if (error) {
         console.error("Supabase inquiry insert error", error);
+        throw new Error('Aanvraag kon niet veilig worden opgeslagen.');
       } else {
         // Trigger push notification to admin securely via Vercel serverless function
         fetch('/api/send-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: 'Nieuwe aanvraag!',
-            body: `${newInquiry.name} heeft een aanvraag ingediend voor "${newInquiry.itemTitle}"`,
-            url: '/admin#inquiries'
+            inquiryId: newInquiry.id
           })
         }).catch(err => console.error("Fout bij triggeren push API:", err));
       }
     } catch (e) {
       console.error("Supabase inquiry insert exception", e);
+      throw e;
     }
+    return newInquiry;
   }
-  return newInquiry;
+
+  return saveInquiry(inquiry);
 };
 
 export const updateInquiryStatus = (id, newStatus) => {
@@ -902,16 +942,16 @@ export const updateInquiryStatus = (id, newStatus) => {
 };
 
 export const updateInquiryStatusAsync = async (id, newStatus) => {
-  const updated = updateInquiryStatus(id, newStatus);
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('inquiries').update({ status: newStatus }).eq('id', id);
       if (error) console.error("Supabase inquiry status update error", error);
+      return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry status update exception", e);
     }
   }
-  return updated;
+  return updateInquiryStatus(id, newStatus);
 };
 
 export const updateInquiryNotes = (id, notes) => {
@@ -927,16 +967,16 @@ export const updateInquiryNotes = (id, notes) => {
 };
 
 export const updateInquiryNotesAsync = async (id, notes) => {
-  const updated = updateInquiryNotes(id, notes);
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('inquiries').update({ notes }).eq('id', id);
       if (error) console.error("Supabase inquiry notes update error", error);
+      return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry notes update exception", e);
     }
   }
-  return updated;
+  return updateInquiryNotes(id, notes);
 };
 
 export const deleteInquiry = (id) => {
@@ -952,19 +992,40 @@ export const deleteInquiry = (id) => {
 };
 
 export const deleteInquiryAsync = async (id) => {
-  const updated = deleteInquiry(id);
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('inquiries').delete().eq('id', id);
       if (error) console.error("Supabase inquiry delete error", error);
+      return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry delete exception", e);
     }
   }
-  return updated;
+  return deleteInquiry(id);
 };
 
-// --- AUTHENTICATION & ADMIN USERS (SECURE DATABASE AUTH) ---
+// --- AUTHENTICATION & ADMIN USERS (SUPABASE AUTH + RLS PROFILE) ---
+
+const getAdminProfileForAuthUser = async (authUser) => {
+  if (!authUser?.id || !supabase) return null;
+
+  const { data, error } = await supabase
+    .from('admin_profiles')
+    .select('user_id, email, name, role, active')
+    .eq('user_id', authUser.id)
+    .maybeSingle();
+
+  if (error || !data?.active || !['admin', 'developer'].includes(data.role)) {
+    return null;
+  }
+
+  return {
+    id: data.user_id,
+    email: data.email || authUser.email,
+    name: data.name || authUser.email,
+    role: data.role
+  };
+};
 
 export const authenticateAdminUserAsync = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
@@ -974,56 +1035,52 @@ export const authenticateAdminUserAsync = async (email, password) => {
   }
 
   try {
-    // 1. Check admin_settings table (key: user_<email>)
-    const { data: settingsData } = await supabase
-      .from('admin_settings')
-      .select('*')
-      .eq('key', `user_${cleanEmail}`)
-      .maybeSingle();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password
+    });
 
-    if (settingsData && settingsData.value) {
-      try {
-        const parsed = typeof settingsData.value === 'string' ? JSON.parse(settingsData.value) : settingsData.value;
-        if (parsed.password === password) {
-          return {
-            success: true,
-            user: {
-              email: cleanEmail,
-              name: parsed.name || cleanEmail,
-              role: parsed.role || 'admin'
-            }
-          };
-        } else {
-          return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
-        }
-      } catch (e) {
-        console.error("Fout bij parsen van account uit admin_settings", e);
-      }
+    if (error || !data.user) {
+      return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
     }
 
-    // 2. Check admin_users table if present
-    const { data: userData } = await supabase
-      .from('admin_users')
-      .select('*')
-      .eq('email', cleanEmail)
-      .maybeSingle();
-
-    if (userData && userData.password === password) {
-      return {
-        success: true,
-        user: {
-          email: userData.email,
-          name: userData.name,
-          role: userData.role
-        }
-      };
+    const user = await getAdminProfileForAuthUser(data.user);
+    if (!user) {
+      await supabase.auth.signOut();
+      return { success: false, message: 'Dit account heeft geen actieve beheerderstoegang.' };
     }
 
-    return { success: false, message: 'Toegang geweigerd. Controleer e-mailadres en wachtwoord.' };
+    return { success: true, user };
   } catch (e) {
     console.error("Authenticatiefout:", e);
     return { success: false, message: 'Fout bij verifiëren van inloggegevens.' };
   }
+};
+
+export const getCurrentAdminSessionAsync = async () => {
+  if (!isSupabaseConfigured() || !supabase) return { success: false, user: null };
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.user) return { success: false, user: null };
+
+    const user = await getAdminProfileForAuthUser(data.session.user);
+    if (!user) {
+      await supabase.auth.signOut();
+      return { success: false, user: null };
+    }
+
+    return { success: true, user };
+  } catch (error) {
+    console.error('Fout bij herstellen van beheerderssessie:', error);
+    return { success: false, user: null };
+  }
+};
+
+export const signOutAdminAsync = async () => {
+  if (!supabase) return;
+  const { error } = await supabase.auth.signOut();
+  if (error) console.error('Fout bij afmelden:', error);
 };
 
 export const updateAdminPasswordAsync = async (email, currentPassword, newPassword) => {
@@ -1033,35 +1090,21 @@ export const updateAdminPasswordAsync = async (email, currentPassword, newPasswo
     return { success: false, message: 'Huidige wachtwoord is onjuist.' };
   }
 
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      // Upsert into admin_settings
-      const userPayload = JSON.stringify({
-        password: newPassword,
-        name: authResult.user?.name || cleanEmail,
-        role: authResult.user?.role || 'admin'
-      });
-
-      await supabase.from('admin_settings').upsert({
-        key: `user_${cleanEmail}`,
-        value: userPayload,
-        updated_at: new Date().toISOString()
-      });
-
-      // Try updating admin_users table if present
-      await supabase.from('admin_users').update({
-        password: newPassword,
-        updated_at: new Date().toISOString()
-      }).eq('email', cleanEmail);
-
-      return { success: true, message: 'Wachtwoord succesvol gewijzigd!' };
-    } catch (e) {
-      console.error("Supabase password update exception:", e);
-      return { success: false, message: 'Verbindingsfout bij bijwerken wachtwoord.' };
+  try {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      console.error('Supabase Auth password update error:', error);
+      return { success: false, message: 'Het wachtwoord kon niet veilig worden bijgewerkt.' };
     }
-  }
 
-  return { success: false, message: 'Database niet beschikbaar.' };
+    const { error: sessionError } = await supabase.auth.signOut({ scope: 'others' });
+    if (sessionError) console.error('Andere beheerderssessies konden niet worden afgemeld:', sessionError);
+
+    return { success: true, message: 'Wachtwoord succesvol gewijzigd!' };
+  } catch (error) {
+    console.error('Supabase Auth password update exception:', error);
+    return { success: false, message: 'Verbindingsfout bij bijwerken wachtwoord.' };
+  }
 };
 
 export const exportDataJSON = () => {
@@ -1437,4 +1480,3 @@ export const saveFaqItemsAsync = async (faqItems) => {
   }
   return faqItems;
 };
-

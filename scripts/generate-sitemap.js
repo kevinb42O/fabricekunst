@@ -30,6 +30,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 import { INITIAL_CATALOG } from '../src/data/initialCatalog.js';
+import { getItemSlug } from '../src/utils/itemSlug.js';
 
 async function generateSitemap() {
   console.log('🔄 Fetching live catalog items from Supabase for sitemap generation...');
@@ -75,7 +76,7 @@ async function generateSitemap() {
   };
 
   const xmlEntries = catalogItems.map(item => {
-    const itemUrl = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(item.id)}`;
+    const itemUrl = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(getItemSlug(item))}`;
     let imageXml = '';
 
     let cleanImages = Array.isArray(item.images) ? item.images.filter(img => img && !img.__ext__) : [];

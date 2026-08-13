@@ -15,7 +15,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
   const isEn = language === 'en';
 
   return (
-    <div className="min-h-screen bg-white text-[#111111] font-sans pb-24 pt-28 sm:pt-36">
+    <div className="mobile-legal-page min-h-screen bg-white text-[#111111] font-sans pb-24 pt-24 sm:pt-36">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Breadcrumb / Back button */}
@@ -27,7 +27,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
         >
           <button
             onClick={onNavigateHome}
-            className="inline-flex items-center space-x-2 text-xs font-serif tracking-widest text-[#8E7035] hover:text-[#B8860B] transition-colors uppercase cursor-pointer"
+            className="inline-flex min-h-11 items-center space-x-2 text-xs font-serif tracking-widest text-[#8E7035] hover:text-[#B8860B] transition-colors uppercase cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>{isFr ? 'Retour à l\'Accueil' : isEn ? 'Back to Home' : 'Terug naar Homepage'}</span>
@@ -184,7 +184,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
               Atelier Rembrandt verkoopt, verhuurt of deelt uw gegevens <strong>nooit</strong> met derden voor commerciële of marketingdoeleinden. Persoonsgegevens worden uitsluitend verstrekt aan derden indien dit noodzakelijk is voor de uitvoering van onze overeenkomst met u of om te voldoen aan een wettelijke verplichting.
             </p>
             <p className="text-xs text-[#666666]">
-              Voorbeelden van strikt gecertificeerde verwerkers zijn onze beveiligde hostingprovider (Supabase / Cloud infrastructure), e-mail- & authenticatiediensten, en gespecialiseerde kunstkoeriers bij geconditioneerd transport. Met alle verwerkers zijn verwerkersovereenkomsten gesloten die voldoen aan de eisen van de AVG.
+              Voorbeelden van verwerkers zijn onze hostingprovider, e-mail- en authenticatiediensten en, wanneer van toepassing, gespecialiseerde vervoerders. Waar de AVG dat vereist, worden passende verwerkersafspraken gemaakt.
             </p>
           </section>
 

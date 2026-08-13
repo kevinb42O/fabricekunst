@@ -105,66 +105,47 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Create Admin Settings Table (PIN & Security settings)
+-- 3. Create public content settings. Credentials must never be stored here.
 CREATE TABLE IF NOT EXISTS public.admin_settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Create Admin Users Table (Email & Password accounts)
-CREATE TABLE IF NOT EXISTS public.admin_users (
-    email TEXT PRIMARY KEY,
-    password TEXT NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT DEFAULT 'admin',
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Administrators are created in Supabase Auth. Run the versioned security
+-- migration after this base schema to create profiles and administrator policies.
 
--- Insert Developer & Admin accounts
-INSERT INTO public.admin_users (email, password, name, role) VALUES
-('kevin@webaanzee.be', 'Pinakaaz420', 'Kevin (Developer)', 'developer'),
-('admin@atelierrembrandt.com', 'Rembrandt5438', 'Atelier Rembrandt Admin', 'admin')
-ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;
-
--- Default Admin PIN ("5438")
-INSERT INTO public.admin_settings (key, value)
-VALUES ('admin_pin', '5438')
-ON CONFLICT (key) DO NOTHING;
-
--- 5. Enable Row Level Security (RLS) & Set Permissive Policies for Web App
+-- 4. Enable Row Level Security with fail-closed base policies
 ALTER TABLE public.items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
 -- Items Policies
 DROP POLICY IF EXISTS "Public read items" ON public.items;
 CREATE POLICY "Public read items" ON public.items FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow write items" ON public.items;
-CREATE POLICY "Allow write items" ON public.items FOR ALL USING (true) WITH CHECK (true);
 
 -- Inquiries Policies
 DROP POLICY IF EXISTS "Public read inquiries" ON public.inquiries;
-CREATE POLICY "Public read inquiries" ON public.inquiries FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "Allow write inquiries" ON public.inquiries;
-CREATE POLICY "Allow write inquiries" ON public.inquiries FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Public create inquiries" ON public.inquiries;
+CREATE POLICY "Public create inquiries" ON public.inquiries FOR INSERT TO anon, authenticated
+WITH CHECK (
+    status = 'Nieuw'
+    AND NULLIF(BTRIM(COALESCE(notes, '')), '') IS NULL
+    AND created_at BETWEEN NOW() - INTERVAL '5 minutes' AND NOW() + INTERVAL '1 minute'
+);
 
 -- Admin Settings Policies
 DROP POLICY IF EXISTS "Public read admin_settings" ON public.admin_settings;
-CREATE POLICY "Public read admin_settings" ON public.admin_settings FOR SELECT USING (true);
+CREATE POLICY "Public read admin_settings" ON public.admin_settings FOR SELECT TO anon, authenticated
+USING (
+    key IN ('hero_image', 'mobile_hero_image', 'hero_slides', 'herkomst_page_data', 'faq_items')
+    OR SUBSTRING(key FROM 1 FOR 9) = 'item_ext_'
+);
 
 DROP POLICY IF EXISTS "Allow write admin_settings" ON public.admin_settings;
-CREATE POLICY "Allow write admin_settings" ON public.admin_settings FOR ALL USING (true) WITH CHECK (true);
-
--- Admin Users Policies
-DROP POLICY IF EXISTS "Public read admin_users" ON public.admin_users;
-CREATE POLICY "Public read admin_users" ON public.admin_users FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow write admin_users" ON public.admin_users;
-CREATE POLICY "Allow write admin_users" ON public.admin_users FOR ALL USING (true) WITH CHECK (true);
 
 -- 6. Setup Supabase Storage Bucket for High-Res Catalog Images
 INSERT INTO storage.buckets (id, name, public) 
@@ -176,10 +157,7 @@ DROP POLICY IF EXISTS "Public Storage Read" ON storage.objects;
 CREATE POLICY "Public Storage Read" ON storage.objects FOR SELECT USING (bucket_id = 'catalog-images');
 
 DROP POLICY IF EXISTS "Public Storage Insert" ON storage.objects;
-CREATE POLICY "Public Storage Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'catalog-images');
-
 DROP POLICY IF EXISTS "Public Storage Delete" ON storage.objects;
-CREATE POLICY "Public Storage Delete" ON storage.objects FOR DELETE USING (bucket_id = 'catalog-images');
 
 -- 7. Seed Initial Catalog Data
 INSERT INTO public.items (
@@ -338,7 +316,6 @@ DROP POLICY IF EXISTS "Public read faq_items" ON public.faq_items;
 CREATE POLICY "Public read faq_items" ON public.faq_items FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow write faq_items" ON public.faq_items;
-CREATE POLICY "Allow write faq_items" ON public.faq_items FOR ALL USING (true) WITH CHECK (true);
 
 -- ========================================================
 -- Push Notifications Table (Run in Supabase SQL Editor)
@@ -352,11 +329,8 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Allow public read/write policies
+-- Push endpoints are sensitive and stay fail-closed until the security migration
+-- installs authenticated administrator policies.
 DROP POLICY IF EXISTS "Public read push_subscriptions" ON public.push_subscriptions;
-CREATE POLICY "Public read push_subscriptions" ON public.push_subscriptions FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "Allow write push_subscriptions" ON public.push_subscriptions;
-CREATE POLICY "Allow write push_subscriptions" ON public.push_subscriptions FOR ALL USING (true) WITH CHECK (true);
-
 

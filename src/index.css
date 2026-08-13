@@ -316,8 +316,9 @@
     line-height: 1.55;
   }
 
-  .masterpieces-showcase .page-shell-wide {
-    max-width: 180rem;
+  .masterpieces-showcase .page-shell-wide,
+  #herkomst.editorial-readable > .page-shell-wide {
+    max-width: 100rem;
   }
 
   .masterpieces-showcase .text-xs {
@@ -617,7 +618,7 @@
   }
 
   /* Accessibility: Respect OS Motion Reduction Settings */
-  @media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) {
     *, ::before, ::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
@@ -715,6 +716,212 @@
   }
 }
 
+/* ================================================================ */
+/* DEDICATED MOBILE PRESENTATION LAYER — DESKTOP STARTS AT 64REM    */
+/* ================================================================ */
+@media (max-width: 63.999rem) {
+  :root {
+    --mobile-gutter: 1rem;
+    --page-gutter: var(--mobile-gutter);
+    --page-wide-gutter: var(--mobile-gutter);
+    --nav-gutter: var(--mobile-gutter);
+    --text-hero: clamp(2.5rem, 12vw, 3.4rem);
+    --text-hero-sub: clamp(1.9rem, 9vw, 2.75rem);
+  }
+
+  html,
+  body {
+    padding: 0;
+    overscroll-behavior-x: none;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  img {
+    will-change: auto;
+  }
+
+  .page-shell,
+  .page-shell-wide,
+  .page-shell-detail,
+  .reading-shell,
+  .mobile-page-gutter,
+  .nav-shell {
+    padding-left: max(var(--mobile-gutter), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--mobile-gutter), env(safe-area-inset-right, 0px));
+  }
+
+  .mobile-safe-top {
+    height: env(safe-area-inset-top, 0px);
+  }
+
+  .mobile-menu-drawer {
+    top: calc(4rem + env(safe-area-inset-top, 0px));
+  }
+
+  .mobile-hero-title {
+    font-size: clamp(2.45rem, 12.2vw, 3.55rem);
+  }
+
+  .mobile-home-content,
+  .mobile-home-content section,
+  .mobile-home-content button {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mobile-home-content h1,
+  .mobile-home-content h2,
+  .mobile-home-content h3,
+  .mobile-home-content p,
+  .mobile-home-content span {
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-home-content img {
+    max-width: 100%;
+  }
+
+  .masterpieces-showcase {
+    padding-block: 4.5rem !important;
+  }
+
+  .masterpieces-showcase .page-shell-wide {
+    row-gap: 3rem;
+  }
+
+  .mobile-spotlight-details {
+    align-items: flex-start !important;
+  }
+
+  .mobile-spotlight-details button {
+    min-height: 44px;
+  }
+
+  #herkomst.editorial-readable {
+    padding-block: 4.5rem !important;
+  }
+
+  #herkomst.editorial-readable > .page-shell-wide {
+    row-gap: 3rem;
+  }
+
+  #herkomst.editorial-readable p.text-xs {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  #faq.editorial-readable {
+    padding-block: 4.5rem !important;
+  }
+
+  #faq button,
+  footer button,
+  footer a[href] {
+    min-height: 44px;
+  }
+
+  footer a[href],
+  footer button {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mobile-legal-page > div {
+    padding-inline: var(--mobile-gutter);
+  }
+
+  .mobile-legal-page > div > div[class*="rounded-xl"] {
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .mobile-legal-page h2 {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.625rem;
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-legal-page a[href],
+  .mobile-legal-page button {
+    min-height: 44px;
+  }
+
+  .mobile-legal-page a[href] {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (min-width: 24.375rem) and (max-width: 63.999rem) {
+  :root {
+    --mobile-gutter: 1.25rem;
+  }
+}
+
+@media (min-width: 37.5rem) and (max-width: 63.999rem) {
+  :root {
+    --mobile-gutter: 2rem;
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: landscape) and (max-height: 35rem) {
+  .mobile-home-hero {
+    min-height: 100svh;
+  }
+
+  .mobile-hero-layout {
+    display: grid;
+    height: calc(100svh - 4rem - env(safe-area-inset-top, 0px));
+    min-height: 0;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  }
+
+  .mobile-hero-image {
+    height: 100% !important;
+    max-height: none !important;
+  }
+
+  .mobile-hero-copy {
+    display: flex;
+    align-items: center;
+    padding-block: 0.75rem !important;
+  }
+
+  .mobile-hero-title {
+    font-size: clamp(1.65rem, 4vw, 2rem);
+  }
+
+  .mobile-hero-copy > div > div:first-child {
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-hero-copy p {
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.15rem;
+  }
+
+  .mobile-hero-copy p + div {
+    margin-top: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .mobile-hero-copy button {
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+  }
+}
+
 /* Light Museum Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -732,7 +939,12 @@
 }
 
 .gold-gradient-text {
-  color: #B8860B;
+  color: #795B16;
+}
+
+/* Darker antique gold for small text and icons on light public surfaces (WCAG AA). */
+[class~="text-[#B8860B]"] {
+  color: #795B16;
 }
 
 /* ========================================= */

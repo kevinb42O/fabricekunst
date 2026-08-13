@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Award, BookOpen, Mail, ArrowRight, ShieldCheck, Truck, FileCheck, PhoneCall, ChevronRight, CheckCircle2, Star, Sparkles, Filter } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
+import { getItemField, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
 import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
@@ -65,7 +65,7 @@ export default function TopstukkenShowcase({
             onClick={onOpenFullCatalog}
             className="px-6 sm:px-8 py-4 bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-serif font-semibold text-xs sm:text-sm uppercase tracking-[0.16em] shadow-xs transition-colors duration-300 shrink-0 border border-[#B8860B]/40 hover:border-[#B8860B] cursor-pointer flex items-center space-x-2.5 min-h-[50px] w-full lg:w-auto justify-center"
           >
-            <span>{t('catalog.viewAllCollection')} ({items.length})</span>
+            <span>{t('catalog.viewAllCollection')}</span>
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>
@@ -83,6 +83,15 @@ export default function TopstukkenShowcase({
             viewport={{ once: true }}
             transition={{ duration: 1.0, ease: LUXURY_EASE }}
             onClick={() => onOpenItemDetail(spotlightItem)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onOpenItemDetail(spotlightItem);
+              }
+            }}
+            role="link"
+            tabIndex={0}
+            aria-label={getItemField(spotlightItem, 'title', language)}
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center group cursor-pointer py-6"
           >
             {/* Spotlight Photography (Frameless, Pristine Edge-to-Edge) */}
@@ -126,13 +135,12 @@ export default function TopstukkenShowcase({
               {getItemField(spotlightItem, 'provenance', language) && (
                 <div className="border-l border-[#8E7035] pl-4 py-2 space-y-1.5 bg-neutral-50 my-3">
                   <span className="text-xs font-serif tracking-[0.16em] text-[#8E7035] uppercase font-semibold block">{t('topstukken.provenanceBadge')}</span>
-                  <p className="text-xs sm:text-sm font-serif italic text-[#222222] leading-relaxed">"{getItemField(spotlightItem, 'provenance', language)}"</p>
+                  <p className="text-sm font-serif text-[#333333] leading-relaxed">{getItemField(spotlightItem, 'provenance', language)}</p>
                 </div>
               )}
 
-              <div className="pt-6 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-6">
+              <div className="mobile-spotlight-details pt-6 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-6">
                 <div>
-                  <span className="text-xs uppercase font-serif tracking-[0.14em] text-[#777777] block">{t('topstukken.priceValuation')}</span>
                   <span className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">{getLocalizedPrice(spotlightItem.price, language)}</span>
                 </div>
 
@@ -161,7 +169,7 @@ export default function TopstukkenShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
-            className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 pt-8 md:pt-12 items-start"
+            className="mobile-featured-rail grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 pt-8 md:pt-12 items-start"
           >
             {gridItems.map((item, idx) => {
               const itemTitle = getItemField(item, 'title', language);
@@ -190,6 +198,15 @@ export default function TopstukkenShowcase({
                   key={item.id}
                   variants={cardVariants}
                   onClick={() => onOpenItemDetail(item)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onOpenItemDetail(item);
+                    }
+                  }}
+                  role="link"
+                  tabIndex={0}
+                  aria-label={itemTitle}
                   className={`${colSpan} ${staggeredClass} flex flex-col justify-between group cursor-pointer space-y-5`}
                 >
                   <div className="space-y-4">
@@ -210,11 +227,8 @@ export default function TopstukkenShowcase({
 
                     {/* Body Content */}
                     <div className="space-y-2.5">
-                      <div className="flex items-center justify-between text-xs font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
+                      <div className="flex items-center text-xs font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
                         <span>{getLocalizedCategory(item.category, language)}</span>
-                        {item.ref && (
-                          <span className="text-[10px] text-[#777777] font-mono tracking-widest">{item.ref}</span>
-                        )}
                       </div>
 
                       <h3
@@ -241,17 +255,10 @@ export default function TopstukkenShowcase({
                   {/* Pinned Bottom Details Bar */}
                   <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-auto">
                     <div>
-                      <span className="text-[10px] uppercase font-serif tracking-[0.14em] text-[#777777] block font-medium">
-                        {t('topstukken.priceValuation')}
-                      </span>
                       <span className="text-lg sm:text-xl font-serif font-bold text-[#111111]">
                         {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                       </span>
                     </div>
-
-                    <span className="text-xs font-serif tracking-[0.16em] text-[#111111] uppercase font-semibold border-b border-[#111111] pb-0.5 group-hover:text-[#B8860B] group-hover:border-[#B8860B] transition-colors duration-300 shrink-0">
-                      {t('topstukken.viewDetails')}
-                    </span>
                   </div>
                 </motion.div>
               );

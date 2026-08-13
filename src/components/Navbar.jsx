@@ -32,9 +32,9 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { id: 'topstukken', label: t('nav.topstukken') },
-    { id: 'catalogus', label: t('nav.collectie') },
-    { id: 'herkomst', label: t('nav.herkomst') },
+    { id: 'topstukken', label: t('nav.topstukken'), href: '/topstukken' },
+    { id: 'catalogus', label: t('nav.collectie'), href: '/collectie' },
+    { id: 'herkomst', label: t('nav.herkomst'), href: '/herkomst' },
     { id: 'contact', label: t('nav.contact') || 'Contact' }
   ];
 
@@ -83,9 +83,13 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           {/* LEFT ZONE: Navigation Links */}
           <div className="hidden lg:flex items-center gap-6 xl:gap-10 2xl:gap-12 min-w-0">
             {navLinks.slice(0, 3).map((link) => (
-              <button
+              <a
                 key={link.id}
-                onClick={() => handleNavClick(link.id)}
+                href={link.href}
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleNavClick(link.id);
+                }}
                 className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
                   activeTab === link.id ? 'text-[#111111] font-semibold' : 'text-[#111111]/75 hover:text-[#111111]'
                 }`}
@@ -98,27 +102,29 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
                     className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#111111]" 
                   />
                 )}
-              </button>
+              </a>
             ))}
           </div>
 
           {/* CENTER ZONE: Brand Logo - DEAD CENTER (Louis Vuitton Architecture) */}
           <div className="flex-1 lg:flex-initial flex justify-center text-center">
-            <motion.button 
+            <motion.a
+              href="/"
               whileHover={{ scale: 1.015 }}
               whileTap={{ scale: 0.985 }}
-              onClick={() => onNavigate('home')} 
-              className="flex flex-col items-center justify-center group text-center focus:outline-none cursor-pointer my-auto"
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigate('home');
+              }}
+              aria-label={t('nav.brandTitle')}
+              className="flex items-center justify-center group text-center focus:outline-none cursor-pointer my-auto"
             >
               <img 
                 src="/images/Atelier Rembrandt.png" 
                 alt="Atelier Rembrandt" 
                 className="h-8 sm:h-10 md:h-11 w-auto object-contain filter contrast-[1.05] shrink-0"
               />
-              <span className="text-xs sm:text-xs tracking-[0.24em] text-[#8E7035] uppercase font-serif font-medium block leading-none mt-1.5 pl-[0.24em] text-center w-full">
-                {t('nav.brandSubtitle')}
-              </span>
-            </motion.button>
+            </motion.a>
           </div>
 
           {/* RIGHT ZONE: Contact Link & Ultra-Sleek Language Switcher */}

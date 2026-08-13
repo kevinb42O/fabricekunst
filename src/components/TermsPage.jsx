@@ -15,7 +15,7 @@ export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
   const isEn = language === 'en';
 
   return (
-    <div className="min-h-screen bg-white text-[#111111] font-sans pb-24 pt-28 sm:pt-36">
+    <div className="mobile-legal-page min-h-screen bg-white text-[#111111] font-sans pb-24 pt-24 sm:pt-36">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Breadcrumb / Back button */}
@@ -27,7 +27,7 @@ export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
         >
           <button
             onClick={onNavigateHome}
-            className="inline-flex items-center space-x-2 text-xs font-serif tracking-widest text-[#8E7035] hover:text-[#B8860B] transition-colors uppercase cursor-pointer"
+            className="inline-flex min-h-11 items-center space-x-2 text-xs font-serif tracking-widest text-[#8E7035] hover:text-[#B8860B] transition-colors uppercase cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>{isFr ? 'Retour à l\'Accueil' : isEn ? 'Back to Home' : 'Terug naar Homepage'}</span>
@@ -130,14 +130,14 @@ export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
           <section className="space-y-3">
             <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
               <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 4</span>
-              <span>4. Levenslange Echtheidsgarantie & Certificate of Authenticity</span>
+              <span>4. Authenticiteitsverklaring & Documentatie</span>
             </h2>
             <div className="flex items-start space-x-3 bg-white border border-[#B8860B]/30 p-5 rounded-lg">
               <Award className="w-6 h-6 text-[#B8860B] shrink-0 mt-0.5" />
               <div className="space-y-1.5 text-xs sm:text-sm">
-                <h4 className="font-semibold text-[#111111]">100% Onvoorwaardelijke Garantiestelling</h4>
+                <h4 className="font-semibold text-[#111111]">Grondslag van de catalogisering</h4>
                 <p className="text-[#444444]">
-                  Atelier Rembrandt garandeert onvoorwaardelijk en levenslang de authenticiteit, datering en herkomst van alle geleverde antiquarische objecten en kunstwerken. Bij elke aankoop wordt op verzoek of standaard een officieel, genummerd en gecertificeerd <strong>Echtheidscertificaat (Certificate of Authenticity)</strong> afgegeven.
+                  De factuur, catalogusfiche en eventuele aanvullende documentatie beschrijven de kenmerken, bronnen en onderzoeksbevindingen waarop de catalogisering berust. Toeschrijvingen en dateringen weerspiegelen de beschikbare informatie op het moment van verkoop. Een specifieke contractuele garantie geldt uitsluitend wanneer zij uitdrukkelijk en schriftelijk in de verkoopovereenkomst is opgenomen.
                 </p>
               </div>
             </div>
@@ -186,15 +186,15 @@ export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
               <div className="border border-[#E8E2D5] p-4 rounded-lg bg-white flex items-start space-x-3">
                 <Truck className="w-5 h-5 text-[#B8860B] shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-[#111111] text-sm">Museumverpakking</h4>
-                  <p className="text-xs text-[#666666] mt-1">Elk werk wordt verpakt in zuurvrije materialen, schokbestendige klimaatverpakking en museum-grade bescherming.</p>
+                  <h4 className="font-semibold text-[#111111] text-sm">Objectgerichte verpakking</h4>
+                  <p className="text-xs text-[#666666] mt-1">De verpakking wordt afgestemd op materiaal, formaat, conditie en bestemming van het object.</p>
                 </div>
               </div>
               <div className="border border-[#E8E2D5] p-4 rounded-lg bg-white flex items-start space-x-3">
                 <ShieldCheck className="w-5 h-5 text-[#B8860B] shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-[#111111] text-sm">100% Verzekerd Transport</h4>
-                  <p className="text-xs text-[#666666] mt-1">Verzendingen vinden uitsluitend plaats via gespecialiseerde en 100% tegen verlies en beschadiging verzekerde koeriersdiensten.</p>
+                  <h4 className="font-semibold text-[#111111] text-sm">Verzekerd transport</h4>
+                  <p className="text-xs text-[#666666] mt-1">De voorgestelde vervoerder, verzekerde waarde, dekking en eventuele uitsluitingen worden vóór verzending bevestigd.</p>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 
@@ -21,7 +21,7 @@ export default function Footer({ onNavigate }) {
           
           {/* Col 1: Brand & Philosophy */}
           <div className="sm:col-span-2 md:col-span-2 space-y-4">
-            <div className="flex flex-col items-start space-y-1.5">
+            <div className="flex items-start">
               <img 
                 src="/images/Atelier Rembrandt.png" 
                 alt="Atelier Rembrandt" 
@@ -29,19 +29,11 @@ export default function Footer({ onNavigate }) {
                 decoding="async"
                 className="h-10 sm:h-12 md:h-13 w-auto object-contain filter contrast-[1.05]"
               />
-              <span className="text-xs tracking-[0.24em] text-[#8E7035] uppercase font-serif font-medium leading-none pl-[0.24em]">
-                {t('nav.brandSubtitle')}
-              </span>
             </div>
             
-            <p className="text-xs sm:text-sm text-[#555555] font-light max-w-md leading-relaxed font-serif">
-              {t('hero.description')}
+            <p className="text-sm text-[#555555] max-w-md leading-relaxed font-serif">
+              {t('footer.addressText')}
             </p>
-
-            <div className="flex items-center space-x-2 text-xs text-[#B8860B]">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="font-semibold">{t('footer.addressText')}</span>
-            </div>
           </div>
 
           {/* Col 2: Navigation & Juridisch */}
@@ -81,10 +73,6 @@ export default function Footer({ onNavigate }) {
           <div className="space-y-3">
             <h4 className="text-xs font-serif font-semibold uppercase tracking-[0.16em] text-[#111111]">{t('footer.contactHeader')}</h4>
             <ul className="space-y-2.5 text-xs sm:text-sm font-serif">
-              <li className="flex items-center space-x-2 text-[#333333]">
-                <MapPin className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                <span>{t('footer.addressText')}</span>
-              </li>
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
                 <a href="mailto:contact@atelierrembrandt.com" className="hover:text-[#B8860B] transition-colors font-medium">
@@ -129,4 +117,3 @@ export default function Footer({ onNavigate }) {
     </footer>
   );
 }
-

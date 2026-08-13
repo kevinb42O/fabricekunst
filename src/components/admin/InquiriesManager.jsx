@@ -72,7 +72,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
   });
 
   return (
-    <div className="space-y-6 text-[#111111] animate-fade-in">
+    <div className="admin-module-legacy admin-inquiries space-y-6 text-[#111111] animate-fade-in">
       
       {/* Search & Status Bar */}
       <div className="p-4 sm:p-6 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -356,10 +356,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
 
               <a
                 href={`mailto:${emailModalInquiry.email}?subject=Re: ${emailModalInquiry.itemTitle} (${emailModalInquiry.itemRef})&body=${encodeURIComponent(customEmailBody)}`}
-                onClick={() => {
-                  handleStatusSelect(emailModalInquiry.id, 'In behandeling');
-                  setEmailModalInquiry(null);
-                }}
+                onClick={() => setEmailModalInquiry(null)}
                 className="px-6 py-2.5 rounded-xl bg-[#111111] text-white hover:bg-stone-800 text-xs font-bold uppercase tracking-wider transition-colors flex items-center space-x-2 shadow-md"
               >
                 <ExternalLink className="w-4 h-4 text-[#D4AF37]" />

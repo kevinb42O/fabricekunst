@@ -192,6 +192,8 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
               {itemProvenanceDetails && (
                 <p className="text-xs text-[#555555]">
                   {itemProvenanceDetails}
+                </p>
+              )}
             </motion.div>
           </div>
 
@@ -290,4 +292,3 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
     </section>
   );
 }
-

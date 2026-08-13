@@ -209,7 +209,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
     const success = await copyTextToClipboard(promptText);
     if (success && showToast) {
-      showToast(`📋 AI Vertaal-prompt voor Herkomst (bron: ${sourceLangName}) gekopieerd naar klembord!`);
+      showToast(`AI-vertaalprompt voor Herkomst met ${sourceLangName} als bron is gekopieerd.`, 'info');
     }
   };
 
@@ -218,7 +218,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
     const data = parseAiJsonTranslation(aiJsonInput);
     if (!data) {
-      if (showToast) showToast("⚠️ Ongeldige JSON code. Controleer het resultaat van de AI.");
+      if (showToast) showToast("Ongeldige JSON. Controleer het resultaat van de AI.", 'error');
       return;
     }
 
@@ -243,11 +243,11 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
     setShowAiImportModal(false);
     setAiJsonInput('');
-    if (showToast) showToast("✨ Success! Herkomst pagina vertalingen geïmporteerd.");
+    if (showToast) showToast("Vertalingen voor de herkomstpagina zijn geïmporteerd.");
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="admin-module-legacy admin-provenance space-y-8 pb-12">
       
       {/* Top Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E8E2D6] shadow-xs">
@@ -273,7 +273,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               title="Kopieer herkomst-teksten als AI vertaal-prompt"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-              <span>Prompt ({formLang === 'nl' ? '🇳🇱 NL' : formLang === 'en' ? '🇬🇧 EN' : '🇫🇷 FR'})</span>
+              <span>Prompt ({formLang.toUpperCase()})</span>
             </button>
 
             <button
@@ -323,7 +323,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                 : 'bg-[#FAF7F2] text-[#555555] border-[#E8E2D6] hover:text-[#1C1A18]'
             }`}
           >
-            <span>🇳🇱</span>
+            <span>NL</span>
             <span>Nederlands (NL)</span>
           </button>
 
@@ -336,7 +336,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                 : 'bg-[#FAF7F2] text-[#555555] border-[#E8E2D6] hover:text-[#1C1A18]'
             }`}
           >
-            <span>🇬🇧</span>
+            <span>EN</span>
             <span>English (EN)</span>
           </button>
 
@@ -349,7 +349,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                 : 'bg-[#FAF7F2] text-[#555555] border-[#E8E2D6] hover:text-[#1C1A18]'
             }`}
           >
-            <span>🇫🇷</span>
+            <span>FR</span>
             <span>Français (FR)</span>
           </button>
         </div>
@@ -414,7 +414,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               </p>
             </div>
             <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#FAF7F2] text-[#B8860B] border border-[#D8CEB8]">
-              {formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}
+              {formLang === 'nl' ? 'Nederlands' : formLang === 'en' ? 'English' : 'Français'}
             </span>
           </div>
 
@@ -476,7 +476,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               </p>
             </div>
             <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#FAF7F2] text-[#B8860B] border border-[#D8CEB8]">
-              {formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}
+              {formLang === 'nl' ? 'Nederlands' : formLang === 'en' ? 'English' : 'Français'}
             </span>
           </div>
 
@@ -581,7 +581,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               </p>
             </div>
             <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#FAF7F2] text-[#B8860B] border border-[#D8CEB8]">
-              {formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}
+              {formLang === 'nl' ? 'Nederlands' : formLang === 'en' ? 'English' : 'Français'}
             </span>
           </div>
 
@@ -723,7 +723,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               </p>
             </div>
             <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#FAF7F2] text-[#B8860B] border border-[#D8CEB8]">
-              {formLang === 'nl' ? '🇳🇱 Nederlands' : formLang === 'en' ? '🇬🇧 English' : '🇫🇷 Français'}
+              {formLang === 'nl' ? 'Nederlands' : formLang === 'en' ? 'English' : 'Français'}
             </span>
           </div>
 

@@ -1,151 +1,152 @@
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('[send-push] Missing Supabase env vars:', {
-    url: !!supabaseUrl,
-    key: !!supabaseKey
-  });
-}
-
-const supabase = supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey)
+const supabase = supabaseUrl && supabaseSecretKey
+  ? createClient(supabaseUrl, supabaseSecretKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
   : null;
 
-// VAPID credentials
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:kevin@webaanzee.be';
-
-if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-  console.error('[send-push] Missing VAPID env vars:', {
-    pub: !!VAPID_PUBLIC_KEY,
-    priv: !!VAPID_PRIVATE_KEY
-  });
-}
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@atelierrembrandt.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const json = (res, status, payload) => {
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(status).json(payload);
+};
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+const getBearerToken = (req) => {
+  const authorization = req.headers.authorization || '';
+  return authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : null;
+};
 
-  // Allow GET requests to serve as a status / health-check endpoint
-  if (req.method === 'GET') {
-    let subCount = null;
-    let dbError = null;
+const requireAdmin = async (req) => {
+  const accessToken = getBearerToken(req);
+  if (!accessToken) return null;
 
-    if (supabase) {
-      const { count, error } = await supabase
-        .from('push_subscriptions')
-        .select('*', { count: 'exact', head: true });
-      if (error) {
-        dbError = error.message;
+  const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+  if (authError || !authData.user) return null;
+
+  const { data: profile, error: profileError } = await supabase
+    .from('admin_profiles')
+    .select('user_id')
+    .eq('user_id', authData.user.id)
+    .eq('active', true)
+    .in('role', ['admin', 'developer'])
+    .maybeSingle();
+
+  return profileError || !profile ? null : authData.user;
+};
+
+const claimInquiry = async (inquiryId) => {
+  if (typeof inquiryId !== 'string' || !/^inq-[0-9a-f-]{36}$/i.test(inquiryId)) return null;
+
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from('inquiries')
+    .update({ notification_sent_at: new Date().toISOString() })
+    .eq('id', inquiryId)
+    .is('notification_sent_at', null)
+    .gte('created_at', tenMinutesAgo)
+    .select('id, item_title, item_ref, type')
+    .maybeSingle();
+
+  if (error) console.error('[send-push] Inquiry claim failed:', error.message);
+  return error ? null : data;
+};
+
+const sendToSubscribers = async (payload) => {
+  const { data: rows, error } = await supabase
+    .from('push_subscriptions')
+    .select('id, subscription');
+
+  if (error) throw new Error(`Subscription lookup failed: ${error.message}`);
+  if (!rows?.length) return { sent: 0, failed: 0 };
+
+  const results = await Promise.all(rows.map(async (row) => {
+    let subscription = row.subscription;
+    if (subscription?.subscription) subscription = subscription.subscription;
+    if (!subscription?.endpoint) return 'failed';
+
+    try {
+      await webpush.sendNotification(subscription, JSON.stringify(payload));
+      return 'sent';
+    } catch (error) {
+      if (error.statusCode === 404 || error.statusCode === 410) {
+        const { error: deleteError } = await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('id', row.id);
+        if (deleteError) console.error('[send-push] Expired subscription cleanup failed:', deleteError.message);
       } else {
-        subCount = count;
+        console.error('[send-push] Delivery failed:', error.statusCode || 'unknown');
       }
+      return 'failed';
     }
+  }));
 
-    return res.status(200).json({
-      status: 'API is active and operational',
-      supabaseConfigured: !!supabase,
-      vapidConfigured: !!(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
-      activeSubscriptionsCount: subCount,
-      dbError: dbError,
-      supabaseUrl: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : null,
-      vapidSubject: VAPID_SUBJECT,
-      instruction: 'To send a push notification, send an HTTP POST request with JSON body { title, body, url }'
-    });
+  return {
+    sent: results.filter((result) => result === 'sent').length,
+    failed: results.filter((result) => result === 'failed').length
+  };
+};
+
+export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Allow', 'GET, POST, OPTIONS');
+    return res.status(204).end();
   }
 
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method === 'GET') return json(res, 200, { status: 'ok' });
 
-  // Debug endpoint — POST with { debug: true } to check config
-  if (req.body?.debug) {
-    return res.status(200).json({
-      supabaseConfigured: !!supabase,
-      vapidConfigured: !!(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
-      supabaseUrl: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : null,
-      vapidSubject: VAPID_SUBJECT
-    });
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST, OPTIONS');
+    return json(res, 405, { error: 'Method not allowed' });
   }
 
-  if (!supabase) {
-    return res.status(500).json({ error: 'Supabase not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.' });
+  if (!supabase || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    console.error('[send-push] Required server configuration is missing.');
+    return json(res, 503, { error: 'Notificatiedienst is tijdelijk niet beschikbaar.' });
   }
-
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    return res.status(500).json({ error: 'VAPID keys not configured. Check VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in Vercel environment variables.' });
-  }
-
-  const { title, body, url } = req.body || {};
 
   try {
-    // Fetch all subscriptions
-    const { data: rows, error } = await supabase
-      .from('push_subscriptions')
-      .select('id, subscription');
+    let payload;
 
-    if (error) {
-      console.error('[send-push] DB select error:', error);
-      return res.status(500).json({ error: 'DB error', details: error.message });
+    if (req.body?.test === true) {
+      const admin = await requireAdmin(req);
+      if (!admin) return json(res, 401, { error: 'Beheerderssessie vereist.' });
+
+      payload = {
+        title: 'Atelier Rembrandt',
+        body: 'Testmelding geslaagd. Dit apparaat ontvangt beheerupdates.',
+        url: '/admin'
+      };
+    } else {
+      const inquiry = await claimInquiry(req.body?.inquiryId);
+      if (!inquiry) {
+        return json(res, 202, { success: true, accepted: false });
+      }
+
+      const subject = inquiry.item_title || inquiry.item_ref || 'de collectie';
+      payload = {
+        title: 'Nieuwe aanvraag',
+        body: `Er is een nieuwe aanvraag ontvangen voor ${subject}.`,
+        url: '/admin'
+      };
     }
 
-    if (!rows || rows.length === 0) {
-      console.log('[send-push] No subscriptions found in DB.');
-      return res.status(200).json({ success: true, count: 0, message: 'No subscriptions registered.' });
-    }
-
-    console.log(`[send-push] Found ${rows.length} subscription(s). Sending...`);
-
-    const payload = JSON.stringify({
-      title: title || 'Nieuwe aanvraag!',
-      body: body || 'U heeft een nieuwe aanvraag ontvangen bij Atelier Rembrandt.',
-      url: url || '/admin'
-    });
-
-    const results = await Promise.all(
-      rows.map(async (row) => {
-        // The subscription field may be the object directly, or nested in a 'subscription' key
-        let pushSub = row.subscription;
-        
-        // Handle case where subscription is double-nested
-        if (pushSub && typeof pushSub === 'object' && pushSub.subscription) {
-          pushSub = pushSub.subscription;
-        }
-
-        if (!pushSub || !pushSub.endpoint) {
-          console.warn(`[send-push] Row ${row.id} has invalid subscription format:`, JSON.stringify(pushSub).substring(0, 100));
-          return { id: row.id, status: 'invalid_format' };
-        }
-
-        try {
-          await webpush.sendNotification(pushSub, payload);
-          console.log(`[send-push] Sent to ${row.id}`);
-          return { id: row.id, status: 'sent' };
-        } catch (err) {
-          console.error(`[send-push] Error sending to ${row.id}:`, err.statusCode, err.message);
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            await supabase.from('push_subscriptions').delete().eq('id', row.id);
-            return { id: row.id, status: 'expired_deleted' };
-          }
-          return { id: row.id, status: 'failed', error: err.message, code: err.statusCode };
-        }
-      })
-    );
-
-    return res.status(200).json({ success: true, count: rows.length, results });
-  } catch (err) {
-    console.error('[send-push] Fatal error:', err);
-    return res.status(500).json({ error: 'Internal server error', message: err.message });
+    const delivery = await sendToSubscribers(payload);
+    return json(res, 200, { success: true, ...delivery });
+  } catch (error) {
+    console.error('[send-push] Unexpected failure:', error.message);
+    return json(res, 500, { error: 'Notificatie kon niet worden verwerkt.' });
   }
 }

@@ -1,20 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { X, ChevronDown, Check, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { saveInquiryAsync } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedPrice } from '../utils/translationService';
+import { useResponsiveMode } from '../hooks/useResponsiveMode';
 
-export default function InquiryModal({ item, catalog = [], onClose, onSuccess }) {
+export default function InquiryModal({ item, catalog = [], initialRequestType = 'general_query', onClose, onSuccess }) {
   const { t, language } = useLanguage();
+  const { isMobile } = useResponsiveMode();
+  const dialogRef = useRef(null);
+  const previouslyFocusedRef = useRef(null);
+  const titleId = useId();
 
-  const REQUEST_TYPES = [
+  const allRequestTypes = [
     { key: 'private_viewing', label: t('inquiry.tabViewing'), fullTitle: t('inquiry.optPrivateViewing') },
     { key: 'make_offer', label: t('inquiry.tabOffer'), fullTitle: t('inquiry.optMakeOffer') },
     { key: 'request_photos', label: t('inquiry.tabPhotos'), fullTitle: t('inquiry.optPhotos') },
     { key: 'general_query', label: t('inquiry.tabGeneral'), fullTitle: t('inquiry.optGeneral') },
   ];
+  const REQUEST_TYPES = isMobile
+    ? allRequestTypes.filter(({ key }) => key !== 'request_photos')
+    : allRequestTypes;
 
-  const [activeTabKey, setActiveTabKey] = useState('private_viewing');
+  const [activeTabKey, setActiveTabKey] = useState(initialRequestType);
   const [selectedItemId, setSelectedItemId] = useState(item ? item.id : 'none');
   const [selectedItem, setSelectedItem] = useState(item || null);
   const [itemDropdownOpen, setItemDropdownOpen] = useState(false);
@@ -30,7 +38,6 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
 
   const [contactPref, setContactPref] = useState('email');
   const [submitted, setSubmitted] = useState(false);
-  const [ticketId, setTicketId] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -43,16 +50,37 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
 
   useEffect(() => {
     const originalStyle = document.body.style.overflow;
+    previouslyFocusedRef.current = document.activeElement;
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = [...dialogRef.current.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+      )];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    const focusTimer = window.setTimeout(() => {
+      dialogRef.current?.querySelector('button')?.focus();
+    }, 0);
     return () => {
       document.body.style.overflow = originalStyle;
       window.removeEventListener('keydown', handleKeyDown);
+      window.clearTimeout(focusTimer);
+      previouslyFocusedRef.current?.focus?.();
     };
   }, [onClose]);
 
@@ -110,7 +138,6 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
 
     try {
       await saveInquiryAsync(payload);
-      setTicketId(`REF: ADV-${Math.floor(100000 + Math.random() * 900000)}`);
       setSubmitted(true);
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -132,25 +159,29 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
 
   return (
     <div 
-      className="fixed inset-0 z-50 overflow-y-auto bg-[#FAF8F5]/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 lg:p-6 animate-fade-in"
+      className="fixed inset-0 z-[90] overflow-hidden bg-[#FAF8F5]/90 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       {/* Brede container geoptimaliseerd voor desktop zonder scrollen */}
       <div 
-        className="relative w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl bg-white border border-[#C5BCAE] rounded-2xl shadow-[0_20px_60px_-15px_rgba(184,134,11,0.12)] overflow-hidden flex flex-col text-[#111111] max-h-[96vh] lg:max-h-[90vh]"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full h-[100dvh] sm:h-auto max-w-3xl bg-white border-0 sm:border border-[#C5BCAE] rounded-none sm:rounded-2xl shadow-[0_20px_60px_-15px_rgba(184,134,11,0.12)] overflow-hidden flex flex-col text-[#111111] max-h-none sm:max-h-[96vh] lg:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E5E0D5] bg-[#FCFBF9] shrink-0">
+        <div className="flex items-center justify-between min-h-16 px-4 sm:px-6 py-2.5 sm:py-3.5 border-b border-[#E5E0D5] bg-[#FCFBF9] shrink-0">
           <div className="flex flex-col items-start">
             <img 
               src="/images/Atelier Rembrandt.png" 
               alt="Atelier Rembrandt" 
               className="h-7 sm:h-8 w-auto object-contain filter contrast-[1.05]"
             />
-            <span className="text-[11px] tracking-[0.20em] text-[#8E7035] uppercase font-serif font-bold mt-0.5">
+            <span id={titleId} className="text-[11px] tracking-[0.20em] text-[#8E7035] uppercase font-serif font-bold mt-0.5">
               {t('inquiry.modalTitle')}
             </span>
           </div>
@@ -158,14 +189,14 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
           <button
             onClick={onClose}
             aria-label={t('inquiry.closeBtn')}
-            className="w-8 h-8 rounded-full border border-[#C5BCAE] hover:border-[#111111] text-[#111111] flex items-center justify-center transition-colors cursor-pointer"
+            className="w-11 h-11 sm:w-8 sm:h-8 rounded-full border border-[#C5BCAE] hover:border-[#111111] text-[#111111] flex items-center justify-center transition-colors cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 p-5 sm:p-6 lg:p-7">
+        <div className="overflow-y-auto overscroll-contain flex-1 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6 lg:p-7">
           {submitted ? (
             /* Post-Submission Reception Screen */
             <div className="py-8 px-4 max-w-md mx-auto text-center space-y-5 animate-fade-in">
@@ -174,9 +205,6 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
               </div>
 
               <div>
-                <span className="text-xs font-mono font-bold text-[#B8860B] uppercase tracking-widest block mb-1">
-                  {ticketId}
-                </span>
                 <h3 className="text-2xl font-serif font-bold text-[#111111]">
                   {t('inquiry.successTitle')}
                 </h3>
@@ -194,70 +222,18 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
               </button>
             </div>
           ) : (
-            /* Split View: Left Showcase + Right Form */
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-              
-              {/* Left Column: Curated Item / Showcase (5 cols) */}
-              <div className="lg:col-span-5 space-y-4 bg-[#FAF9F6] p-4 sm:p-5 rounded-xl border border-[#D8CEB8]">
-                {selectedItem ? (
-                  <div className="space-y-2.5">
-                    <div className="relative h-44 sm:h-52 lg:h-48 w-full rounded-lg overflow-hidden border border-[#D8CEB8] shadow-xs">
-                      <img 
-                        src={selectedItem.images[0]?.url || "/images/voltaire-lit-bookcase-desk.jpg"} 
-                        alt={getItemField(selectedItem, 'title', language)} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-mono font-bold text-[#B8860B]">
-                        <span>{selectedItem.ref}</span>
-                        <span className="font-serif font-bold text-sm text-[#111111]">
-                          {getLocalizedPrice(selectedItem.price, language)}
-                        </span>
-                      </div>
-                      <h3 className="text-sm sm:text-base font-serif font-bold text-[#111111] mt-0.5 line-clamp-2">
-                        {getItemField(selectedItem, 'title', language)}
-                      </h3>
-                      <p className="text-xs text-[#444444] font-serif italic font-medium">
-                        {selectedItem.author} ({selectedItem.year})
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5 py-1">
-                    <img 
-                      src="/images/Atelier Rembrandt.png" 
-                      alt="Atelier Rembrandt" 
-                      className="h-8 w-auto object-contain filter contrast-[1.05]"
-                    />
-                    <span className="text-xs tracking-[0.24em] text-[#8E7035] uppercase font-serif font-bold block">
-                      {t('nav.brandSubtitle')}
+            <div className="max-w-2xl mx-auto">
+              <div className="space-y-3.5">
+                {item && (
+                  <div className="border-b border-[#D8CEB8] pb-3">
+                    <strong className="mt-1 block line-clamp-2 font-serif text-base leading-snug text-[#111111]">
+                      {getItemField(item, 'title', language)}
+                    </strong>
+                    <span className="mt-1 block font-serif text-sm text-[#655B50]">
+                      {[item.author, item.year].filter(Boolean).join(' · ')}
                     </span>
-                    <p className="text-xs text-[#333333] font-serif leading-relaxed font-medium">
-                      {t('inquiry.certificateNotice')}
-                    </p>
                   </div>
                 )}
-
-                {/* Guarantees List */}
-                <div className="pt-3 border-t border-[#D8CEB8] space-y-2 text-xs font-serif font-semibold text-[#222222]">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#B8860B] shrink-0" />
-                    <span>{t('inquiry.guarantee1')}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#B8860B] shrink-0" />
-                    <span>{t('inquiry.guarantee2')}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#B8860B] shrink-0" />
-                    <span>{t('inquiry.guarantee3')}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: High-Legibility Scroll-Free Form (7 cols) */}
-              <div className="lg:col-span-7 space-y-3.5">
                 
                 {/* Type Aanvraag Tabs */}
                 <div>
@@ -273,7 +249,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                           key={typeObj.key}
                           type="button"
                           onClick={() => setActiveTabKey(typeObj.key)}
-                          className={`py-2 px-1 text-xs uppercase tracking-wider font-sans transition-all duration-200 cursor-pointer text-center border-b-2 -mb-[2px] ${
+                          className={`min-h-12 py-2 px-1 text-[11px] sm:text-xs uppercase tracking-wider font-sans transition-all duration-200 cursor-pointer text-center border-b-2 -mb-[2px] ${
                             isActive
                               ? 'border-[#B8860B] text-[#111111] font-extrabold'
                               : 'border-transparent text-[#555555] hover:text-[#111111] font-semibold'
@@ -287,14 +263,16 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                 </div>
 
                 {/* Topstuk Selector Dropdown */}
-                <div className="relative">
+                {!item && <div className="relative">
                   <label className="block text-[#111111] uppercase tracking-[0.16em] text-xs font-sans font-bold mb-1">
                     {t('inquiry.selectItemLabel')}
                   </label>
 
-                  <div 
+                  <button
+                    type="button"
+                    aria-expanded={itemDropdownOpen}
                     onClick={() => setItemDropdownOpen(!itemDropdownOpen)}
-                    className="w-full px-3.5 py-2.5 bg-[#FAF9F6] hover:bg-white border border-[#C5BCAE] rounded-lg text-xs sm:text-sm font-serif flex items-center justify-between cursor-pointer transition-colors min-h-[40px]"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF9F6] hover:bg-white border border-[#C5BCAE] rounded-lg text-xs sm:text-sm font-serif flex items-center justify-between cursor-pointer transition-colors min-h-12"
                   >
                     {selectedItem ? (
                       <span className="font-bold text-[#111111] truncate">
@@ -304,7 +282,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       <span className="text-[#555555] italic font-medium">{t('inquiry.noSpecificItem')}</span>
                     )}
                     <ChevronDown className={`w-4 h-4 text-[#333333] transition-transform duration-200 ${itemDropdownOpen ? 'rotate-180' : ''}`} />
-                  </div>
+                  </button>
 
                   {itemDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#C5BCAE] rounded-lg shadow-lg z-20 overflow-hidden animate-fade-in">
@@ -314,7 +292,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                           value={itemSearchQuery}
                           onChange={(e) => setItemSearchQuery(e.target.value)}
                           placeholder={t('inquiry.searchItemPlaceholder')}
-                          className="w-full px-3 py-1.5 bg-white border border-[#C5BCAE] rounded text-xs text-[#111111] font-medium focus:outline-none focus:border-[#B8860B]"
+                          className="w-full min-h-12 px-3 py-2 bg-white border border-[#C5BCAE] rounded text-sm text-[#111111] font-medium focus:outline-none focus:border-[#B8860B]"
                         />
                       </div>
 
@@ -322,7 +300,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                         <button
                           type="button"
                           onClick={() => handleItemSelect({ id: 'none' })}
-                          className={`w-full p-2.5 text-left text-xs font-serif hover:bg-[#FAF7F0] transition-colors flex items-center justify-between ${
+                          className={`w-full min-h-12 p-2.5 text-left text-xs font-serif hover:bg-[#FAF7F0] transition-colors flex items-center justify-between ${
                             !selectedItem ? 'bg-[#FAF7F0] text-[#B8860B] font-bold' : 'text-[#333333] font-medium'
                           }`}
                         >
@@ -337,7 +315,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                               key={catItem.id}
                               type="button"
                               onClick={() => handleItemSelect(catItem)}
-                              className={`w-full p-2.5 text-left text-xs font-serif hover:bg-[#FAF7F0] transition-colors flex items-center justify-between ${
+                              className={`w-full min-h-12 p-2.5 text-left text-xs font-serif hover:bg-[#FAF7F0] transition-colors flex items-center justify-between ${
                                 isSelected ? 'bg-[#FAF7F0] text-[#B8860B] font-bold' : 'text-[#111111] font-medium'
                               }`}
                             >
@@ -352,7 +330,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       </div>
                     </div>
                   )}
-                </div>
+                </div>}
 
                 {/* Form Controls */}
                 <form onSubmit={handleSubmit} className="space-y-3">
@@ -369,7 +347,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder={t('inquiry.formNamePlaceholder')}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-xs sm:text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none min-h-[40px]"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none min-h-12 sm:min-h-[40px]"
                       />
                     </div>
 
@@ -383,7 +361,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder={t('inquiry.formEmailPlaceholder')}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-xs sm:text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none min-h-[40px]"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none min-h-12 sm:min-h-[40px]"
                       />
                     </div>
                   </div>
@@ -399,7 +377,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder={t('inquiry.formPhonePlaceholder')}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-xs sm:text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none min-h-[40px]"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none min-h-12 sm:min-h-[40px]"
                       />
                     </div>
 
@@ -414,7 +392,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                             setContactPref('email');
                             setFormData(prev => ({ ...prev, contactPref: 'email' }));
                           }}
-                          className={`py-2 text-xs font-bold uppercase tracking-wider font-sans border rounded-lg transition-all cursor-pointer text-center min-h-[40px] ${
+                          className={`py-2 text-[11px] font-bold uppercase tracking-wide font-sans border rounded-lg transition-all cursor-pointer text-center min-h-12 sm:min-h-[40px] ${
                             contactPref === 'email'
                               ? 'bg-[#FAF7F0] border-2 border-[#B8860B] text-[#B8860B]'
                               : 'bg-[#FAF9F6] border border-[#C5BCAE] text-[#333333] hover:text-[#111111]'
@@ -428,7 +406,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                             setContactPref('phone');
                             setFormData(prev => ({ ...prev, contactPref: 'phone' }));
                           }}
-                          className={`py-2 text-xs font-bold uppercase tracking-wider font-sans border rounded-lg transition-all cursor-pointer text-center min-h-[40px] ${
+                          className={`py-2 text-[11px] font-bold uppercase tracking-wide font-sans border rounded-lg transition-all cursor-pointer text-center min-h-12 sm:min-h-[40px] ${
                             contactPref === 'phone'
                               ? 'bg-[#FAF7F0] border-2 border-[#B8860B] text-[#B8860B]'
                               : 'bg-[#FAF9F6] border border-[#C5BCAE] text-[#333333] hover:text-[#111111]'
@@ -442,7 +420,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                             setContactPref('whatsapp');
                             setFormData(prev => ({ ...prev, contactPref: 'whatsapp' }));
                           }}
-                          className={`py-2 text-xs font-bold uppercase tracking-wider font-sans border rounded-lg transition-all cursor-pointer text-center min-h-[40px] ${
+                          className={`py-2 text-[11px] font-bold uppercase tracking-wide font-sans border rounded-lg transition-all cursor-pointer text-center min-h-12 sm:min-h-[40px] ${
                             contactPref === 'whatsapp'
                               ? 'bg-[#FAF7F0] border-2 border-[#B8860B] text-[#B8860B]'
                               : 'bg-[#FAF9F6] border border-[#C5BCAE] text-[#333333] hover:text-[#111111]'
@@ -465,7 +443,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder={t('inquiry.formMessagePlaceholder')}
-                      className="w-full p-3 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-xs sm:text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none"
+                      className="w-full min-h-24 p-3 rounded-lg bg-[#FAF9F6] focus:bg-white border border-[#C5BCAE] focus:border-[#B8860B] text-sm text-[#111111] font-medium placeholder-[#777777] transition-all focus:outline-none"
                     />
                   </div>
 
@@ -480,7 +458,7 @@ export default function InquiryModal({ item, catalog = [], onClose, onSuccess })
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 rounded-lg bg-[#FAF7F0] hover:bg-[#111111] text-[#111111] hover:text-white border-2 border-[#B8860B] hover:border-[#111111] text-xs sm:text-sm font-sans uppercase tracking-[0.2em] font-bold transition-all duration-300 shadow-md cursor-pointer text-center min-h-[46px]"
+                    className="w-full py-3.5 rounded-lg bg-[#FAF7F0] hover:bg-[#111111] text-[#111111] hover:text-white border-2 border-[#B8860B] hover:border-[#111111] text-xs sm:text-sm font-sans uppercase tracking-[0.16em] sm:tracking-[0.2em] font-bold transition-all duration-300 shadow-md cursor-pointer text-center min-h-12"
                   >
                     {loading ? t('inquiry.submitting') : t('inquiry.confidentialSubmit')}
                   </button>

@@ -14,15 +14,15 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
   const [mounted, setMounted]         = useState(false);
   const emailRef = useRef(null);
 
-  /* ── Load remembered credentials on mount ── */
+  /* Remember only the email address; credentials never belong in browser storage. */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(REMEMBER_KEY);
       if (saved) {
-        const { email: savedEmail, password: savedPassword } = JSON.parse(saved);
+        const { email: savedEmail } = JSON.parse(saved);
         if (savedEmail) setEmail(savedEmail);
-        if (savedPassword) setPassword(savedPassword);
         setRememberMe(true);
+        localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email: savedEmail }));
       }
     } catch (_) { /* ignore parse errors */ }
 
@@ -47,9 +47,9 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
     setLoading(false);
 
     if (result.success) {
-      /* ── Persist or clear remembered credentials ── */
+      /* Persist only the normalized email address, never the password. */
       if (rememberMe) {
-        localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email: email.trim().toLowerCase(), password }));
+        localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email: email.trim().toLowerCase() }));
       } else {
         localStorage.removeItem(REMEMBER_KEY);
       }
@@ -87,19 +87,6 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
             linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
           background-size: 40px 40px;
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        /* Soft radial glow in top-left */
-        .al-root::after {
-          content: '';
-          position: fixed;
-          top: -30%;
-          left: -20%;
-          width: 70vw;
-          height: 70vw;
-          background: radial-gradient(circle, rgba(0,112,243,0.04) 0%, transparent 70%);
           pointer-events: none;
           z-index: 0;
         }
@@ -142,10 +129,7 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
           border: 1px solid #e5e5e5;
           border-radius: 12px;
           padding: 40px 40px 36px;
-          box-shadow:
-            0 0 0 1px rgba(0,0,0,0.03),
-            0 4px 6px rgba(0,0,0,0.04),
-            0 12px 28px rgba(0,0,0,0.06);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.05);
         }
 
         /* ── Logo / Brand mark ── */
@@ -164,6 +148,7 @@ export default function AdminLoginModal({ onClose, onLoginSuccess }) {
 
         /* ── Header ── */
         .al-heading {
+          font-family: inherit;
           font-size: 22px;
           font-weight: 600;
           color: #111;

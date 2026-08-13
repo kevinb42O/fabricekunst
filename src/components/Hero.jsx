@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 
-export default function Hero({ heroImage, onExploreCatalog, onRequestConsultation }) {
+export default function Hero({ heroImage, onExploreCatalog }) {
   const { t } = useLanguage();
   const heroRef = useRef(null);
   const currentHeroImage = heroImage || '/images/provenience-light-cream-hero.jpg';
@@ -142,12 +142,6 @@ export default function Hero({ heroImage, onExploreCatalog, onRequestConsultatio
                 <span>{t('hero.exploreBtn')}</span>
               </button>
 
-              <button
-                onClick={onRequestConsultation}
-                className="text-xs sm:text-sm font-serif tracking-[0.16em] text-[#8E7035] uppercase font-semibold hover:text-[#4A1521] border-b border-transparent pb-1 transition-colors duration-300 cursor-pointer"
-              >
-                <span>{t('hero.consultationBtn')}</span>
-              </button>
             </motion.div>
           </div>
 

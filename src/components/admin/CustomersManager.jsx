@@ -38,7 +38,7 @@ export default function CustomersManager({ inquiries = [] }) {
   });
 
   return (
-    <div className="space-y-6 text-[#1C1A18] font-sans animate-fade-in">
+    <div className="admin-module-legacy admin-customers space-y-6 text-[#1C1A18] font-sans animate-fade-in">
       
       {/* Header & Search */}
       <div className="p-6 rounded-xl bg-white border border-[#EBE7DF] shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">

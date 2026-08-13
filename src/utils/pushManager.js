@@ -74,8 +74,6 @@ export async function subscribeUserToPush() {
   // CRITICAL: subscription.toJSON() gives us { endpoint, expirationTime, keys: { p256dh, auth } }
   // We must store this as a plain object — NOT the raw PushSubscription class instance
   const subscriptionJSON = subscription.toJSON();
-  console.log('[pushManager] Subscription to save:', JSON.stringify(subscriptionJSON).substring(0, 80) + '...');
-
   if (!subscriptionJSON.endpoint) {
     throw new Error('Ongeldig push-abonnement ontvangen. Probeer opnieuw.');
   }
@@ -93,7 +91,6 @@ export async function subscribeUserToPush() {
     }
 
     if (existing && existing.length > 0) {
-      console.log('[pushManager] Subscription already exists in DB, skipping insert.');
       return subscription;
     }
 
@@ -107,7 +104,6 @@ export async function subscribeUserToPush() {
       throw new Error(`Kon abonnement niet opslaan: ${insertErr.message}`);
     }
 
-    console.log('[pushManager] Subscription saved to Supabase ✓');
   } else {
     console.warn('[pushManager] No Supabase client — subscription not saved.');
   }
@@ -137,8 +133,6 @@ export async function unsubscribeUserFromPush() {
 
       if (error) {
         console.error('[pushManager] Delete error:', error.message);
-      } else {
-        console.log('[pushManager] Subscription removed from Supabase ✓');
       }
     }
 

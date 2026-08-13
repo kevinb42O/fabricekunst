@@ -31,6 +31,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 import { INITIAL_CATALOG } from '../src/data/initialCatalog.js';
 import { getLocalizedCategoryLabel } from '../src/data/catalogTaxonomy.js';
+import { getItemSlug } from '../src/utils/itemSlug.js';
 
 export async function generateLlmsContent() {
   let catalogItems = [];
@@ -57,7 +58,7 @@ export async function generateLlmsContent() {
   }
 
   const itemsMarkdown = catalogItems.map((item, index) => {
-    const url = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(item.id)}`;
+    const url = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(getItemSlug(item))}`;
     const priceStr = item.price ? ` | Prijs: ${item.price}` : '';
     const statusStr = item.status ? ` | Status: ${item.status}` : '';
     const authorStr = item.author ? `\n- **Auteur/Kunstenaar**: ${item.author.trim()}` : '';

@@ -16,6 +16,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { updateAdminPasswordAsync } from '../../utils/storage';
+import { supabase } from '../../utils/supabaseClient';
 import {
   isPushSupported,
   isIOS,
@@ -92,14 +93,17 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
   const handleSendTestNotification = async () => {
     setTestingPush(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Uw beheerderssessie is verlopen. Meld u opnieuw aan.');
+
       const response = await fetch('/api/send-push', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'Atelier Rembrandt 🛎️',
-          body: 'Dit is uw test push notificatie! Het werkt perfect op uw apparaat.',
-          url: '/admin#inquiries'
-        })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ test: true })
       });
       const data = await response.json();
       if (data.success) {
@@ -125,8 +129,8 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setErrorMsg('Nieuw wachtwoord moet minimaal 6 tekens lang zijn.');
+    if (newPassword.length < 12) {
+      setErrorMsg('Nieuw wachtwoord moet minimaal 12 tekens lang zijn.');
       return;
     }
 
@@ -151,7 +155,7 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 text-[#111111] animate-fade-in">
+    <div className="admin-module-legacy admin-settings max-w-3xl mx-auto space-y-8 text-[#111111] animate-fade-in">
       
       {/* Header Banner */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm space-y-4">
@@ -226,7 +230,9 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimaal 6 tekens..."
+                minLength={12}
+                autoComplete="new-password"
+                placeholder="Minimaal 12 tekens..."
                 className="w-full p-3.5 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm font-mono font-bold text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
@@ -240,6 +246,8 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={12}
+                autoComplete="new-password"
                 placeholder="Herhaal nieuw wachtwoord..."
                 className="w-full p-3.5 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-sm font-mono font-bold text-[#111111] focus:outline-none focus:border-[#111111]"
               />
