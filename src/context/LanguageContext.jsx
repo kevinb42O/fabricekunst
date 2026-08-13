@@ -4,7 +4,6 @@ import {
   DEFAULT_LANGUAGE,
   LANGUAGE_TAGS,
   SUPPORTED_LANGUAGES,
-  detectBrowserLanguage,
   getLanguageFromPath,
   localizePath,
   normalizeLanguage,
@@ -16,22 +15,6 @@ const LanguageContext = createContext();
 const STORAGE_KEY = 'atelier_language';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-const readCookieLanguage = () => {
-  if (typeof document === 'undefined') return '';
-  const match = document.cookie.match(/(?:^|;\s*)atelier_language=([^;]+)/);
-  return normalizeLanguage(match ? decodeURIComponent(match[1]) : '');
-};
-
-const readSavedLanguage = () => {
-  try {
-    const localLanguage = normalizeLanguage(localStorage.getItem(STORAGE_KEY));
-    if (localLanguage) return localLanguage;
-  } catch {
-    // Cookies remain available when localStorage is blocked.
-  }
-  return readCookieLanguage();
-};
-
 const detectSystemLanguage = () => {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
 
@@ -41,10 +24,9 @@ const detectSystemLanguage = () => {
   const queryLanguage = normalizeLanguage(new URLSearchParams(window.location.search).get('lang'));
   if (queryLanguage) return queryLanguage;
 
-  const savedLanguage = readSavedLanguage();
-  if (savedLanguage) return savedLanguage;
-
-  return detectBrowserLanguage(navigator.languages || [navigator.language || '']);
+  // The unprefixed URL is the canonical Dutch location. Keeping the URL as
+  // the source of truth prevents lang, canonical and hreflang mismatches.
+  return 'nl';
 };
 
 function updateLanguageUrl(language, { replace = false } = {}) {
