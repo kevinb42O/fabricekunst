@@ -4,9 +4,9 @@
   "description": "Atelier Rembrandt — Collectiebeheer CMS",
   "icons": [
     {
-      "src": "/images/andor.jpeg",
-      "type": "image/jpeg",
-      "sizes": "512x512",
+      "src": "/AR.png",
+      "type": "image/png",
+      "sizes": "1254x1254",
       "purpose": "any maskable"
     }
   ],
