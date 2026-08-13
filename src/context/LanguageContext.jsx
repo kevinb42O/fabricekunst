@@ -1,29 +1,65 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations } from '../i18n/translations';
+import {
+  DEFAULT_LANGUAGE,
+  LANGUAGE_TAGS,
+  SUPPORTED_LANGUAGES,
+  detectBrowserLanguage,
+  getLanguageFromPath,
+  localizePath,
+  normalizeLanguage,
+  stripLanguagePrefix
+} from '../utils/locales';
 
 const LanguageContext = createContext();
 
 const STORAGE_KEY = 'atelier_language';
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+const readCookieLanguage = () => {
+  if (typeof document === 'undefined') return '';
+  const match = document.cookie.match(/(?:^|;\s*)atelier_language=([^;]+)/);
+  return normalizeLanguage(match ? decodeURIComponent(match[1]) : '');
+};
+
+const readSavedLanguage = () => {
+  try {
+    const localLanguage = normalizeLanguage(localStorage.getItem(STORAGE_KEY));
+    if (localLanguage) return localLanguage;
+  } catch {
+    // Cookies remain available when localStorage is blocked.
+  }
+  return readCookieLanguage();
+};
 
 const detectSystemLanguage = () => {
-  if (typeof window === 'undefined') return 'en';
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
 
-  const savedLang = localStorage.getItem(STORAGE_KEY);
-  if (savedLang && ['nl', 'en', 'fr'].includes(savedLang)) {
-    return savedLang;
-  }
+  const pathLanguage = getLanguageFromPath(window.location.pathname);
+  if (pathLanguage) return pathLanguage;
 
-  const browserLangs = navigator.languages || [navigator.language || ''];
-  for (const lang of browserLangs) {
-    const l = lang.toLowerCase();
-    if (l.startsWith('nl')) return 'nl';
-    if (l.startsWith('fr')) return 'fr';
-    if (l.startsWith('en')) return 'en';
-  }
+  const queryLanguage = normalizeLanguage(new URLSearchParams(window.location.search).get('lang'));
+  if (queryLanguage) return queryLanguage;
 
-  // Fallback for any other system language is English, as instructed
-  return 'en';
+  const savedLanguage = readSavedLanguage();
+  if (savedLanguage) return savedLanguage;
+
+  return detectBrowserLanguage(navigator.languages || [navigator.language || '']);
 };
+
+function updateLanguageUrl(language, { replace = false } = {}) {
+  if (typeof window === 'undefined') return;
+  const route = stripLanguagePrefix(window.location.pathname);
+  if (route === '/admin' || route.startsWith('/admin/')) return;
+  const pathname = localizePath(route, language);
+  const search = new URLSearchParams(window.location.search);
+  search.delete('lang');
+  const query = search.toString();
+  const nextUrl = `${pathname}${query ? `?${query}` : ''}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl === currentUrl) return;
+  window.history[replace ? 'replaceState' : 'pushState']({ language }, '', nextUrl);
+}
 
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(detectSystemLanguage);
@@ -31,15 +67,38 @@ export function LanguageProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, language);
-    } catch (e) {
-      console.warn('Could not save language preference to localStorage:', e);
+    } catch {
+      // The first-party cookie below is the persistence fallback.
     }
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${STORAGE_KEY}=${encodeURIComponent(language)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+    document.documentElement.lang = LANGUAGE_TAGS[language] || language;
+    updateLanguageUrl(language, { replace: true });
+  }, [language]);
+
+  useEffect(() => {
+    const syncLanguageFromUrl = () => {
+      const pathLanguage = getLanguageFromPath(window.location.pathname) || 'nl';
+      if (pathLanguage && pathLanguage !== language) setLanguageState(pathLanguage);
+    };
+    const syncLanguageAcrossTabs = (event) => {
+      if (event.key !== STORAGE_KEY) return;
+      const savedLanguage = normalizeLanguage(event.newValue);
+      if (savedLanguage && savedLanguage !== language) setLanguageState(savedLanguage);
+    };
+    window.addEventListener('popstate', syncLanguageFromUrl);
+    window.addEventListener('storage', syncLanguageAcrossTabs);
+    return () => {
+      window.removeEventListener('popstate', syncLanguageFromUrl);
+      window.removeEventListener('storage', syncLanguageAcrossTabs);
+    };
   }, [language]);
 
   const setLanguage = (newLang) => {
-    if (['nl', 'en', 'fr'].includes(newLang)) {
-      setLanguageState(newLang);
-    }
+    const languageToSet = normalizeLanguage(newLang);
+    if (!SUPPORTED_LANGUAGES.includes(languageToSet) || languageToSet === language) return;
+    updateLanguageUrl(languageToSet);
+    setLanguageState(languageToSet);
   };
 
   /**

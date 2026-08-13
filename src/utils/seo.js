@@ -1,4 +1,5 @@
 import { getItemSlug } from './itemSlug.js';
+import { LANGUAGE_TAGS, getLanguageAlternates, localizePath, stripLanguagePrefix } from './locales.js';
 
 export const SITE_URL = 'https://www.atelierrembrandt.com';
 export const SITE_NAME = 'Atelier Rembrandt';
@@ -97,8 +98,6 @@ const PAGE_COPY = {
   }
 };
 
-const LANGUAGE_TAGS = { nl: 'nl-BE', en: 'en', fr: 'fr' };
-
 function localizedField(item, field, language) {
   if (!item) return '';
   if (language !== 'nl' && item[`${field}_${language}`]) return item[`${field}_${language}`];
@@ -151,7 +150,7 @@ function availabilityFor(status) {
 }
 
 export function getPageKind(pathname, currentPage = 'home') {
-  const path = normalizePath(pathname).toLowerCase();
+  const path = stripLanguagePrefix(normalizePath(pathname)).toLowerCase();
   if (path === '/topstukken') return 'topstukken';
   if (currentPage === 'item-detail') return 'item';
   if (currentPage === 'not-found') return 'notFound';
@@ -165,10 +164,14 @@ export function buildPageSeo({ page = 'home', item = null, language = 'nl', path
   const itemTitle = localizedField(item, 'title', lang);
   const itemDescription = localizedField(item, 'description', lang) || localizedField(item, 'subtitle', lang);
   const itemImage = absoluteUrl(item?.images?.find((image) => image?.url)?.url);
-  const canonicalPath = pageKind === 'item' && item
+  const routePath = pageKind === 'item' && item
     ? `/collectie/${getItemSlug(item)}`
-    : normalizePath(pathname);
+    : stripLanguagePrefix(normalizePath(pathname));
+  const canonicalPath = localizePath(routePath, lang);
   const canonical = `${SITE_URL}${canonicalPath === '/' ? '/' : canonicalPath}`;
+  const alternates = Object.fromEntries(
+    Object.entries(getLanguageAlternates(routePath)).map(([hreflang, path]) => [hreflang, `${SITE_URL}${path === '/' ? '/' : path}`])
+  );
 
   const title = pageKind === 'item' && itemTitle
     ? truncate(`${itemTitle} — ${SITE_NAME}`, 72)
@@ -186,6 +189,7 @@ export function buildPageSeo({ page = 'home', item = null, language = 'nl', path
     type: pageKind === 'item' ? 'product' : 'website',
     language: lang,
     locale: LANGUAGE_TAGS[lang],
+    alternates,
     robots: pageKind === 'notFound'
       ? 'noindex, nofollow'
       : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
@@ -214,10 +218,10 @@ export function buildStructuredData({ page, item, language = 'nl', canonical, it
         ? { home: 'Home', collection: 'Collection' }
         : { home: 'Home', collection: 'Collectie' };
     const breadcrumbItems = [
-      { '@type': 'ListItem', position: 1, name: labels.home, item: `${SITE_URL}/` }
+      { '@type': 'ListItem', position: 1, name: labels.home, item: `${SITE_URL}${localizePath('/', language)}` }
     ];
     if (page === 'item') {
-      breadcrumbItems.push({ '@type': 'ListItem', position: 2, name: labels.collection, item: `${SITE_URL}/collectie` });
+      breadcrumbItems.push({ '@type': 'ListItem', position: 2, name: labels.collection, item: `${SITE_URL}${localizePath('/collectie', language)}` });
       breadcrumbItems.push({ '@type': 'ListItem', position: 3, name: localizedField(item, 'title', language), item: canonical });
     } else {
       breadcrumbItems.push({ '@type': 'ListItem', position: 2, name: PAGE_COPY[language]?.[page]?.title || SITE_NAME, item: canonical });
@@ -239,7 +243,7 @@ export function buildStructuredData({ page, item, language = 'nl', canonical, it
         '@type': 'ListItem',
         position: index + 1,
         name: localizedField(catalogItem, 'title', language),
-        url: `${SITE_URL}/collectie/${getItemSlug(catalogItem)}`
+        url: `${SITE_URL}${localizePath(`/collectie/${getItemSlug(catalogItem)}`, language)}`
       }))
     });
   }
@@ -314,6 +318,16 @@ export function applySeoToDocument(seo) {
     document.head.appendChild(canonical);
   }
   canonical.href = seo.canonical;
+
+  document.head.querySelectorAll('link[data-seo-alternate]').forEach((element) => element.remove());
+  for (const [hreflang, href] of Object.entries(seo.alternates)) {
+    const alternate = document.createElement('link');
+    alternate.rel = 'alternate';
+    alternate.hreflang = hreflang;
+    alternate.href = href;
+    alternate.dataset.seoAlternate = 'true';
+    document.head.appendChild(alternate);
+  }
 
   let structuredData = document.getElementById('page-structured-data');
   if (!structuredData) {

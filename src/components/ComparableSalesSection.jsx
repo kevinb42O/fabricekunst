@@ -107,6 +107,12 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                 <div className="absolute bottom-2.5 right-2.5 p-1.5 rounded-md bg-black/40 text-white/90 group-hover:bg-[#B8860B] group-hover:text-white transition-colors backdrop-blur-xs">
                   <ZoomIn className="w-4 h-4" />
                 </div>
+
+                {sale.imageCaption && (
+                  <span className="absolute bottom-2.5 left-2.5 max-w-[calc(100%-4rem)] rounded-sm bg-white/90 px-2.5 py-1.5 font-serif text-[11px] italic leading-snug text-[#40372F] shadow-sm backdrop-blur-xs">
+                    {sale.imageCaption}
+                  </span>
+                )}
               </button>
 
               <div className={`flex flex-col justify-center ${compact ? 'p-4 sm:p-5' : 'p-5 sm:p-7'}`}>

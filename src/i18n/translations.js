@@ -3,6 +3,7 @@ export const translations = {
     nav: {
       brandTitle: 'Atelier Rembrandt',
       brandSubtitle: 'Antiquariaat, Kunst & Historische Objecten',
+      home: 'Home',
       topstukken: 'Topstukken',
       collectie: 'Collectie',
       herkomst: 'Herkomst',
@@ -348,6 +349,7 @@ export const translations = {
       contactHeader: 'Contact & Atelier',
       addressHeader: 'Locatie & Bezichtiging',
       addressText: 'Privé-bezichtiging en consultatie enkel op afspraak.',
+      facebook: 'Volg ons op Facebook',
       rights: 'Alle rechten voorbehouden.',
       adminLink: 'CMS Beheer'
     },
@@ -364,6 +366,7 @@ export const translations = {
     nav: {
       brandTitle: 'Atelier Rembrandt',
       brandSubtitle: 'Antiquarian Books, Art & Historical Objects',
+      home: 'Home',
       topstukken: 'Masterpieces',
       collectie: 'Collection',
       herkomst: 'Provenance',
@@ -709,6 +712,7 @@ export const translations = {
       contactHeader: 'Contact & Studio',
       addressHeader: 'Location & Viewings',
       addressText: 'Private viewings and consultations strictly by appointment.',
+      facebook: 'Follow us on Facebook',
       rights: 'All rights reserved.',
       adminLink: 'CMS Admin'
     },
@@ -725,6 +729,7 @@ export const translations = {
     nav: {
       brandTitle: 'Atelier Rembrandt',
       brandSubtitle: 'Livres Anciens, Art & Objets Historiques',
+      home: 'Accueil',
       topstukken: 'Chefs-d’œuvre',
       collectie: 'Collection',
       herkomst: 'Provenance',
@@ -1070,6 +1075,7 @@ export const translations = {
       contactHeader: 'Contact & Atelier',
       addressHeader: 'Emplacement & Visites',
       addressText: 'Présentations et consultations uniquement sur rendez-vous.',
+      facebook: 'Suivez-nous sur Facebook',
       rights: 'Tous droits réservés.',
       adminLink: 'Administration CMS'
     },

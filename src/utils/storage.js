@@ -4,52 +4,10 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const CATALOG_KEY = 'atelier_rembrandt_catalog';
 const INQUIRIES_KEY = 'atelier_rembrandt_inquiries';
-const HERO_SLIDES_KEY = 'atelier_rembrandt_hero_slides';
 const OLD_CATALOG_KEY_2 = 'rare_art_books_catalog';
 const OLD_INQUIRIES_KEY_2 = 'rare_art_books_inquiries';
-const OLD_HERO_SLIDES_KEY_2 = 'rare_art_books_hero_slides';
 const OLD_CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
 const OLD_INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
-const OLD_HERO_SLIDES_KEY = 'fabrice_boeken_kunst_hero_slides';
-
-export const DEFAULT_HERO_SLIDES = [
-  {
-    id: 'scarron-1713',
-    title: 'Les Œuvres de Monsieur Scarron',
-    year: 'Amsterdam 1713',
-    subtitle: 'Originele kopergravures & gemarmerde schutbladen in goudgestempeld leder.',
-    image: '/images/hero/hero-scarron-candlelight.jpg',
-    objectPosition: 'center 35%',
-    tag: 'I'
-  },
-  {
-    id: 'voltaire-theatre',
-    title: 'Théâtre de Voltaire',
-    year: 'Parijs 1829',
-    subtitle: 'Met zeldzame kopergravure en antieke messing leesbril.',
-    image: '/images/hero/hero-voltaire-glasses.jpg',
-    objectPosition: 'center center',
-    tag: 'II'
-  },
-  {
-    id: 'scarron-engraving',
-    title: '18e-Eeuwse Kopergravures',
-    year: 'Amsterdam 1713',
-    subtitle: 'Gedetailleerde koperetsing door meester-graveurs uit de Verlichting.',
-    image: '/images/hero/hero-scarron-engraving.jpg',
-    objectPosition: 'center top',
-    tag: 'III'
-  },
-  {
-    id: 'provenance-exlibris',
-    title: 'Ex-Libris & Provenance',
-    year: 'Historische Collectie',
-    subtitle: 'Verifieerbare adellijke herkomst met origineel Vacheron-Poinsot stempel.',
-    image: '/images/hero/hero-voltaire-exlibris.jpg',
-    objectPosition: 'center center',
-    tag: 'IV'
-  }
-];
 
 const HERO_IMAGE_KEY = 'atelier_rembrandt_hero_image';
 const MOBILE_HERO_IMAGE_KEY = 'atelier_rembrandt_mobile_hero_image';
@@ -92,17 +50,20 @@ export const saveHeroImageAsync = async (imageUrl) => {
     localStorage.setItem(HERO_IMAGE_KEY, imageUrl);
   } catch (err) {
     console.error("Fout bij opslaan hero image:", err);
+    throw new Error('De desktop hero-afbeelding kon niet lokaal worden opgeslagen.');
   }
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('admin_settings').upsert({
+      const { error } = await supabase.from('admin_settings').upsert({
         key: 'hero_image',
         value: imageUrl,
         updated_at: new Date().toISOString()
       });
+      if (error) throw error;
     } catch (e) {
       console.error("Supabase hero image save exception:", e);
+      throw new Error('De desktop hero-afbeelding is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
     }
   }
   return imageUrl;
@@ -143,77 +104,23 @@ export const saveMobileHeroImageAsync = async (imageUrl) => {
     localStorage.setItem(MOBILE_HERO_IMAGE_KEY, imageUrl);
   } catch (err) {
     console.error("Fout bij opslaan mobiele hero image:", err);
+    throw new Error('De mobiele hero-afbeelding kon niet lokaal worden opgeslagen.');
   }
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('admin_settings').upsert({
+      const { error } = await supabase.from('admin_settings').upsert({
         key: 'mobile_hero_image',
         value: imageUrl,
         updated_at: new Date().toISOString()
       });
+      if (error) throw error;
     } catch (err) {
       console.error("Supabase mobiele hero image save exception:", err);
+      throw new Error('De mobiele hero-afbeelding is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
     }
   }
   return imageUrl;
-};
-
-export const getHeroSlides = () => {
-  try {
-    const saved = localStorage.getItem(HERO_SLIDES_KEY) || localStorage.getItem(OLD_HERO_SLIDES_KEY_2) || localStorage.getItem(OLD_HERO_SLIDES_KEY);
-    if (!saved) return DEFAULT_HERO_SLIDES;
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_HERO_SLIDES;
-  } catch (err) {
-    console.error("Fout bij ophalen hero slides:", err);
-    return DEFAULT_HERO_SLIDES;
-  }
-};
-
-export const fetchHeroSlidesAsync = async () => {
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('*')
-        .eq('key', 'hero_slides')
-        .maybeSingle();
-
-      if (!error && data && data.value) {
-        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          localStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(parsed));
-          return parsed;
-        }
-      }
-    } catch (err) {
-      console.error("Fout bij ophalen hero slides van Supabase:", err);
-    }
-  }
-  return getHeroSlides();
-};
-
-export const saveHeroSlidesAsync = async (slides) => {
-  try {
-    localStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(slides));
-  } catch (err) {
-    console.error("Fout bij opslaan hero slides:", err);
-  }
-
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const payload = typeof slides === 'string' ? slides : JSON.stringify(slides);
-      await supabase.from('admin_settings').upsert({
-        key: 'hero_slides',
-        value: payload,
-        updated_at: new Date().toISOString()
-      });
-    } catch (e) {
-      console.error("Supabase hero slides save exception:", e);
-    }
-  }
-  return slides;
 };
 
 // Helper to extract field value checking all camelCase, snake_case, and capitalization variations
@@ -274,6 +181,8 @@ const mapDbItemToFrontend = (dbItem) => {
   const publisher_fr = dbItem.publisher_fr || extPayload.publisher_fr || extractFieldValue(dbItem, 'publisher', 'fr');
   const city_en = dbItem.city_en || extPayload.city_en || extractFieldValue(dbItem, 'city', 'en');
   const city_fr = dbItem.city_fr || extPayload.city_fr || extractFieldValue(dbItem, 'city', 'fr');
+  const dimensions_en = dbItem.dimensions_en || extPayload.dimensions_en || extractFieldValue(dbItem, 'dimensions', 'en');
+  const dimensions_fr = dbItem.dimensions_fr || extPayload.dimensions_fr || extractFieldValue(dbItem, 'dimensions', 'fr');
 
   const historicalContext = dbItem.historical_context || dbItem.historicalContext || extPayload.historicalContext || '';
   const conditionReport = dbItem.condition_report || dbItem.conditionReport || extPayload.conditionReport || '';
@@ -332,6 +241,8 @@ const mapDbItemToFrontend = (dbItem) => {
     publisher_fr,
     city_en,
     city_fr,
+    dimensions_en,
+    dimensions_fr,
 
     provenance_details_en: extPayload.provenanceDetails_en || extractFieldValue(dbItem, 'provenanceDetails', 'en'),
     provenance_details_fr: extPayload.provenanceDetails_fr || extractFieldValue(dbItem, 'provenanceDetails', 'fr'),
@@ -393,6 +304,8 @@ const mapFrontendItemToDb = (item) => {
       publisher_fr: item.publisher_fr || '',
       city_en: item.city_en || '',
       city_fr: item.city_fr || '',
+      dimensions_en: item.dimensions_en || '',
+      dimensions_fr: item.dimensions_fr || '',
       collectionGroup: getCollectionGroupForItem(item),
       attributes: item.attributes || {},
       emptyFields: item.emptyFields || item.empty_fields || {}
@@ -489,6 +402,8 @@ const mapFrontendItemToBasicDb = (item) => {
       publisher_fr: item.publisher_fr || '',
       city_en: item.city_en || '',
       city_fr: item.city_fr || '',
+      dimensions_en: item.dimensions_en || '',
+      dimensions_fr: item.dimensions_fr || '',
       collectionGroup: getCollectionGroupForItem(item),
       attributes: item.attributes || {},
       emptyFields: item.emptyFields || item.empty_fields || {}
@@ -777,10 +692,11 @@ export const deleteItemAsync = async (itemId) => {
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('items').delete().eq('id', itemId);
-      if (error) {
-        console.error("Supabase item delete error:", error);
+      const { error: extError } = await supabase.from('admin_settings').delete().eq('key', `item_ext_${itemId}`);
+      if (error || extError) {
+        console.error("Supabase item delete error:", error || extError);
         supabaseSuccess = false;
-        supabaseError = formatSupabaseErrorMessage(error);
+        supabaseError = formatSupabaseErrorMessage(error || extError);
       }
     } catch (e) {
       console.error("Supabase item delete exception:", e);
@@ -945,10 +861,11 @@ export const updateInquiryStatusAsync = async (id, newStatus) => {
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('inquiries').update({ status: newStatus }).eq('id', id);
-      if (error) console.error("Supabase inquiry status update error", error);
+      if (error) throw error;
       return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry status update exception", e);
+      throw new Error('De status kon niet naar de cloud worden opgeslagen.');
     }
   }
   return updateInquiryStatus(id, newStatus);
@@ -970,10 +887,11 @@ export const updateInquiryNotesAsync = async (id, notes) => {
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('inquiries').update({ notes }).eq('id', id);
-      if (error) console.error("Supabase inquiry notes update error", error);
+      if (error) throw error;
       return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry notes update exception", e);
+      throw new Error('De notitie kon niet naar de cloud worden opgeslagen.');
     }
   }
   return updateInquiryNotes(id, notes);
@@ -995,10 +913,11 @@ export const deleteInquiryAsync = async (id) => {
   if (isSupabaseConfigured() && supabase) {
     try {
       const { error } = await supabase.from('inquiries').delete().eq('id', id);
-      if (error) console.error("Supabase inquiry delete error", error);
+      if (error) throw error;
       return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry delete exception", e);
+      throw new Error('De aanvraag kon niet uit de cloud worden verwijderd.');
     }
   }
   return deleteInquiry(id);
@@ -1333,6 +1252,7 @@ export const saveProvenanceDataAsync = async (data) => {
     localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(data));
   } catch (err) {
     console.error("Fout bij lokaal opslaan herkomst page data:", err);
+    throw new Error('De herkomstpagina kon niet lokaal worden opgeslagen.');
   }
 
   if (isSupabaseConfigured() && supabase) {
@@ -1345,9 +1265,10 @@ export const saveProvenanceDataAsync = async (data) => {
           value: payload,
           updated_at: new Date().toISOString()
         });
-      if (error) console.error("Supabase herkomst page save error:", error);
+      if (error) throw error;
     } catch (err) {
       console.error("Supabase herkomst page save exception:", err);
+      throw new Error('De herkomstpagina is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
     }
   }
   return data;
@@ -1426,7 +1347,7 @@ export const getFaqItems = () => {
     const saved = localStorage.getItem(FAQ_ITEMS_KEY);
     if (!saved) return DEFAULT_FAQ_ITEMS;
     const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_FAQ_ITEMS;
+    return Array.isArray(parsed) ? parsed : DEFAULT_FAQ_ITEMS;
   } catch (err) {
     console.error("Fout bij ophalen FAQ items:", err);
     return DEFAULT_FAQ_ITEMS;
@@ -1444,7 +1365,7 @@ export const fetchFaqItemsAsync = async () => {
 
       if (!error && data && data.value) {
         const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           localStorage.setItem(FAQ_ITEMS_KEY, JSON.stringify(parsed));
           return parsed;
         }
@@ -1461,6 +1382,7 @@ export const saveFaqItemsAsync = async (faqItems) => {
     localStorage.setItem(FAQ_ITEMS_KEY, JSON.stringify(faqItems));
   } catch (err) {
     console.error("Fout bij lokaal opslaan FAQ items:", err);
+    throw new Error('De FAQ kon niet lokaal worden opgeslagen.');
   }
 
   if (isSupabaseConfigured() && supabase) {
@@ -1473,9 +1395,10 @@ export const saveFaqItemsAsync = async (faqItems) => {
           value: payload,
           updated_at: new Date().toISOString()
         });
-      if (error) console.error("Supabase FAQ save error:", error);
+      if (error) throw error;
     } catch (err) {
       console.error("Supabase FAQ save exception:", err);
+      throw new Error('De FAQ is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
     }
   }
   return faqItems;

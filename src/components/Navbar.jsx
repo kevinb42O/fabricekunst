@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
+import { localizePath } from '../utils/locales';
 
 export default function Navbar({ onNavigate, activeTab, onRequestConsultation }) {
   const [scrolled, setScrolled] = useState(false);
@@ -32,9 +33,9 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { id: 'topstukken', label: t('nav.topstukken'), href: '/topstukken' },
-    { id: 'catalogus', label: t('nav.collectie'), href: '/collectie' },
-    { id: 'herkomst', label: t('nav.herkomst'), href: '/herkomst' },
+    { id: 'topstukken', label: t('nav.topstukken'), href: localizePath('/topstukken', language) },
+    { id: 'catalogus', label: t('nav.collectie'), href: localizePath('/collectie', language) },
+    { id: 'herkomst', label: t('nav.herkomst'), href: localizePath('/herkomst', language) },
     { id: 'contact', label: t('nav.contact') || 'Contact' }
   ];
 
@@ -109,7 +110,7 @@ export default function Navbar({ onNavigate, activeTab, onRequestConsultation })
           {/* CENTER ZONE: Brand Logo - DEAD CENTER (Louis Vuitton Architecture) */}
           <div className="flex-1 lg:flex-initial flex justify-center text-center">
             <motion.a
-              href="/"
+              href={localizePath('/', language)}
               whileHover={{ scale: 1.015 }}
               whileTap={{ scale: 0.985 }}
               onClick={(event) => {

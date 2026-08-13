@@ -63,6 +63,9 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   const nextItem = currentIndex >= 0 && currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : null;
 
   const detailLabels = getLocalizedItemDetailLabels(item.itemType, language);
+  const localizedPublisher = getItemField(item, 'publisher', language);
+  const localizedCity = getItemField(item, 'city', language);
+  const localizedDimensions = getItemField(item, 'dimensions', language);
 
   const handlePrevImage = () => {
     setSelectedImageIndex((prev) => (prev === 0 ? item.images.length - 1 : prev - 1));
@@ -182,6 +185,12 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
 
               </div>
 
+              {currentImage.caption && (
+                <p className="font-serif text-sm italic leading-relaxed text-[#655B50]">
+                  {currentImage.caption}
+                </p>
+              )}
+
               {/* Thumbnail Gallery Strip */}
               {item.images && item.images.length > 1 && (
                 <div className="detail-thumbnail-rail flex items-center space-x-2 sm:space-x-3 overflow-x-auto mobile-scroll-x pb-2 snap-x snap-mandatory">
@@ -249,13 +258,13 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                         <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
                           {detailLabels.publisher}
                         </span>
-                        <span className="text-sm font-serif font-bold text-[#111111] mt-1 block">{item.publisher}</span>
+                        <span className="text-sm font-serif font-bold text-[#111111] mt-1 block">{localizedPublisher || '—'}</span>
                       </div>
                       <div>
                         <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">
                           {detailLabels.city}
                         </span>
-                        <span className="text-sm font-serif font-bold text-[#111111] mt-1 block">{item.city || "Europa"}</span>
+                        <span className="text-sm font-serif font-bold text-[#111111] mt-1 block">{localizedCity || '—'}</span>
                       </div>
                       <div>
                         <span className="text-[11px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.yearCentury')}</span>
@@ -399,7 +408,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   {detailLabels.maker}: {item.author}
                 </p>
                 <p>
-                  {detailLabels.publisher}: {item.publisher}{item.city ? ` (${item.city})` : ''}
+                  {detailLabels.publisher}: {localizedPublisher || '—'}{localizedCity ? ` (${localizedCity})` : ''}
                 </p>
               </div>
 
@@ -427,7 +436,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             <div className="detail-summary-specs grid grid-cols-2 gap-2 sm:gap-3 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
                 <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.format')}</span>
-                <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{item.dimensions || "In-8°"}</span>
+                <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{localizedDimensions || '—'}</span>
               </div>
               <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
                 <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.century')}</span>

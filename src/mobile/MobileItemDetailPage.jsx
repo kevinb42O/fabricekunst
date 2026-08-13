@@ -3,9 +3,11 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Bookmark,
   ChevronLeft,
   ChevronRight,
   FileCheck2,
+  FileText,
   History,
   Maximize2,
   Share2,
@@ -59,6 +61,9 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
     : [{ url: '/images/scarron-spines-white-bg.jpg', caption: '' }];
   const activeImage = images[selectedImageIndex] || images[0];
   const detailLabels = getLocalizedItemDetailLabels(item.itemType, language);
+  const localizedPublisher = getItemField(item, 'publisher', language);
+  const localizedCity = getItemField(item, 'city', language);
+  const localizedDimensions = getItemField(item, 'dimensions', language);
   const currentIndex = catalog.findIndex((candidate) => candidate.id === item.id);
   const previousItem = currentIndex > 0 ? catalog[currentIndex - 1] : null;
   const nextItem = currentIndex >= 0 && currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : null;
@@ -96,6 +101,21 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
   const showPreviousImage = () => setSelectedImageIndex((index) => (index === 0 ? images.length - 1 : index - 1));
   const showNextImage = () => setSelectedImageIndex((index) => (index === images.length - 1 ? 0 : index + 1));
 
+  const joinDistinctContent = (...values) => {
+    const seen = new Set();
+    return values
+      .flatMap((value) => String(value || '').split('\n\n'))
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .filter((value) => {
+        const key = value.toLocaleLowerCase().replace(/\s+/g, ' ');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .join('\n\n');
+  };
+
   const rawDossierSections = [
     {
       key: 'description',
@@ -113,13 +133,31 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
       key: 'provenance',
       title: labels.provenance,
       icon: ShieldCheck,
-      content: getItemField(item, 'provenance', language)
+      content: joinDistinctContent(
+        getItemField(item, 'provenance', language),
+        getItemField(item, 'provenanceDetails', language)
+      )
+    },
+    {
+      key: 'binding',
+      title: detailLabels.binding,
+      icon: Bookmark,
+      content: getItemField(item, 'binding', language)
     },
     {
       key: 'conditionReport',
       title: detailLabels.physicalSection,
       icon: FileCheck2,
-      content: getItemField(item, 'conditionReport', language) || getItemField(item, 'condition', language)
+      content: joinDistinctContent(
+        getItemField(item, 'condition', language),
+        getItemField(item, 'conditionReport', language)
+      )
+    },
+    {
+      key: 'collationSpecs',
+      title: detailLabels.specifications,
+      icon: FileText,
+      content: getItemField(item, 'collationSpecs', language)
     }
   ].filter((section) => section.content);
   const seenParagraphs = new Set();
@@ -199,6 +237,12 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
           </div>
         </div>
 
+        {activeImage.caption && (
+          <p className="mx-auto mt-3 max-w-3xl px-4 font-serif text-xs italic leading-relaxed text-[#655B50] min-[390px]:px-5 min-[600px]:px-8">
+            {activeImage.caption}
+          </p>
+        )}
+
       </section>
 
       <main className="px-4 pt-5 min-[390px]:px-5 min-[600px]:px-8">
@@ -216,9 +260,9 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
                 {detailLabels.maker}: {item.author}
               </p>
             )}
-            {(item.publisher || item.city) && (
+            {(localizedPublisher || localizedCity) && (
               <p className="mt-1 font-serif text-sm italic leading-relaxed text-[#665B50]">
-                {[item.publisher, item.city].filter(Boolean).join(' · ')}
+                {[localizedPublisher, localizedCity].filter(Boolean).join(' · ')}
               </p>
             )}
             {getItemField(item, 'subtitle', language) && (
@@ -246,9 +290,10 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
             <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden border border-[#D8CEB8] bg-[#D8CEB8]">
               {[
                 [t('item_detail.century'), getLocalizedCentury(item.century, language)],
-                [t('item_detail.format'), item.dimensions || '—'],
-                [detailLabels.publisher, item.publisher || '—'],
-                [detailLabels.city, item.city || '—']
+                [t('item_detail.format'), localizedDimensions || '—'],
+                [detailLabels.publisher, localizedPublisher || '—'],
+                [detailLabels.city, localizedCity || '—'],
+                [t('item_detail.yearCentury'), [item.year, getLocalizedCentury(item.century, language)].filter(Boolean).join(' · ') || '—']
               ].map(([term, value]) => (
                 <div key={term} className="min-h-[88px] bg-white p-4">
                   <dt className="font-sans text-[9px] font-bold uppercase tracking-[0.14em] text-[#71675D]">{term}</dt>

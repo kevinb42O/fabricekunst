@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { loadCatalogForBuild } from './catalog-source.js';
 import { buildPageSeo, getPageKind } from '../src/utils/seo.js';
 import { getItemSlug } from '../src/utils/itemSlug.js';
+import { SUPPORTED_LANGUAGES, localizePath } from '../src/utils/locales.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(__dirname, '../dist');
@@ -54,17 +55,25 @@ function renderSeoHtml(seo) {
     ? html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag)
     : html.replace('</head>', `    ${canonicalTag}\n  </head>`);
 
+  const alternateTags = Object.entries(seo.alternates)
+    .map(([hreflang, href]) => `<link rel="alternate" hreflang="${escapeAttribute(hreflang)}" href="${escapeAttribute(href)}" data-seo-alternate="true" />`)
+    .join('\n    ');
+  html = html.replace('</head>', `    ${alternateTags}\n  </head>`);
+
   const json = JSON.stringify(seo.structuredData).replace(/</g, '\\u003c');
   const pageData = `<script id="page-structured-data" type="application/ld+json">${json}</script>`;
   html = html.replace('</head>', `    ${pageData}\n  </head>`);
   return html;
 }
 
-function writePage(route, page, item = null) {
-  const seo = buildPageSeo({ page, item, language: 'nl', pathname: route, items });
-  const outputDir = route === '/' ? distDir : path.join(distDir, route.replace(/^\//, ''));
-  fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(path.join(outputDir, 'index.html'), renderSeoHtml(seo), 'utf8');
+function writePage(route, page, item = null, language = 'nl') {
+  const localizedRoute = localizePath(route, language);
+  const seo = buildPageSeo({ page, item, language, pathname: localizedRoute, items });
+  const outputPath = localizedRoute === '/'
+    ? path.join(distDir, 'index.html')
+    : path.join(distDir, `${localizedRoute.replace(/^\//, '')}.html`);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, renderSeoHtml(seo), 'utf8');
 }
 
 const staticRoutes = [
@@ -75,14 +84,17 @@ const staticRoutes = [
   { route: '/voorwaarden', page: 'voorwaarden' },
   { route: '/privacy', page: 'privacy' }
 ];
-for (const { route, page } of staticRoutes) writePage(route, getPageKind(route, page));
+for (const language of SUPPORTED_LANGUAGES) {
+  for (const { route, page } of staticRoutes) writePage(route, getPageKind(route, page), null, language);
+}
 
 const seenSlugs = new Set();
 for (const item of items) {
   const slug = getItemSlug(item);
   if (!slug || seenSlugs.has(slug)) continue;
   seenSlugs.add(slug);
-  writePage(`/collectie/${slug}`, 'item', item);
+  for (const language of SUPPORTED_LANGUAGES) writePage(`/collectie/${slug}`, 'item', item, language);
 }
 
-console.log(`Generated SEO HTML for ${staticRoutes.length} pages and ${seenSlugs.size} catalog items from ${source}.`);
+const generatedCount = (staticRoutes.length + seenSlugs.size) * SUPPORTED_LANGUAGES.length;
+console.log(`Generated ${generatedCount} localized SEO HTML pages (${seenSlugs.size} catalog items × ${SUPPORTED_LANGUAGES.length} languages) from ${source}.`);

@@ -15,6 +15,7 @@ import { useResponsiveMode } from './hooks/useResponsiveMode';
 import { getItemSlug, itemMatchesRoute } from './utils/itemSlug';
 import { useLanguage } from './context/LanguageContext';
 import { applySeoToDocument, buildPageSeo, getPageKind } from './utils/seo';
+import { localizePath, stripLanguagePrefix } from './utils/locales';
 
 const AdminLoginModal = lazy(() => import('./components/admin/AdminLoginModal'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -41,9 +42,6 @@ import {
   getMobileHeroImage,
   fetchMobileHeroImageAsync,
   saveMobileHeroImageAsync,
-  getHeroSlides,
-  fetchHeroSlidesAsync,
-  saveHeroSlidesAsync,
   getProvenanceData,
   fetchProvenanceDataAsync,
   saveProvenanceDataAsync,
@@ -59,7 +57,6 @@ export default function App() {
   const [inquiries, setInquiries] = useState([]);
   const [heroImage, setHeroImage] = useState(getHeroImage());
   const [mobileHeroImage, setMobileHeroImage] = useState(getMobileHeroImage());
-  const [heroSlides, setHeroSlides] = useState(getHeroSlides());
   const [provenanceData, setProvenanceData] = useState(getProvenanceData());
   const [faqItems, setFaqItems] = useState(getFaqItems());
   
@@ -73,32 +70,23 @@ export default function App() {
   const [adminUser, setAdminUser] = useState(null);
 
   const handleSaveHeroImage = async (updatedImage) => {
-    setHeroImage(updatedImage);
     await saveHeroImageAsync(updatedImage);
+    setHeroImage(updatedImage);
   };
 
   const handleSaveMobileHeroImage = async (updatedImage) => {
-    setMobileHeroImage(updatedImage);
     await saveMobileHeroImageAsync(updatedImage);
-  };
-
-  const handleSaveHeroSlides = async (updatedSlides) => {
-    if (typeof updatedSlides === 'string') {
-      await handleSaveHeroImage(updatedSlides);
-    } else {
-      setHeroSlides(updatedSlides);
-      await saveHeroSlidesAsync(updatedSlides);
-    }
+    setMobileHeroImage(updatedImage);
   };
 
   const handleSaveProvenance = async (updatedData) => {
-    setProvenanceData(updatedData);
     await saveProvenanceDataAsync(updatedData);
+    setProvenanceData(updatedData);
   };
 
   const handleSaveFaqItems = async (updatedItems) => {
-    setFaqItems(updatedItems);
     await saveFaqItemsAsync(updatedItems);
+    setFaqItems(updatedItems);
   };
 
   const { scrollYProgress } = useScroll();
@@ -122,10 +110,6 @@ export default function App() {
       if (img) setMobileHeroImage(img);
     });
 
-    fetchHeroSlidesAsync().then(slides => {
-      if (slides) setHeroSlides(slides);
-    });
-
     fetchProvenanceDataAsync().then(pData => {
       if (pData) setProvenanceData(pData);
     });
@@ -135,7 +119,7 @@ export default function App() {
     });
 
     const checkRoutes = () => {
-      const path = window.location.pathname.toLowerCase();
+      const path = stripLanguagePrefix(window.location.pathname).toLowerCase();
       const hash = window.location.hash.toLowerCase();
 
       if (path === '/admin' || hash === '#admin') {
@@ -200,7 +184,7 @@ export default function App() {
 
     let sessionCheckActive = true;
     getCurrentAdminSessionAsync().then(async (result) => {
-      const path = window.location.pathname.toLowerCase();
+      const path = stripLanguagePrefix(window.location.pathname).toLowerCase();
       const hash = window.location.hash.toLowerCase();
       const isAdminRoute = path === '/admin' || hash === '#admin';
       if (!sessionCheckActive || !isAdminRoute || !result.success) return;
@@ -247,7 +231,7 @@ export default function App() {
     setAdminUser(null);
     setInquiries([]);
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
-      window.history.pushState({}, '', '/');
+      window.history.pushState({}, '', localizePath('/', language));
     }
   };
 
@@ -257,7 +241,7 @@ export default function App() {
     setAdminUser(null);
     setInquiries([]);
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
-      window.history.pushState({}, '', '/');
+      window.history.pushState({}, '', localizePath('/', language));
     }
   };
 
@@ -290,7 +274,7 @@ export default function App() {
       () => setTransitionItemId(null),
       () => setTransitionItemId(null)
     );
-    const newPath = `/collectie/${getItemSlug(item)}`;
+    const newPath = localizePath(`/collectie/${getItemSlug(item)}`, language);
     if (window.location.pathname !== newPath) {
       window.history.pushState({ page: 'item', id: item.id }, '', newPath);
     }
@@ -310,8 +294,9 @@ export default function App() {
         () => setTransitionItemId(null),
         () => setTransitionItemId(null)
       );
-      if (window.location.pathname !== '/collectie') {
-        window.history.pushState({ page: 'collectie' }, '', '/collectie');
+      const collectionPath = localizePath('/collectie', language);
+      if (window.location.pathname !== collectionPath) {
+        window.history.pushState({ page: 'collectie' }, '', collectionPath);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -321,8 +306,9 @@ export default function App() {
       transitionPageChange(() => {
         setCurrentPage('herkomst');
       });
-      if (window.location.pathname !== '/herkomst') {
-        window.history.pushState({ page: 'herkomst' }, '', '/herkomst');
+      const provenancePath = localizePath('/herkomst', language);
+      if (window.location.pathname !== provenancePath) {
+        window.history.pushState({ page: 'herkomst' }, '', provenancePath);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -332,8 +318,9 @@ export default function App() {
       transitionPageChange(() => {
         setCurrentPage('privacy');
       });
-      if (window.location.pathname !== '/privacy') {
-        window.history.pushState({ page: 'privacy' }, '', '/privacy');
+      const privacyPath = localizePath('/privacy', language);
+      if (window.location.pathname !== privacyPath) {
+        window.history.pushState({ page: 'privacy' }, '', privacyPath);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -343,8 +330,9 @@ export default function App() {
       transitionPageChange(() => {
         setCurrentPage('voorwaarden');
       });
-      if (window.location.pathname !== '/voorwaarden') {
-        window.history.pushState({ page: 'voorwaarden' }, '', '/voorwaarden');
+      const termsPath = localizePath('/voorwaarden', language);
+      if (window.location.pathname !== termsPath) {
+        window.history.pushState({ page: 'voorwaarden' }, '', termsPath);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -354,15 +342,16 @@ export default function App() {
       transitionPageChange(() => {
         setCurrentPage('home');
       });
-      if (window.location.pathname !== '/') {
-        window.history.pushState({ page: 'home' }, '', '/');
+      const homePath = localizePath('/', language);
+      if (window.location.pathname !== homePath) {
+        window.history.pushState({ page: 'home' }, '', homePath);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (targetId === 'topstukken') {
-      const cleanPath = '/topstukken';
+      const cleanPath = localizePath('/topstukken', language);
       if (window.location.pathname !== cleanPath) {
         window.history.pushState({ page: 'home', route: targetId }, '', cleanPath);
       }
@@ -460,7 +449,6 @@ export default function App() {
         inquiries={inquiries}
         heroImage={heroImage}
         mobileHeroImage={mobileHeroImage}
-        heroSlides={heroSlides}
         provenanceData={provenanceData}
         faqItems={faqItems}
         currentUser={adminUser}
@@ -469,7 +457,6 @@ export default function App() {
         onUpdateInquiries={handleUpdateInquiries}
         onSaveHeroImage={handleSaveHeroImage}
         onSaveMobileHeroImage={handleSaveMobileHeroImage}
-        onSaveHeroSlides={handleSaveHeroSlides}
         onSaveProvenance={handleSaveProvenance}
         onSaveFaqItems={handleSaveFaqItems}
         onLogout={handleLogoutAdmin}
@@ -604,7 +591,6 @@ export default function App() {
             ) : (
               <Hero
                 heroImage={heroImage}
-                slides={heroSlides}
                 onExploreCatalog={() => handleNavigate('catalogus')}
                 onRequestConsultation={() => handleOpenConsultation(null)}
               />

@@ -347,7 +347,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                         </h3>
 
                         <p className="text-xs sm:text-sm text-[#555555] font-serif italic">
-                          {item.author} ({item.year}) — {item.publisher}
+                          {item.author} ({item.year}) — {getItemField(item, 'publisher', language)}
                         </p>
 
                         <p className="text-xs sm:text-sm text-[#444444] leading-relaxed font-serif font-light line-clamp-3">

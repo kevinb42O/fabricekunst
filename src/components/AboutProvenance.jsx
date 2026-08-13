@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Award, Compass, ShieldCheck, Feather, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
+import { localizePath } from '../utils/locales';
 
 const PROVENANCE_VISUALS = [
   {
@@ -29,7 +30,7 @@ const PROVENANCE_VISUALS = [
 ];
 
 export default function AboutProvenance() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeVisualIndex, setActiveVisualIndex] = useState(0);
 
   const provenanceVisuals = [
@@ -151,7 +152,7 @@ export default function AboutProvenance() {
             {/* Subtiele Haarlijn Knop */}
             <div className="pt-4">
               <a
-                href="/herkomst"
+                href={localizePath('/herkomst', language)}
                 className="inline-flex min-h-12 items-center justify-center space-x-2 border-b border-[#1C1A17] text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] hover:text-[#4A1521] transition-colors duration-300"
               >
                 <span>{t('nav.herkomst')}</span>

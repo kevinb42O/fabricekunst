@@ -33,6 +33,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
   const itemDescription = item ? getItemField(item, 'description', language) : t('voltaire.narrativeP1');
   const itemHistoricalContext = item ? getItemField(item, 'historicalContext', language) : null;
   const itemProvenance = item ? getItemField(item, 'provenance', language) : t('voltaire.provenanceQuote');
+  const itemPublisher = item ? getItemField(item, 'publisher', language) : '';
   const itemProvenanceDetails = item ? getItemField(item, 'provenanceDetails', language) : null;
   const itemBinding = item ? getItemField(item, 'binding', language) : null;
 
@@ -54,19 +55,19 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
     <section 
       ref={sectionRef} 
       id="topstukken" 
-      className="py-24 bg-white overflow-hidden"
+      className="w-full max-w-full overflow-x-clip bg-white py-16 sm:py-24"
     >
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-        className="page-shell-wide space-y-16"
+        className="page-shell-wide min-w-0 max-w-full space-y-12 sm:space-y-16"
       >
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-[#111111] pb-6">
-          <div>
+          <div className="min-w-0">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -78,7 +79,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
               <span>{t('voltaire.badge')}</span>
             </motion.div>
             
-            <h2 className="text-4xl sm:text-6xl font-serif font-bold text-[#111111] tracking-tight">
+            <h2 className="break-words font-serif text-3xl font-bold tracking-tight text-[#111111] min-[390px]:text-4xl sm:text-6xl">
               {itemTitle}
             </h2>
             <p className="text-lg text-[#555555] font-serif italic mt-1">
@@ -86,7 +87,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             </p>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
+          <div className="flex min-w-0 flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center md:shrink-0">
             <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">
               {itemPrice}
             </span>
@@ -94,7 +95,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
               whileTap={{ scale: 0.96 }}
               onClick={handleRequestInquiry}
-              className="px-6 py-3.5 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-semibold text-xs uppercase tracking-[0.18em] border border-[#B8860B]/40 hover:border-[#B8860B] transition-colors duration-300 shadow-sm cursor-pointer font-mono whitespace-nowrap shrink-0"
+              className="w-full rounded-sm border border-[#B8860B]/40 bg-[#1C1A17] px-5 py-3.5 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#FAF7F2] shadow-sm transition-colors duration-300 hover:border-[#B8860B] sm:w-auto sm:shrink-0 sm:whitespace-nowrap sm:px-6 sm:tracking-[0.18em]"
             >
               <span>{t('voltaire.inquireBtn')}</span>
             </motion.button>
@@ -120,12 +121,12 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
             </AnimatePresence>
-            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex items-center justify-between z-10">
-              <span className="text-sm font-serif font-semibold text-white flex items-center space-x-2">
+            <div className="absolute inset-x-0 bottom-0 z-10 flex min-w-0 flex-col items-start gap-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <span className="flex min-w-0 items-center space-x-2 font-serif text-xs font-semibold leading-snug text-white sm:text-sm">
                 <span>{images[activeImage]?.caption || itemTitle}</span>
                 <span className="text-xs font-mono text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity">{t('voltaire.clickEnlarge')}</span>
               </span>
-              <span className="text-xs font-mono text-[#D4AF37] font-bold px-3 py-1 rounded bg-[#111111] flex items-center space-x-1.5 shadow-sm">
+              <span className="flex shrink-0 items-center space-x-1.5 rounded bg-[#111111] px-2.5 py-1 font-mono text-[10px] font-bold text-[#D4AF37] shadow-sm sm:px-3 sm:text-xs">
                 <ZoomIn className="w-3.5 h-3.5" />
                 <span>{t('voltaire.photoOf', { current: activeImage + 1, total: images.length })}</span>
               </span>
@@ -162,7 +163,7 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
         )}
 
         {/* NARRATIVE & SPECIFICATIONS GRID IN PAGE FLOW */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div className="grid min-w-0 grid-cols-1 items-start gap-10 lg:grid-cols-12">
           
           {/* Detailed Storytelling Narrative */}
           <div className="lg:col-span-7 space-y-6 text-[#333333] font-serif leading-relaxed text-base sm:text-lg">
@@ -207,57 +208,57 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
               {t('voltaire.specTitle')}
             </h4>
 
-            <div className="space-y-3">
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+            <div className="space-y-3 [&>div>span]:min-w-0 [&>div>span:last-child]:break-words [&>div>span:last-child]:text-right">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.author')}</span>
                 <span className="font-bold text-[#111111] font-serif text-sm">{item?.author || 'Voltaire'}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">Jaar / Periode</span>
                 <span className="font-bold text-[#111111] font-serif text-sm">{item?.year || '1829–1833'}</span>
               </div>
 
-              {item?.publisher && (
-                <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              {itemPublisher && (
+                <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                   <span className="text-[#666666] font-mono uppercase">Uitgever</span>
-                  <span className="font-bold text-[#111111] font-serif text-sm">{item.publisher}</span>
+                  <span className="font-bold text-[#111111] font-serif text-sm">{itemPublisher}</span>
                 </div>
               )}
 
-              {item?.binding && (
-                <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              {itemBinding && (
+                <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                   <span className="text-[#666666] font-mono uppercase">Binding</span>
-                  <span className="font-bold text-[#111111] font-serif text-sm">{item.binding}</span>
+                  <span className="font-bold text-[#111111] font-serif text-sm">{itemBinding}</span>
                 </div>
               )}
 
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.volumeCount')}</span>
                 <span className="font-bold text-[#111111] font-serif text-sm">52 Delen (Compleet)</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.publisher')}</span>
                 <span className="font-bold text-[#111111]">Lecointe / Didot, Parijs</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.year')}</span>
                 <span className="font-bold text-[#111111]">1829–1833 (19e Eeuw)</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.binding')}</span>
                 <span className="font-bold text-[#111111]">Rood Chagrin Halfleer</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-[#FAF7F2]">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5 border-b border-[#FAF7F2]">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.format')}</span>
                 <span className="font-bold text-[#111111]">In-8° (21,5 x 13,5 cm)</span>
               </div>
 
-              <div className="flex justify-between py-1.5">
+              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3 py-1.5">
                 <span className="text-[#666666] font-mono uppercase">{t('voltaire.refCode')}</span>
                 <span className="font-bold font-mono text-[#B8860B]">FB-1829-VOL</span>
               </div>

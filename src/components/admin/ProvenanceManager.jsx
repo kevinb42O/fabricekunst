@@ -18,6 +18,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   const [formData, setFormData] = useState(provenanceData || DEFAULT_PROVENANCE_DATA);
   const [activeSection, setActiveSection] = useState('hero'); // 'hero' | 'protocol' | 'story' | 'cta'
   const [formLang, setFormLang] = useState('nl'); // 'nl' | 'en' | 'fr'
+  const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingStory, setUploadingStory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showAiImportModal, setShowAiImportModal] = useState(false);
@@ -111,6 +112,27 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
         story
       };
     });
+  };
+
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(true);
+    try {
+      const url = await uploadCatalogImage(file);
+      if (!url) throw new Error('Upload leverde geen URL op.');
+      setFormData(prev => ({
+        ...prev,
+        hero: { ...(prev.hero || {}), bgImage: url }
+      }));
+      if (showToast) showToast('Hero-afbeelding voor de herkomstpagina geüpload.', 'info');
+    } catch (err) {
+      console.error('Provenance hero image upload error', err);
+      if (showToast) showToast('Uploaden van de hero-afbeelding is mislukt.', 'error');
+    } finally {
+      setUploadingHero(false);
+      e.target.value = '';
+    }
   };
 
   const handleStoryImageUpload = async (e) => {
@@ -416,6 +438,37 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
             <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[#FAF7F2] text-[#B8860B] border border-[#D8CEB8]">
               {formLang === 'nl' ? 'Nederlands' : formLang === 'en' ? 'English' : 'Français'}
             </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 rounded-2xl border border-[#E8E2D6] bg-[#FAF7F2] p-5 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)] md:items-start">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#555555]">Achtergrondafbeelding</p>
+                <p className="mt-1 text-xs leading-relaxed text-[#78736B]">Deze afbeelding hoort uitsluitend bij de herkomstpagina en staat los van de homepage-hero.</p>
+              </div>
+              <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D8CEB8] bg-white px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#1C1A18] transition-colors hover:border-[#B8860B]">
+                <Upload className="h-4 w-4 text-[#B8860B]" aria-hidden="true" />
+                <span>{uploadingHero ? 'Uploaden…' : 'Afbeelding uploaden'}</span>
+                <input type="file" accept="image/*" className="sr-only" disabled={uploadingHero} onChange={handleHeroImageUpload} />
+              </label>
+              <label className="block space-y-2">
+                <span className="block text-xs font-mono font-bold uppercase tracking-wider text-[#555555]">Afbeeldings-URL</span>
+                <input
+                  type="url"
+                  value={formData.hero?.bgImage || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, hero: { ...(prev.hero || {}), bgImage: e.target.value } }))}
+                  className="w-full rounded-xl border border-[#E8E2D6] bg-white px-4 py-3 text-sm text-[#1C1A18] focus:border-[#C5A059] focus:outline-none"
+                  placeholder="/images/herkomst-hero.jpg"
+                />
+              </label>
+            </div>
+            <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#D8CEB8] bg-white">
+              {formData.hero?.bgImage ? (
+                <img src={formData.hero.bgImage} alt="Voorbeeld van de herkomst-hero" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-[#B7AA92]"><ImageIcon className="h-8 w-8" aria-hidden="true" /></div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

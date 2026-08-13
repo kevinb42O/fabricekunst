@@ -11,23 +11,38 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
   const [customEmailBody, setCustomEmailBody] = useState('');
 
   const handleStatusSelect = async (id, newStatus) => {
-    const updated = await updateInquiryStatusAsync(id, newStatus);
-    onStatusChange(updated);
-    if (onShowToast) onShowToast(`Aanvraag status gewijzigd naar ${newStatus}`);
+    try {
+      const updated = await updateInquiryStatusAsync(id, newStatus);
+      onStatusChange(updated);
+      if (onShowToast) onShowToast(`Aanvraag status gewijzigd naar ${newStatus}`);
+    } catch (error) {
+      console.error('Aanvraagstatus opslaan mislukt:', error);
+      if (onShowToast) onShowToast('De status kon niet worden opgeslagen.', 'error');
+    }
   };
 
   const handleSaveNotes = async (id) => {
     const noteText = activeNotes[id] || '';
-    const updated = await updateInquiryNotesAsync(id, noteText);
-    onStatusChange(updated);
-    if (onShowToast) onShowToast('Interne notitie opgeslagen');
+    try {
+      const updated = await updateInquiryNotesAsync(id, noteText);
+      onStatusChange(updated);
+      if (onShowToast) onShowToast('Interne notitie opgeslagen');
+    } catch (error) {
+      console.error('Aanvraagnotitie opslaan mislukt:', error);
+      if (onShowToast) onShowToast('De notitie kon niet worden opgeslagen.', 'error');
+    }
   };
 
   const handleDelete = async (id, name) => {
     if (window.confirm(`Weet je zeker dat je de aanvraag van ${name} wilt verwijderen?`)) {
-      const updated = await deleteInquiryAsync(id);
-      onStatusChange(updated);
-      if (onShowToast) onShowToast('Aanvraag verwijderd.');
+      try {
+        const updated = await deleteInquiryAsync(id);
+        onStatusChange(updated);
+        if (onShowToast) onShowToast('Aanvraag verwijderd.');
+      } catch (error) {
+        console.error('Aanvraag verwijderen mislukt:', error);
+        if (onShowToast) onShowToast('De aanvraag kon niet worden verwijderd.', 'error');
+      }
     }
   };
 

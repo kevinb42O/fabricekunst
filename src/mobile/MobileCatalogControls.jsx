@@ -4,9 +4,9 @@ import { Check, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const COPY = {
-  nl: { collection: 'Collectie', results: 'objecten gevonden', search: 'Zoek in de collectie', filters: 'Filter en sorteer', sort: 'Sorteren', refine: 'Verfijn de collectie', apply: 'Toon resultaten', clear: 'Wis alles', clearSearch: 'Zoekopdracht wissen', close: 'Filters sluiten', active: 'actief' },
-  en: { collection: 'Collection', results: 'works found', search: 'Search the collection', filters: 'Filter and sort', sort: 'Sort', refine: 'Refine the collection', apply: 'Show results', clear: 'Clear all', clearSearch: 'Clear search', close: 'Close filters', active: 'active' },
-  fr: { collection: 'Collection', results: 'œuvres trouvées', search: 'Rechercher dans la collection', filters: 'Filtrer et trier', sort: 'Trier', refine: 'Affiner la collection', apply: 'Afficher les résultats', clear: 'Tout effacer', clearSearch: 'Effacer la recherche', close: 'Fermer les filtres', active: 'actifs' }
+  nl: { collection: 'Collectie', search: 'Zoek in de collectie', filters: 'Filter en sorteer', sort: 'Sorteren', refine: 'Verfijn de collectie', apply: 'Toon resultaten', clear: 'Wis alles', clearSearch: 'Zoekopdracht wissen', close: 'Filters sluiten', active: 'actief' },
+  en: { collection: 'Collection', search: 'Search the collection', filters: 'Filter and sort', sort: 'Sort', refine: 'Refine the collection', apply: 'Show results', clear: 'Clear all', clearSearch: 'Clear search', close: 'Close filters', active: 'active' },
+  fr: { collection: 'Collection', search: 'Rechercher dans la collection', filters: 'Filtrer et trier', sort: 'Trier', refine: 'Affiner la collection', apply: 'Afficher les résultats', clear: 'Tout effacer', clearSearch: 'Effacer la recherche', close: 'Fermer les filtres', active: 'actifs' }
 };
 
 export default function MobileCatalogControls({
@@ -17,7 +17,6 @@ export default function MobileCatalogControls({
   activeFilters,
   resetFilters,
   hasActiveFilters,
-  resultCount,
   sections,
   isOpen,
   setIsOpen
@@ -70,9 +69,6 @@ export default function MobileCatalogControls({
           <div className="mt-1 font-serif text-[2rem] font-bold leading-none text-[#111111]">
             {labels.collection}
           </div>
-          {activeFilters.length > 0 && (
-            <p className="mt-2 font-serif text-sm text-[#655B50]">{resultCount} {labels.results}</p>
-          )}
         </div>
         {hasActiveFilters && (
           <button
@@ -263,7 +259,7 @@ export default function MobileCatalogControls({
                   onClick={() => setIsOpen(false)}
                   className="min-h-12 bg-[#1C1A17] px-3 font-sans text-[10px] font-bold uppercase tracking-[0.12em] text-white"
                 >
-                  {labels.apply}{activeFilters.length > 0 ? ` · ${resultCount}` : ''}
+                  {labels.apply}
                 </button>
               </div>
             </motion.div>

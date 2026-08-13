@@ -1,291 +1,147 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Scale, ShieldCheck, FileCheck, Truck, RotateCcw, Award, ArrowLeft, Mail, Phone, Globe } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { LUXURY_EASE } from '../utils/motion';
+import React from 'react';
+import LegalDocument, { BUSINESS, BusinessIdentity, LegalLink } from './LegalDocument';
+
+const BulletList = ({ children }) => <ul>{children}</ul>;
 
 export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
-  const { language } = useLanguage();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const isFr = language === 'fr';
-  const isEn = language === 'en';
+  const sections = [
+    {
+      id: 'identiteit',
+      title: 'Onderneming en definities',
+      content: <>
+        <BusinessIdentity />
+        <p>In deze voorwaarden betekent <strong>Atelier Rembrandt</strong>: {BUSINESS.legalName}, handelend onder de handelsnaam Atelier Rembrandt; <strong>Koper</strong>: iedere persoon die een aanbod aanvraagt of een overeenkomst sluit; <strong>Consument</strong>: een natuurlijke persoon die hoofdzakelijk buiten zijn handels-, bedrijfs-, ambachts- of beroepsactiviteit handelt; en <strong>Object</strong>: ieder boek, manuscript, prent, schilderij of ander kunst- of verzamelobject.</p>
+      </>,
+    },
+    {
+      id: 'toepasselijkheid',
+      title: 'Toepasselijkheid en voorrang',
+      content: <>
+        <p>Deze voorwaarden gelden voor onze catalogus, offertes, reserveringen, bezichtigingen en overeenkomsten. De versie die vóór of bij het sluiten van de overeenkomst aan de Koper is verstrekt, is van toepassing. Bij tegenstrijdigheid heeft een uitdrukkelijke, schriftelijke bijzondere afspraak voorrang.</p>
+        <p>Dwingende consumentenrechten blijven altijd gelden. Afwijkende voorwaarden van een professionele Koper gelden alleen wanneer wij die uitdrukkelijk schriftelijk aanvaarden. De nietigheid van één bepaling tast de overige bepalingen niet aan; de ongeldige bepaling wordt vervangen door de geldige regel die het doel ervan het dichtst benadert.</p>
+      </>,
+    },
+    {
+      id: 'catalogus',
+      title: 'Catalogus, afbeeldingen en conditie',
+      content: <>
+        <p>Wij beschrijven ieder Object zorgvuldig op basis van het onderzoek en de informatie die op dat moment beschikbaar zijn. Afmetingen, kleuren en beeldweergave kunnen beperkt afwijken door meetwijze, fotografie of scherminstellingen. Foto’s en een meegedeelde conditiebeschrijving maken deel uit van de contractuele informatie.</p>
+        <p>Antiquarische Objecten zijn gebruikte en vaak unieke goederen. Normale, gemelde of bij een bezichtiging redelijkerwijs waarneembare ouderdomssporen — zoals patina, foxing, slijtage, oude restauraties of materiaalveroudering — vormen op zichzelf geen gebrek aan overeenstemming. Dit beperkt nooit de wettelijke rechten voor een niet-gemeld gebrek of een Object dat niet beantwoordt aan de overeenkomst.</p>
+        <p>De Koper wordt uitgenodigd om vóór aankoop detailfoto’s, een conditierapport of een bezichtiging te vragen. Dat is een mogelijkheid en geen afstand van wettelijke rechten.</p>
+      </>,
+    },
+    {
+      id: 'authenticiteit',
+      title: 'Toeschrijving, herkomst en documentatie',
+      content: <>
+        <p>Een toeschrijving, datering, herkomst of bibliografische conclusie is een zorgvuldig onderbouwde professionele beoordeling volgens de kennis en algemeen aanvaarde inzichten op het moment van verkoop. Wij vermelden bekende onzekerheden en maken duidelijk onderscheid tussen bijvoorbeeld “van”, “toegeschreven aan”, “atelier van”, “school van” en “naar”.</p>
+        <p>De factuur, catalogusfiche en eventueel certificaat beschrijven de contractueel relevante kwalificaties. Nieuwe wetenschappelijke inzichten na de verkoop maken een eerdere, zorgvuldig geformuleerde opinie niet automatisch fout. Een uitdrukkelijke authenticiteitsgarantie of andere aanvullende garantie geldt volgens de schriftelijke voorwaarden daarvan, zonder afbreuk aan dwingende wettelijke conformiteitsrechten.</p>
+      </>,
+    },
+    {
+      id: 'overeenkomst',
+      title: 'Aanbod, reservering en totstandkoming',
+      content: <>
+        <p>Een catalogusvermelding, prijsindicatie of informatieantwoord is geen bindend aanbod zolang wij beschikbaarheid, prijs, toepasselijke belastingen, levering en eventuele bijzondere voorwaarden niet schriftelijk hebben bevestigd. Een overeenkomst ontstaat wanneer de Koper ons definitieve aanbod binnen de geldigheidsduur aanvaardt en wij die aanvaarding bevestigen, of wanneer wij de uitvoering starten.</p>
+        <p>Een reservering is alleen bindend voor de schriftelijk bevestigde duur en voorwaarden. Kennelijke schrijf-, reken- of prijsfouten binden ons niet wanneer de Koper redelijkerwijs moest begrijpen dat sprake was van een vergissing. Wij mogen een bestelling weigeren op objectieve gronden, zoals onbeschikbaarheid, wettelijke verplichtingen, sanctieregels of een aantoonbaar frauderisico.</p>
+      </>,
+    },
+    {
+      id: 'prijs',
+      title: 'Prijs, belastingen en betaling',
+      content: <>
+        <p>Prijzen luiden in euro. Voor Consumenten vermelden wij de totale prijs inclusief toepasselijke btw of margeregeling en alle vooraf berekenbare kosten. Leverings-, verzekerings-, invoer- of uitvoerkosten die niet in de prijs zijn inbegrepen, worden vóór de overeenkomst meegedeeld. Voor professionele Kopers kan een prijs exclusief btw worden vermeld wanneer dat ondubbelzinnig is aangegeven.</p>
+        <p>Betaling gebeurt via de op de offerte of factuur vermelde methode en termijn. Het Object blijft eigendom van Atelier Rembrandt tot de volledige prijs en overeengekomen kosten zijn ontvangen. Voor ingebrekestelling, rente en invorderingskosten gelden de dwingende Belgische regels; tegenover Consumenten worden geen kosten aangerekend zonder de wettelijk vereiste kosteloze herinnering en termijnen.</p>
+      </>,
+    },
+    {
+      id: 'levering',
+      title: 'Levering, verzekering en risico',
+      content: <>
+        <p>Wij verpakken het Object volgens aard, conditie, waarde en bestemming. De overeengekomen vervoerder, prijs, verzekerde waarde en eventuele relevante dekkingsbeperkingen worden vóór verzending bevestigd. Tenzij anders overeengekomen leveren wij zonder onnodige vertraging en bij een Consumentenkoop uiterlijk binnen 30 dagen na de overeenkomst.</p>
+        <p>Bij een Consumentenkoop gaat het risico pas over wanneer de Consument of een door hem aangewezen derde het Object fysiek ontvangt, behalve wanneer de Consument zelf een niet door ons aangeboden vervoerder kiest. Voor professionele Kopers gaat het risico over volgens de schriftelijk overeengekomen leveringsvoorwaarde.</p>
+        <p>Controleer de verpakking bij ontvangst en meld zichtbare transportschade zo snel mogelijk, bij voorkeur met foto’s. Een laattijdige melding ontneemt een Consument geen dwingende rechten, maar kan het onderzoek of een verzekeringsclaim bemoeilijken.</p>
+      </>,
+    },
+    {
+      id: 'conformiteit',
+      title: 'Wettelijke conformiteit en gebreken',
+      content: <>
+        <p>Voor Consumenten geldt de Belgische wettelijke garantie. Voor tweedehandsgoederen kan de wettelijke termijn alleen met uitdrukkelijk akkoord worden verkort tot minimaal één jaar; zonder zo’n afspraak geldt de wettelijke termijn van twee jaar vanaf levering.</p>
+        <p>Bij een gebrek aan overeenstemming heeft de Consument recht op de wettelijke remedies. Omdat een Object vaak uniek is, kan vervanging onmogelijk zijn; ook herstel kan kunsthistorisch onverantwoord of onevenredig zijn. In dat geval gelden, volgens de wettelijke voorwaarden, een evenredige prijsvermindering of ontbinding. Meld een probleem via <LegalLink href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</LegalLink> met de factuurreferentie en relevante foto’s.</p>
+        <p>Voor professionele Kopers geldt uitsluitend de garantie die in de bijzondere overeenkomst is opgenomen, met behoud van aansprakelijkheid die wettelijk niet kan worden uitgesloten.</p>
+      </>,
+    },
+    {
+      id: 'herroeping',
+      title: 'Herroepingsrecht bij verkoop op afstand',
+      content: <>
+        <p>Een Consument die een overeenkomst op afstand of buiten de verkoopruimte sluit, kan die in beginsel zonder reden herroepen binnen 14 kalenderdagen vanaf de dag na ontvangst van het Object. Bij één bestelling met afzonderlijke leveringen begint de termijn na ontvangst van het laatste Object.</p>
+        <p>De Consument herroept vóór het einde van de termijn met een ondubbelzinnige verklaring aan <LegalLink href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</LegalLink> of per post aan onze maatschappelijke zetel. Het onderstaande modelformulier mag worden gebruikt, maar is niet verplicht.</p>
+        <div className="legal-form" aria-label="Modelformulier voor herroeping">
+          <p><strong>Modelformulier voor herroeping</strong></p>
+          <p>Aan: Atelier Rembrandt / {BUSINESS.legalName}, {BUSINESS.address}, {BUSINESS.email}</p>
+          <p>Ik/Wij deel/delen u hierbij mee dat ik/wij onze overeenkomst betreffende de verkoop van het volgende Object herroep/herroepen:</p>
+          <p>Omschrijving en referentie: …<br />Besteld op / ontvangen op: …<br />Naam Consument(en): …<br />Adres Consument(en): …<br />Datum: …<br />Handtekening (alleen bij papier): …</p>
+        </div>
+        <p>Na de melding heeft de Consument nog 14 dagen om het Object terug te sturen. De rechtstreekse retourkosten zijn voor de Consument. Gezien de aard en waarde moet de retour deugdelijk, traceerbaar en voor de volledige waarde verzekerd worden; neem vooraf contact op voor praktische instructies. Dit mag het herroepingsrecht niet onnodig bemoeilijken.</p>
+        <p>Wij betalen de ontvangen prijs en de kosten van de goedkoopste aangeboden standaardlevering uiterlijk 14 dagen na de herroepingsmelding terug via hetzelfde betaalmiddel, tenzij anders overeengekomen. Wij mogen wachten tot wij het Object hebben ontvangen of de Consument bewijs van verzending verstrekt. De Consument is alleen aansprakelijk voor waardevermindering door gebruik dat verder gaat dan nodig om aard, kenmerken en werking vast te stellen.</p>
+        <p>Het wettelijke herroepingsrecht geldt niet in de wettelijk bepaalde uitzonderingen, onder meer voor een volgens de specificaties van de Consument vervaardigd of duidelijk gepersonaliseerd goed. Aankopen die volledig in onze verkoopruimte worden gesloten, hebben geen wettelijk herroepingsrecht tenzij wij dat schriftelijk aanbieden.</p>
+      </>,
+    },
+    {
+      id: 'uitvoer',
+      title: 'Uitvoer, cultuurgoederen en naleving',
+      content: <>
+        <p>De uitvoer of invoer van bepaalde cultuurgoederen kan een vergunning, douanedocument of andere toestemming vereisen. Wij delen vóór de overeenkomst mee welke bekende formaliteiten op onze levering van toepassing zijn. De Koper verstrekt correcte gegevens en werkt mee aan wettelijk vereiste controles. Geen van beide partijen hoeft een handeling te verrichten die strijdig is met sanctie-, douane-, antiwitwas- of cultuurgoederenwetgeving.</p>
+        <p>Een vergunning is een overheidsbeslissing en kan daarom niet worden gegarandeerd. Als uitvoering definitief onmogelijk wordt door een weigering waarvoor geen partij verantwoordelijk is, zoeken partijen een wettelijke en redelijke oplossing, rekening houdend met reeds gemaakte, vooraf meegedeelde kosten.</p>
+      </>,
+    },
+    {
+      id: 'aansprakelijkheid',
+      title: 'Aansprakelijkheid en overmacht',
+      content: <>
+        <p>Atelier Rembrandt is aansprakelijk volgens het toepasselijke recht voor schade die het voorzienbare en rechtstreekse gevolg is van een toerekenbare tekortkoming. Niets in deze voorwaarden beperkt aansprakelijkheid voor bedrog, opzettelijke of zware fout, aantasting van leven of lichamelijke integriteit, of andere aansprakelijkheid die wettelijk niet kan worden uitgesloten.</p>
+        <p>Tegenover professionele Kopers is, voor zover wettelijk toegestaan, aansprakelijkheid voor indirecte schade uitgesloten en is de totale contractuele aansprakelijkheid beperkt tot het factuurbedrag van het betrokken Object. Deze beperking geldt niet in de gevallen genoemd in de vorige alinea.</p>
+        <p>Een partij is niet aansprakelijk voor vertraging door een onvoorzienbare en onvermijdbare gebeurtenis buiten haar redelijke controle. Zij informeert de andere partij zo snel mogelijk en beperkt de gevolgen. Duurt de verhindering onredelijk lang, dan kunnen partijen het niet-uitgevoerde deel beëindigen volgens het toepasselijke recht.</p>
+      </>,
+    },
+    {
+      id: 'intellectueel',
+      title: 'Intellectuele eigendom',
+      content: <>
+        <p>De aankoop van een Object draagt geen auteursrecht of ander intellectueel eigendomsrecht op afbeeldingen, teksten, onderzoek of het Object zelf over. Websitefotografie, catalogusteksten, vormgeving en onderzoeksmateriaal mogen niet commercieel worden gereproduceerd of gepubliceerd zonder voorafgaande schriftelijke toestemming, behalve voor zover een wettelijke uitzondering dat toestaat.</p>
+      </>,
+    },
+    {
+      id: 'klachten',
+      title: 'Klachten en buitengerechtelijke regeling',
+      content: <>
+        <p>Stuur een klacht met factuur- of objectreferentie naar <LegalLink href={`mailto:${BUSINESS.email}`}>{BUSINESS.email}</LegalLink>. Wij bevestigen de ontvangst en proberen zo snel mogelijk een inhoudelijke oplossing te bieden.</p>
+        <p>Is een consumentengeschil na rechtstreeks contact niet opgelost, dan kan de Consument kosteloos een beroep doen op de <LegalLink href="https://consumentenombudsdienst.be/">Consumentenombudsdienst</LegalLink>, Koning Albert II-laan 8 bus 1, 1000 Brussel, contact@consumentenombudsdienst.be, +32 (0)2 702 52 00. Deelname aan bemiddeling verhindert niet dat een partij later naar de rechter stapt.</p>
+      </>,
+    },
+    {
+      id: 'recht',
+      title: 'Toepasselijk recht en bevoegde rechter',
+      content: <>
+        <p>Op de overeenkomst is Belgisch recht van toepassing. Een Consument behoudt de bescherming van dwingende bepalingen van het land van zijn gewone verblijfplaats wanneer die bescherming volgens het internationaal privaatrecht van toepassing is.</p>
+        <p>Geschillen worden voorgelegd aan de rechter die volgens de wettelijke bevoegdheidsregels bevoegd is. Voor professionele Kopers zijn, voor zover wettelijk toegestaan, uitsluitend de rechtbanken van het gerechtelijk arrondissement van onze maatschappelijke zetel bevoegd.</p>
+      </>,
+    },
+  ];
 
   return (
-    <div className="mobile-legal-page min-h-screen bg-white text-[#111111] font-sans pb-24 pt-24 sm:pt-36">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Top Breadcrumb / Back button */}
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <button
-            onClick={onNavigateHome}
-            className="inline-flex min-h-11 items-center space-x-2 text-xs font-serif tracking-widest text-[#8E7035] hover:text-[#B8860B] transition-colors uppercase cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{isFr ? 'Retour à l\'Accueil' : isEn ? 'Back to Home' : 'Terug naar Homepage'}</span>
-          </button>
-        </motion.div>
-
-        {/* Header Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: LUXURY_EASE }}
-          className="bg-white border border-[#E8E2D5] rounded-xl p-8 sm:p-12 shadow-sm mb-12 relative overflow-hidden"
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#B8860B]/5 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex items-center space-x-3 text-xs tracking-[0.25em] text-[#8E7035] uppercase font-serif font-semibold mb-4">
-            <Scale className="w-4 h-4 text-[#B8860B]" />
-            <span>{isFr ? 'Cadre Juridique & Conditions d\'Vente' : isEn ? 'Legal Terms & Gallery Conditions' : 'Juridisch Kader & Galerievoorwaarden'}</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#111111] font-semibold tracking-tight mb-4 leading-tight">
-            {isFr ? 'Conditions Générales' : isEn ? 'Terms & Conditions' : 'Algemene Voorwaarden'}
-          </h1>
-
-          <p className="text-sm sm:text-base text-[#555555] font-serif leading-relaxed max-w-2xl">
-            {isFr
-              ? 'Les présentes conditions générales régissent l’ensemble des offres, expertises, consultations et transactions conclues avec Atelier Rembrandt.'
-              : isEn
-              ? 'These terms and conditions govern all offers, expertises, consultations, and transactions concluded with Atelier Rembrandt.'
-              : 'Deze Algemene Voorwaarden zijn van toepassing op alle aanbiedingen, opties, bezichtigingen, offertes en overeenkomsten betrekking hebbend op antiquarische boeken, manuscripten en kunstwerken van Atelier Rembrandt.'}
-          </p>
-
-          <div className="mt-8 pt-6 border-t border-[#E8E2D5] flex flex-wrap items-center justify-between gap-4 text-xs font-serif text-[#666666]">
-            <div className="flex flex-wrap items-center gap-4">
-              <div><strong>{isFr ? 'Domaine:' : isEn ? 'Domain:' : 'Website:'}</strong> www.atelierrembrandt.com</div>
-              <span className="text-[#D8CEB8]">|</span>
-              <div><strong>{isFr ? 'Société:' : isEn ? 'Company:' : 'Rechtspersoon:'}</strong> Andor Comm V. (Atelier Rembrandt)</div>
-              <span className="text-[#D8CEB8]">|</span>
-              <div><strong>{isFr ? 'Dernière revision:' : isEn ? 'Last Revision:' : 'Laatst bijgewerkt:'}</strong> 30 juli 2026</div>
-            </div>
-            <img src="/images/andor.jpeg" alt="Andor Comm V." className="h-7 w-auto object-contain opacity-90 filter contrast-105" />
-          </div>
-        </motion.div>
-
-        {/* Content Body */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: LUXURY_EASE }}
-          className="bg-white border border-[#E8E2D5] rounded-xl p-8 sm:p-12 shadow-sm space-y-10 text-[#333333] font-serif leading-relaxed text-sm sm:text-base"
-        >
-
-          {/* Section 1 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 1</span>
-              <span>1. Definities</span>
-            </h2>
-            <p>In deze algemene voorwaarden wordt verstaan onder:</p>
-            <ul className="list-disc pl-6 space-y-2 text-[#444444]">
-              <li><strong>Andor Comm V. / Atelier Rembrandt:</strong> De rechtspersoon <strong>Andor Comm V.</strong>, handelend onder de handelsnaam en galerie <strong>Atelier Rembrandt</strong> geëxploiteerd via de website <strong>www.atelierrembrandt.com</strong>, gespecialiseerd in zeldzame antiquarische boeken, 16e–18e-eeuwse drukken, gravures, oude meesters en historische kunstobjecten.</li>
-              <li><strong>Koper / Verzamelaar:</strong> Iedere natuurlijke persoon of rechtspersoon die een informatieaanvraag doet, een optie of privébezichtiging aanvraagt, of een overeenkomst aangaat met Andor Comm V. / Atelier Rembrandt.</li>
-              <li><strong>Antiquarisch Object / Kunstwerk:</strong> Elk zeldzaam boek, manuscript, prent, schilderij of kunsthistorisch voorwerp dat op www.atelierrembrandt.com of in het atelier te koop of ter bezichtiging wordt aangeboden.</li>
-            </ul>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 2 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 2</span>
-              <span>2. Toepasselijkheid</span>
-            </h2>
-            <p>
-              Deze Algemene Voorwaarden zijn van toepassing op alle aanbiedingen, offertes, catalogusfiches, bezichtigingsafspraken, reserveringen en overeenkomsten tussen Atelier Rembrandt en de Koper via <strong>www.atelierrembrandt.com</strong> of in persoon. Afwijkingen van deze voorwaarden zijn slechts geldig indien deze uitdrukkelijk en schriftelijk door Atelier Rembrandt zijn aanvaard.
-            </p>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 3 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 3</span>
-              <span>3. Catalogus, Beschrijving & Conditie van Antiquarische Werken</span>
-            </h2>
-            <p>
-              Elk object in onze collectie wordt door experts onderzocht en met de grootst mogelijke kunsthistorische en bibliografische zorgvuldigheid gecatalogiseerd op www.atelierrembrandt.com.
-            </p>
-            <div className="bg-white border border-[#E8E2D5] p-4 rounded-lg space-y-2 text-xs sm:text-sm text-[#444444]">
-              <p><strong>Aard van Antiquarische Stukken:</strong> Gezien de historische ouderdom (veelal 16e, 17e of 18e eeuw) dragen antiquarische boeken, manuscripten en kunstwerken natuurlijke ouderdomssporen (zoals geringe foxing, marquinering, contemporaine lederen banden of patina). Deze sporen behoren tot de authentieke staat van het object.</p>
-              <p><strong>Conditiebeschrijving:</strong> Belangrijke bijzonderheden of restauraties worden expliciet vermeld in de catalogusfiche. Hoge-resolutie detailfoto's vormen een integraal onderdeel van de beschrijving.</p>
-            </div>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 4 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 4</span>
-              <span>4. Authenticiteitsverklaring & Documentatie</span>
-            </h2>
-            <div className="flex items-start space-x-3 bg-white border border-[#B8860B]/30 p-5 rounded-lg">
-              <Award className="w-6 h-6 text-[#B8860B] shrink-0 mt-0.5" />
-              <div className="space-y-1.5 text-xs sm:text-sm">
-                <h4 className="font-semibold text-[#111111]">Grondslag van de catalogisering</h4>
-                <p className="text-[#444444]">
-                  De factuur, catalogusfiche en eventuele aanvullende documentatie beschrijven de kenmerken, bronnen en onderzoeksbevindingen waarop de catalogisering berust. Toeschrijvingen en dateringen weerspiegelen de beschikbare informatie op het moment van verkoop. Een specifieke contractuele garantie geldt uitsluitend wanneer zij uitdrukkelijk en schriftelijk in de verkoopovereenkomst is opgenomen.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 5 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 5</span>
-              <span>5. Aanvragen, Prijzen & Reserveringen</span>
-            </h2>
-            <ul className="list-disc pl-6 space-y-2 text-[#444444]">
-              <li><strong>Prijzen:</strong> Alle vermelde of op aanvraag meegedeelde prijzen zijn luidende in Euro (€) en zijn inclusief eventuele toepasselijke marginale btw-regelingen voor gebruikte antiquarische goederen en kunst.</li>
-              <li><strong>Vrijblijvendheid:</strong> Alle catalogusvermeldingen en prijsonopgaven zijn vrijblijvend, zolang het werk niet schriftelijk door Atelier Rembrandt is gereserveerd.</li>
-              <li><strong>Opties & Reservering:</strong> Een optie op een zeldzaam object wordt uitsluitend bindend na schriftelijke of digitale bevestiging vanuit Atelier Rembrandt.</li>
-            </ul>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 6 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 6</span>
-              <span>6. Betaling & Eigendomsvoorbehoud</span>
-            </h2>
-            <p>
-              Betaling dient te geschieden via bankoverschrijving of overeengekomen veilige betalingsmethode voorafgaand aan verzending of bij persoonlijke overdracht.
-            </p>
-            <p className="text-xs text-[#666666]">
-              <strong>Eigendomsvoorbehoud:</strong> Alle geleverde antiquarische objecten blijven het volledige eigendom van Atelier Rembrandt totdat de Koper aan al zijn betalingsverplichtingen heeft voldaan.
-            </p>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 7 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 7</span>
-              <span>7. Geconditioneerde Verpakking & Verzekerd Transport</span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div className="border border-[#E8E2D5] p-4 rounded-lg bg-white flex items-start space-x-3">
-                <Truck className="w-5 h-5 text-[#B8860B] shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-[#111111] text-sm">Objectgerichte verpakking</h4>
-                  <p className="text-xs text-[#666666] mt-1">De verpakking wordt afgestemd op materiaal, formaat, conditie en bestemming van het object.</p>
-                </div>
-              </div>
-              <div className="border border-[#E8E2D5] p-4 rounded-lg bg-white flex items-start space-x-3">
-                <ShieldCheck className="w-5 h-5 text-[#B8860B] shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-[#111111] text-sm">Verzekerd transport</h4>
-                  <p className="text-xs text-[#666666] mt-1">De voorgestelde vervoerder, verzekerde waarde, dekking en eventuele uitsluitingen worden vóór verzending bevestigd.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 8 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 8</span>
-              <span>8. Herroepingsrecht & Retourvoorwaarden</span>
-            </h2>
-            <p>
-              Consument-kopers hebben overeenkomstig de wettelijke bepalingen bij afstandskopen het recht om de aankoop binnen 14 kalenderdagen na ontvangst zonder opgave van redenen te herroepen.
-            </p>
-            <div className="bg-white border border-[#E8E2D5] p-4 rounded-lg text-xs sm:text-sm space-y-2 text-[#444444]">
-              <p><strong>Voorwaarden voor Retourontvangst:</strong> Retournering is uitsluitend toegestaan indien het antiquarische object zich in exact dezelfde, ongewijzigde en onbeschadigde staat bevindt als bij aflevering door Atelier Rembrandt, inclusief alle meegeleverde certificaten en originele verpakking.</p>
-              <p><strong>Retourtransport:</strong> Het retourtransport dient via een gelijkwaardig geconditioneerde en volledig verzekerde koerier te worden uitgevoerd.</p>
-            </div>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 9 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 9</span>
-              <span>9. Intellectueel Eigendom & Auteursrechten</span>
-            </h2>
-            <p>
-              Alle intellectuele eigendomsrechten, waaronder auteursrechten, merkrechten, hoge-resolutie fotografie, bibliografische analyses, omschrijvingen en beeldmateriaal gepubliceerd op <strong>www.atelierrembrandt.com</strong> berusten uitsluitend bij Atelier Rembrandt. Niets van deze website mag worden verveelvoudigd, gekopieerd of openbaar gemaakt zonder voorafgaande schriftelijke toestemming van Atelier Rembrandt.
-            </p>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 10 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 10</span>
-              <span>10. Aansprakelijkheid & Overmacht</span>
-            </h2>
-            <p>
-              De aansprakelijkheid van Atelier Rembrandt voor schade voortvloeiend uit of verband houdend met een overeenkomst of de werking van www.atelierrembrandt.com is te allen tijde beperkt tot maximaal het factuurbedrag van het specifieke object waarop de schade betrekking heeft. Atelier Rembrandt is niet aansprakelijk voor indirecte schade of overmachtssituaties.
-            </p>
-          </section>
-
-          <hr className="border-[#E8E2D5]" />
-
-          {/* Section 11 */}
-          <section className="space-y-3">
-            <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#111111] flex items-center space-x-3">
-              <span className="text-xs font-sans text-[#8E7035] bg-white border border-[#E8E2D5] px-2.5 py-1 rounded-md">Art. 11</span>
-              <span>11. Toepasselijk Recht & Bevoegde Rechter</span>
-            </h2>
-            <p>
-              Op alle rechtsbetrekkingen tussen Atelier Rembrandt en de Koper is uitsluitend het recht van toepassing van het land waar Atelier Rembrandt haar hoofdvestiging heeft. Geschillen zullen bij uitsluiting worden voorgelegd aan de bevoegde rechter van de vestigingsplaats van Atelier Rembrandt, tenzij dwingend recht anders voorschrijft.
-            </p>
-          </section>
-
-        </motion.div>
-
-        {/* Bottom CTA Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="mt-12 text-center bg-white border border-[#E8E2D5] rounded-xl p-8 space-y-4"
-        >
-          <h3 className="text-lg font-serif font-semibold text-[#111111]">Vragen over onze galerievoorwaarden of aankoopgaranties?</h3>
-          <p className="text-xs sm:text-sm text-[#666666] font-serif max-w-xl mx-auto">
-            Neem gerust contact met ons op voor advies over reserveringen, bezichtigingen of de opmaak van een echtheidsdossier.
-          </p>
-          <div className="pt-2 flex flex-wrap justify-center gap-4">
-            <button
-              onClick={onRequestConsultation}
-              className="px-6 py-2.5 bg-[#111111] text-white text-xs font-serif tracking-widest uppercase rounded-lg hover:bg-[#8E7035] transition-colors cursor-pointer"
-            >
-              Plan Privé-Bezichtiging
-            </button>
-            <button
-              onClick={onNavigateHome}
-              className="px-6 py-2.5 border border-[#111111] text-[#111111] text-xs font-serif tracking-widest uppercase rounded-lg hover:bg-white transition-colors cursor-pointer"
-            >
-              Terug naar Galerie
-            </button>
-          </div>
-        </motion.div>
-
-      </div>
-    </div>
+    <LegalDocument
+      documentNumber="02"
+      eyebrow="Verkoop & dienstverlening"
+      title="Algemene voorwaarden"
+      summary="De afspraken die gelden voor catalogusvermeldingen, bezichtigingen en de aankoop en levering van antiquarische boeken, prenten en kunstobjecten."
+      sections={sections}
+      onNavigateHome={onNavigateHome}
+      onRequestConsultation={onRequestConsultation}
+      contactTitle="Een voorwaarde bespreken vóór aankoop?"
+      contactText="Voor elk object lichten we conditie, documentatie, levering en eventuele bijzondere afspraken graag persoonlijk toe."
+    />
   );
 }

@@ -2109,11 +2109,8 @@ export default function ItemManager({
                         {renderFieldHeader(editingFieldLabels.publisher, "publisher")}
                         <input
                           type="text"
-                          value={getFormField('publisher') || editingItem.publisher || ''}
-                          onChange={(e) => {
-                            updateFormField('publisher', e.target.value);
-                            setEditingItem(prev => ({ ...prev, publisher: e.target.value }));
-                          }}
+                          value={getFormField('publisher')}
+                          onChange={(e) => updateFormField('publisher', e.target.value)}
                           placeholder={isFieldNvt('publisher', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : editingFieldLabels.publisher}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
                             isFieldNvt('publisher', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
@@ -2125,11 +2122,8 @@ export default function ItemManager({
                         {renderFieldHeader(editingFieldLabels.city, "city")}
                         <input
                           type="text"
-                          value={getFormField('city') || editingItem.city || ''}
-                          onChange={(e) => {
-                            updateFormField('city', e.target.value);
-                            setEditingItem(prev => ({ ...prev, city: e.target.value }));
-                          }}
+                          value={getFormField('city')}
+                          onChange={(e) => updateFormField('city', e.target.value)}
                           placeholder={isFieldNvt('city', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : editingFieldLabels.city}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
                             isFieldNvt('city', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'
@@ -2216,11 +2210,8 @@ export default function ItemManager({
                         {renderFieldHeader(editingFieldLabels.dimensions, "dimensions")}
                         <input
                           type="text"
-                          value={getFormField('dimensions') || editingItem.dimensions || ''}
-                          onChange={(e) => {
-                            updateFormField('dimensions', e.target.value);
-                            setEditingItem(prev => ({ ...prev, dimensions: e.target.value }));
-                          }}
+                          value={getFormField('dimensions')}
+                          onChange={(e) => updateFormField('dimensions', e.target.value)}
                           placeholder={isFieldNvt('dimensions', formLang) ? "✓ Bewust leeg gelaten (N.v.t.)" : "Bijv. In-8° (21,5 x 13,5 cm)"}
                           className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18] ${
                             isFieldNvt('dimensions', formLang) ? 'bg-amber-50/60 border-amber-300' : 'bg-[#F9F7F2] border-[#E0D9CC]'

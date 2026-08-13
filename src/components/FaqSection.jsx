@@ -3,14 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField } from '../utils/translationService';
-import { DEFAULT_FAQ_ITEMS } from '../utils/storage';
 import { LUXURY_EASE } from '../utils/motion';
 
 export default function FaqSection({ items = [] }) {
   const { t, language } = useLanguage();
   const [openIndex, setOpenIndex] = useState(null);
 
-  const displayItems = (Array.isArray(items) && items.length > 0 ? items : DEFAULT_FAQ_ITEMS).slice(0, 3);
+  const displayItems = Array.isArray(items) ? items : [];
 
   const toggleAccordion = (idx) => {
     setOpenIndex(openIndex === idx ? null : idx);
@@ -51,6 +50,8 @@ export default function FaqSection({ items = [] }) {
       }
     }
   };
+
+  if (displayItems.length === 0) return null;
 
   return (
     <section id="faq" className="editorial-readable py-24 sm:py-32 bg-white relative overflow-hidden">

@@ -1,4 +1,5 @@
 {
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -36,6 +37,36 @@
       "source": "/algemene-voorwaarden",
       "destination": "/voorwaarden",
       "permanent": true
+    },
+    {
+      "source": "/en/catalogus",
+      "destination": "/en/collectie",
+      "permanent": true
+    },
+    {
+      "source": "/fr/catalogus",
+      "destination": "/fr/collectie",
+      "permanent": true
+    },
+    {
+      "source": "/en/algemene-voorwaarden",
+      "destination": "/en/voorwaarden",
+      "permanent": true
+    },
+    {
+      "source": "/fr/algemene-voorwaarden",
+      "destination": "/fr/voorwaarden",
+      "permanent": true
+    },
+    {
+      "source": "/nl",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/nl/:path*",
+      "destination": "/:path*",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -48,16 +79,28 @@
       "destination": "/api/llms"
     },
     {
-      "source": "/admin",
-      "destination": "/admin.html"
+      "source": "/collectie/:path*",
+      "destination": "/"
     },
     {
-      "source": "/collectie/:path*",
-      "destination": "/index.html"
+      "source": "/en/collectie/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/fr/collectie/:path*",
+      "destination": "/"
     },
     {
       "source": "/item/:path*",
-      "destination": "/index.html"
+      "destination": "/"
+    },
+    {
+      "source": "/en/item/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/fr/item/:path*",
+      "destination": "/"
     }
   ]
 }

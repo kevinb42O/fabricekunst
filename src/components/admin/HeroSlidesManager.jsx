@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, Image as ImageIcon, RefreshCw, Save, Upload } from 'lucide-react';
 import { DEFAULT_HERO_IMAGE, DEFAULT_MOBILE_HERO_IMAGE, uploadCatalogImage } from '../../utils/storage';
 
@@ -7,7 +7,6 @@ export default function HeroSlidesManager({
   mobileHeroImage = '',
   onSaveHeroImage,
   onSaveMobileHeroImage,
-  onSaveSlides,
   onShowToast = () => {}
 }) {
   const [imageUrl, setImageUrl] = useState(heroImage || DEFAULT_HERO_IMAGE);
@@ -15,8 +14,16 @@ export default function HeroSlidesManager({
   const [uploadingTarget, setUploadingTarget] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const saveDesktopImage = onSaveHeroImage || onSaveSlides || (() => Promise.resolve());
+  const saveDesktopImage = onSaveHeroImage || (() => Promise.resolve());
   const saveMobileImage = onSaveMobileHeroImage || (() => Promise.resolve());
+
+  useEffect(() => {
+    setImageUrl(heroImage || DEFAULT_HERO_IMAGE);
+  }, [heroImage]);
+
+  useEffect(() => {
+    setMobileImageUrl(mobileHeroImage || DEFAULT_MOBILE_HERO_IMAGE);
+  }, [mobileHeroImage]);
 
   const handleImageUpload = async (event, target) => {
     const file = event.target.files?.[0];

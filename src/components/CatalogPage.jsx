@@ -29,6 +29,7 @@ import {
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
+import { localizePath } from '../utils/locales';
 import MobileCatalogControls from '../mobile/MobileCatalogControls';
 
 const DEFAULT_FILTER_VALUE = 'Alle';
@@ -146,12 +147,14 @@ function getPrimaryMeta(item) {
   return [item.author, item.year].filter(Boolean).join(' • ');
 }
 
-function getSecondaryMeta(item) {
+function getSecondaryMeta(item, language) {
+  const publisher = getItemField(item, 'publisher', language);
+  const city = getItemField(item, 'city', language);
   if (getTypeValue(item) === 'painting') {
-    return item.publisher || item.city || '';
+    return publisher || city || '';
   }
 
-  return [item.publisher, item.city].filter(Boolean).join(' • ');
+  return [publisher, city].filter(Boolean).join(' • ');
 }
 
 function getInitialParam(name, fallback = '') {
@@ -664,7 +667,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
               activeFilters={activeFilters}
               resetFilters={resetFilters}
               hasActiveFilters={hasActiveFilters}
-              resultCount={filteredItems.length}
               sections={mobileFilterSections}
               isOpen={mobileFiltersOpen}
               setIsOpen={setMobileFiltersOpen}
@@ -743,7 +745,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                   return (
                     <motion.a
                       key={item.id}
-                      href={`/collectie/${getItemSlug(item)}`}
+                      href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                       initial={{ opacity: 0, y: 18 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.45, delay: Math.min(index * 0.035, 0.24) }}
@@ -825,7 +827,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
               <div className="space-y-12">
                 {filteredItems.map((item, index) => {
                   const primaryMeta = getPrimaryMeta(item);
-                  const secondaryMeta = getSecondaryMeta(item);
+                  const secondaryMeta = getSecondaryMeta(item, language);
                   const statusTone = getStatusTone(item.status);
                   const mediaOnRight = index % 2 === 1;
 
@@ -840,7 +842,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 lg:items-center">
                         <div className={`lg:col-span-5 ${mediaOnRight ? 'lg:order-2' : ''}`}>
                           <a
-                            href={`/collectie/${getItemSlug(item)}`}
+                            href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                             onClick={(event) => {
                               event.preventDefault();
                               onOpenItemDetail(item);
@@ -877,7 +879,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             className="display-editorial-card-wide mt-3 text-2xl font-serif font-bold leading-[1.18] text-[#111111] transition-colors duration-300 hover:text-[#8E7035] lg:text-3xl"
                           >
                             <a
-                              href={`/collectie/${getItemSlug(item)}`}
+                              href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                               onClick={(event) => {
                                 event.preventDefault();
                                 onOpenItemDetail(item);
@@ -917,7 +919,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
 
                             <div className="flex items-center gap-x-6">
                               <a
-                                href={`/collectie/${getItemSlug(item)}`}
+                                href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                                 onClick={(event) => {
                                   event.preventDefault();
                                   onOpenItemDetail(item);

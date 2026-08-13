@@ -1,9 +1,9 @@
 import React, { useId, useState } from 'react';
 import { ArrowRight, BookOpenCheck, ChevronDown, FileCheck2, ShieldCheck, Truck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_FAQ_ITEMS } from '../utils/storage';
 import { getItemField, getLocalizedCategory, getLocalizedPrice, getLocalizedStatus } from '../utils/translationService';
 import { getItemSlug } from '../utils/itemSlug';
+import { localizePath } from '../utils/locales';
 
 const COPY = {
   nl: {
@@ -73,14 +73,14 @@ export default function MobileHomeSections({
   const { language } = useLanguage();
   const labels = COPY[language] || COPY.en;
   const featured = items.filter((item) => item?.featured);
-  const selected = (featured.length ? featured : items).slice(0, 3);
-  const questions = (faqItems.length ? faqItems : DEFAULT_FAQ_ITEMS).slice(0, 3);
+  const selected = featured.slice(0, 3);
+  const questions = Array.isArray(faqItems) ? faqItems : [];
   const [openFaq, setOpenFaq] = useState(null);
   const faqBaseId = useId();
 
   return (
     <div className="mobile-home-content bg-[#FFFEFC] text-[#111111] lg:hidden">
-      <section id="topstukken" aria-labelledby="mobile-selected-works" className="px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
+      {selected.length > 0 && <section id="topstukken" aria-labelledby="mobile-selected-works" className="px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
         <div className="mx-auto max-w-3xl">
           <h2 id="mobile-selected-works" className="font-serif text-[2.25rem] font-bold leading-none tracking-[-0.025em] text-[#111111]">
             {labels.selected}
@@ -93,7 +93,7 @@ export default function MobileHomeSections({
               return (
                 <a
                   key={item.id}
-                  href={`/collectie/${getItemSlug(item)}`}
+                  href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                   onClick={(event) => {
                     event.preventDefault();
                     onOpenItemDetail(item);
@@ -139,7 +139,7 @@ export default function MobileHomeSections({
           </div>
 
           <a
-            href="/collectie"
+            href={localizePath('/collectie', language)}
             onClick={(event) => {
               event.preventDefault();
               onOpenFullCatalog();
@@ -150,7 +150,7 @@ export default function MobileHomeSections({
             <ArrowRight className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
           </a>
         </div>
-      </section>
+      </section>}
 
       <section id="herkomst" aria-labelledby="mobile-why-title" className="border-y border-[#E8DFCF] bg-[#F7F3EC] px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
         <div className="mx-auto max-w-3xl">
@@ -192,7 +192,7 @@ export default function MobileHomeSections({
         </div>
       </section>
 
-      <section id="faq" aria-labelledby="mobile-faq-title" className="px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
+      {questions.length > 0 && <section id="faq" aria-labelledby="mobile-faq-title" className="px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
         <div className="mx-auto max-w-3xl">
           <h2 id="mobile-faq-title" className="font-serif text-[2.15rem] font-bold leading-none tracking-[-0.025em]">{labels.faq}</h2>
           <div className="mt-7 divide-y divide-[#D8CEB8] border-y border-[#D8CEB8]">
@@ -223,7 +223,7 @@ export default function MobileHomeSections({
             })}
           </div>
         </div>
-      </section>
+      </section>}
     </div>
   );
 }

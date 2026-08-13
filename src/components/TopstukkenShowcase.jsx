@@ -7,6 +7,7 @@ import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
+import { localizePath } from '../utils/locales';
 
 export default function TopstukkenShowcase({ 
   items = [], 
@@ -19,13 +20,12 @@ export default function TopstukkenShowcase({
   // Filter items marked as featured (Op Homepage Tonen)
   const featuredItems = items.filter(item => item && item.featured);
   
-  // Fallback: If no items are marked featured, take items from catalog
-  const sourceItems = featuredItems.length > 0 ? featuredItems : items;
-
-  const displayItems = sourceItems;
+  const displayItems = featuredItems;
 
   const spotlightItem = displayItems[0];
   const gridItems = displayItems.slice(1, 4);
+
+  if (displayItems.length === 0) return null;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -123,7 +123,7 @@ export default function TopstukkenShowcase({
                   className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
                 >
                   <a
-                    href={`/collectie/${getItemSlug(spotlightItem)}`}
+                    href={localizePath(`/collectie/${getItemSlug(spotlightItem)}`, language)}
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -246,7 +246,7 @@ export default function TopstukkenShowcase({
                         className="display-editorial-card-wide text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
                       >
                         <a
-                          href={`/collectie/${getItemSlug(item)}`}
+                          href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                           onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Mail, Phone } from 'lucide-react';
+import FacebookIcon from '../components/FacebookIcon';
 import { useLanguage } from '../context/LanguageContext';
+import { localizePath } from '../utils/locales';
 
 const COPY = {
   nl: { selected: 'Selectie', collection: 'Collectie', provenance: 'Herkomst' },
@@ -26,19 +28,28 @@ export default function MobileFooter({ onNavigate }) {
             <Phone className="h-4 w-4 text-[#8E7035]" aria-hidden="true" />
             0484 38 45 30
           </a>
+          <a
+            href="https://www.facebook.com/profile.php?id=61592459230449"
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-11 items-center gap-3 font-serif text-sm transition-colors active:text-[#8E7035] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035]"
+          >
+            <FacebookIcon className="h-4 w-4 shrink-0 text-[#8E7035]" />
+            {t('footer.facebook')}
+          </a>
         </div>
 
         <nav aria-label={t('footer.quickLinks')} className="mt-7 grid grid-cols-3 border-y border-[#E8DFCF] py-2">
-          <button type="button" onClick={() => onNavigate('topstukken')} className="min-h-11 text-left font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.selected}</button>
-          <button type="button" onClick={() => onNavigate('catalogus')} className="min-h-11 text-center font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.collection}</button>
-          <button type="button" onClick={() => onNavigate('herkomst')} className="min-h-11 text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.provenance}</button>
+          <a href={localizePath('/topstukken', language)} onClick={(event) => { event.preventDefault(); onNavigate('topstukken'); }} className="flex min-h-11 items-center text-left font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.selected}</a>
+          <a href={localizePath('/collectie', language)} onClick={(event) => { event.preventDefault(); onNavigate('catalogus'); }} className="flex min-h-11 items-center justify-center text-center font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.collection}</a>
+          <a href={localizePath('/herkomst', language)} onClick={(event) => { event.preventDefault(); onNavigate('herkomst'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.provenance}</a>
         </nav>
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-4 font-serif text-[11px] text-[#6B6258]">
           <span>© {new Date().getFullYear()} Atelier Rembrandt</span>
           <div className="flex items-center gap-4">
-            <button type="button" onClick={() => onNavigate('privacy')} className="min-h-11">{t('footer.privacy')}</button>
-            <button type="button" onClick={() => onNavigate('voorwaarden')} className="min-h-11">{t('footer.terms')}</button>
+            <a href={localizePath('/privacy', language)} onClick={(event) => { event.preventDefault(); onNavigate('privacy'); }} className="flex min-h-11 items-center">{t('footer.privacy')}</a>
+            <a href={localizePath('/voorwaarden', language)} onClick={(event) => { event.preventDefault(); onNavigate('voorwaarden'); }} className="flex min-h-11 items-center">{t('footer.terms')}</a>
           </div>
         </div>
       </div>

@@ -44,7 +44,6 @@ export default function AdminDashboard({
   inquiries = [],
   heroImage = '',
   mobileHeroImage = '',
-  heroSlides = [],
   faqItems = [],
   provenanceData = null,
   currentUser = null,
@@ -53,7 +52,6 @@ export default function AdminDashboard({
   onUpdateInquiries = () => {},
   onSaveHeroImage = () => {},
   onSaveMobileHeroImage = () => {},
-  onSaveHeroSlides = () => {},
   onSaveProvenance = () => {},
   onSaveFaqItems = () => {},
   onLogout = () => {},
@@ -229,10 +227,8 @@ export default function AdminDashboard({
             <HeroSlidesManager
               heroImage={heroImage}
               mobileHeroImage={mobileHeroImage}
-              slides={heroSlides}
-              onSaveHeroImage={onSaveHeroImage || onSaveHeroSlides}
+              onSaveHeroImage={onSaveHeroImage}
               onSaveMobileHeroImage={onSaveMobileHeroImage}
-              onSaveSlides={onSaveHeroSlides}
               onShowToast={showToast}
             />
           )}

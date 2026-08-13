@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone } from 'lucide-react';
+import FacebookIcon from './FacebookIcon';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
+import { localizePath } from '../utils/locales';
 
 export default function Footer({ onNavigate }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <footer id="contact" className="relative z-30 bg-white text-[#444444] pt-10 sm:pt-16 pb-8 sm:pb-12 overflow-hidden">
@@ -41,19 +43,19 @@ export default function Footer({ onNavigate }) {
             <h4 className="text-xs font-serif font-semibold uppercase tracking-[0.16em] text-[#111111]">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2 text-xs sm:text-sm font-serif">
               <li>
-                <button onClick={() => onNavigate('topstukken')} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
+                <a href={localizePath('/topstukken', language)} onClick={(event) => { event.preventDefault(); onNavigate('topstukken'); }} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
                   {t('nav.topstukken')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => onNavigate('catalogus')} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
+                <a href={localizePath('/collectie', language)} onClick={(event) => { event.preventDefault(); onNavigate('catalogus'); }} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
                   {t('nav.collectie')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => onNavigate('herkomst')} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
+                <a href={localizePath('/herkomst', language)} onClick={(event) => { event.preventDefault(); onNavigate('herkomst'); }} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
                   {t('nav.herkomst')}
-                </button>
+                </a>
               </li>
               <li>
                 <button 
@@ -85,6 +87,17 @@ export default function Footer({ onNavigate }) {
                   0484 38 45 30
                 </a>
               </li>
+              <li className="flex items-center space-x-2 text-[#333333]">
+                <FacebookIcon className="h-3.5 w-3.5 shrink-0 text-[#B8860B]" />
+                <a
+                  href="https://www.facebook.com/profile.php?id=61592459230449"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium transition-colors hover:text-[#B8860B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035]"
+                >
+                  {t('footer.facebook')}
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -97,19 +110,21 @@ export default function Footer({ onNavigate }) {
             <img src="/images/andor.jpeg" alt="Andor Comm V." loading="lazy" decoding="async" className="h-5 w-auto object-contain opacity-75 filter contrast-105" />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-serif">
-            <button 
-              onClick={() => onNavigate('privacy')} 
+            <a
+              href={localizePath('/privacy', language)}
+              onClick={(event) => { event.preventDefault(); onNavigate('privacy'); }}
               className="hover:text-[#B8860B] transition-colors cursor-pointer underline underline-offset-4 decoration-[#D8CEB8]"
             >
               {t('footer.privacy')}
-            </button>
+            </a>
             <span className="text-[#D8CEB8]">•</span>
-            <button 
-              onClick={() => onNavigate('voorwaarden')} 
+            <a
+              href={localizePath('/voorwaarden', language)}
+              onClick={(event) => { event.preventDefault(); onNavigate('voorwaarden'); }}
               className="hover:text-[#B8860B] transition-colors cursor-pointer underline underline-offset-4 decoration-[#D8CEB8]"
             >
               {t('footer.terms')}
-            </button>
+            </a>
           </div>
         </div>
 

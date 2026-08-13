@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HelpCircle, Plus, Edit2, Trash2, ArrowUp, ArrowDown, Save, X, Globe, Sparkles, Download, Copy } from 'lucide-react';
 import { copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
@@ -6,9 +6,12 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
   const [items, setItems] = useState(faqItems);
   const [editingItem, setEditingItem] = useState(null);
   const [formLang, setFormLang] = useState('nl');
-  const [isTranslating, setIsTranslating] = useState(false);
   const [showAiImportModal, setShowAiImportModal] = useState(false);
   const [aiJsonInput, setAiJsonInput] = useState('');
+
+  useEffect(() => {
+    if (!editingItem) setItems(faqItems);
+  }, [editingItem, faqItems]);
 
   const handleCreateNew = () => {
     const newItem = {
@@ -30,15 +33,20 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
     setFormLang('nl');
   };
 
-  const handleDelete = (idToDelete) => {
+  const handleDelete = async (idToDelete) => {
     if (!window.confirm("Weet u zeker dat u deze veelgestelde vraag wilt verwijderen?")) return;
     const updated = items.filter(i => i.id !== idToDelete);
-    setItems(updated);
-    onSaveFaqItems(updated);
-    onShowToast("Veelgestelde vraag verwijderd.");
+    try {
+      await onSaveFaqItems(updated);
+      setItems(updated);
+      onShowToast("Veelgestelde vraag verwijderd.");
+    } catch (error) {
+      console.error('FAQ verwijderen mislukt:', error);
+      onShowToast('De vraag kon niet worden verwijderd.', 'error');
+    }
   };
 
-  const handleMove = (index, direction) => {
+  const handleMove = async (index, direction) => {
     const newItems = [...items];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newItems.length) return;
@@ -53,12 +61,17 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
       displayOrder: idx + 1
     }));
 
-    setItems(reordered);
-    onSaveFaqItems(reordered);
-    onShowToast("FAQ volgorde bijgewerkt.");
+    try {
+      await onSaveFaqItems(reordered);
+      setItems(reordered);
+      onShowToast("FAQ volgorde bijgewerkt.");
+    } catch (error) {
+      console.error('FAQ-volgorde opslaan mislukt:', error);
+      onShowToast('De nieuwe volgorde kon niet worden opgeslagen.', 'error');
+    }
   };
 
-  const handleSaveModal = () => {
+  const handleSaveModal = async () => {
     if (!editingItem.question.trim() || !editingItem.answer.trim()) {
       alert("Vul a.u.b. ten minste de vraag en het antwoord in het Nederlands in.");
       return;
@@ -73,10 +86,15 @@ export default function FaqManager({ faqItems = [], onSaveFaqItems = () => {}, o
       updatedList = [...items, editingItem];
     }
 
-    setItems(updatedList);
-    onSaveFaqItems(updatedList);
-    setEditingItem(null);
-    onShowToast("FAQ opgeslagen!");
+    try {
+      await onSaveFaqItems(updatedList);
+      setItems(updatedList);
+      setEditingItem(null);
+      onShowToast("FAQ opgeslagen!");
+    } catch (error) {
+      console.error('FAQ opslaan mislukt:', error);
+      onShowToast('De FAQ kon niet worden opgeslagen.', 'error');
+    }
   };
 
   const handleCopyAiPrompt = async () => {

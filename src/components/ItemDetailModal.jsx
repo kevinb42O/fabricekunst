@@ -155,7 +155,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                   {getItemField(item, 'title', language)}
                 </h2>
                 <p className="text-sm font-serif italic text-[#555555]">
-                  {item.author} ({item.year}) • {item.publisher}
+                  {item.author} ({item.year}) • {getItemField(item, 'publisher', language)}
                 </p>
               </div>
 
@@ -180,7 +180,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8]">
                   <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.format')}</span>
-                  <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{item.dimensions || "In-8°"}</span>
+                  <span className="font-bold text-[#111111] font-serif text-xs mt-0.5 block">{getItemField(item, 'dimensions', language) || '—'}</span>
                 </div>
                 <div className="p-3 rounded-lg bg-white border border-[#D8CEB8]">
                   <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.century')}</span>
