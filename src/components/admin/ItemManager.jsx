@@ -43,6 +43,28 @@ const isSafeHttpUrl = (value) => {
   }
 };
 
+const parsePriceForSort = (value) => {
+  const formattedPrice = String(value || '').replace(/[^\d,.-]/g, '');
+  if (!/\d/.test(formattedPrice)) return null;
+
+  const lastComma = formattedPrice.lastIndexOf(',');
+  const lastDot = formattedPrice.lastIndexOf('.');
+  const lastSeparatorIndex = Math.max(lastComma, lastDot);
+  const decimalDigits = lastSeparatorIndex === -1
+    ? ''
+    : formattedPrice.slice(lastSeparatorIndex + 1).replace(/\D/g, '');
+  const hasDecimalSeparator = decimalDigits.length > 0 && decimalDigits.length <= 2;
+  const integerPart = hasDecimalSeparator
+    ? formattedPrice.slice(0, lastSeparatorIndex).replace(/[^\d-]/g, '')
+    : formattedPrice.replace(/[^\d-]/g, '');
+  const normalizedPrice = hasDecimalSeparator
+    ? `${integerPart}.${decimalDigits}`
+    : integerPart;
+  const numericPrice = Number.parseFloat(normalizedPrice);
+
+  return Number.isFinite(numericPrice) ? numericPrice : null;
+};
+
 const isComparableSaleComplete = (sale) => isSafeHttpUrl(sale?.imageUrl);
 
 const getItemTypeIcon = (type) => {
@@ -875,8 +897,7 @@ export default function ItemManager({
       case 'status':
         return item.status || '';
       case 'price': {
-        const numericPrice = Number.parseFloat(String(item.price || '').replace(/[^0-9,.-]/g, '').replace(',', '.'));
-        return Number.isFinite(numericPrice) ? numericPrice : item.price || '';
+        return parsePriceForSort(item.price);
       }
       default:
         return '';
@@ -888,6 +909,10 @@ export default function ItemManager({
 
     const firstValue = getSortValue(first, sortConfig.key);
     const secondValue = getSortValue(second, sortConfig.key);
+    if (sortConfig.key === 'price' && (firstValue === null || secondValue === null)) {
+      if (firstValue === secondValue) return 0;
+      return firstValue === null ? 1 : -1;
+    }
     let comparison;
     if (typeof firstValue === 'number' && typeof secondValue === 'number') {
       comparison = firstValue - secondValue;
