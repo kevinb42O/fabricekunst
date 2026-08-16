@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink, Landmark } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink, Landmark, ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import {
   CATEGORIES,
   COLLECTION_GROUPS,
@@ -43,15 +43,7 @@ const isSafeHttpUrl = (value) => {
   }
 };
 
-const isComparableSaleComplete = (sale) => (
-  isSafeHttpUrl(sale?.imageUrl)
-  && Boolean(sale?.description?.trim())
-  && Boolean(sale?.seller?.trim())
-  && Boolean(sale?.saleDate)
-  && Boolean(sale?.realizedPrice?.trim())
-  && (!sale.saleUrl || isSafeHttpUrl(sale.saleUrl))
-  && new Date(`${sale.saleDate}T12:00:00`) <= new Date()
-);
+const isComparableSaleComplete = (sale) => isSafeHttpUrl(sale?.imageUrl);
 
 const getItemTypeIcon = (type) => {
   if (type === 'book') return BookOpen;
@@ -179,15 +171,6 @@ export const getItemTranslationStatus = (item) => {
       }
     }
   }
-
-  const publishedComparableSales = Array.isArray(item.comparableSales)
-    ? item.comparableSales.filter(sale => sale?.published)
-    : [];
-  publishedComparableSales.forEach((sale, index) => {
-    if (!sale.description?.trim()) details.nl.missing.push(`Comparable Sale ${index + 1}`);
-    if (!sale.description_en?.trim()) details.en.missing.push(`Comparable Sale ${index + 1}`);
-    if (!sale.description_fr?.trim()) details.fr.missing.push(`Comparable Sale ${index + 1}`);
-  });
 
   let completeCount = 0;
   if (details.nl.missing.length === 0) completeCount++;
@@ -826,6 +809,7 @@ export default function ItemManager({
   // Add Topstuk filter toggle state & view mode ('table' | 'grid')
   const [onlyTopstukken, setOnlyTopstukken] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [isCompactView, setIsCompactView] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   ));
@@ -869,6 +853,77 @@ export default function ItemManager({
 
     return matchesSearch && matchesType && matchesStatus && matchesCategory && matchesTopstuk;
   });
+
+  const getSortValue = (item, key) => {
+    switch (key) {
+      case 'id':
+        return item.ref || item.id || '';
+      case 'image':
+        return Boolean(item.images?.[0]?.url || item.image) ? 1 : 0;
+      case 'title':
+        return `${item.title || ''} ${item.author || item.subtitle || ''}`;
+      case 'type':
+        return getLocalizedItemType(item.itemType, 'nl');
+      case 'translation':
+        return getItemTranslationStatus(item).completeCount;
+      case 'period': {
+        const year = Number.parseInt(item.year, 10);
+        if (Number.isFinite(year)) return year;
+        const century = Number.parseInt(item.century, 10);
+        return Number.isFinite(century) ? century * 100 : item.century || '';
+      }
+      case 'status':
+        return item.status || '';
+      case 'price': {
+        const numericPrice = Number.parseFloat(String(item.price || '').replace(/[^0-9,.-]/g, '').replace(',', '.'));
+        return Number.isFinite(numericPrice) ? numericPrice : item.price || '';
+      }
+      default:
+        return '';
+    }
+  };
+
+  const sortedItems = [...filtered].sort((first, second) => {
+    if (!sortConfig.key) return 0;
+
+    const firstValue = getSortValue(first, sortConfig.key);
+    const secondValue = getSortValue(second, sortConfig.key);
+    let comparison;
+    if (typeof firstValue === 'number' && typeof secondValue === 'number') {
+      comparison = firstValue - secondValue;
+    } else {
+      comparison = String(firstValue).localeCompare(String(secondValue), 'nl', { numeric: true, sensitivity: 'base' });
+    }
+    return sortConfig.direction === 'asc' ? comparison : -comparison;
+  });
+
+  const toggleSort = (key) => {
+    setSortConfig((current) => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const renderSortHeader = (label, key, className = '') => {
+    const isActive = sortConfig.key === key;
+    const SortIcon = isActive
+      ? sortConfig.direction === 'asc' ? ArrowUp : ArrowDown
+      : ArrowUpDown;
+
+    return (
+      <th aria-sort={isActive ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : 'none'} className={`p-0 ${className}`}>
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className="group flex w-full items-center gap-1.5 px-3.5 py-3.5 text-left transition-colors hover:bg-[#F1ECE2] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#B8860B]"
+          title={`Sorteer op ${label}`}
+        >
+          <span>{label}</span>
+          <SortIcon className={`h-3.5 w-3.5 shrink-0 transition-colors ${isActive ? 'text-[#B8860B]' : 'text-[#AAA295] group-hover:text-[#555555]'}`} aria-hidden="true" />
+        </button>
+      </th>
+    );
+  };
 
   const availableCount = items.filter(i => i.status === 'Beschikbaar').length;
   const reservedCount = items.filter(i => i.status === 'Gereserveerd').length;
@@ -1082,19 +1137,19 @@ export default function ItemManager({
                       className="rounded border-[#D8CEB8] text-[#111111] focus:ring-0 cursor-pointer"
                     />
                   </th>
-                  <th className="p-3.5 font-mono text-[11px]">ID</th>
-                  <th className="p-3.5">Afbeelding</th>
-                  <th className="p-3.5">Titel &amp; Auteur</th>
-                  <th className="p-3.5">Type</th>
-                  <th className="p-3.5">Vertaling</th>
-                  <th className="p-3.5">Periode</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5">Prijs</th>
+                  {renderSortHeader('ID', 'id', 'font-mono text-[11px]')}
+                  {renderSortHeader('Afbeelding', 'image')}
+                  {renderSortHeader('Titel & Auteur', 'title')}
+                  {renderSortHeader('Type', 'type')}
+                  {renderSortHeader('Vertaling', 'translation')}
+                  {renderSortHeader('Periode', 'period')}
+                  {renderSortHeader('Status', 'status')}
+                  {renderSortHeader('Prijs', 'price')}
                   <th className="p-3.5 text-right">Acties</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE4D8]">
-                {filtered.map((item) => {
+                {sortedItems.map((item) => {
                   const img = item.images?.[0]?.url || item.image || '/images/scarron-spines-white-bg.jpg';
                   const isSelected = selectedItemIds.includes(item.id);
                   const translationStatus = getItemTranslationStatus(item);
@@ -2319,7 +2374,7 @@ export default function ItemManager({
                       <div>
                         <h4 className="text-sm font-serif font-bold">Comparable Sales</h4>
                         <p className="text-[11px] text-stone-400 font-serif mt-1">
-                          Voeg gerealiseerde verkopen van vergelijkbare objecten toe. Alleen complete referenties met “Tonen op website” verschijnen publiek.
+                          Voeg vergelijkbare verkopen toe. Een afbeelding is het enige verplichte veld; zet “Tonen op website” aan om de referentie publiek te tonen.
                         </p>
                       </div>
                     </div>
@@ -2357,7 +2412,7 @@ export default function ItemManager({
                                 {sale.seller || `Comparable Sale ${index + 1}`}
                               </h4>
                               <span className={`text-[10px] font-mono font-bold uppercase ${isComplete ? 'text-emerald-700' : 'text-amber-700'}`}>
-                                {isComplete ? 'Compleet' : 'Concept — verplichte gegevens ontbreken'}
+                                {isComplete ? 'Klaar om te tonen' : 'Concept — afbeelding vereist'}
                               </span>
                             </div>
                           </div>
@@ -2444,7 +2499,7 @@ export default function ItemManager({
                             <div>
                               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                 <label className="text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider">
-                                  Korte omschrijving ({formLang.toUpperCase()}) *
+                                  Korte omschrijving ({formLang.toUpperCase()})
                                 </label>
                                 <div className="flex items-center gap-1 bg-[#F4F1EA] p-1 rounded-lg">
                                   {['nl', 'en', 'fr'].map(lang => (
@@ -2470,7 +2525,7 @@ export default function ItemManager({
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Veilinghuis / Verkoper *</label>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Veilinghuis / Verkoper</label>
                                 <input
                                   type="text"
                                   value={sale.seller || ''}
@@ -2480,7 +2535,7 @@ export default function ItemManager({
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Verkoopdatum *</label>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Verkoopdatum</label>
                                 <input
                                   type="date"
                                   max={new Date().toISOString().slice(0, 10)}
@@ -2500,7 +2555,7 @@ export default function ItemManager({
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Gerealiseerde prijs *</label>
+                                <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">Gerealiseerde prijs</label>
                                 <input
                                   type="text"
                                   value={sale.realizedPrice || ''}

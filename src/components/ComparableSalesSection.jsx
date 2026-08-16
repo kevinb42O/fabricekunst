@@ -18,19 +18,15 @@ const isSafeUrl = (value) => {
   }
 };
 
-const isCompletePublishedSale = (sale) => (
+const isPublishedSaleWithImage = (sale) => (
   sale?.published === true
   && isSafeUrl(sale.imageUrl)
-  && Boolean(sale.description || sale.description_en || sale.description_fr)
-  && Boolean(sale.seller)
-  && Boolean(sale.saleDate)
-  && Boolean(sale.realizedPrice)
 );
 
 export default function ComparableSalesSection({ sales = [], compact = false }) {
   const { t, language } = useLanguage();
   const [zoomIndex, setZoomIndex] = useState(null);
-  const visibleSales = Array.isArray(sales) ? sales.filter(isCompletePublishedSale) : [];
+  const visibleSales = Array.isArray(sales) ? sales.filter(isPublishedSaleWithImage) : [];
 
   if (visibleSales.length === 0) return null;
 
@@ -72,25 +68,26 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
             : sale.priceType === 'including-premium'
               ? 'comparableSalePremium'
               : null;
+          const hasDetails = Boolean(description || sale.lotNumber || sale.seller || sale.saleDate || sale.realizedPrice);
 
           return (
             <article
               key={sale.id || index}
               className={`grid grid-cols-1 bg-white border border-[#D8CEB8] overflow-hidden shadow-xs ${
-                compact ? 'md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] rounded-xl' : 'sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] rounded-2xl'
-              }`}
+                hasDetails ? (compact ? 'md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]' : 'sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]') : ''
+              } ${compact ? 'rounded-xl' : 'rounded-2xl'}`}
             >
               <button
                 type="button"
                 onClick={() => setZoomIndex(index)}
-                aria-label={`${t('item_detail.comparableSaleZoom')} - ${sale.seller || description}`}
+                aria-label={`${t('item_detail.comparableSaleZoom')} - ${sale.seller || description || t('item_detail.comparableSaleTitle')}`}
                 className={`group relative w-full bg-[#F4F1EA] overflow-hidden text-left focus:outline-none focus:ring-2 focus:ring-[#B8860B] focus:ring-inset cursor-pointer ${
                   compact ? 'min-h-52' : 'min-h-64'
                 }`}
               >
                 <img
                   src={sale.imageUrl}
-                  alt={sale.imageCaption || description}
+                  alt={sale.imageCaption || description || t('item_detail.comparableSaleTitle')}
                   className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
                 />
@@ -115,20 +112,24 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                 )}
               </button>
 
-              <div className={`flex flex-col justify-center ${compact ? 'p-4 sm:p-5' : 'p-5 sm:p-7'}`}>
-                <div className="space-y-4">
+              {hasDetails && (
+                <div className={`flex flex-col justify-center ${compact ? 'p-4 sm:p-5' : 'p-5 sm:p-7'}`}>
+                  <div className="space-y-4">
                   <div>
                     {sale.lotNumber && (
                       <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase tracking-wider">
                         {t('item_detail.comparableSaleLot')} {sale.lotNumber}
                       </span>
                     )}
-                    <p className={`font-serif font-bold text-[#111111] leading-snug mt-1 ${compact ? 'text-base' : 'text-lg'}`}>
-                      {description}
-                    </p>
+                    {description && (
+                      <p className={`font-serif font-bold text-[#111111] leading-snug mt-1 ${compact ? 'text-base' : 'text-lg'}`}>
+                        {description}
+                      </p>
+                    )}
                   </div>
 
-                  <dl className="space-y-2 text-xs text-[#444444]">
+                  {(sale.seller || sale.saleDate) && <dl className="space-y-2 text-xs text-[#444444]">
+                    {sale.seller && (
                     <div className="flex items-start gap-2">
                       <Building2 className="w-4 h-4 text-[#B8860B] shrink-0 mt-0.5" />
                       <div>
@@ -136,6 +137,8 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                         <dd className="font-serif font-semibold text-[#111111]">{sale.seller}</dd>
                       </div>
                     </div>
+                    )}
+                    {sale.saleDate && (
                     <div className="flex items-start gap-2">
                       <CalendarDays className="w-4 h-4 text-[#B8860B] shrink-0 mt-0.5" />
                       <div>
@@ -143,9 +146,10 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                         <dd className="font-serif">{formatDate(sale.saleDate)}</dd>
                       </div>
                     </div>
-                  </dl>
+                    )}
+                  </dl>}
 
-                  <div className="border-t border-[#D8CEB8]/70 pt-4">
+                  {sale.realizedPrice && <div className="border-t border-[#D8CEB8]/70 pt-4">
                     <span className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider">
                       {t('item_detail.comparableSaleRealized')}
                     </span>
@@ -157,10 +161,10 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                         {t(`item_detail.${priceTypeKey}`)}
                       </span>
                     )}
+                  </div>}
                   </div>
-                </div>
 
-                {isSafeUrl(sale.saleUrl) && (
+                  {isSafeUrl(sale.saleUrl) && (
                   <a
                     href={sale.saleUrl}
                     target="_blank"
@@ -170,8 +174,9 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                     <span>{t('item_detail.comparableSaleView')}</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </article>
           );
         })}
