@@ -152,7 +152,7 @@ export default function AnalyticsManager() {
       pages[path].visitors += 1;
     });
     return Object.values(pages).sort((a, b) => b.visitors - a.visitors).slice(0, 7);
-  }, [pageViews]);
+  }, [filteredViews]);
 
   const referrersData = useMemo(() => {
     const refs = {};
