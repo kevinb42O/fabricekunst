@@ -26,9 +26,9 @@ import {
 } from '../utils/translationService';
 
 const COPY = {
-  nl: { share: 'Delen', shared: 'Link gekopieerd', photo: 'Foto', enlarge: 'Foto vergroten', previous: 'Vorige foto', next: 'Volgende foto', details: 'Objectdetails', provenance: 'Herkomst & Provenantie', history: 'Historische context', inquire: 'Aanvragen', more: 'Meer uit de collectie' },
-  en: { share: 'Share', shared: 'Link copied', photo: 'Photo', enlarge: 'Enlarge photo', previous: 'Previous photo', next: 'Next photo', details: 'Work details', provenance: 'Provenance', history: 'Historical context', inquire: 'Inquire', more: 'More from the collection' },
-  fr: { share: 'Partager', shared: 'Lien copié', photo: 'Photo', enlarge: 'Agrandir la photo', previous: 'Photo précédente', next: 'Photo suivante', details: 'Détails de l’œuvre', provenance: 'Provenance', history: 'Contexte historique', inquire: 'Demander', more: 'Plus de la collection' }
+  nl: { share: 'Delen', shared: 'Link gekopieerd', photo: 'Foto', enlarge: 'Foto vergroten', previous: 'Vorige foto', next: 'Volgende foto', details: 'Objectdetails', provenance: 'Herkomst & Provenantie', history: 'Historische context', inquire: 'Aanvragen', more: 'Meer uit de collecties' },
+  en: { share: 'Share', shared: 'Link copied', photo: 'Photo', enlarge: 'Enlarge photo', previous: 'Previous photo', next: 'Next photo', details: 'Work details', provenance: 'Provenance', history: 'Historical context', inquire: 'Inquire', more: 'More from the collections' },
+  fr: { share: 'Partager', shared: 'Lien copié', photo: 'Photo', enlarge: 'Agrandir la photo', previous: 'Photo précédente', next: 'Photo suivante', details: 'Détails de l’œuvre', provenance: 'Provenance', history: 'Contexte historique', inquire: 'Demander', more: 'Plus des collections' }
 };
 
 export default function MobileItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {

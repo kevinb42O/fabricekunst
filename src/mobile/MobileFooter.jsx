@@ -5,9 +5,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { localizePath } from '../utils/locales';
 
 const COPY = {
-  nl: { selected: 'Selectie', collection: 'Collectie', provenance: 'Herkomst' },
-  en: { selected: 'Selected works', collection: 'Collection', provenance: 'Provenance' },
-  fr: { selected: 'Œuvres', collection: 'Collection', provenance: 'Provenance' }
+  nl: { selected: 'Selectie', collection: 'Collecties', provenance: 'Herkomst' },
+  en: { selected: 'Selected works', collection: 'Collections', provenance: 'Provenance' },
+  fr: { selected: 'Œuvres', collection: 'Collections', provenance: 'Provenance' }
 };
 
 export default function MobileFooter({ onNavigate }) {

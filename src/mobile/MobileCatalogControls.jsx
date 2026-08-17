@@ -4,9 +4,9 @@ import { Check, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const COPY = {
-  nl: { collection: 'Collectie', search: 'Zoek in de collectie', filters: 'Filter en sorteer', sort: 'Sorteren', refine: 'Verfijn de collectie', apply: 'Toon resultaten', clear: 'Wis alles', clearSearch: 'Zoekopdracht wissen', close: 'Filters sluiten', active: 'actief' },
-  en: { collection: 'Collection', search: 'Search the collection', filters: 'Filter and sort', sort: 'Sort', refine: 'Refine the collection', apply: 'Show results', clear: 'Clear all', clearSearch: 'Clear search', close: 'Close filters', active: 'active' },
-  fr: { collection: 'Collection', search: 'Rechercher dans la collection', filters: 'Filtrer et trier', sort: 'Trier', refine: 'Affiner la collection', apply: 'Afficher les résultats', clear: 'Tout effacer', clearSearch: 'Effacer la recherche', close: 'Fermer les filtres', active: 'actifs' }
+  nl: { collection: 'Collecties', search: 'Zoek in de collecties', filters: 'Filter en sorteer', sort: 'Sorteren', refine: 'Verfijn de collecties', apply: 'Toon resultaten', clear: 'Wis alles', clearSearch: 'Zoekopdracht wissen', close: 'Filters sluiten', active: 'actief' },
+  en: { collection: 'Collections', search: 'Search the collections', filters: 'Filter and sort', sort: 'Sort', refine: 'Refine the collections', apply: 'Show results', clear: 'Clear all', clearSearch: 'Clear search', close: 'Close filters', active: 'active' },
+  fr: { collection: 'Collections', search: 'Rechercher dans les collections', filters: 'Filtrer et trier', sort: 'Trier', refine: 'Affiner les collections', apply: 'Afficher les résultats', clear: 'Tout effacer', clearSearch: 'Effacer la recherche', close: 'Fermer les filtres', active: 'actifs' }
 };
 
 export default function MobileCatalogControls({

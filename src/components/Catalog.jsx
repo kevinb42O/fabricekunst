@@ -66,7 +66,7 @@ export default function Catalog({ items, onSelectItem, onRequestInquiry }) {
             <span>Gecureerd Overzicht</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif font-bold text-parchment tracking-tight mb-4">
-            De Exclusieve Collectie
+            De Exclusieve Collecties
           </h2>
           <p className="text-parchment-muted font-light text-base sm:text-lg">
             Verken de zeldzame boekbanden, kopergravures en verlichtingsgeschriften in onze collectie.
