@@ -36,7 +36,7 @@ const parseReferrer = (referrer) => {
   }
 };
 
-const VercelList = ({ title, data, valueKey, labelKey, totalValue }) => (
+const VercelList = ({ title, data, valueKey, labelKey, totalValue, asPercentage }) => (
   <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #eaeaea', fontSize: '12px', color: '#666', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
       <span>{title}</span>
@@ -51,8 +51,11 @@ const VercelList = ({ title, data, valueKey, labelKey, totalValue }) => (
               position: 'absolute', left: 0, top: 0, bottom: 0, width: `${percent}%`, 
               backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: '4px', zIndex: -1 
             }}></div>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%' }}>{item[labelKey]}</span>
-            <span>{item[valueKey]}</span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {item.flag && <span>{item.flag}</span>}
+              {item[labelKey]}
+            </span>
+            <span>{asPercentage ? `${Math.round(percent)}%` : item[valueKey]}</span>
           </div>
         );
       })}
@@ -216,6 +219,17 @@ export default function AnalyticsManager() {
     return Object.values(oses).sort((a, b) => b.visitors - a.visitors);
   }, [uniqueSessionsMap]);
 
+  const countriesData = useMemo(() => {
+    const countries = {};
+    const flags = { 'Belgium': '🇧🇪', 'United States of America': '🇺🇸', 'France': '🇫🇷', 'Netherlands': '🇳🇱', 'Canada': '🇨🇦' };
+    uniqueSessionsMap.forEach(view => {
+      const country = view.country || 'Unknown';
+      if (!countries[country]) countries[country] = { country, visitors: 0, flag: flags[country] || '🌍' };
+      countries[country].visitors += 1;
+    });
+    return Object.values(countries).sort((a, b) => b.visitors - a.visitors).slice(0, 5);
+  }, [uniqueSessionsMap]);
+
   if (loading) return <div style={{ color: '#111', padding: '2rem' }}>Laden...</div>;
 
   return (
@@ -309,9 +323,12 @@ export default function AnalyticsManager() {
         <VercelList title="Pagina's" data={pagesData} valueKey="visitors" labelKey="path" totalValue={metrics.pageViews} />
         <VercelList title="Verkeersbronnen" data={referrersData} valueKey="visitors" labelKey="source" totalValue={metrics.visitors} />
         
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
+          <VercelList title="Landen" data={countriesData} valueKey="visitors" labelKey="country" totalValue={metrics.visitors} asPercentage />
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <VercelList title="Apparaten" data={devicesData} valueKey="visitors" labelKey="device" totalValue={metrics.visitors} />
-          <VercelList title="OS" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} />
+          <VercelList title="Apparaten" data={devicesData} valueKey="visitors" labelKey="device" totalValue={metrics.visitors} asPercentage />
+          <VercelList title="OS" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} asPercentage />
         </div>
       </div>
 
