@@ -115,14 +115,22 @@ export default function AnalyticsManager() {
     filteredViews.forEach(view => {
       const dateObj = new Date(view.created_at);
       let dateKey;
+      let sortKey;
+      
       if (timeRange === '24u') {
         dateKey = dateObj.toLocaleTimeString('nl-NL', { hour: 'numeric' }) + 'u';
+        const hourDate = new Date(dateObj);
+        hourDate.setMinutes(0, 0, 0);
+        sortKey = hourDate.getTime();
       } else {
         dateKey = dateObj.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' });
+        const dayDate = new Date(dateObj);
+        dayDate.setHours(0, 0, 0, 0);
+        sortKey = dayDate.getTime();
       }
       
       if (!dailyData[dateKey]) {
-        dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: timeRange === '24u' ? dateObj.getHours() : dateObj.getTime() };
+        dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey };
       }
       dailyData[dateKey].visitors.add(view.session_id);
     });
@@ -250,6 +258,7 @@ export default function AnalyticsManager() {
                 tickLine={false}
                 tick={{ fill: '#666', fontSize: 12 }}
                 dx={-10}
+                allowDecimals={false}
               />
               <RechartsTooltip 
                 contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
@@ -278,7 +287,7 @@ export default function AnalyticsManager() {
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
           <VercelList title="Apparaten" data={devicesData} valueKey="visitors" labelKey="device" totalValue={metrics.visitors} />
-          <VercelList title="Besturingssystemen" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} />
+          <VercelList title="OS" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} />
         </div>
       </div>
 
