@@ -121,10 +121,23 @@ export default function AnalyticsManager() {
   }, [pageViews, cutoffDate]);
 
   const metrics = useMemo(() => {
-    const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
+    const sessionCounts = {};
+    filteredViews.forEach(view => {
+      sessionCounts[view.session_id] = (sessionCounts[view.session_id] || 0) + 1;
+    });
+
+    const uniqueSessions = Object.keys(sessionCounts).length;
+    let bounces = 0;
+    Object.values(sessionCounts).forEach(count => {
+      if (count === 1) bounces++;
+    });
+
+    const bounceRate = uniqueSessions > 0 ? Math.round((bounces / uniqueSessions) * 100) : 0;
+
     return {
       visitors: uniqueSessions,
-      pageViews: filteredViews.length
+      pageViews: filteredViews.length,
+      bounceRate: bounceRate
     };
   }, [filteredViews]);
 
@@ -257,6 +270,10 @@ export default function AnalyticsManager() {
           <div style={{ backgroundColor: '#fff', padding: '16px 24px', minWidth: '150px' }}>
             <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Weergaven</div>
             <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
+          </div>
+          <div style={{ backgroundColor: '#fff', padding: '16px 24px', minWidth: '150px' }}>
+            <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Bounce Rate</div>
+            <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.bounceRate}%</div>
           </div>
         </div>
 
