@@ -69,7 +69,7 @@ export default function Catalog({ items, onSelectItem, onRequestInquiry }) {
             De Exclusieve Collecties
           </h2>
           <p className="text-parchment-muted font-light text-base sm:text-lg">
-            Verken de zeldzame boekbanden, kopergravures en verlichtingsgeschriften in onze collectie.
+            Verken de zeldzame boekbanden, kopergravures en verlichtingsgeschriften in onze collecties.
           </p>
         </div>
 

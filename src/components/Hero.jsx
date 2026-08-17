@@ -54,7 +54,7 @@ export default function Hero({ heroImage, onExploreCatalog }) {
         >
           <img
             src={currentHeroImage}
-            alt="Atelier Rembrandt Provenience Collectie"
+            alt="Atelier Rembrandt Provenience Collecties"
             loading="eager"
             decoding="async"
             fetchPriority="high"

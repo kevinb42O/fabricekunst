@@ -8,7 +8,7 @@ import { localizePath } from '../utils/locales';
 const COPY = {
   nl: {
     selected: 'Uitgelichte werken',
-    all: 'Bekijk de volledige collectie',
+    all: 'Bekijk de volledige collecties',
     why: 'Waarom Atelier Rembrandt',
     whyIntro: 'Zekerheid die u vóór een aankoop kunt controleren.',
     proof1: 'Gedocumenteerde herkomst',

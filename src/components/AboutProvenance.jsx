@@ -11,7 +11,7 @@ const PROVENANCE_VISUALS = [
     title: 'Inspectie met Witte Handschoenen',
     subtitle: 'Museumwaardige conservering & gecureerde selectie van zeldzame meesterwerken',
     image: '/images/white-gloves-conservator.jpg',
-    quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collectie."'
+    quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collecties."'
   },
   {
     id: 'bookcase',
@@ -39,7 +39,7 @@ export default function AboutProvenance() {
       title: 'Inspectie met Witte Handschoenen',
       subtitle: 'Museumwaardige conservering & gecureerde selectie',
       image: '/images/white-gloves-conservator.jpg',
-      quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collectie."'
+      quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collecties."'
     },
     {
       id: 'bookcase',

@@ -12,12 +12,12 @@ const PAGE_COPY = {
       description: 'Ontdek zeldzame antiquarische boeken, prenten en historische kunstobjecten, zorgvuldig geselecteerd en gedocumenteerd op herkomst.'
     },
     catalogus: {
-      title: 'Collectie antiquarische boeken & kunst — Atelier Rembrandt',
-      description: 'Bekijk de actuele collectie zeldzame boeken, prenten, schilderijen en historische objecten van Atelier Rembrandt.'
+      title: 'Collecties antiquarische boeken & kunst — Atelier Rembrandt',
+      description: 'Bekijk de actuele collecties zeldzame boeken, prenten, schilderijen en historische objecten van Atelier Rembrandt.'
     },
     topstukken: {
       title: 'Topstukken — Atelier Rembrandt',
-      description: 'Ontdek de topstukken uit de collectie van Atelier Rembrandt: uitzonderlijke boeken en kunstobjecten met gedocumenteerde herkomst.'
+      description: 'Ontdek de topstukken uit de collecties van Atelier Rembrandt: uitzonderlijke boeken en kunstobjecten met gedocumenteerde herkomst.'
     },
     herkomst: {
       title: 'Herkomstonderzoek & provenance — Atelier Rembrandt',
@@ -213,10 +213,10 @@ export function buildStructuredData({ page, item, language = 'nl', canonical, it
 
   if (page !== 'home' && page !== 'notFound') {
     const labels = language === 'fr'
-      ? { home: 'Accueil', collection: 'Collection' }
+      ? { home: 'Accueil', collection: 'Collections' }
       : language === 'en'
-        ? { home: 'Home', collection: 'Collection' }
-        : { home: 'Home', collection: 'Collectie' };
+        ? { home: 'Home', collection: 'Collections' }
+        : { home: 'Home', collection: 'Collecties' };
     const breadcrumbItems = [
       { '@type': 'ListItem', position: 1, name: labels.home, item: `${SITE_URL}${localizePath('/', language)}` }
     ];
