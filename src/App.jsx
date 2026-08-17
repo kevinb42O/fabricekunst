@@ -17,6 +17,7 @@ import { getItemSlug, itemMatchesRoute } from './utils/itemSlug';
 import { useLanguage } from './context/LanguageContext';
 import { applySeoToDocument, buildPageSeo, getPageKind } from './utils/seo';
 import { localizePath, stripLanguagePrefix } from './utils/locales';
+import { useAnalytics } from './hooks/useAnalytics';
 
 const AdminLoginModal = lazy(() => import('./components/admin/AdminLoginModal'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -52,6 +53,7 @@ import {
 } from './utils/storage';
 
 export default function App() {
+  useAnalytics();
   const { isMobile } = useResponsiveMode();
   const { language } = useLanguage();
   const [catalog, setCatalog] = useState(getCatalog());

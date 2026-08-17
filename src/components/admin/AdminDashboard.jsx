@@ -12,7 +12,8 @@ import {
   Settings,
   ShieldCheck,
   Users,
-  X
+  X,
+  BarChart2
 } from 'lucide-react';
 import ItemManager from './ItemManager';
 import InquiriesManager from './InquiriesManager';
@@ -25,10 +26,11 @@ import ProvenanceManager from './ProvenanceManager';
 import FaqManager from './FaqManager';
 import CertificateManager from './CertificateManager';
 import AdminTooltip from './AdminTooltip';
+import AnalyticsManager from './AnalyticsManager';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
-  'dashboard', 'items', 'certificates', 'hero', 'provenance', 'faq',
+  'dashboard', 'analytics', 'items', 'certificates', 'hero', 'provenance', 'faq',
   'inquiries', 'customers', 'settings'
 ]);
 
@@ -99,6 +101,7 @@ export default function AdminDashboard({
   const newInquiriesCount = activeInquiries.filter((item) => item?.status === 'Nieuw').length;
   const navItems = [
     { id: 'dashboard', label: 'Overzicht', icon: LayoutDashboard },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
     { id: 'items', label: 'Collectie', icon: BookOpen, count: activeItems.length },
     { id: 'certificates', label: 'Certificaten', icon: Award },
     { id: 'hero', label: 'Hero', icon: ImageIcon },
@@ -110,6 +113,7 @@ export default function AdminDashboard({
   ];
   const tabTitles = {
     dashboard: 'Overzicht',
+    analytics: 'Analytics',
     items: 'Collectie',
     certificates: 'Certificaten',
     hero: 'Hero-afbeeldingen',
@@ -198,6 +202,7 @@ export default function AdminDashboard({
               onOpenLiveSite={handleClose}
             />
           )}
+          {activeTab === 'analytics' && <AnalyticsManager />}
           {activeTab === 'items' && (
             <ItemManager
               items={activeItems}
