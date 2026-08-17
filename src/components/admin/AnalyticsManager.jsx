@@ -112,6 +112,29 @@ export default function AnalyticsManager() {
 
   const chartData = useMemo(() => {
     const dailyData = {};
+    const now = new Date();
+    
+    // 1. Pre-fill the dictionary with all expected intervals so we get 0-drops
+    if (timeRange === '24u') {
+      for (let i = 24; i >= 0; i--) {
+        const d = new Date(now.getTime());
+        d.setHours(d.getHours() - i);
+        d.setMinutes(0, 0, 0);
+        const dateKey = d.toLocaleTimeString('nl-NL', { hour: 'numeric' }) + 'u';
+        dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: d.getTime() };
+      }
+    } else {
+      const days = timeRange === '7d' ? 7 : 30;
+      for (let i = days; i >= 0; i--) {
+        const d = new Date(now.getTime());
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        const dateKey = d.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' });
+        dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: d.getTime() };
+      }
+    }
+
+    // 2. Populate with actual data
     filteredViews.forEach(view => {
       const dateObj = new Date(view.created_at);
       let dateKey;
@@ -135,6 +158,7 @@ export default function AnalyticsManager() {
       dailyData[dateKey].visitors.add(view.session_id);
     });
 
+    // 3. Sort chronologically
     const sorted = Object.values(dailyData).sort((a, b) => a.sortKey - b.sortKey);
     return sorted.map(d => ({
       date: d.date,
