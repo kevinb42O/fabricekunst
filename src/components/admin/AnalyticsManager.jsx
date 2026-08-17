@@ -95,15 +95,30 @@ export default function AnalyticsManager() {
     fetchAnalytics();
   }, []);
 
-  const filteredViews = useMemo(() => {
+  const cutoffDate = useMemo(() => {
     const now = new Date();
     let cutoff = new Date();
-    if (timeRange === '24u') cutoff.setHours(now.getHours() - 24);
-    if (timeRange === '7d') cutoff.setDate(now.getDate() - 7);
-    if (timeRange === '30d') cutoff.setDate(now.getDate() - 30);
-    
-    return pageViews.filter(v => new Date(v.created_at) >= cutoff);
-  }, [pageViews, timeRange]);
+    if (timeRange === '24u') {
+      cutoff.setHours(now.getHours() - 24);
+      cutoff.setMinutes(0, 0, 0);
+    } else if (timeRange === '7d') {
+      cutoff.setDate(now.getDate() - 7);
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeRange === '30d') {
+      if (now.getDate() >= 8) {
+        cutoff.setDate(8);
+      } else {
+        cutoff.setMonth(cutoff.getMonth() - 1);
+        cutoff.setDate(8);
+      }
+      cutoff.setHours(0, 0, 0, 0);
+    }
+    return cutoff;
+  }, [timeRange]);
+
+  const filteredViews = useMemo(() => {
+    return pageViews.filter(v => new Date(v.created_at) >= cutoffDate);
+  }, [pageViews, cutoffDate]);
 
   const metrics = useMemo(() => {
     const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
@@ -119,21 +134,18 @@ export default function AnalyticsManager() {
     
     // 1. Pre-fill the dictionary with all expected intervals so we get 0-drops
     if (timeRange === '24u') {
-      for (let i = 24; i >= 0; i--) {
-        const d = new Date(now.getTime());
-        d.setHours(d.getHours() - i);
-        d.setMinutes(0, 0, 0);
+      let d = new Date(cutoffDate.getTime());
+      while (d <= now) {
         const dateKey = d.toLocaleTimeString('nl-NL', { hour: 'numeric' }) + 'u';
         dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: d.getTime() };
+        d.setHours(d.getHours() + 1);
       }
     } else {
-      const days = timeRange === '7d' ? 7 : 30;
-      for (let i = days; i >= 0; i--) {
-        const d = new Date(now.getTime());
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
+      let d = new Date(cutoffDate.getTime());
+      while (d <= now) {
         const dateKey = d.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' });
         dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: d.getTime() };
+        d.setDate(d.getDate() + 1);
       }
     }
 
