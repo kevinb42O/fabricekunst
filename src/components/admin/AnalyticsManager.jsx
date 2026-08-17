@@ -1,38 +1,76 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../utils/supabaseClient';
-import { Activity } from 'lucide-react';
-
-const COLORS = ['#171717', '#B8860B', '#737373', '#e5e5e5'];
 
 const parseDevice = (userAgent) => {
-  if (!userAgent) return 'Onbekend';
+  if (!userAgent) return 'Desktop';
   const ua = userAgent.toLowerCase();
   if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return 'Tablet';
-  if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return 'Mobiel';
+  if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return 'Mobile';
   return 'Desktop';
+};
+
+const parseOS = (userAgent) => {
+  if (!userAgent) return 'Windows';
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('mac os x') && !ua.includes('iphone') && !ua.includes('ipad')) return 'Mac';
+  if (ua.includes('windows')) return 'Windows';
+  if (ua.includes('android')) return 'Android';
+  if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) return 'iOS';
+  if (ua.includes('linux')) return 'GNU/Linux';
+  return 'Unknown';
 };
 
 const parseReferrer = (referrer) => {
   if (!referrer) return 'Direct';
   try {
     const url = new URL(referrer);
-    const hostname = url.hostname.replace('www.', '');
-    if (hostname.includes('google')) return 'Google';
-    if (hostname.includes('facebook') || hostname.includes('fb.com')) return 'Facebook';
-    if (hostname.includes('instagram')) return 'Instagram';
-    if (hostname.includes('linkedin')) return 'LinkedIn';
-    if (hostname.includes('twitter') || hostname.includes('t.co')) return 'X (Twitter)';
+    let hostname = url.hostname.replace('www.', '');
+    if (referrer.includes('android-app://')) {
+      if (referrer.includes('com.google.android.gm')) return 'com.google.android.gm';
+      if (referrer.includes('com.google.android.googlequicksearchbox')) return 'com.google.android.googlequicksearchbox';
+    }
     return hostname;
   } catch (e) {
     return 'Overig';
   }
 };
 
+// Vercel-style List Component
+const VercelList = ({ title, data, valueKey, labelKey, totalValue }) => (
+  <div style={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #333', fontSize: '12px', color: '#888', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+      <span>{title}</span>
+      <span>Visitors</span>
+    </div>
+    <div style={{ padding: '8px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {data.map((item, i) => {
+        const percent = totalValue > 0 ? (item[valueKey] / totalValue) * 100 : 0;
+        return (
+          <div key={i} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: '13px', color: '#EDEDED', zIndex: 1 }}>
+            <div style={{ 
+              position: 'absolute', left: 0, top: 0, bottom: 0, width: `${percent}%`, 
+              backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '4px', zIndex: -1 
+            }}></div>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%' }}>{item[labelKey]}</span>
+            <span>{item[valueKey]}</span>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
 export default function AnalyticsManager() {
   const [loading, setLoading] = useState(true);
   const [pageViews, setPageViews] = useState([]);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Dark mode body override for this tab
+    document.body.style.backgroundColor = '#000000';
+    return () => { document.body.style.backgroundColor = ''; };
+  }, []);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -45,7 +83,7 @@ export default function AnalyticsManager() {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        const { data, error: fetchError } = await supabase
+        const { data, fetchError } = await supabase
           .from('page_views')
           .select('*')
           .gte('created_at', thirtyDaysAgo.toISOString())
@@ -65,287 +103,153 @@ export default function AnalyticsManager() {
   }, []);
 
   const metrics = useMemo(() => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const fifteenMinsAgo = new Date();
-    fifteenMinsAgo.setMinutes(fifteenMinsAgo.getMinutes() - 15);
-    
-    const last7DaysViews = pageViews.filter(v => new Date(v.created_at) >= sevenDaysAgo);
-    const activeNowViews = pageViews.filter(v => new Date(v.created_at) >= fifteenMinsAgo);
-    
-    const uniqueSessions7Days = new Set(last7DaysViews.map(v => v.session_id)).size;
-    const uniqueSessions30Days = new Set(pageViews.map(v => v.session_id)).size;
-    const activeNowUnique = new Set(activeNowViews.map(v => v.session_id)).size;
-
+    const uniqueSessions = new Set(pageViews.map(v => v.session_id)).size;
     return {
-      activeNow: activeNowUnique,
-      totalViews30Days: pageViews.length,
-      totalViews7Days: last7DaysViews.length,
-      uniqueSessions7Days,
-      uniqueSessions30Days,
+      visitors: uniqueSessions,
+      pageViews: pageViews.length
     };
   }, [pageViews]);
 
   const chartData = useMemo(() => {
     const dailyData = {};
     pageViews.forEach(view => {
-      const date = new Date(view.created_at).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' });
+      const dateObj = new Date(view.created_at);
+      const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dailyData[date]) {
-        dailyData[date] = { date, weergaven: 0, uniekeBezoekers: new Set() };
+        dailyData[date] = { date, visitors: new Set(), sortKey: dateObj.getTime() };
       }
-      dailyData[date].weergaven += 1;
-      dailyData[date].uniekeBezoekers.add(view.session_id);
+      dailyData[date].visitors.add(view.session_id);
     });
 
-    return Object.values(dailyData).map(d => ({
-      ...d,
-      uniekeBezoekers: d.uniekeBezoekers.size
+    const sorted = Object.values(dailyData).sort((a, b) => a.sortKey - b.sortKey);
+    return sorted.map(d => ({
+      date: d.date,
+      Visitors: d.visitors.size
     }));
   }, [pageViews]);
 
-  const topPagesData = useMemo(() => {
+  const uniqueSessionsMap = useMemo(() => {
+    const map = new Map();
+    pageViews.forEach(view => {
+      if (!map.has(view.session_id)) {
+        map.set(view.session_id, view);
+      }
+    });
+    return Array.from(map.values());
+  }, [pageViews]);
+
+  const pagesData = useMemo(() => {
     const pages = {};
     pageViews.forEach(view => {
-      let path = view.page_url;
-      if (path === '/') path = 'Home';
-      else if (path.startsWith('/collectie/') || path.startsWith('/item/')) return; // Filter uit artworks
-      
-      if (!pages[path]) pages[path] = { path, weergaven: 0 };
-      pages[path].weergaven += 1;
+      const path = view.page_url;
+      if (!pages[path]) pages[path] = { path, visitors: 0 };
+      pages[path].visitors += 1;
     });
-    
-    return Object.values(pages)
-      .sort((a, b) => b.weergaven - a.weergaven)
-      .slice(0, 5);
+    return Object.values(pages).sort((a, b) => b.visitors - a.visitors).slice(0, 7);
   }, [pageViews]);
 
-  const topArtworksData = useMemo(() => {
-    const artworks = {};
-    pageViews.forEach(view => {
-      let path = view.page_url;
-      if (path.startsWith('/collectie/') || path.startsWith('/item/')) {
-        const itemSlug = path.replace('/collectie/', '').replace('/item/', '');
-        if (!artworks[itemSlug]) artworks[itemSlug] = { path: itemSlug, weergaven: 0 };
-        artworks[itemSlug].weergaven += 1;
-      }
-    });
-    
-    return Object.values(artworks)
-      .sort((a, b) => b.weergaven - a.weergaven)
-      .slice(0, 5);
-  }, [pageViews]);
-
-  const deviceData = useMemo(() => {
-    const devices = {};
-    // Use unique sessions for device metrics so 1 person refreshing doesn't skew it
-    const uniqueSessions = new Map();
-    pageViews.forEach(view => {
-      if (!uniqueSessions.has(view.session_id)) {
-        uniqueSessions.set(view.session_id, view);
-      }
-    });
-
-    Array.from(uniqueSessions.values()).forEach(view => {
-      const device = parseDevice(view.user_agent);
-      if (!devices[device]) devices[device] = { name: device, value: 0 };
-      devices[device].value += 1;
-    });
-
-    return Object.values(devices).sort((a, b) => b.value - a.value);
-  }, [pageViews]);
-
-  const referrerData = useMemo(() => {
-    const referrers = {};
-    const uniqueSessions = new Map();
-    pageViews.forEach(view => {
-      if (!uniqueSessions.has(view.session_id)) {
-        uniqueSessions.set(view.session_id, view);
-      }
-    });
-
-    Array.from(uniqueSessions.values()).forEach(view => {
+  const referrersData = useMemo(() => {
+    const refs = {};
+    uniqueSessionsMap.forEach(view => {
       const ref = parseReferrer(view.referrer);
-      if (!referrers[ref]) referrers[ref] = { source: ref, visitors: 0 };
-      referrers[ref].visitors += 1;
+      if (!refs[ref]) refs[ref] = { source: ref, visitors: 0 };
+      refs[ref].visitors += 1;
     });
+    return Object.values(refs).sort((a, b) => b.visitors - a.visitors).slice(0, 6);
+  }, [uniqueSessionsMap]);
 
-    return Object.values(referrers).sort((a, b) => b.visitors - a.visitors).slice(0, 5);
-  }, [pageViews]);
+  const devicesData = useMemo(() => {
+    const devs = {};
+    uniqueSessionsMap.forEach(view => {
+      const dev = parseDevice(view.user_agent);
+      if (!devs[dev]) devs[dev] = { device: dev, visitors: 0 };
+      devs[dev].visitors += 1;
+    });
+    return Object.values(devs).sort((a, b) => b.visitors - a.visitors);
+  }, [uniqueSessionsMap]);
 
-  if (loading) {
-    return (
-      <div className="admin-analytics" style={{ padding: '2rem', textAlign: 'center' }}>
-        <p>Analytics laden...</p>
-      </div>
-    );
-  }
+  const osData = useMemo(() => {
+    const oses = {};
+    uniqueSessionsMap.forEach(view => {
+      const os = parseOS(view.user_agent);
+      if (!oses[os]) oses[os] = { os: os, visitors: 0 };
+      oses[os].visitors += 1;
+    });
+    return Object.values(oses).sort((a, b) => b.visitors - a.visitors);
+  }, [uniqueSessionsMap]);
 
-  if (error) {
-    return (
-      <div className="admin-analytics" style={{ padding: '2rem' }}>
-        <div style={{ backgroundColor: 'var(--admin-danger)', color: 'white', padding: '1rem', borderRadius: '4px' }}>
-          {error}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ color: '#fff', padding: '2rem' }}>Loading...</div>;
 
   return (
-    <div className="admin-analytics" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ backgroundColor: '#000000', minHeight: '100vh', padding: '2rem', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>Bezoekers Analytics</h2>
-          <p style={{ color: 'var(--admin-muted)' }}>Geavanceerde inzichten in websiteverkeer en paginaweergaven (30 dagen).</p>
+      {/* Top Metrics Strip */}
+      <div style={{ display: 'flex', gap: '1px', backgroundColor: '#333', border: '1px solid #333', borderRadius: '8px', width: 'fit-content', overflow: 'hidden', marginBottom: '2rem' }}>
+        <div style={{ backgroundColor: '#000', padding: '16px 24px', minWidth: '150px' }}>
+          <div style={{ color: '#888', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Visitors</div>
+          <div style={{ color: '#fff', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.visitors}</div>
         </div>
-        <div style={{ 
-          display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--admin-surface)', 
-          padding: '0.75rem 1.25rem', borderRadius: '50px', border: '1px solid var(--admin-border)',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-        }}>
-          <Activity size={18} color="#067647" className="pulse-animation" />
-          <span style={{ fontWeight: 600, color: '#067647' }}>{metrics.activeNow}</span>
-          <span style={{ color: 'var(--admin-muted)', fontSize: '0.875rem' }}>actief nu (15m)</span>
+        <div style={{ backgroundColor: '#000', padding: '16px 24px', minWidth: '150px' }}>
+          <div style={{ color: '#888', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Page Views</div>
+          <div style={{ color: '#fff', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
         </div>
       </div>
 
-      {/* Top Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <p style={{ color: 'var(--admin-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Paginaweergaven (30d)</p>
-          <p style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.totalViews30Days}</p>
-        </div>
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <p style={{ color: 'var(--admin-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Unieke Sessies (30d)</p>
-          <p style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.uniqueSessions30Days}</p>
-        </div>
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <p style={{ color: 'var(--admin-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Paginaweergaven (7d)</p>
-          <p style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.totalViews7Days}</p>
-        </div>
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <p style={{ color: 'var(--admin-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Unieke Sessies (7d)</p>
-          <p style={{ fontSize: '2rem', fontWeight: 700 }}>{metrics.uniqueSessions7Days}</p>
-        </div>
-      </div>
-
-      {/* Trend Chart (Full Width) */}
-      <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)', marginBottom: '3rem' }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem' }}>Bezoekers Trend (30d)</h3>
+      {/* Chart */}
+      <div style={{ border: '1px solid #333', borderRadius: '8px', padding: '24px 0', marginBottom: '2rem', backgroundColor: '#000' }}>
         <div style={{ height: '300px', width: '100%' }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#B8860B" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#B8860B" stopOpacity={0}/>
+                <linearGradient id="colorBlue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#0070F3" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#0070F3" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--admin-border)" />
               <XAxis 
                 dataKey="date" 
-                axisLine={false}
+                axisLine={{ stroke: '#333' }}
                 tickLine={false}
-                tick={{ fill: 'var(--admin-muted)', fontSize: 12 }}
+                tick={{ fill: '#888', fontSize: 12 }}
                 dy={10}
               />
               <YAxis 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'var(--admin-muted)', fontSize: 12 }}
+                tick={{ fill: '#888', fontSize: 12 }}
+                dx={-10}
               />
               <RechartsTooltip 
-                contentStyle={{ backgroundColor: 'var(--admin-surface)', borderColor: 'var(--admin-border)', borderRadius: '4px', color: 'var(--admin-text)' }}
-                itemStyle={{ color: 'var(--admin-text)' }}
+                contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '6px', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
+                itemStyle={{ color: '#fff', fontSize: '14px', fontWeight: 500 }}
+                labelStyle={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}
+                cursor={{ stroke: '#444', strokeWidth: 1, strokeDasharray: '4 4' }}
               />
-              <Area type="monotone" dataKey="weergaven" stroke="#B8860B" fillOpacity={1} fill="url(#colorViews)" />
+              <Area 
+                type="linear" 
+                dataKey="Visitors" 
+                stroke="#0070F3" 
+                strokeWidth={2}
+                fillOpacity={1} 
+                fill="url(#colorBlue)" 
+                activeDot={{ r: 4, fill: '#0070F3', stroke: '#000', strokeWidth: 2 }}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Advanced Insights Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      {/* Lists Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+        <VercelList title="Pages" data={pagesData} valueKey="visitors" labelKey="path" totalValue={metrics.pageViews} />
+        <VercelList title="Referrers" data={referrersData} valueKey="visitors" labelKey="source" totalValue={metrics.visitors} />
         
-        {/* Most Viewed Artworks */}
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem' }}>Populairste Collectie Items</h3>
-          <div style={{ height: '250px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topArtworksData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--admin-border)" />
-                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--admin-muted)', fontSize: 12 }} />
-                <YAxis dataKey="path" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--admin-text)', fontSize: 12 }} width={100} />
-                <RechartsTooltip cursor={{fill: 'var(--admin-subtle)'}} contentStyle={{ backgroundColor: 'var(--admin-surface)', borderColor: 'var(--admin-border)', borderRadius: '4px', color: 'var(--admin-text)' }} />
-                <Bar dataKey="weergaven" fill="#B8860B" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <VercelList title="Devices" data={devicesData} valueKey="visitors" labelKey="device" totalValue={metrics.visitors} />
+          <VercelList title="Operating Systems" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} />
         </div>
-
-        {/* Traffic Sources */}
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem' }}>Verkeersbronnen (Sessies)</h3>
-          <div style={{ height: '250px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={referrerData} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--admin-border)" />
-                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--admin-muted)', fontSize: 12 }} />
-                <YAxis dataKey="source" type="category" axisLine={false} tickLine={false} tick={{ fill: 'var(--admin-text)', fontSize: 12 }} width={100} />
-                <RechartsTooltip cursor={{fill: 'var(--admin-subtle)'}} contentStyle={{ backgroundColor: 'var(--admin-surface)', borderColor: 'var(--admin-border)', borderRadius: '4px', color: 'var(--admin-text)' }} />
-                <Bar dataKey="visitors" fill="#171717" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Device Breakdown */}
-        <div style={{ backgroundColor: 'var(--admin-surface)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--admin-border)' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>Apparaten (Sessies)</h3>
-          <div style={{ height: '250px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={deviceData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {deviceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip contentStyle={{ backgroundColor: 'var(--admin-surface)', borderColor: 'var(--admin-border)', borderRadius: '4px', color: 'var(--admin-text)' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '-1rem' }}>
-              {deviceData.map((entry, index) => (
-                <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: COLORS[index % COLORS.length] }}></div>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--admin-text)' }}>{entry.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
       </div>
-      
-      {/* CSS for the pulse animation */}
-      <style>{`
-        @keyframes pulse-green {
-          0% { transform: scale(0.95); opacity: 1; }
-          70% { transform: scale(1.1); opacity: 0.5; }
-          100% { transform: scale(0.95); opacity: 1; }
-        }
-        .pulse-animation {
-          animation: pulse-green 2s infinite;
-        }
-      `}</style>
+
     </div>
   );
 }
