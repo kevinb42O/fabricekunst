@@ -65,6 +65,7 @@ export default function AnalyticsManager() {
   const [loading, setLoading] = useState(true);
   const [pageViews, setPageViews] = useState([]);
   const [error, setError] = useState(null);
+  const [timeRange, setTimeRange] = useState('7d'); // '24h', '7d', '30d'
 
   useEffect(() => {
     // Dark mode body override for this tab
@@ -80,13 +81,9 @@ export default function AnalyticsManager() {
         return;
       }
       try {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
         const { data, fetchError } = await supabase
           .from('page_views')
           .select('*')
-          .gte('created_at', thirtyDaysAgo.toISOString())
           .order('created_at', { ascending: true });
 
         if (fetchError) throw fetchError;
@@ -102,23 +99,39 @@ export default function AnalyticsManager() {
     fetchAnalytics();
   }, []);
 
+  const filteredViews = useMemo(() => {
+    const now = new Date();
+    let cutoff = new Date();
+    if (timeRange === '24h') cutoff.setHours(now.getHours() - 24);
+    if (timeRange === '7d') cutoff.setDate(now.getDate() - 7);
+    if (timeRange === '30d') cutoff.setDate(now.getDate() - 30);
+    
+    return pageViews.filter(v => new Date(v.created_at) >= cutoff);
+  }, [pageViews, timeRange]);
+
   const metrics = useMemo(() => {
-    const uniqueSessions = new Set(pageViews.map(v => v.session_id)).size;
+    const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
     return {
       visitors: uniqueSessions,
-      pageViews: pageViews.length
+      pageViews: filteredViews.length
     };
-  }, [pageViews]);
+  }, [filteredViews]);
 
   const chartData = useMemo(() => {
     const dailyData = {};
-    pageViews.forEach(view => {
+    filteredViews.forEach(view => {
       const dateObj = new Date(view.created_at);
-      const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!dailyData[date]) {
-        dailyData[date] = { date, visitors: new Set(), sortKey: dateObj.getTime() };
+      let dateKey;
+      if (timeRange === '24h') {
+        dateKey = dateObj.toLocaleTimeString('en-US', { hour: 'numeric' });
+      } else {
+        dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }
-      dailyData[date].visitors.add(view.session_id);
+      
+      if (!dailyData[dateKey]) {
+        dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: timeRange === '24h' ? dateObj.getHours() : dateObj.getTime() };
+      }
+      dailyData[dateKey].visitors.add(view.session_id);
     });
 
     const sorted = Object.values(dailyData).sort((a, b) => a.sortKey - b.sortKey);
@@ -126,21 +139,21 @@ export default function AnalyticsManager() {
       date: d.date,
       Visitors: d.visitors.size
     }));
-  }, [pageViews]);
+  }, [filteredViews, timeRange]);
 
   const uniqueSessionsMap = useMemo(() => {
     const map = new Map();
-    pageViews.forEach(view => {
+    filteredViews.forEach(view => {
       if (!map.has(view.session_id)) {
         map.set(view.session_id, view);
       }
     });
     return Array.from(map.values());
-  }, [pageViews]);
+  }, [filteredViews]);
 
   const pagesData = useMemo(() => {
     const pages = {};
-    pageViews.forEach(view => {
+    filteredViews.forEach(view => {
       const path = view.page_url;
       if (!pages[path]) pages[path] = { path, visitors: 0 };
       pages[path].visitors += 1;
@@ -183,15 +196,40 @@ export default function AnalyticsManager() {
   return (
     <div style={{ backgroundColor: '#000000', minHeight: '100vh', padding: '2rem', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       
-      {/* Top Metrics Strip */}
-      <div style={{ display: 'flex', gap: '1px', backgroundColor: '#333', border: '1px solid #333', borderRadius: '8px', width: 'fit-content', overflow: 'hidden', marginBottom: '2rem' }}>
-        <div style={{ backgroundColor: '#000', padding: '16px 24px', minWidth: '150px' }}>
-          <div style={{ color: '#888', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Visitors</div>
-          <div style={{ color: '#fff', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.visitors}</div>
+      {/* Top Filter & Metrics */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '1px', backgroundColor: '#333', border: '1px solid #333', borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ backgroundColor: '#000', padding: '16px 24px', minWidth: '150px' }}>
+            <div style={{ color: '#888', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Visitors</div>
+            <div style={{ color: '#fff', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.visitors}</div>
+          </div>
+          <div style={{ backgroundColor: '#000', padding: '16px 24px', minWidth: '150px' }}>
+            <div style={{ color: '#888', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Page Views</div>
+            <div style={{ color: '#fff', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
+          </div>
         </div>
-        <div style={{ backgroundColor: '#000', padding: '16px 24px', minWidth: '150px' }}>
-          <div style={{ color: '#888', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Page Views</div>
-          <div style={{ color: '#fff', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
+
+        {/* Time Range Selector */}
+        <div style={{ display: 'flex', backgroundColor: '#111', border: '1px solid #333', borderRadius: '6px', padding: '4px' }}>
+          {['24h', '7d', '30d'].map(range => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              style={{
+                background: timeRange === range ? '#333' : 'transparent',
+                color: timeRange === range ? '#fff' : '#888',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {range}
+            </button>
+          ))}
         </div>
       </div>
 
