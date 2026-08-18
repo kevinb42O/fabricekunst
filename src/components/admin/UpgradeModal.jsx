@@ -12,7 +12,7 @@ const UpgradeModal = ({ isOpen, onClose, product = 'pro' }) => {
   // Pro Plan variables
   const isYearly = billingCycle === 'yearly';
   const proPrice = isYearly ? 468 : 45;
-  const proDesc = isYearly ? '€39 / maand, gefactureerd als €468 per jaar' : '€45 / maand, maandelijks gefactureerd';
+  const proDesc = isYearly ? '€39 / maand, gefactureerd als €468 per jaar. (Incl. 150 kunstwerken limiet)' : '€45 / maand, maandelijks gefactureerd. (Incl. 150 kunstwerken limiet)';
 
   // Token Plan variables
   const isTier1 = billingCycle === 'monthly' || billingCycle === 'tier1';
@@ -26,7 +26,7 @@ const UpgradeModal = ({ isOpen, onClose, product = 'pro' }) => {
   // EPC QR Code
   const iban = "BE43738004886701";
   const formattedIban = "BE43 7380 0488 6701";
-  const name = "Web Development";
+  const name = "Kevin Bourguignon";
   const epcString = `BCD\n002\n1\nSCT\n\n${name}\n${iban}\nEUR${price}.00\n\n${productName}`;
   const paymentData = encodeURIComponent(epcString);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${paymentData}&margin=10`;

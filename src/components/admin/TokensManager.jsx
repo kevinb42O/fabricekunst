@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, AlertCircle, ShoppingCart, Info, HardDrive, LayoutGrid, Activity } from 'lucide-react';
+import { RefreshCw, AlertCircle, ShoppingCart, Info, HardDrive, LayoutGrid, Activity, Check, X } from 'lucide-react';
 import UpgradeModal from './UpgradeModal';
 
 const CircularProgress = ({ percentage, color = '#24b47e' }) => {
@@ -245,88 +245,99 @@ export default function TokensManager({ items = [] }) {
         />
       </div>
 
-      {/* Plan Vergelijking Table */}
-      <div className="bg-white text-gray-900 rounded-xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Capaciteit Vergelijking</h2>
-          <p className="text-sm text-gray-500 mt-1">Zie exact hoeveel extra capaciteit uw website krijgt bij een upgrade naar het Pro Plan.</p>
+      {/* Hosting Pakketten Vergelijking */}
+      <div className="mb-12">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Hosting Pakketten</h2>
+          <p className="text-gray-500 mt-1">Upgrade de onderliggende serverinfrastructuur van uw website voor bliksemsnelle prestaties en 100% zekerheid.</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[600px]">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 font-bold">
-                <th className="py-4 px-6">Middelen</th>
-                <th className="py-4 px-6">Huidig (Basis)</th>
-                <th className="py-4 px-6 text-blue-600">Pro Plan</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
-              <tr className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><HardDrive size={16} className="text-gray-400"/> Database Grootte</td>
-                <td className="py-4 px-6">500 MB</td>
-                <td className="py-4 px-6 font-semibold text-gray-900">8 GB <span className="text-green-600 text-[11px] uppercase tracking-wider font-bold ml-2 bg-green-50 px-2 py-1 rounded">16x Meer</span></td>
-              </tr>
-              <tr className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><HardDrive size={16} className="text-gray-400"/> Media Opslag</td>
-                <td className="py-4 px-6">1 GB</td>
-                <td className="py-4 px-6 font-semibold text-gray-900">100 GB <span className="text-green-600 text-[11px] uppercase tracking-wider font-bold ml-2 bg-green-50 px-2 py-1 rounded">100x Meer</span></td>
-              </tr>
-              <tr className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><Activity size={16} className="text-gray-400"/> Direct Dataverkeer</td>
-                <td className="py-4 px-6">5 GB / mnd</td>
-                <td className="py-4 px-6 font-semibold text-gray-900">250 GB / mnd <span className="text-green-600 text-[11px] uppercase tracking-wider font-bold ml-2 bg-green-50 px-2 py-1 rounded">50x Meer</span></td>
-              </tr>
-              <tr className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><Activity size={16} className="text-gray-400"/> Gecachet Verkeer</td>
-                <td className="py-4 px-6">5 GB / mnd</td>
-                <td className="py-4 px-6 font-semibold text-gray-900 flex items-center gap-2">Ongelimiteerd ✨</td>
-              </tr>
-            </tbody>
-          </table>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Basis Plan Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex flex-col">
+            <h3 className="text-lg font-bold text-gray-900">Basis Plan</h3>
+            <div className="mt-2 mb-4">
+              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€0</span>
+              <span className="text-gray-500 font-medium"> / maand</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
+              Standaard inbegrepen bij oplevering. Perfect voor een startende online catalogus, maar met technische limieten.
+            </p>
+            
+            <ul className="space-y-4 mb-8 flex-1">
+              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 50 Kunstwerken</li>
+              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 500 MB Database Grootte</li>
+              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 1 GB Media Opslag (Sterk gecomprimeerd)</li>
+              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 5 GB/mnd Gedeeld Dataverkeer</li>
+              <li className="flex items-start text-sm text-gray-400"><X size={18} className="text-gray-300 mr-3 mt-0.5 flex-shrink-0" /> Geen Wereldwijd CDN (Tragere laadtijden)</li>
+              <li className="flex items-start text-sm text-gray-400"><X size={18} className="text-gray-300 mr-3 mt-0.5 flex-shrink-0" /> Geen Gegarandeerde Uptime</li>
+            </ul>
+
+            <button disabled className="w-full py-3 px-4 bg-gray-50 text-gray-400 font-bold rounded-xl text-sm border border-gray-200 cursor-not-allowed">
+              Uw Huidige Plan
+            </button>
+          </div>
+
+          {/* Pro Plan Card */}
+          <div className="bg-gradient-to-b from-blue-50/80 to-white rounded-2xl border-2 border-blue-500 p-8 shadow-md flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-blue-500"></div>
+            <div className="absolute top-5 right-5 bg-blue-100 text-blue-700 text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">Aanbevolen</div>
+            
+            <h3 className="text-lg font-bold text-gray-900">Pro Plan</h3>
+            <div className="mt-2 mb-4">
+              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€39</span>
+              <span className="text-gray-500 font-medium"> / maand</span>
+            </div>
+            <p className="text-sm text-gray-600 mb-6 pb-6 border-b border-blue-100">
+              Premium infrastructuur voor professionele kunsthandelaren. Haperingsvrije weergave van originele 4K foto's wereldwijd.
+            </p>
+            
+            <ul className="space-y-4 mb-8 flex-1">
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 150 Kunstwerken <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">3x Meer</span></li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 8 GB Database <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">16x Meer</span></li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 100 GB Media Opslag (4K Ready)</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 250 GB Direct Dataverkeer</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Ongelimiteerd Gecachet CDN Verkeer ✨</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Automatische Dagelijkse Back-ups</li>
+            </ul>
+
+            <button 
+              onClick={() => { setModalProduct('pro'); setIsUpgradeModalOpen(true); }}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg hover:shadow-xl transition-all active:scale-95"
+            >
+              Upgrade naar Pro
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white text-gray-900 p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-          <h2 className="text-lg font-semibold flex items-center text-gray-800">
-            <ShoppingCart className="mr-2 text-gray-500" size={20} /> Tokens & Upgrades
-          </h2>
+      {/* Tokens / Extra Kunstwerken */}
+      <div className="bg-white text-gray-900 p-8 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-xl font-bold flex items-center text-gray-900">
+              Eenmalige Uitbreidingen
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">Koop extra ruimte in de catalogus (tokens) om meer kunstwerken toe te voegen.</p>
+          </div>
+          <ShoppingCart className="text-gray-300" size={32} />
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div>
-              <h4 className="font-medium text-gray-900 flex items-center">
-                Uitbreiding: Extra Kunstwerken
-                <span className="ml-3 bg-gray-200 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">Eenmalig</span>
-              </h4>
-              <p className="text-sm text-gray-500 mt-1">Verhoog de capaciteit van uw digitale catalogus blijvend. Geen maandelijkse kosten.</p>
-            </div>
-            <button 
-              onClick={() => { setModalProduct('token'); setIsUpgradeModalOpen(true); }}
-              className="inline-flex items-center bg-gray-900 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-gray-800 hover:shadow-lg transition-all active:scale-95"
-            >
-              Koop Tokens <span className="ml-2">→</span>
-            </button>
+        <div className="flex items-center justify-between bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div>
+            <h4 className="font-bold text-gray-900 text-lg flex items-center">
+              Extra Kunstwerken
+              <span className="ml-3 bg-gray-200 text-gray-800 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full">Geen abonnementskosten</span>
+            </h4>
+            <p className="text-sm text-gray-500 mt-2">Zit u aan de limiet van {MAX_ITEMS} kunstwerken? Verhoog dit limiet blijvend met een token-pakket.</p>
           </div>
-
-          <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div>
-              <h4 className="font-medium text-gray-900 flex items-center">
-                Pro Plan Hosting
-                <span className="ml-3 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Vanaf €39 / maand</span>
-              </h4>
-              <p className="text-sm text-gray-500 mt-1">
-                Zorg voor een bliksemsnelle, haperingsvrije weergave van uw hoge resolutie afbeeldingen voor élke bezoeker. (Inclusief 50GB extra opslag).
-              </p>
-            </div>
-            <button 
-              onClick={() => { setModalProduct('pro'); setIsUpgradeModalOpen(true); }}
-              className="inline-flex items-center bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all active:scale-95"
-            >
-              Upgrade Plan <span className="ml-2">→</span>
-            </button>
-          </div>
+          <button 
+            onClick={() => { setModalProduct('token'); setIsUpgradeModalOpen(true); }}
+            className="inline-flex items-center bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-gray-800 hover:shadow-lg transition-all active:scale-95 whitespace-nowrap ml-6"
+          >
+            Koop Tokens <span className="ml-2">→</span>
+          </button>
         </div>
       </div>
       
