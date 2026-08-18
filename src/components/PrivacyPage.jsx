@@ -23,7 +23,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
           <li><strong>Aanvraag- en correspondentiegegevens:</strong> uw bericht, het betrokken object, afspraken, biedingen en verdere correspondentie.</li>
           <li><strong>Transactiegegevens:</strong> bestel-, betaal-, factuur-, leverings-, retour- en verzekeringsgegevens. Wij ontvangen geen volledige betaalkaartgegevens wanneer een betalingsdienstverlener de betaling verwerkt.</li>
           <li><strong>Object- en certificatiedossier:</strong> gegevens die nodig zijn voor herkomstonderzoek, facturatie, levering en een eventueel certificaat, waaronder de naam van de eigenaar wanneer dat noodzakelijk is.</li>
-          <li><strong>Technische gegevens:</strong> IP-adres, tijdstip, aangevraagde pagina, apparaat- en browserinformatie en technische loggegevens die hosting- en beveiligingssystemen automatisch kunnen verwerken.</li>
+          <li><strong>Technische en analytische gegevens:</strong> tijdstip, aangevraagde pagina, apparaat- en browserinformatie, ruwe schatting van uw land (op basis van tijdzone), website-interacties (zoals scroll- en klikgedrag) en technische loggegevens die hosting- en beveiligingssystemen automatisch kunnen verwerken. Wij slaan uw IP-adres <strong>niet</strong> op in onze eigen analysesystemen.</li>
           <li><strong>Voorkeuren:</strong> de gekozen taal en functionele instellingen die lokaal in uw browser worden bewaard.</li>
         </BulletList>
         <p>Wij vragen u geen gevoelige persoonsgegevens mee te delen. Doet u dat toch in een vrij tekstveld, dan verwijderen wij die informatie zodra zij niet noodzakelijk is.</p>
@@ -42,6 +42,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
               <tr><td>Boekhouding, fiscale administratie en medewerking aan bevoegde overheden.</td><td>Wettelijke verplichting.</td></tr>
               <tr><td>Fraude, misbruik en beveiligingsincidenten voorkomen en juridische aanspraken vaststellen.</td><td>Ons gerechtvaardigd belang in een veilige dienstverlening en rechtsbescherming.</td></tr>
               <tr><td>U op uw verzoek informeren over nieuwe aanwinsten.</td><td>Uw toestemming; die kan u altijd intrekken.</td></tr>
+              <tr><td>Inzicht verkrijgen in websitegebruik, verkeersbronnen en prestaties om de website te verbeteren.</td><td>Ons gerechtvaardigd belang om het functioneren en de effectiviteit van onze website te meten door middel van privacyvriendelijke first-party analytics (zonder opslag van IP-adressen).</td></tr>
               <tr><td>Uw taalkeuze onthouden en de gevraagde websitefuncties leveren.</td><td>Gerechtvaardigd belang en de door u gevraagde elektronische dienst.</td></tr>
             </tbody>
           </table>
@@ -96,12 +97,13 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
       id: 'cookies',
       title: 'Cookies, lokale opslag en analyse',
       content: <>
-        <p>Op de datum van deze versie gebruikt de publieke website <strong>geen advertentie-, tracking- of analysecookies</strong>. Er wordt dus geen cookiebanner getoond. Wij gebruiken alleen functionele browseropslag:</p>
+        <p>Onze publieke website plaatst <strong>geen tracking- of advertentiecookies van derde partijen</strong>. Wel gebruiken wij een eigen, privacyvriendelijk en anoniem analysesysteem om het websitegebruik te meten. Hierbij maken wij gebruik van de volgende browseropslag:</p>
         <div className="legal-table-wrap">
           <table>
             <thead><tr><th>Naam / techniek</th><th>Doel</th><th>Duur</th></tr></thead>
             <tbody>
-              <tr><td><code>atelier_language</code> (cookie en local storage)</td><td>De door u gekozen taal onthouden.</td><td>Maximaal 12 maanden.</td></tr>
+              <tr><td><code>atelier_language</code> (local storage)</td><td>De door u gekozen taal onthouden.</td><td>Maximaal 12 maanden.</td></tr>
+              <tr><td><code>analytics_visitor_id</code> (local storage)</td><td>Genereren van geanonimiseerde bezoekersstatistieken en analyseren van websitegebruik, uitsluitend voor eigen inzichten (first-party analytics).</td><td>Maximaal 12 maanden.</td></tr>
               <tr><td>Service-worker cache</td><td>Statische websitebestanden sneller en stabieler laden; bevat geen formulierinhoud.</td><td>Tot de cache door een nieuwe versie wordt vervangen of door u wordt gewist.</td></tr>
             </tbody>
           </table>

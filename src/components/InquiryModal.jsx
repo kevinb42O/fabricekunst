@@ -4,6 +4,7 @@ import { saveInquiryAsync } from '../utils/storage';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedPrice } from '../utils/translationService';
 import { useResponsiveMode } from '../hooks/useResponsiveMode';
+import { trackEvent } from '../hooks/useAnalytics';
 
 export default function InquiryModal({ item, catalog = [], initialRequestType = 'general_query', onClose, onSuccess }) {
   const { t, language } = useLanguage();
@@ -138,6 +139,7 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
 
     try {
       await saveInquiryAsync(payload);
+      trackEvent('cta_click', { button: 'Neem contact op / Verzenden', type: typeTitle });
       setSubmitted(true);
       if (onSuccess) onSuccess();
     } catch (err) {

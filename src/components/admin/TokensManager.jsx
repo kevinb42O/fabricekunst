@@ -89,14 +89,15 @@ export default function TokensManager({ items = [] }) {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState('pro'); // 'pro' or 'token'
 
-  const isPro = metrics?.plan === 'pro';
+  const isPremium = metrics?.plan === 'premium';
+  const isPro = metrics?.plan === 'pro' || isPremium;
 
   // Dynamic Limits
-  const MAX_ITEMS = isPro ? 150 : 50;
-  const MAX_STORAGE_BYTES = isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024; // 100 GB vs 1 GB
-  const MAX_DB_BYTES = isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024; // 8 GB vs 0.5 GB
-  const MAX_EGRESS_BYTES = isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024; // 250 GB vs 5 GB
-  const MAX_CACHED_EGRESS_BYTES = isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024; // 500 GB vs 5 GB
+  const MAX_ITEMS = isPremium ? 500 : (isPro ? 150 : 50);
+  const MAX_STORAGE_BYTES = isPremium ? 500 * 1024 * 1024 * 1024 : (isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024); // 500 GB vs 100 GB vs 1 GB
+  const MAX_DB_BYTES = isPremium ? 20 * 1024 * 1024 * 1024 : (isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024); // 20 GB vs 8 GB vs 0.5 GB
+  const MAX_EGRESS_BYTES = isPremium ? 1000 * 1024 * 1024 * 1024 : (isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024); // 1 TB vs 250 GB vs 5 GB
+  const MAX_CACHED_EGRESS_BYTES = isPremium ? 2000 * 1024 * 1024 * 1024 : (isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024); // 2 TB vs 500 GB vs 5 GB
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -186,7 +187,7 @@ export default function TokensManager({ items = [] }) {
   const hasExceeded = isOverCachedEgress || isOverEgress || isOverStorage || isOverItems || isOverDb;
 
   return (
-    <div className="max-w-4xl mx-auto p-2 pb-12">
+    <div className="max-w-6xl mx-auto p-2 pb-12">
       <header className="mb-8">
         <h1 className="text-2xl font-semibold mb-2">Hosting & Tokens</h1>
         <p className="text-gray-500">Beheer de opslag, het dataverkeer en de capaciteit van uw website.</p>
@@ -196,12 +197,15 @@ export default function TokensManager({ items = [] }) {
         <div className="bg-red-50 text-red-900 p-4 rounded-lg mb-8 border border-red-200 flex items-start">
           <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5 text-red-600" />
           <div>
-            <h3 className="font-semibold text-red-800">Hostinglimiet bereikt</h3>
-            <p className="text-sm mt-1">
-              Uw website trekt enorm veel bezoekers of uw collectie is dusdanig groot dat uw huidige hostingpakket de limiet heeft bereikt. Om de website snel en online te houden voor uw bezoekers, dient u uw plan te upgraden.
+            <h3 className="font-semibold text-red-800">Accountlimieten bereikt</h3>
+            <p className="text-sm mt-1 text-red-700">
+              Je (gratis) Basis Plan heeft de toegestane limieten voor opslag of dataverkeer bereikt. Om te voorkomen dat je website trager wordt of tijdelijk offline gaat, vragen we je te upgraden.
             </p>
-            <button className="mt-3 bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors">
-              Upgrade Hosting Pakket
+            <button 
+              onClick={() => document.getElementById('pricing-plans')?.scrollIntoView({ behavior: 'smooth' })}
+              className="mt-3 bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors shadow-sm"
+            >
+              Bekijk Upgrade Opties
             </button>
           </div>
         </div>
@@ -211,7 +215,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Collectie Grootte" 
           usageStr={currentItems} 
-          limitStr={isPro ? "150 obj" : "50 obj"} 
+          limitStr={isPremium ? "500 obj" : (isPro ? "150 obj" : "50 obj")} 
           percentage={itemsPercentage} 
           overLimit={isOverItems} 
           icon={LayoutGrid} 
@@ -220,7 +224,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Media Opslag" 
           usageStr={formatBytes(currentStorage)} 
-          limitStr={isPro ? "100 GB" : "1 GB"} 
+          limitStr={isPremium ? "500 GB" : (isPro ? "100 GB" : "1 GB")} 
           percentage={storagePercentage} 
           overLimit={isOverStorage} 
           icon={HardDrive} 
@@ -229,7 +233,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Database Grootte" 
           usageStr={formatBytes(currentDb)} 
-          limitStr={isPro ? "8 GB" : "0.5 GB"} 
+          limitStr={isPremium ? "20 GB" : (isPro ? "8 GB" : "0.5 GB")} 
           percentage={dbPercentage} 
           overLimit={isOverDb} 
           icon={HardDrive} 
@@ -238,7 +242,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Direct Dataverkeer" 
           usageStr={formatBytes(currentEgress)} 
-          limitStr={isPro ? "250 GB" : "5 GB"} 
+          limitStr={isPremium ? "1 TB" : (isPro ? "250 GB" : "5 GB")} 
           percentage={egressPercentage} 
           overLimit={isOverEgress} 
           icon={Activity} 
@@ -247,7 +251,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Gecachet Verkeer" 
           usageStr={formatBytes(currentCachedEgress)} 
-          limitStr={isPro ? "500 GB" : "5 GB"} 
+          limitStr={isPremium ? "2 TB" : (isPro ? "500 GB" : "5 GB")} 
           percentage={cachedEgressPercentage} 
           overLimit={isOverCachedEgress} 
           icon={Activity} 
@@ -256,23 +260,23 @@ export default function TokensManager({ items = [] }) {
       </div>
 
       {/* Hosting Pakketten Vergelijking */}
-      <div className="mb-12">
+      <div id="pricing-plans" className="mb-12 scroll-mt-6">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900">Hosting Pakketten</h2>
           <p className="text-gray-500 mt-1">Upgrade de onderliggende serverinfrastructuur van uw website voor bliksemsnelle prestaties en 100% zekerheid.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
           
           {/* Basis Plan Card */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex flex-col">
-            <h3 className="text-lg font-bold text-gray-900">Basis Plan</h3>
-            <div className="mt-2 mb-4">
-              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€0</span>
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex flex-col hover:shadow-md transition-shadow h-full">
+            <h3 className="text-xl font-semibold text-gray-900">Basis</h3>
+            <div className="mt-4 mb-2">
+              <span className="text-4xl font-bold text-gray-900 tracking-tight">€0</span>
               <span className="text-gray-500 font-medium"> / maand</span>
             </div>
-            <p className="text-sm text-gray-500 mb-6 pb-6 border-b border-gray-100">
-              Standaard inbegrepen bij oplevering. Perfect voor een startende online catalogus, maar met technische limieten.
+            <p className="text-sm text-gray-500 mb-8 pb-8 border-b border-gray-100 min-h-[80px]">
+              Standaard inbegrepen. Perfect voor een startende online catalogus, met basis functionaliteiten.
             </p>
             
             <ul className="space-y-4 mb-8 flex-1">
@@ -286,52 +290,96 @@ export default function TokensManager({ items = [] }) {
             </ul>
 
             {!isPro ? (
-              <button disabled className="w-full py-3 px-4 bg-gray-50 text-gray-400 font-bold rounded-xl text-sm border border-gray-200 cursor-not-allowed">
+              <button disabled className="w-full py-3 px-4 bg-gray-50 text-gray-400 font-semibold rounded-xl text-sm border border-gray-200 cursor-not-allowed">
                 Uw Huidige Plan
               </button>
             ) : (
-              <button disabled className="w-full py-3 px-4 bg-transparent text-gray-400 font-bold rounded-xl text-sm border border-transparent cursor-not-allowed">
+              <button disabled className="w-full py-3 px-4 bg-transparent text-gray-400 font-semibold rounded-xl text-sm border border-transparent cursor-not-allowed">
                 Inactief
               </button>
             )}
           </div>
 
           {/* Pro Plan Card */}
-          <div className="bg-gradient-to-b from-blue-50/80 to-white rounded-2xl border-2 border-blue-500 p-8 shadow-md flex flex-col relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-blue-500"></div>
-            <div className="absolute top-5 right-5 bg-blue-100 text-blue-700 text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">Aanbevolen</div>
-            
-            <h3 className="text-lg font-bold text-gray-900">Pro Plan</h3>
-            
-            <div className="mt-2 mb-4">
-              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€20</span>
-              <span className="text-gray-500 font-medium"> / maand</span>
-              <div className="text-[11px] text-gray-500 font-medium mt-1">Vanaf-prijs bij jaarlijkse facturering</div>
+          <div className="bg-white rounded-2xl border-2 border-blue-500 p-8 shadow-xl flex flex-col relative hover:-translate-y-1 transition-transform duration-300 h-full">
+            <div className="absolute top-6 right-6 bg-blue-50 text-blue-600 text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full border border-blue-100">
+              Aanbevolen
             </div>
-            <p className="text-sm text-gray-600 mb-6 pb-6 border-b border-blue-100">
-              Ontgrendel de volledige potentie van uw website. Razendsnelle servers en ruime limieten voor een grote, hoogwaardige catalogus.
+            
+            <h3 className="text-xl font-semibold text-gray-900">Pro</h3>
+            
+            <div className="mt-4 mb-2 flex items-baseline">
+              <span className="text-4xl font-bold text-gray-900 tracking-tight">€20</span>
+              <span className="text-gray-500 font-medium ml-1"> / maand</span>
+            </div>
+            <div className="text-[11px] text-gray-500 font-medium mb-2 uppercase tracking-wider">Vanaf-prijs, jaarlijks gefactureerd</div>
+            
+            <p className="text-sm text-gray-600 mb-8 pb-8 border-b border-gray-100 min-h-[80px]">
+              Ontgrendel de volledige potentie. Razendsnelle servers en ruime limieten voor een groeiende, hoogwaardige catalogus.
             </p>
             
             <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 150 Kunstwerken <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">3x Meer</span></li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 8 GB Database <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">16x Meer</span></li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 100+ GB Media Opslag (4K Ready)</li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 250 GB Direct Dataverkeer</li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Geavanceerde Analytics (Volledige historie)</li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 500 GB Gecachet CDN Verkeer</li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Gegarandeerde Uptime & Back-ups</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 150 Kunstwerken</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 8 GB Database</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 100+ GB Media Opslag (4K Ready)</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 250 GB Direct Dataverkeer</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Geavanceerde Analytics</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 500 GB Gecachet CDN Verkeer</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Gegarandeerde Uptime & Back-ups</li>
             </ul>
 
-            {isPro ? (
-              <button disabled className="w-full py-3 px-4 bg-blue-50 text-blue-400 font-bold rounded-xl text-sm border border-blue-100 cursor-not-allowed">
-                Uw Huidige Plan
+            {isPremium || isPro ? (
+              <button disabled className="w-full py-3 px-4 bg-blue-50 text-blue-400 font-semibold rounded-xl text-sm border border-blue-100 cursor-not-allowed">
+                {isPro && !isPremium ? 'Uw Huidige Plan' : 'Inactief'}
               </button>
             ) : (
               <button 
                 onClick={() => { setModalProduct('pro'); setIsUpgradeModalOpen(true); }}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg hover:shadow-xl transition-all active:scale-95"
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-md transition-colors active:scale-[0.98]"
               >
                 Upgrade naar Pro
+              </button>
+            )}
+          </div>
+
+          {/* Premium Plan Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm flex flex-col relative hover:shadow-md transition-shadow h-full">
+            <div className="absolute top-6 right-6 bg-gray-100 text-gray-600 text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full border border-gray-200">
+              Voor Grote Collecties
+            </div>
+            
+            <h3 className="text-xl font-semibold text-gray-900">Premium</h3>
+            
+            <div className="mt-4 mb-2 flex items-baseline">
+              <span className="text-4xl font-bold text-gray-900 tracking-tight">€49</span>
+              <span className="text-gray-500 font-medium ml-1"> / maand</span>
+            </div>
+            <div className="text-[11px] text-gray-500 font-medium mb-2 uppercase tracking-wider">Vanaf-prijs, jaarlijks gefactureerd</div>
+            
+            <p className="text-sm text-gray-600 mb-8 pb-8 border-b border-gray-100 min-h-[80px]">
+              Ultieme prestaties en capaciteit voor de grootste, meest veeleisende internationale collecties.
+            </p>
+            
+            <ul className="space-y-4 mb-8 flex-1">
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 500 Kunstwerken</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> 20 GB Database</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> 500 GB Media Opslag (4K Ready)</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> 1 TB Direct Dataverkeer</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> Geavanceerde Analytics</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> 2 TB Gecachet CDN Verkeer</li>
+              <li className="flex items-start text-sm text-gray-900"><Check size={18} className="text-gray-900 mr-3 mt-0.5 flex-shrink-0" /> Priority Support & Back-ups</li>
+            </ul>
+
+            {isPremium ? (
+              <button disabled className="w-full py-3 px-4 bg-gray-100 text-gray-500 font-semibold rounded-xl text-sm border border-gray-200 cursor-not-allowed">
+                Uw Huidige Plan
+              </button>
+            ) : (
+              <button 
+                onClick={() => { setModalProduct('premium'); setIsUpgradeModalOpen(true); }}
+                className="w-full py-3 px-4 bg-gray-900 hover:bg-black text-white font-semibold rounded-xl text-sm shadow-md transition-colors active:scale-[0.98]"
+              >
+                Upgrade naar Premium
               </button>
             )}
           </div>
@@ -356,7 +404,7 @@ export default function TokensManager({ items = [] }) {
               +50 of +150 Extra Kunstwerken
               <span className="ml-3 bg-gray-200 text-gray-800 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full">Eenmalige Aankoop</span>
             </h4>
-            <p className="text-sm text-gray-500 mt-2">Ideaal wanneer uw collectie groeit, maar u de huidige serverprestaties (Basis Plan) nog voldoende vindt.</p>
+            <p className="text-sm text-gray-500 mt-2">Ideaal wanneer uw collectie groeit, maar u de huidige prestaties van het Basis Plan wilt behouden.</p>
           </div>
           <button 
             onClick={() => { setModalProduct('token'); setIsUpgradeModalOpen(true); }}

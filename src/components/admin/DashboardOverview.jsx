@@ -47,8 +47,10 @@ export default function DashboardOverview({
   }, []);
 
   const currentEgress = metricsData?.usages?.find(m => m.metric === 'egress')?.usage || 0;
-  const MAX_EGRESS = 5 * 1024 * 1024 * 1024;
-  const MAX_ITEMS = 50;
+  const isPremium = metricsData?.plan === 'premium';
+  const isPro = metricsData?.plan === 'pro' || isPremium;
+  const MAX_EGRESS = isPremium ? 1000 * 1024 * 1024 * 1024 : (isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024);
+  const MAX_ITEMS = isPremium ? 500 : (isPro ? 150 : 50);
   const isTrafficExceeded = currentEgress >= MAX_EGRESS;
   const isItemsExceeded = items.length >= MAX_ITEMS;
 
@@ -104,14 +106,14 @@ export default function DashboardOverview({
         <div className="bg-red-50 text-red-900 p-4 rounded-lg mb-8 border border-red-200 flex items-start shadow-sm mx-8">
           <AlertTriangle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5 text-red-600" />
           <div>
-            <h3 className="font-semibold text-red-800">Actie vereist: Datacapaciteit bereikt</h3>
+            <h3 className="font-semibold text-red-800">Accountlimieten bereikt</h3>
             <p className="text-sm mt-1 mb-3 text-red-700">
               {isTrafficExceeded 
-                ? 'Omdat uw website afbeeldingen in hoge resolutie toont, bereikt u met de huidige bezoekersaantallen de datalimiet van het gratis basispakket. Stap over op het Pro Plan om de website snel en online te houden.' 
-                : 'De maximale capaciteit voor het aantal kunstwerken in uw huidige pakket is bereikt. Bekijk de upgrade-opties om verder te groeien.'}
+                ? 'Je (gratis) Basis Plan heeft de toegestane limiet voor dataverkeer bereikt. Om te voorkomen dat je website offline gaat of trager wordt voor bezoekers, vragen we je te upgraden.' 
+                : 'Je hebt de opslaglimieten van je (gratis) Basis Plan bereikt. Upgrade je account om nieuwe kunstwerken te kunnen toevoegen en onbeperkt door te groeien.'}
             </p>
             <button onClick={() => onNavigateTab('tokens')} className="inline-flex items-center bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-red-700 hover:shadow-lg transition-all active:scale-95">
-              Upgrade Opties Bekijken <span className="ml-2">→</span>
+              Bekijk Upgrade Opties <span className="ml-2">→</span>
             </button>
           </div>
         </div>
@@ -121,14 +123,14 @@ export default function DashboardOverview({
         <section className="admin-panel" aria-labelledby="inquiries-title">
           <div className="admin-panel__header">
             <div>
-              <h2 id="inquiries-title">Recente aanvragen</h2>
+              <h2 id="inquiries-title">Recente berichten</h2>
               <p>{newInquiries.length ? `${newInquiries.length} vragen om opvolging` : 'Alles is bijgewerkt'}</p>
             </div>
-            <button type="button" className="admin-text-button" onClick={() => onNavigateTab('inquiries')}>Alle aanvragen <ArrowRight aria-hidden="true" /></button>
+            <button type="button" className="admin-text-button" onClick={() => onNavigateTab('inquiries')}>Alle berichten <ArrowRight aria-hidden="true" /></button>
           </div>
           <div className="admin-list">
             {recentInquiries.length === 0 ? (
-              <div className="admin-empty-state"><Inbox aria-hidden="true" /><p>Nog geen aanvragen ontvangen.</p></div>
+              <div className="admin-empty-state"><Inbox aria-hidden="true" /><p>Nog geen berichten ontvangen.</p></div>
             ) : recentInquiries.map((inquiry, index) => (
               <button type="button" className="admin-list-row" key={inquiry.id || `${inquiry.email}-${index}`} onClick={() => onNavigateTab('inquiries')}>
                 <span className="admin-avatar">{(inquiry.name || inquiry.email || '?').trim().charAt(0).toUpperCase()}</span>

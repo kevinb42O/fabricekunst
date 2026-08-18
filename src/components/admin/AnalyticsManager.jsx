@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { Lock } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { Lock, Eye, MousePointerClick, Globe, ArrowDown, Activity, X, Monitor, Smartphone, MapPin, Clock, Filter, Flame, Timer, Link, ArrowRight, MousePointer2 } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import UpgradeModal from './UpgradeModal';
 
@@ -65,12 +65,15 @@ const VercelList = ({ title, data, valueKey, labelKey, totalValue, asPercentage 
   </div>
 );
 
-export default function AnalyticsManager({ isPro = false }) {
+export default function AnalyticsManager({ isPro = false, activeTab = 'overview' }) {
   const [loading, setLoading] = useState(true);
   const [pageViews, setPageViews] = useState([]);
+  const [events, setEvents] = useState([]);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('7d');
+  const [showAllTimeRanges, setShowAllTimeRanges] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -80,13 +83,25 @@ export default function AnalyticsManager({ isPro = false }) {
         return;
       }
       try {
-        const { data, fetchError } = await supabase
+        const { data: pageData, fetchError: pageError } = await supabase
           .from('page_views')
           .select('*')
           .order('created_at', { ascending: true });
 
-        if (fetchError) throw fetchError;
-        setPageViews(data || []);
+        if (pageError) throw pageError;
+        setPageViews(pageData || []);
+
+        // Fetch events if the table exists
+        try {
+          const { data: eventData } = await supabase
+            .from('analytics_events')
+            .select('*')
+            .order('created_at', { ascending: true });
+          if (eventData) setEvents(eventData);
+        } catch (e) {
+          // Table might not exist yet, ignore
+          console.log("Analytics events table not yet available");
+        }
       } catch (err) {
         console.error("Fout bij ophalen analytics:", err);
         setError('Fout bij het ophalen van analytics data.');
@@ -96,6 +111,38 @@ export default function AnalyticsManager({ isPro = false }) {
     };
 
     fetchAnalytics();
+
+    // Set up Real-time subscription for live visitor updates
+    let channel;
+    let eventChannel;
+    if (supabase) {
+      channel = supabase
+        .channel('public:page_views')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'page_views' },
+          (payload) => {
+            setPageViews((prev) => [...prev, payload.new]);
+          }
+        )
+        .subscribe();
+        
+      eventChannel = supabase
+        .channel('public:analytics_events')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'analytics_events' },
+          (payload) => {
+            setEvents((prev) => [...prev, payload.new]);
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+      if (eventChannel) supabase.removeChannel(eventChannel);
+    };
   }, []);
 
   const cutoffDate = useMemo(() => {
@@ -232,10 +279,13 @@ export default function AnalyticsManager({ isPro = false }) {
     const pages = {};
     filteredViews.forEach(view => {
       const path = view.page_url;
-      if (!pages[path]) pages[path] = { path, visitors: 0 };
-      pages[path].visitors += 1;
+      if (!pages[path]) pages[path] = { path, visitors: new Set(), totalViews: 0 };
+      pages[path].visitors.add(view.session_id);
+      pages[path].totalViews += 1;
     });
-    return Object.values(pages).sort((a, b) => b.visitors - a.visitors).slice(0, 7);
+    return Object.values(pages)
+      .map(p => ({ path: p.path, visitors: p.visitors.size, totalViews: p.totalViews }))
+      .sort((a, b) => b.visitors - a.visitors).slice(0, 7);
   }, [filteredViews]);
 
   const referrersData = useMemo(() => {
@@ -279,30 +329,177 @@ export default function AnalyticsManager({ isPro = false }) {
     return Object.values(countries).sort((a, b) => b.visitors - a.visitors).slice(0, 5);
   }, [uniqueSessionsMap]);
 
+  // --- NEW FEATURES COMPUTATIONS ---
+
+  const activeNow = useMemo(() => {
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60000);
+    const activeSessions = new Set();
+    pageViews.forEach(v => {
+      if (new Date(v.created_at) > fiveMinsAgo) activeSessions.add(v.session_id);
+    });
+    events.forEach(e => {
+      if (new Date(e.created_at) > fiveMinsAgo) activeSessions.add(e.session_id);
+    });
+    return activeSessions.size;
+  }, [pageViews, events]);
+
+  const liveActivity = useMemo(() => {
+    const combined = [
+      ...pageViews.map(v => ({ type: 'view', ...v })),
+      ...events.map(e => ({ type: 'event', ...e }))
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 50);
+    return combined;
+  }, [pageViews, events]);
+
+  const filteredEvents = useMemo(() => {
+    return events.filter(e => new Date(e.created_at) >= cutoffDate);
+  }, [events, cutoffDate]);
+
+  const conversionData = useMemo(() => {
+    const totalVisitors = metrics.visitors || 1;
+    let ctaClicks = 0;
+    
+    filteredEvents.forEach(e => {
+      if (e.event_name === 'cta_click') ctaClicks++;
+    });
+
+    const ctaRate = (ctaClicks / totalVisitors) * 100;
+
+    return {
+      clicks: ctaClicks,
+      rate: ctaRate.toFixed(1)
+    };
+  }, [filteredEvents, metrics.visitors]);
+
+  const scrollDepthData = useMemo(() => {
+    const depths = { 25: 0, 50: 0, 75: 0, 100: 0 };
+    filteredEvents.forEach(e => {
+      if (e.event_name === 'scroll_depth' && e.event_data?.depth) {
+        depths[e.event_data.depth]++;
+      }
+    });
+    return [
+      { name: '25%', value: depths[25] },
+      { name: '50%', value: depths[50] },
+      { name: '75%', value: depths[75] },
+      { name: '100%', value: depths[100] }
+    ];
+  }, [filteredEvents]);
+
+  const selectedSessionTimeline = useMemo(() => {
+    if (!selectedSessionId) return null;
+    const sViews = pageViews.filter(v => v.session_id === selectedSessionId).map(v => ({ type: 'view', ...v }));
+    const sEvents = events.filter(e => e.session_id === selectedSessionId).map(e => ({ type: 'event', ...e }));
+    return [...sViews, ...sEvents].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  }, [selectedSessionId, pageViews, events]);
+
+  const selectedSessionInfo = useMemo(() => {
+    if (!selectedSessionTimeline || selectedSessionTimeline.length === 0) return null;
+    
+    // Fallback to searching the timeline since 'analytics_events' don't store user_agent/country/referrer
+    const firstEvent = selectedSessionTimeline[0];
+    const countryData = selectedSessionTimeline.find(e => e.country)?.country;
+    const userAgentData = selectedSessionTimeline.find(e => e.user_agent)?.user_agent;
+    const referrerData = selectedSessionTimeline.find(e => e.referrer)?.referrer;
+
+    return {
+      os: parseOS(userAgentData || ''),
+      device: parseDevice(userAgentData || ''),
+      referrer: parseReferrer(referrerData || ''),
+      country: countryData || 'Onbekend (geen IP tracking)',
+      startTime: firstEvent.created_at,
+      totalInteractions: selectedSessionTimeline.length
+    };
+  }, [selectedSessionTimeline]);
+
+  const advancedAnalytics = useMemo(() => {
+    // 1. Average Session Duration
+    let totalDurationMs = 0;
+    let validSessions = 0;
+    
+    // Group all by session
+    const sessions = {};
+    [...filteredViews, ...filteredEvents].forEach(item => {
+      if (!sessions[item.session_id]) sessions[item.session_id] = { start: item.created_at, end: item.created_at, hasCatalog: false, hasDetail: false, hasContact: false };
+      
+      const t = new Date(item.created_at).getTime();
+      const s = sessions[item.session_id];
+      if (t < new Date(s.start).getTime()) s.start = item.created_at;
+      if (t > new Date(s.end).getTime()) s.end = item.created_at;
+      
+      if (item.page_url && (item.page_url.includes('/catalogus') || item.page_url.includes('/topstukken'))) s.hasCatalog = true;
+      if (item.page_url && item.page_url.includes('/collectie/')) s.hasDetail = true;
+      if (item.event_name === 'scroll_depth' && item.event_data?.depth >= 75) s.hasDetail = true;
+      if (item.event_name === 'cta_click') s.hasContact = true;
+    });
+
+    Object.values(sessions).forEach(s => {
+      const dur = new Date(s.end).getTime() - new Date(s.start).getTime();
+      if (dur > 0 && dur < 3600000) { // Max 1 uur meerekenen voor gemiddelde
+        totalDurationMs += dur;
+        validSessions++;
+      }
+    });
+
+    const avgSeconds = validSessions > 0 ? Math.round(totalDurationMs / validSessions / 1000) : 0;
+    const avgMinutes = Math.floor(avgSeconds / 60);
+    const avgRemSeconds = avgSeconds % 60;
+    const avgDurationStr = avgMinutes > 0 ? `${avgMinutes}m ${avgRemSeconds}s` : `${avgRemSeconds}s`;
+
+    // 2. User Journey Funnel
+    let step1 = 0, step2 = 0, step3 = 0, step4 = 0;
+    Object.values(sessions).forEach(s => {
+      step1++;
+      if (s.hasCatalog || s.hasDetail || s.hasContact) step2++;
+      if (s.hasDetail || s.hasContact) step3++;
+      if (s.hasContact) step4++;
+    });
+
+    // 3. UTM Campaigns
+    const campaignsMap = {};
+    filteredEvents.forEach(e => {
+      if (e.event_name === 'utm_visit') {
+        const cId = `${e.event_data.source}-${e.event_data.campaign}`;
+        if (!campaignsMap[cId]) campaignsMap[cId] = { source: e.event_data.source, campaign: e.event_data.campaign, medium: e.event_data.medium, sessions: new Set(), conversions: 0 };
+        campaignsMap[cId].sessions.add(e.session_id);
+      }
+    });
+    
+    Object.values(campaignsMap).forEach(camp => {
+      camp.sessions.forEach(sid => {
+        if (sessions[sid]?.hasContact) camp.conversions++;
+      });
+      camp.visitors = camp.sessions.size;
+    });
+
+    const campaigns = Object.values(campaignsMap).sort((a, b) => b.visitors - a.visitors);
+
+    return {
+      avgDurationStr,
+      funnel: [
+        { name: 'Bezocht website', count: step1 },
+        { name: 'Keek in catalogus', count: step2 },
+        { name: 'Toonde diepe interesse', count: step3 },
+        { name: 'Nam contact op', count: step4 }
+      ],
+      campaigns
+    };
+  }, [filteredViews, filteredEvents]);
+
   if (loading) return <div style={{ color: '#111', padding: '2rem' }}>Laden...</div>;
 
   return (
     <div style={{ backgroundColor: '#fafafa', minHeight: '100vh', padding: '2rem', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       
-      {/* Top Filter & Metrics */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '1px', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden' }}>
-          <div style={{ backgroundColor: '#fff', padding: '16px 24px', minWidth: '150px' }}>
-            <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Bezoekers</div>
-            <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.visitors}</div>
-          </div>
-          <div style={{ backgroundColor: '#fff', padding: '16px 24px', minWidth: '150px' }}>
-            <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Weergaven</div>
-            <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
-          </div>
-          <div style={{ backgroundColor: '#fff', padding: '16px 24px', minWidth: '150px' }}>
-            <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Pagina's per bezoeker</div>
-            <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pagesPerSession}</div>
-          </div>
+      {/* Top Header & Time Range Selector (Always Visible) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: '#111', letterSpacing: '-0.02em' }}>Analytics Command Center</h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#666' }}>Inzichten, conversies en bezoekersgedrag.</p>
         </div>
-
+        
         {/* Time Range Selector */}
-        <div style={{ display: 'flex', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '6px', padding: '4px', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '6px', padding: '4px', overflowX: 'auto', transition: 'all 0.3s ease' }}>
           {[
             { id: '24u', label: '24u' },
             { id: '7d', label: '7d' },
@@ -311,7 +508,7 @@ export default function AnalyticsManager({ isPro = false }) {
             { id: '12m', label: '1 Jaar', isProFeature: true },
             { id: 'YTD', label: 'Dit Jaar', isProFeature: true },
             { id: 'All', label: 'Alles', isProFeature: true }
-          ].map(range => (
+          ].filter((_, idx) => showAllTimeRanges || idx < 3).map((range, idx) => (
             <button
               key={range.id}
               onClick={() => {
@@ -322,87 +519,347 @@ export default function AnalyticsManager({ isPro = false }) {
                 }
               }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
+                display: 'flex', alignItems: 'center', gap: '4px',
                 background: timeRange === range.id ? '#fff' : 'transparent',
                 color: timeRange === range.id ? '#111' : (range.isProFeature && !isPro ? '#999' : '#666'),
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '4px',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
+                border: 'none', padding: '6px 12px', borderRadius: '4px',
+                fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s',
                 boxShadow: timeRange === range.id ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                animation: idx >= 3 ? 'fadeIn 0.3s ease-out' : 'none'
               }}
             >
               {range.label}
               {range.isProFeature && !isPro && <Lock size={12} />}
             </button>
           ))}
+
+          <button
+            onClick={() => setShowAllTimeRanges(!showAllTimeRanges)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+              background: 'transparent',
+              color: '#666',
+              border: 'none', padding: '6px 8px', borderRadius: '4px',
+              cursor: 'pointer', transition: 'all 0.2s',
+              marginLeft: '4px'
+            }}
+            title={showAllTimeRanges ? "Minder tonen" : "Meer opties tonen"}
+          >
+            <div style={{ transform: showAllTimeRanges ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', display: 'flex' }}>
+              <ArrowRight size={14} />
+            </div>
+          </button>
+          
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateX(-10px); }
+              to { opacity: 1; transform: translateX(0); }
+            }
+          `}</style>
         </div>
       </div>
 
-      {/* Chart */}
-      <div style={{ border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px 0', marginBottom: '2rem', backgroundColor: '#fff' }}>
-        <div style={{ height: '300px', width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorBlue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0070F3" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#0070F3" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <XAxis 
-                dataKey="date" 
-                axisLine={{ stroke: '#eaeaea' }}
-                tickLine={false}
-                tick={{ fill: '#666', fontSize: 12 }}
-                dy={10}
-              />
-              <YAxis 
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#666', fontSize: 12 }}
-                dx={-10}
-                allowDecimals={false}
-              />
-              <RechartsTooltip 
-                contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                itemStyle={{ color: '#111', fontSize: '14px', fontWeight: 500 }}
-                labelStyle={{ color: '#666', fontSize: '12px', marginBottom: '4px' }}
-                cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }}
-              />
-              <Area 
-                type="linear" 
-                dataKey="Bezoekers" 
-                stroke="#0070F3" 
-                strokeWidth={2}
-                fillOpacity={1} 
-                fill="url(#colorBlue)" 
-                activeDot={{ r: 4, fill: '#0070F3', stroke: '#fff', strokeWidth: 2 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* TAB 1: OVERVIEW */}
+      {activeTab === 'overview' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          {/* Top Metrics */}
+          <div style={{ display: 'flex', gap: '1px', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
+              <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Bezoekers</div>
+              <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.visitors}</div>
+            </div>
+            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
+              <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Weergaven</div>
+              <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
+            </div>
+            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
+              <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>Gem. Sessieduur <Timer size={14} /></div>
+              <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{advancedAnalytics.avgDurationStr}</div>
+            </div>
+            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1, position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>
+                <div style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                Nu Online
+                <style>{`
+                  @keyframes pulse {
+                    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+                    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+                  }
+                `}</style>
+              </div>
+              <div style={{ color: '#10B981', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{activeNow}</div>
+            </div>
+          </div>
 
-      {/* Lists Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
-        <VercelList title="Pagina's" data={pagesData} valueKey="visitors" labelKey="path" totalValue={metrics.pageViews} />
-        <VercelList title="Verkeersbronnen" data={referrersData} valueKey="visitors" labelKey="source" totalValue={metrics.visitors} />
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-          <VercelList title="Landen" data={countriesData} valueKey="visitors" labelKey="country" totalValue={metrics.visitors} asPercentage />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Chart */}
+            <div style={{ border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px 0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '0 24px', marginBottom: '16px', fontSize: '13px', color: '#111', fontWeight: 600, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Eye size={16} /> Bezoekers over tijd
+              </div>
+              <div style={{ height: '300px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorBlue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0070F3" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#0070F3" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="date" axisLine={{ stroke: '#eaeaea' }} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dx={-10} allowDecimals={false} />
+                    <RechartsTooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} itemStyle={{ color: '#111', fontSize: '14px', fontWeight: 500 }} labelStyle={{ color: '#666', fontSize: '12px', marginBottom: '4px' }} cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    <Area type="linear" dataKey="Bezoekers" stroke="#0070F3" strokeWidth={2} fillOpacity={1} fill="url(#colorBlue)" activeDot={{ r: 4, fill: '#0070F3', stroke: '#fff', strokeWidth: 2 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Live Activity Ticker */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '400px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 24px', borderBottom: '1px solid #eaeaea', fontSize: '13px', color: '#111', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                <Activity size={16} /> Live Activity Ticker
+              </div>
+              <div style={{ overflowY: 'auto', flexGrow: 1, padding: '0' }}>
+                {liveActivity.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#999', fontSize: '13px' }}>Geen recente activiteit</div>
+                ) : (
+                  liveActivity.map((act, idx) => (
+                    <div key={idx} onClick={() => setSelectedSessionId(act.session_id)} style={{ display: 'flex', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #fafafa', alignItems: 'flex-start', cursor: 'pointer', transition: 'background-color 0.2s', backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                      <div style={{ color: '#999', marginTop: '2px' }}>
+                        {act.type === 'view' ? <Eye size={14} /> : act.event_name === 'cta_click' ? <MousePointerClick size={14} color="#0070F3" /> : act.event_name === 'scroll_depth' ? <ArrowDown size={14} /> : act.event_name === 'rage_click' ? <Flame size={14} color="#ef4444" /> : act.event_name === 'utm_visit' ? <Link size={14} color="#f59e0b" /> : <Globe size={14} />}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', color: '#111', marginBottom: '4px' }}>
+                          {act.type === 'view' ? (<>Bezoeker bekeek <strong>{act.page_url === '/' ? 'Home' : act.page_url}</strong></>) : act.event_name === 'cta_click' ? (<>Bezoeker klikte op <strong>{act.event_data?.button || 'Knop'}</strong></>) : act.event_name === 'scroll_depth' ? (<>Bezoeker scrolde naar <strong>{act.event_data?.depth}%</strong> op {act.page_url}</>) : act.event_name === 'rage_click' ? (<span style={{ color: '#ef4444' }}>Bezoeker raakte gefrustreerd: <strong>klikte razendsnel op "{act.event_data?.target || 'iets'}"</strong></span>) : act.event_name === 'utm_visit' ? (<span style={{ color: '#d97706' }}>Kwam binnen via campagne <strong>{act.event_data?.campaign} ({act.event_data?.source})</strong></span>) : (<>Bezoeker deed actie: <strong>{act.event_name}</strong></>)}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#999' }}>{new Date(act.created_at).toLocaleTimeString('nl-NL')} • {act.type === 'view' ? parseDevice(act.user_agent) : 'Interactie'}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <VercelList title="Apparaten" data={devicesData} valueKey="visitors" labelKey="device" totalValue={metrics.visitors} asPercentage />
-          <VercelList title="OS" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} asPercentage />
+      )}
+
+      {/* TAB 2: ACQUISITION & CAMPAIGNS */}
+      {activeTab === 'acquisition' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
+            {/* Marketing Campaigns (UTM) */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div style={{ fontSize: '13px', color: '#111', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Link size={16} /> Marketing Campagnes
+                </div>
+              </div>
+              
+              {advancedAnalytics.campaigns.length === 0 ? (
+                <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center', color: '#666' }}>
+                  <Link size={32} color="#eaeaea" style={{ marginBottom: '12px' }} />
+                  <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Nog geen campagnes gemeten</div>
+                  <div style={{ fontSize: '12px' }}>Deel links met <code style={{ backgroundColor: '#fafafa', padding: '2px 4px', borderRadius: '4px' }}>?utm_source=facebook</code> eraan vastgeplakt om hier resultaten te zien.</div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 12px 8px', fontSize: '11px', color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>
+                    <span style={{ flex: 2 }}>Campagne / Bron</span>
+                    <span style={{ flex: 1, textAlign: 'center' }}>Sessies</span>
+                    <span style={{ flex: 1, textAlign: 'right' }}>Conversies</span>
+                  </div>
+                  {advancedAnalytics.campaigns.map((camp, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fafafa', border: '1px solid #eaeaea', borderRadius: '6px' }}>
+                      <div style={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#111' }}>{camp.campaign}</span>
+                        <span style={{ fontSize: '11px', color: '#666' }}>Bron: {camp.source}</span>
+                      </div>
+                      <div style={{ flex: 1, textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#111' }}>{camp.visitors}</div>
+                      <div style={{ flex: 1, textAlign: 'right', fontSize: '14px', fontWeight: 600, color: camp.conversions > 0 ? '#10B981' : '#666' }}>{camp.conversions}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <VercelList title="Verkeersbronnen" data={referrersData} valueKey="visitors" labelKey="source" totalValue={metrics.visitors} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            <VercelList title="Landen" data={countriesData} valueKey="visitors" labelKey="country" totalValue={metrics.visitors} asPercentage />
+            <VercelList title="Apparaten" data={devicesData} valueKey="visitors" labelKey="device" totalValue={metrics.visitors} asPercentage />
+            <VercelList title="OS" data={osData} valueKey="visitors" labelKey="os" totalValue={metrics.visitors} asPercentage />
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* TAB 3: BEHAVIOR & ENGAGEMENT */}
+      {activeTab === 'behavior' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
+            {/* User Journey Funnel */}
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div style={{ fontSize: '13px', color: '#111', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Filter size={16} /> User Journey (Sales Funnel)
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
+                {(() => {
+                  const maxCount = Math.max(advancedAnalytics.funnel[0].count, 1);
+                  return advancedAnalytics.funnel.map((step, index) => {
+                    const percentTotal = Math.round((step.count / maxCount) * 100);
+                    const prevCount = index === 0 ? maxCount : advancedAnalytics.funnel[index-1].count;
+                    const dropOff = prevCount > 0 ? 100 - Math.round((step.count / prevCount) * 100) : 0;
+
+                    return (
+                      <div key={index} style={{ position: 'relative' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#fafafa', border: '1px solid #eaeaea', borderRadius: '6px', zIndex: 2, position: 'relative' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>{index + 1}</div>
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#111' }}>{step.name}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            {index > 0 && dropOff > 0 && (
+                              <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 600, padding: '4px 8px', backgroundColor: '#fee2e2', borderRadius: '12px' }}>-{dropOff}% drop-off</span>
+                            )}
+                            <span style={{ fontSize: '16px', fontWeight: 700, color: '#111', minWidth: '40px', textAlign: 'right' }}>{step.count}</span>
+                          </div>
+                        </div>
+                        {index < advancedAnalytics.funnel.length - 1 && (
+                          <div style={{ width: '2px', height: '16px', backgroundColor: '#eaeaea', margin: '0 28px' }}></div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Conversions & Scroll Depth */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1px', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
+                  <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>CTA Kliks (Aanvragen)</div>
+                  <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{conversionData.clicks}</div>
+                </div>
+                <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
+                  <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Conversieratio</div>
+                  <div style={{ color: '#0070F3', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{conversionData.rate}%</div>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ fontSize: '13px', color: '#666', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Scroll-diepte (Betrokkenheid)</div>
+                  <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>Hoe ver lezen je bezoekers naar beneden?</div>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
+                  {(() => {
+                    const maxScrollValue = Math.max(...scrollDepthData.map(d => d.value), 1);
+                    return scrollDepthData.map((item) => {
+                      const percent = (item.value / maxScrollValue) * 100;
+                      let title = '', subtitle = '';
+                      if (item.name === '25%') { title = 'Tot 25% gescrold'; subtitle = '(Keken vluchtig)'; }
+                      if (item.name === '50%') { title = 'Tot 50% gescrold'; subtitle = '(Lazen ongeveer de helft)'; }
+                      if (item.name === '75%') { title = 'Tot 75% gescrold'; subtitle = '(Lazen bijna alles)'; }
+                      if (item.name === '100%') { title = 'Tot 100% gescrold'; subtitle = '(Lazen tot het einde)'; }
+                      
+                      return (
+                        <div key={item.name} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '14px 16px', fontSize: '13px', color: '#111', zIndex: 1, borderRadius: '6px', border: '1px solid #eaeaea', backgroundColor: '#fff', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${percent}%`, backgroundColor: '#f5f5f5', borderRight: '2px solid #ddd', zIndex: -1 }}></div>
+                          <span style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ color: '#111', fontWeight: 600 }}>{title}</span> 
+                            <span style={{ color: '#666', fontStyle: 'italic' }}>{subtitle}</span>
+                          </span>
+                          <span style={{ fontWeight: 600 }}>{item.value} <span style={{ color: '#999', fontWeight: 400, marginLeft: '4px' }}>x bereikt</span></span>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <VercelList title="Meest Bekeken Pagina's" data={pagesData} valueKey="visitors" labelKey="path" totalValue={metrics.pageViews} />
+          
+        </div>
+      )}
+
+      {/* Session Details Modal */}
+      {selectedSessionId && selectedSessionTimeline && selectedSessionInfo && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setSelectedSessionId(null)}>
+          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '100%', maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #eaeaea', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#111' }}>Bezoeker Detail-analyse</h3>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px', fontFamily: 'monospace' }}>Sessie ID: {selectedSessionId.substring(0, 12)}...</div>
+              </div>
+              <button onClick={() => setSelectedSessionId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}><X size={20} /></button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', padding: '20px 24px', backgroundColor: '#fafafa', borderBottom: '1px solid #eaeaea' }}>
+              <div>
+                <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#999', fontWeight: 600, marginBottom: '6px' }}>Apparaat & OS</div>
+                <div style={{ fontSize: '13px', color: '#111', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {selectedSessionInfo.device === 'Desktop' ? <Monitor size={14} color="#666" /> : <Smartphone size={14} color="#666" />}
+                  {selectedSessionInfo.device} ({selectedSessionInfo.os})
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#999', fontWeight: 600, marginBottom: '6px' }}>Oorsprong</div>
+                <div style={{ fontSize: '13px', color: '#111', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Globe size={14} color="#666" /> {selectedSessionInfo.referrer}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#999', fontWeight: 600, marginBottom: '6px' }}>Locatie</div>
+                <div style={{ fontSize: '13px', color: '#111', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={14} color="#666" /> {selectedSessionInfo.country}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ flexGrow: 1, overflowY: 'auto', padding: '24px' }}>
+              <div style={{ fontSize: '12px', textTransform: 'uppercase', color: '#111', fontWeight: 700, marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <Clock size={14} /> Chronologische Tijdlijn ({selectedSessionInfo.totalInteractions} acties)
+              </div>
+              <div style={{ borderLeft: '2px solid #eaeaea', marginLeft: '6px', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {selectedSessionTimeline.map((act, i) => (
+                  <div key={i} style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: '-27px', top: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: act.type === 'event' ? '#0070F3' : '#ccc', border: '2px solid #fff' }}></div>
+                    <div style={{ fontSize: '11px', color: '#999', marginBottom: '2px' }}>{new Date(act.created_at).toLocaleTimeString('nl-NL')}</div>
+                    <div style={{ fontSize: '13px', color: '#111', fontWeight: 500 }}>
+                      {act.type === 'view' ? (
+                        <>Bezocht pagina <span style={{ color: '#0070F3' }}>{act.page_url}</span></>
+                      ) : act.event_name === 'cta_click' ? (
+                        <>Klikte op <span style={{ fontWeight: 700 }}>{act.event_data?.button || 'Knop'}</span></>
+                      ) : act.event_name === 'scroll_depth' ? (
+                        <>Scrolde naar <span style={{ fontWeight: 700 }}>{act.event_data?.depth}%</span> op {act.page_url}</>
+                      ) : act.event_name === 'utm_visit' ? (
+                        <>Kwam binnen via campagne <span style={{ fontWeight: 700, color: '#d97706' }}>{act.event_data?.campaign} ({act.event_data?.source})</span></>
+                      ) : act.event_name === 'rage_click' ? (
+                        <span style={{ color: '#ef4444' }}>Bezoeker gefrustreerd: klikte razendsnel op <strong>"{act.event_data?.target || 'iets'}"</strong></span>
+                      ) : (
+                        <>Actie: {act.event_name}</>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <UpgradeModal 
         isOpen={isUpgradeModalOpen}

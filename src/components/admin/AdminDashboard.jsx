@@ -13,7 +13,12 @@ import {
   ShieldCheck,
   Users,
   X,
-  BarChart2
+  BarChart2,
+  Activity,
+  Globe,
+  MousePointer2,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import ItemManager from './ItemManager';
 import InquiriesManager from './InquiriesManager';
@@ -32,7 +37,7 @@ import { supabase } from '../../utils/supabaseClient';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
-  'dashboard', 'analytics', 'items', 'certificates', 'hero', 'provenance', 'faq',
+  'dashboard', 'analytics-overview', 'analytics-acquisition', 'analytics-behavior', 'items', 'certificates', 'hero', 'provenance', 'faq',
   'inquiries', 'customers', 'settings', 'tokens'
 ]);
 
@@ -72,6 +77,11 @@ export default function AdminDashboard({
   const [toast, setToast] = useState(null);
   const [createItemRequest, setCreateItemRequest] = useState(0);
   const [metricsData, setMetricsData] = useState(null);
+  const [expandedGroups, setExpandedGroups] = useState(() => {
+    const initial = {};
+    if (getTabFromHash().startsWith('analytics-')) initial.analytics = true;
+    return initial;
+  });
   const toastTimer = useRef(null);
 
   useEffect(() => {
@@ -136,13 +146,14 @@ export default function AdminDashboard({
   const currentStorage = metricsData?.usages?.find(m => m.metric === 'storage_size')?.usage || 0;
   const currentDb = metricsData?.usages?.find(m => m.metric === 'db_size')?.usage || 0;
 
-  const isPro = metricsData?.plan === 'pro';
+  const isPremium = metricsData?.plan === 'premium';
+  const isPro = metricsData?.plan === 'pro' || isPremium;
   
-  const MAX_CACHED_EGRESS_BYTES = isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024;
-  const MAX_EGRESS = isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024;
-  const MAX_STORAGE = isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024;
-  const MAX_DB = isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024;
-  const MAX_ITEMS = isPro ? 150 : 50;
+  const MAX_CACHED_EGRESS_BYTES = isPremium ? 2000 * 1024 * 1024 * 1024 : (isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024);
+  const MAX_EGRESS = isPremium ? 1000 * 1024 * 1024 * 1024 : (isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024);
+  const MAX_STORAGE = isPremium ? 500 * 1024 * 1024 * 1024 : (isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024);
+  const MAX_DB = isPremium ? 20 * 1024 * 1024 * 1024 : (isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024);
+  const MAX_ITEMS = isPremium ? 500 : (isPro ? 150 : 50);
 
   const hasExceededLimits = currentCachedEgress >= MAX_CACHED_EGRESS_BYTES || 
                             currentEgress >= MAX_EGRESS || 
@@ -152,29 +163,40 @@ export default function AdminDashboard({
 
   const navItems = [
     { id: 'dashboard', label: 'Overzicht', icon: LayoutDashboard },
-    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
+    { 
+      id: 'analytics', 
+      label: 'Analytics', 
+      icon: BarChart2,
+      subItems: [
+        { id: 'analytics-overview', label: 'Live Overzicht' },
+        { id: 'analytics-acquisition', label: 'Verkeer & Marketing' },
+        { id: 'analytics-behavior', label: 'Kliks & Gedrag' }
+      ]
+    },
     { id: 'items', label: 'Collectie', icon: BookOpen, count: activeItems.length },
     { id: 'certificates', label: 'Certificaten', icon: Award },
     { id: 'hero', label: 'Hero', icon: ImageIcon },
     { id: 'provenance', label: 'Herkomst', icon: ShieldCheck },
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
-    { id: 'inquiries', label: 'Aanvragen', icon: Mail, count: newInquiriesCount || undefined },
+    { id: 'inquiries', label: 'Berichten', icon: Mail, count: newInquiriesCount || undefined },
     { id: 'customers', label: 'Klanten', icon: Users },
     { id: 'tokens', label: 'Tokens', icon: Award, alert: hasExceededLimits },
-    { id: 'settings', label: 'Instellingen', icon: Settings }
+    { id: 'settings', label: 'Account', icon: Settings }
   ];
   const tabTitles = {
     dashboard: 'Overzicht',
-    analytics: 'Analytics',
+    'analytics-overview': 'Live Overzicht',
+    'analytics-acquisition': 'Verkeer & Marketing',
+    'analytics-behavior': 'Kliks & Gedrag',
     items: 'Collectie',
     certificates: 'Certificaten',
     hero: 'Hero-afbeeldingen',
     provenance: 'Herkomstpagina',
     faq: 'Veelgestelde vragen',
-    inquiries: 'Aanvragen',
+    inquiries: 'Berichten',
     customers: 'Klanten',
     tokens: 'Hosting & Tokens',
-    settings: 'Instellingen'
+    settings: 'Account'
   };
 
   return (
@@ -201,22 +223,56 @@ export default function AdminDashboard({
 
         <nav className="admin-nav">
           <p className="admin-nav__label">Werkruimte</p>
-          {navItems.map(({ id, label, icon: Icon, count, alert }) => (
-            <button
-              type="button"
-              key={id}
-              className={`admin-nav__item flex items-center justify-between ${activeTab === id ? 'is-active' : ''}`}
-              aria-current={activeTab === id ? 'page' : undefined}
-              onClick={() => navigateTo(id)}
-            >
-              <div className="flex items-center gap-3">
-                <Icon aria-hidden="true" />
-                <span>{label}</span>
-              </div>
-              {count !== undefined && <span className="admin-nav__count ml-auto">{count}</span>}
-              {alert && <span className="w-2 h-2 rounded-full bg-red-500 ml-auto shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
-            </button>
-          ))}
+          {navItems.map(({ id, label, icon: Icon, count, alert, subItems }) => {
+            const isExpanded = !!expandedGroups[id];
+            return (
+            <React.Fragment key={id}>
+              <button
+                type="button"
+                className={`admin-nav__item flex items-center justify-between ${activeTab === id ? 'is-active' : ''}`}
+                aria-current={activeTab === id ? 'page' : undefined}
+                style={{ fontWeight: isExpanded ? '600' : undefined, color: isExpanded ? 'var(--admin-text)' : undefined }}
+                onClick={() => {
+                  if (subItems) {
+                    setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
+                    if (!activeTab.startsWith(id)) {
+                      navigateTo(subItems[0].id);
+                    }
+                  } else {
+                    navigateTo(id);
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon aria-hidden="true" />
+                  <span>{label}</span>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  {count !== undefined && <span className="admin-nav__count">{count}</span>}
+                  {alert && <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
+                  {subItems && (
+                    isExpanded ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />
+                  )}
+                </div>
+              </button>
+              {isExpanded && (
+                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '12px', gap: '4px', marginTop: '-4px', marginBottom: '8px' }}>
+                  {subItems.map(sub => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      className={`admin-nav__item ${activeTab === sub.id ? 'is-active' : ''}`}
+                      onClick={() => navigateTo(sub.id)}
+                    >
+                      <div className="w-[18px]"></div>
+                      <span style={{ fontSize: '13px' }}>{sub.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </React.Fragment>
+            );
+          })}
         </nav>
 
         <div className="admin-sidebar__footer">
@@ -239,11 +295,15 @@ export default function AdminDashboard({
           <div className="admin-topbar__title flex items-center gap-2">
             <span>Atelier Rembrandt</span>
             <strong>{tabTitles[activeTab]}</strong>
-            {isPro && (
+            {isPremium ? (
+              <span className="bg-gradient-to-r from-gray-900 to-black text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">
+                Premium
+              </span>
+            ) : isPro ? (
               <span className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">
                 Pro
               </span>
-            )}
+            ) : null}
           </div>
           {newInquiriesCount > 0 && activeTab !== 'inquiries' && (
             <button type="button" className="admin-inbox-shortcut" onClick={() => navigateTo('inquiries')}>
@@ -263,7 +323,7 @@ export default function AdminDashboard({
               onOpenLiveSite={handleClose}
             />
           )}
-          {activeTab === 'analytics' && <AnalyticsManager isPro={isPro} />}
+          {activeTab.startsWith('analytics-') && <AnalyticsManager isPro={isPro} activeTab={activeTab.replace('analytics-', '')} />}
           {activeTab === 'items' && (
             <ItemManager
               items={activeItems}
