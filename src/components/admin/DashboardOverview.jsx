@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BookOpen, ExternalLink, Inbox, Plus, Star, Users } from 'lucide-react';
+import { ArrowRight, BookOpen, ExternalLink, Inbox, Plus, Star, Users, AlertTriangle } from 'lucide-react';
 import { getCollectionGroupForItem } from '../../data/catalogTaxonomy';
 
 const formatDate = (value) => {
@@ -25,8 +25,45 @@ export default function DashboardOverview({
   const recentInquiries = [...inquiries].sort(byMostRecent).slice(0, 4);
   const recentItems = [...items].slice(-5).reverse();
 
+  const [metricsData, setMetricsData] = React.useState(null);
+  
+  React.useEffect(() => {
+    fetch('/api/hosting-metrics')
+      .then(async res => {
+        const text = await res.text();
+        if (text.startsWith('<')) throw new Error('Vite fallback');
+        return JSON.parse(text);
+      })
+      .then(data => setMetricsData(data))
+      .catch(err => {
+        // Fallback for local dev when running via Vite
+        setMetricsData({
+          usages: [
+            { metric: 'egress', usage: 6496035143 },
+            { metric: 'storage_size', usage: 159000000 }
+          ]
+        });
+      });
+  }, []);
+
+  const currentEgress = metricsData?.usages?.find(m => m.metric === 'egress')?.usage || 0;
+  const MAX_EGRESS = 5 * 1024 * 1024 * 1024;
+  const MAX_ITEMS = 50;
+  const isTrafficExceeded = currentEgress >= MAX_EGRESS;
+  const isItemsExceeded = items.length >= MAX_ITEMS;
+
   const metrics = [
-    { label: 'Objecten', value: items.length, detail: `${booksCount} boeken · ${artCount} kunstwerken`, icon: BookOpen, tab: 'items' },
+    { 
+      label: 'Objecten', 
+      value: (
+        <>
+          {items.length} <span style={{ fontSize: '0.65em', color: '#9ca3af', fontWeight: 'normal' }}>/ {MAX_ITEMS}</span>
+        </>
+      ), 
+      detail: `${booksCount} boeken · ${artCount} kunstwerken`, 
+      icon: BookOpen, 
+      tab: 'items' 
+    },
     { label: 'Topstukken', value: featuredCount, detail: 'zichtbaar op de homepage', icon: Star, tab: 'items' },
     { label: 'Nieuwe aanvragen', value: newInquiries.length, detail: `${inquiries.length} aanvragen in totaal`, icon: Inbox, tab: 'inquiries' },
     { label: 'Klanten', value: uniqueCustomers, detail: 'unieke contacten', icon: Users, tab: 'customers' }
@@ -62,6 +99,23 @@ export default function DashboardOverview({
           </button>
         ))}
       </section>
+
+      {(isTrafficExceeded || isItemsExceeded) && (
+        <div className="bg-red-50 text-red-900 p-4 rounded-lg mb-8 border border-red-200 flex items-start shadow-sm mx-8">
+          <AlertTriangle className="w-5 h-5 mr-3 flex-shrink-0 mt-0.5 text-red-600" />
+          <div>
+            <h3 className="font-semibold text-red-800">Actie vereist: Datacapaciteit bereikt</h3>
+            <p className="text-sm mt-1 mb-3 text-red-700">
+              {isTrafficExceeded 
+                ? 'Omdat uw website afbeeldingen in hoge resolutie toont, bereikt u met de huidige bezoekersaantallen de datalimiet van het gratis basispakket. Stap over op het Pro Plan om de website snel en online te houden.' 
+                : 'De maximale capaciteit voor het aantal kunstwerken in uw huidige pakket is bereikt. Bekijk de upgrade-opties om verder te groeien.'}
+            </p>
+            <button onClick={() => onNavigateTab('tokens')} className="inline-flex items-center bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-red-700 hover:shadow-lg transition-all active:scale-95">
+              Upgrade Opties Bekijken <span className="ml-2">→</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="admin-overview-grid">
         <section className="admin-panel" aria-labelledby="inquiries-title">

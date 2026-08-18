@@ -27,11 +27,12 @@ import FaqManager from './FaqManager';
 import CertificateManager from './CertificateManager';
 import AdminTooltip from './AdminTooltip';
 import AnalyticsManager from './AnalyticsManager';
+import TokensManager from './TokensManager';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
   'dashboard', 'analytics', 'items', 'certificates', 'hero', 'provenance', 'faq',
-  'inquiries', 'customers', 'settings'
+  'inquiries', 'customers', 'settings', 'tokens'
 ]);
 
 const getTabFromHash = () => {
@@ -69,7 +70,28 @@ export default function AdminDashboard({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [createItemRequest, setCreateItemRequest] = useState(0);
+  const [metricsData, setMetricsData] = useState(null);
   const toastTimer = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/hosting-metrics')
+      .then(async res => {
+        const text = await res.text();
+        if (text.startsWith('<')) throw new Error('Vite fallback');
+        return JSON.parse(text);
+      })
+      .then(data => setMetricsData(data))
+      .catch(err => {
+        setMetricsData({
+          usages: [
+            { metric: 'cached_egress', usage: 6503673364, limit: 5368709120 },
+            { metric: 'egress', usage: 2099157893, limit: 5368709120 },
+            { metric: 'db_size', usage: 31138512, limit: 536870912 },
+            { metric: 'storage_size', usage: 170724966, limit: 1073741824 }
+          ]
+        });
+      });
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => setActiveTab(getTabFromHash());
@@ -99,6 +121,22 @@ export default function AdminDashboard({
   };
 
   const newInquiriesCount = activeInquiries.filter((item) => item?.status === 'Nieuw').length;
+  
+  const currentCachedEgress = metricsData?.usages?.find(m => m.metric === 'cached_egress')?.usage || 0;
+  const currentEgress = metricsData?.usages?.find(m => m.metric === 'egress')?.usage || 0;
+  const currentStorage = metricsData?.usages?.find(m => m.metric === 'storage_size')?.usage || 0;
+  const currentDb = metricsData?.usages?.find(m => m.metric === 'db_size')?.usage || 0;
+
+  const MAX_EGRESS = 5 * 1024 * 1024 * 1024;
+  const MAX_STORAGE = 1 * 1024 * 1024 * 1024;
+  const MAX_DB = 0.5 * 1024 * 1024 * 1024;
+
+  const hasExceededLimits = currentCachedEgress >= MAX_EGRESS || 
+                            currentEgress >= MAX_EGRESS || 
+                            currentStorage >= MAX_STORAGE || 
+                            currentDb >= MAX_DB || 
+                            activeItems.length >= 50;
+
   const navItems = [
     { id: 'dashboard', label: 'Overzicht', icon: LayoutDashboard },
     { id: 'analytics', label: 'Analytics', icon: BarChart2 },
@@ -109,6 +147,7 @@ export default function AdminDashboard({
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
     { id: 'inquiries', label: 'Aanvragen', icon: Mail, count: newInquiriesCount || undefined },
     { id: 'customers', label: 'Klanten', icon: Users },
+    { id: 'tokens', label: 'Tokens', icon: Award, alert: hasExceededLimits },
     { id: 'settings', label: 'Instellingen', icon: Settings }
   ];
   const tabTitles = {
@@ -121,6 +160,7 @@ export default function AdminDashboard({
     faq: 'Veelgestelde vragen',
     inquiries: 'Aanvragen',
     customers: 'Klanten',
+    tokens: 'Hosting & Tokens',
     settings: 'Instellingen'
   };
 
@@ -148,17 +188,20 @@ export default function AdminDashboard({
 
         <nav className="admin-nav">
           <p className="admin-nav__label">Werkruimte</p>
-          {navItems.map(({ id, label, icon: Icon, count }) => (
+          {navItems.map(({ id, label, icon: Icon, count, alert }) => (
             <button
               type="button"
               key={id}
-              className={`admin-nav__item ${activeTab === id ? 'is-active' : ''}`}
+              className={`admin-nav__item flex items-center justify-between ${activeTab === id ? 'is-active' : ''}`}
               aria-current={activeTab === id ? 'page' : undefined}
               onClick={() => navigateTo(id)}
             >
-              <Icon aria-hidden="true" />
-              <span>{label}</span>
-              {count !== undefined && <span className="admin-nav__count">{count}</span>}
+              <div className="flex items-center gap-3">
+                <Icon aria-hidden="true" />
+                <span>{label}</span>
+              </div>
+              {count !== undefined && <span className="admin-nav__count ml-auto">{count}</span>}
+              {alert && <span className="w-2 h-2 rounded-full bg-red-500 ml-auto shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
             </button>
           ))}
         </nav>
@@ -247,6 +290,7 @@ export default function AdminDashboard({
             <InquiriesManager inquiries={activeInquiries} onStatusChange={onUpdateInquiries} onShowToast={showToast} />
           )}
           {activeTab === 'customers' && <CustomersManager inquiries={activeInquiries} />}
+          {activeTab === 'tokens' && <TokensManager items={activeItems} />}
           {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
         </main>
       </div>
