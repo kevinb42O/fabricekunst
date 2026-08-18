@@ -127,15 +127,18 @@ export default function AdminDashboard({
   const currentStorage = metricsData?.usages?.find(m => m.metric === 'storage_size')?.usage || 0;
   const currentDb = metricsData?.usages?.find(m => m.metric === 'db_size')?.usage || 0;
 
-  const MAX_EGRESS = 5 * 1024 * 1024 * 1024;
-  const MAX_STORAGE = 1 * 1024 * 1024 * 1024;
-  const MAX_DB = 0.5 * 1024 * 1024 * 1024;
+  const isPro = metricsData?.plan === 'pro';
+  
+  const MAX_EGRESS = isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024;
+  const MAX_STORAGE = isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024;
+  const MAX_DB = isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024;
+  const MAX_ITEMS = isPro ? 150 : 50;
 
   const hasExceededLimits = currentCachedEgress >= MAX_EGRESS || 
                             currentEgress >= MAX_EGRESS || 
                             currentStorage >= MAX_STORAGE || 
                             currentDb >= MAX_DB || 
-                            activeItems.length >= 50;
+                            activeItems.length >= MAX_ITEMS;
 
   const navItems = [
     { id: 'dashboard', label: 'Overzicht', icon: LayoutDashboard },

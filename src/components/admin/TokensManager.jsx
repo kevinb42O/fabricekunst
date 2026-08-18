@@ -89,12 +89,14 @@ export default function TokensManager({ items = [] }) {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState('pro'); // 'pro' or 'token'
 
-  // Virtual Limits (Base Plan)
-  const MAX_ITEMS = 50;
-  const MAX_STORAGE_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB
-  const MAX_DB_BYTES = 0.5 * 1024 * 1024 * 1024; // 0.5 GB
-  const MAX_EGRESS_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
-  const MAX_CACHED_EGRESS_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
+  const isPro = metrics?.plan === 'pro';
+
+  // Dynamic Limits
+  const MAX_ITEMS = isPro ? 150 : 50;
+  const MAX_STORAGE_BYTES = isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024; // 100 GB vs 1 GB
+  const MAX_DB_BYTES = isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024; // 8 GB vs 0.5 GB
+  const MAX_EGRESS_BYTES = isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024; // 250 GB vs 5 GB
+  const MAX_CACHED_EGRESS_BYTES = isPro ? Infinity : 5 * 1024 * 1024 * 1024; // Infinity vs 5 GB
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -201,7 +203,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Collectie Grootte" 
           usageStr={currentItems} 
-          limitStr="50 obj" 
+          limitStr={isPro ? "150 obj" : "50 obj"} 
           percentage={itemsPercentage} 
           overLimit={isOverItems} 
           icon={LayoutGrid} 
@@ -210,7 +212,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Media Opslag" 
           usageStr={formatBytes(currentStorage)} 
-          limitStr="1 GB" 
+          limitStr={isPro ? "100 GB" : "1 GB"} 
           percentage={storagePercentage} 
           overLimit={isOverStorage} 
           icon={HardDrive} 
@@ -219,7 +221,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Database Grootte" 
           usageStr={formatBytes(currentDb)} 
-          limitStr="0.5 GB" 
+          limitStr={isPro ? "8 GB" : "0.5 GB"} 
           percentage={dbPercentage} 
           overLimit={isOverDb} 
           icon={HardDrive} 
@@ -228,7 +230,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Direct Dataverkeer" 
           usageStr={formatBytes(currentEgress)} 
-          limitStr="5 GB" 
+          limitStr={isPro ? "250 GB" : "5 GB"} 
           percentage={egressPercentage} 
           overLimit={isOverEgress} 
           icon={Activity} 
@@ -237,7 +239,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Gecachet Verkeer" 
           usageStr={formatBytes(currentCachedEgress)} 
-          limitStr="5 GB" 
+          limitStr={isPro ? "∞" : "5 GB"} 
           percentage={cachedEgressPercentage} 
           overLimit={isOverCachedEgress} 
           icon={Activity} 
