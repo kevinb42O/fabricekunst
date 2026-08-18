@@ -96,7 +96,7 @@ export default function TokensManager({ items = [] }) {
   const MAX_STORAGE_BYTES = isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024; // 100 GB vs 1 GB
   const MAX_DB_BYTES = isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024; // 8 GB vs 0.5 GB
   const MAX_EGRESS_BYTES = isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024; // 250 GB vs 5 GB
-  const MAX_CACHED_EGRESS_BYTES = isPro ? Infinity : 5 * 1024 * 1024 * 1024; // Infinity vs 5 GB
+  const MAX_CACHED_EGRESS_BYTES = isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024; // 500 GB vs 5 GB
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -118,8 +118,16 @@ export default function TokensManager({ items = [] }) {
     } catch (err) {
       console.warn("API failed (waarschijnlijk omdat je lokaal via Vite draait in plaats van Vercel). Terugvallen op test-data.", err);
       
+      let plan = 'basis';
+      try {
+        const { supabase } = await import('../../utils/supabaseClient');
+        const { data } = await supabase.from('admin_settings').select('value').eq('key', 'hosting_plan').single();
+        if (data) plan = data.value;
+      } catch (e) { }
+
       // Fallback test-data voor lokale ontwikkeling
       setMetrics({
+        plan,
         usages: [
           { metric: 'cached_egress', usage: 6503673364, limit: 5368709120, unit: 'bytes' },
           { metric: 'egress', usage: 2099157893, limit: 5368709120, unit: 'bytes' },
@@ -239,7 +247,7 @@ export default function TokensManager({ items = [] }) {
         <UsageCard 
           title="Gecachet Verkeer" 
           usageStr={formatBytes(currentCachedEgress)} 
-          limitStr={isPro ? "∞" : "5 GB"} 
+          limitStr={isPro ? "500 GB" : "5 GB"} 
           percentage={cachedEgressPercentage} 
           overLimit={isOverCachedEgress} 
           icon={Activity} 
@@ -277,9 +285,15 @@ export default function TokensManager({ items = [] }) {
               <li className="flex items-start text-sm text-gray-400"><X size={18} className="text-gray-300 mr-3 mt-0.5 flex-shrink-0" /> Geen Gegarandeerde Uptime</li>
             </ul>
 
-            <button disabled className="w-full py-3 px-4 bg-gray-50 text-gray-400 font-bold rounded-xl text-sm border border-gray-200 cursor-not-allowed">
-              Uw Huidige Plan
-            </button>
+            {!isPro ? (
+              <button disabled className="w-full py-3 px-4 bg-gray-50 text-gray-400 font-bold rounded-xl text-sm border border-gray-200 cursor-not-allowed">
+                Uw Huidige Plan
+              </button>
+            ) : (
+              <button disabled className="w-full py-3 px-4 bg-transparent text-gray-400 font-bold rounded-xl text-sm border border-transparent cursor-not-allowed">
+                Inactief
+              </button>
+            )}
           </div>
 
           {/* Pro Plan Card */}
@@ -308,12 +322,18 @@ export default function TokensManager({ items = [] }) {
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Gegarandeerde Uptime & Back-ups</li>
             </ul>
 
-            <button 
-              onClick={() => { setModalProduct('pro'); setIsUpgradeModalOpen(true); }}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg hover:shadow-xl transition-all active:scale-95"
-            >
-              Upgrade naar Pro
-            </button>
+            {isPro ? (
+              <button disabled className="w-full py-3 px-4 bg-blue-50 text-blue-400 font-bold rounded-xl text-sm border border-blue-100 cursor-not-allowed">
+                Uw Huidige Plan
+              </button>
+            ) : (
+              <button 
+                onClick={() => { setModalProduct('pro'); setIsUpgradeModalOpen(true); }}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-lg hover:shadow-xl transition-all active:scale-95"
+              >
+                Upgrade naar Pro
+              </button>
+            )}
           </div>
         </div>
       </div>

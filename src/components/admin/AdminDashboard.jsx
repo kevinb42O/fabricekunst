@@ -138,12 +138,13 @@ export default function AdminDashboard({
 
   const isPro = metricsData?.plan === 'pro';
   
+  const MAX_CACHED_EGRESS_BYTES = isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024;
   const MAX_EGRESS = isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024;
   const MAX_STORAGE = isPro ? 100 * 1024 * 1024 * 1024 : 1 * 1024 * 1024 * 1024;
   const MAX_DB = isPro ? 8 * 1024 * 1024 * 1024 : 0.5 * 1024 * 1024 * 1024;
   const MAX_ITEMS = isPro ? 150 : 50;
 
-  const hasExceededLimits = currentCachedEgress >= MAX_EGRESS || 
+  const hasExceededLimits = currentCachedEgress >= MAX_CACHED_EGRESS_BYTES || 
                             currentEgress >= MAX_EGRESS || 
                             currentStorage >= MAX_STORAGE || 
                             currentDb >= MAX_DB || 
