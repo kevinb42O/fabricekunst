@@ -103,7 +103,7 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
         return;
       }
       try {
-        const { data: pageData, fetchError: pageError } = await supabase
+        const { data: pageData, error: pageError } = await supabase
           .from('page_views')
           .select('*')
           .order('created_at', { ascending: true });
@@ -366,13 +366,25 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
   const liveActivity = useMemo(() => {
     const combined = [
       ...pageViews.map(v => ({ type: 'view', ...v })),
-      ...events.map(e => ({ type: 'event', ...e }))
+      ...events.map(e => {
+        let parsedData = e.event_data;
+        if (typeof parsedData === 'string') {
+          try { parsedData = JSON.parse(parsedData); } catch(err) {}
+        }
+        return { type: 'event', ...e, event_data: parsedData };
+      })
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 50);
     return combined;
   }, [pageViews, events]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter(e => new Date(e.created_at) >= cutoffDate);
+    return events.filter(e => new Date(e.created_at) >= cutoffDate).map(e => {
+      let parsedData = e.event_data;
+      if (typeof parsedData === 'string') {
+        try { parsedData = JSON.parse(parsedData); } catch(err) {}
+      }
+      return { ...e, event_data: parsedData };
+    });
   }, [events, cutoffDate]);
 
   const conversionData = useMemo(() => {

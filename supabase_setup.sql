@@ -334,3 +334,48 @@ ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public read push_subscriptions" ON public.push_subscriptions;
 DROP POLICY IF EXISTS "Allow write push_subscriptions" ON public.push_subscriptions;
 
+-- ========================================================
+-- Analytics Tables (Page Views & Events)
+-- ========================================================
+CREATE TABLE IF NOT EXISTS public.page_views (
+    id BIGSERIAL PRIMARY KEY,
+    page_url TEXT,
+    referrer TEXT,
+    user_agent TEXT,
+    session_id TEXT,
+    country TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anon insert page_views" ON public.page_views;
+CREATE POLICY "Anon insert page_views"
+  ON public.page_views FOR INSERT TO anon, authenticated
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public read page_views" ON public.page_views;
+CREATE POLICY "Public read page_views"
+  ON public.page_views FOR SELECT TO anon, authenticated
+  USING (true);
+
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+    id BIGSERIAL PRIMARY KEY,
+    event_name TEXT NOT NULL,
+    event_data JSONB DEFAULT '{}'::jsonb,
+    page_url TEXT,
+    session_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anon insert analytics_events" ON public.analytics_events;
+CREATE POLICY "Anon insert analytics_events"
+  ON public.analytics_events FOR INSERT TO anon, authenticated
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public read analytics_events" ON public.analytics_events;
+CREATE POLICY "Public read analytics_events"
+  ON public.analytics_events FOR SELECT TO anon, authenticated
+  USING (true);

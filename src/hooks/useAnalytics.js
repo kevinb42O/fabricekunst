@@ -14,12 +14,15 @@ export const trackEvent = async (eventName, eventData = {}) => {
   if (!visitorId) return;
 
   try {
-    await supabase.from('analytics_events').insert([{
+    const { error } = await supabase.from('analytics_events').insert([{
       event_name: eventName,
       event_data: eventData,
       page_url: window.location.pathname,
       session_id: visitorId
     }]);
+    if (error) {
+      console.warn(`[Analytics] Event insert blocked (${eventName}):`, error.message);
+    }
   } catch (error) {
     console.error("Failed to log analytics event:", error);
   }
@@ -113,13 +116,16 @@ export function useAnalytics() {
       if (!supabase) return;
 
       try {
-        await supabase.from('page_views').insert([{
+        const { error } = await supabase.from('page_views').insert([{
           page_url: window.location.pathname,
           referrer: document.referrer || null,
           user_agent: window.navigator.userAgent,
           session_id: visitorId, // Use visitorId for unique visitor counting
           country: guessCountry()
         }]);
+        if (error) {
+          console.warn('[Analytics] Page view insert blocked:', error.message);
+        }
       } catch (error) {
         console.error("Failed to log page view:", error);
       }
@@ -167,14 +173,22 @@ export function useAnalytics() {
     const handleScroll = () => {
       if (window.location.pathname.startsWith('/admin')) return;
       
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      // Use the larger of the two possible scroll height sources for accuracy
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+      );
+      const scrollHeight = docHeight - window.innerHeight;
       if (scrollHeight <= 0) return;
       
       const scrollPercent = Math.round((window.scrollY / scrollHeight) * 100);
       
       const milestones = [25, 50, 75, 100];
       for (const milestone of milestones) {
-        if (scrollPercent >= milestone && maxScrollRef.current < milestone) {
+        // Use a small buffer (97) for the 100% milestone to handle
+        // subpixel rounding on mobile/retina screens
+        const threshold = milestone === 100 ? 97 : milestone;
+        if (scrollPercent >= threshold && maxScrollRef.current < milestone) {
           maxScrollRef.current = milestone;
           trackEvent('scroll_depth', { depth: milestone });
         }
