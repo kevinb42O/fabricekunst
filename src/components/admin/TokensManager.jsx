@@ -304,7 +304,7 @@ export default function TokensManager({ items = [] }) {
             <h3 className="text-lg font-bold text-gray-900">Pro Plan</h3>
             
             <div className="mt-2 mb-4">
-              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€25</span>
+              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€20</span>
               <span className="text-gray-500 font-medium"> / maand</span>
               <div className="text-[11px] text-gray-500 font-medium mt-1">Vanaf-prijs bij jaarlijkse facturering</div>
             </div>
