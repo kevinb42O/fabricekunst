@@ -226,9 +226,14 @@ export default function AdminDashboard({
           <button type="button" className="admin-icon-button admin-menu-button" onClick={() => setMobileMenuOpen(true)} aria-label="Menu openen">
             <Menu aria-hidden="true" />
           </button>
-          <div className="admin-topbar__title">
+          <div className="admin-topbar__title flex items-center gap-2">
             <span>Atelier Rembrandt</span>
             <strong>{tabTitles[activeTab]}</strong>
+            {isPro && (
+              <span className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">
+                Pro
+              </span>
+            )}
           </div>
           {newInquiriesCount > 0 && activeTab !== 'inquiries' && (
             <button type="button" className="admin-inbox-shortcut" onClick={() => navigateTo('inquiries')}>
@@ -248,7 +253,7 @@ export default function AdminDashboard({
               onOpenLiveSite={handleClose}
             />
           )}
-          {activeTab === 'analytics' && <AnalyticsManager />}
+          {activeTab === 'analytics' && <AnalyticsManager isPro={isPro} />}
           {activeTab === 'items' && (
             <ItemManager
               items={activeItems}

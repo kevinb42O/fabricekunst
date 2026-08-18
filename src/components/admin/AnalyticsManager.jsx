@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { Lock } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
+import UpgradeModal from './UpgradeModal';
 
 const parseDevice = (userAgent) => {
   if (!userAgent) return 'Desktop';
@@ -63,11 +65,12 @@ const VercelList = ({ title, data, valueKey, labelKey, totalValue, asPercentage 
   </div>
 );
 
-export default function AnalyticsManager() {
+export default function AnalyticsManager({ isPro = false }) {
   const [loading, setLoading] = useState(true);
   const [pageViews, setPageViews] = useState([]);
   const [error, setError] = useState(null);
-  const [timeRange, setTimeRange] = useState('7d'); // '24u', '7d', '30d'
+  const [timeRange, setTimeRange] = useState('7d');
+  const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -112,6 +115,16 @@ export default function AnalyticsManager() {
         cutoff.setDate(8);
       }
       cutoff.setHours(0, 0, 0, 0);
+    } else if (timeRange === '3m') {
+      cutoff.setMonth(now.getMonth() - 3);
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeRange === '12m') {
+      cutoff.setFullYear(now.getFullYear() - 1);
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeRange === 'YTD') {
+      cutoff = new Date(now.getFullYear(), 0, 1);
+    } else if (timeRange === 'All') {
+      cutoff = new Date(0);
     }
     return cutoff;
   }, [timeRange]);
@@ -148,6 +161,17 @@ export default function AnalyticsManager() {
         dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: d.getTime() };
         d.setHours(d.getHours() + 1);
       }
+    } else if (timeRange === '12m' || timeRange === 'All' || timeRange === 'YTD') {
+      let d = new Date(cutoffDate.getTime());
+      if (timeRange === 'All' && filteredViews.length > 0) {
+        d = new Date(filteredViews[0].created_at);
+        d.setDate(1); d.setHours(0,0,0,0);
+      }
+      while (d <= now) {
+        const dateKey = d.toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
+        dailyData[dateKey] = { date: dateKey, visitors: new Set(), sortKey: d.getTime() };
+        d.setMonth(d.getMonth() + 1);
+      }
     } else {
       let d = new Date(cutoffDate.getTime());
       while (d <= now) {
@@ -168,6 +192,11 @@ export default function AnalyticsManager() {
         const hourDate = new Date(dateObj);
         hourDate.setMinutes(0, 0, 0);
         sortKey = hourDate.getTime();
+      } else if (timeRange === '12m' || timeRange === 'All' || timeRange === 'YTD') {
+        dateKey = dateObj.toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
+        const monthDate = new Date(dateObj);
+        monthDate.setDate(1); monthDate.setHours(0,0,0,0);
+        sortKey = monthDate.getTime();
       } else {
         dateKey = dateObj.toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' });
         const dayDate = new Date(dateObj);
@@ -273,14 +302,31 @@ export default function AnalyticsManager() {
         </div>
 
         {/* Time Range Selector */}
-        <div style={{ display: 'flex', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '6px', padding: '4px' }}>
-          {['24u', '7d', '30d'].map(range => (
+        <div style={{ display: 'flex', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '6px', padding: '4px', overflowX: 'auto' }}>
+          {[
+            { id: '24u', label: '24u' },
+            { id: '7d', label: '7d' },
+            { id: '30d', label: '30d' },
+            { id: '3m', label: '3M', isProFeature: true },
+            { id: '12m', label: '1 Jaar', isProFeature: true },
+            { id: 'YTD', label: 'Dit Jaar', isProFeature: true },
+            { id: 'All', label: 'Alles', isProFeature: true }
+          ].map(range => (
             <button
-              key={range}
-              onClick={() => setTimeRange(range)}
+              key={range.id}
+              onClick={() => {
+                if (range.isProFeature && !isPro) {
+                  setUpgradeModalOpen(true);
+                } else {
+                  setTimeRange(range.id);
+                }
+              }}
               style={{
-                background: timeRange === range ? '#fff' : 'transparent',
-                color: timeRange === range ? '#111' : '#666',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: timeRange === range.id ? '#fff' : 'transparent',
+                color: timeRange === range.id ? '#111' : (range.isProFeature && !isPro ? '#999' : '#666'),
                 border: 'none',
                 padding: '6px 12px',
                 borderRadius: '4px',
@@ -288,10 +334,12 @@ export default function AnalyticsManager() {
                 fontWeight: 500,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                boxShadow: timeRange === range ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                boxShadow: timeRange === range.id ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                whiteSpace: 'nowrap'
               }}
             >
-              {range}
+              {range.label}
+              {range.isProFeature && !isPro && <Lock size={12} />}
             </button>
           ))}
         </div>
@@ -356,6 +404,11 @@ export default function AnalyticsManager() {
         </div>
       </div>
 
+      <UpgradeModal 
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        product="pro"
+      />
     </div>
   );
 }
