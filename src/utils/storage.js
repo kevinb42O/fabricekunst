@@ -729,27 +729,45 @@ export const uploadCatalogImage = async (file) => {
   }
 
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-    const filePath = `catalog/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('catalog-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error("Supabase image upload error:", uploadError);
-      throw uploadError;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    
+    if (!token) {
+      console.warn("No active session for R2 upload");
+      throw new Error("No active session");
     }
 
-    const { data } = supabase.storage
-      .from('catalog-images')
-      .getPublicUrl(filePath);
+    const res = await fetch('/api/r2-presigned-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type
+      })
+    });
 
-    return data?.publicUrl || null;
+    if (!res.ok) {
+      throw new Error(`Failed to get presigned URL: ${res.statusText}`);
+    }
+
+    const { presignedUrl, publicUrl } = await res.json();
+
+    const uploadRes = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream'
+      }
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(`Failed to upload to R2: ${uploadRes.statusText}`);
+    }
+
+    return publicUrl;
   } catch (e) {
     console.error("Image upload exception, falling back to Data URL", e);
     return new Promise((resolve) => {
