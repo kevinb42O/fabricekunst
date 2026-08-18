@@ -108,6 +108,57 @@ export default async function handler(req, res) {
       });
     }
 
+    // 4b. Add Cloudflare Egress if on PRO plan (cross-fade migration)
+    if (plan === 'pro' && process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN) {
+      try {
+        const date30DaysAgo = new Date();
+        date30DaysAgo.setDate(date30DaysAgo.getDate() - 30);
+        const dateStr = date30DaysAgo.toISOString();
+        
+        const query = `
+          query {
+            viewer {
+              accounts(filter: {accountTag: "${process.env.CLOUDFLARE_ACCOUNT_ID}"}) {
+                r2OperationsAdaptiveGroups(limit: 1, filter: {datetime_gt: "${dateStr}"}) {
+                  sum {
+                    responseBytes
+                  }
+                }
+              }
+            }
+          }
+        `;
+        
+        const cfRes = await fetch('https://api.cloudflare.com/client/v4/graphql', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query })
+        });
+        
+        if (cfRes.ok) {
+          const cfData = await cfRes.json();
+          const r2Egress = cfData?.data?.viewer?.accounts?.[0]?.r2OperationsAdaptiveGroups?.[0]?.sum?.responseBytes || 0;
+          
+          // Add R2 Egress to the rolling 30-day Supabase Egress for a seamless cross-fade
+          const egressIndex = supabaseData.usages.findIndex(u => u.metric === 'egress');
+          if (egressIndex !== -1) {
+            supabaseData.usages[egressIndex].usage += r2Egress;
+          }
+          
+          // For cached egress, we can also add it, or keep it static. Let's add it to direct as well so both grow.
+          const cachedIndex = supabaseData.usages.findIndex(u => u.metric === 'cached_egress');
+          if (cachedIndex !== -1) {
+            supabaseData.usages[cachedIndex].usage += (r2Egress * 0.8); // Estimate 80% is cached CDN traffic
+          }
+        }
+      } catch (cfErr) {
+        console.error("Failed to fetch Cloudflare egress", cfErr);
+      }
+    }
+
     // 5. Append plan
     supabaseData.plan = plan;
 
