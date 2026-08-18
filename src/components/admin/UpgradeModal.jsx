@@ -11,8 +11,8 @@ const UpgradeModal = ({ isOpen, onClose, product = 'pro' }) => {
   
   // Pro Plan variables
   const isYearly = billingCycle === 'yearly';
-  const proPrice = isYearly ? 468 : 45;
-  const proDesc = isYearly ? '€39 / maand, gefactureerd als €468 per jaar. (Incl. 150 kunstwerken limiet)' : '€45 / maand, maandelijks gefactureerd. (Incl. 150 kunstwerken limiet)';
+  const proPrice = isYearly ? 300 : 30;
+  const proDesc = isYearly ? '€25 / maand, gefactureerd als €300 per jaar. (Incl. 150 kunstwerken limiet)' : '€30 / maand, maandelijks gefactureerd. (Incl. 150 kunstwerken limiet)';
 
   // Token Plan variables
   const isTier1 = billingCycle === 'monthly' || billingCycle === 'tier1';
