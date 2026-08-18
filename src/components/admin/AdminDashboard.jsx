@@ -28,6 +28,7 @@ import CertificateManager from './CertificateManager';
 import AdminTooltip from './AdminTooltip';
 import AnalyticsManager from './AnalyticsManager';
 import TokensManager from './TokensManager';
+import { supabase } from '../../utils/supabaseClient';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
@@ -81,8 +82,16 @@ export default function AdminDashboard({
         return JSON.parse(text);
       })
       .then(data => setMetricsData(data))
-      .catch(err => {
+      .catch(async err => {
+        // Local dev fallback when Vercel API is not available
+        let plan = 'basis';
+        try {
+          const { data } = await supabase.from('admin_settings').select('value').eq('key', 'hosting_plan').single();
+          if (data) plan = data.value;
+        } catch (e) { }
+
         setMetricsData({
+          plan,
           usages: [
             { metric: 'cached_egress', usage: 6503673364, limit: 5368709120 },
             { metric: 'egress', usage: 2099157893, limit: 5368709120 },
