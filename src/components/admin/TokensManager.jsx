@@ -309,7 +309,7 @@ export default function TokensManager({ items = [] }) {
               <div className="text-[11px] text-gray-500 font-medium mt-1">Vanaf-prijs bij jaarlijkse facturering</div>
             </div>
             <p className="text-sm text-gray-600 mb-6 pb-6 border-b border-blue-100">
-              Premium infrastructuur voor professionele kunsthandelaren. Haperingsvrije weergave van originele 4K foto's wereldwijd.
+              Ontgrendel de volledige potentie van uw website. Razendsnelle servers en ruime limieten voor een grote, hoogwaardige catalogus.
             </p>
             
             <ul className="space-y-4 mb-8 flex-1">
