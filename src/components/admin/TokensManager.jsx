@@ -88,6 +88,7 @@ export default function TokensManager({ items = [] }) {
   const [error, setError] = useState(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState('pro'); // 'pro' or 'token'
+  const [isYearly, setIsYearly] = useState(true);
 
   // Virtual Limits (Base Plan)
   const MAX_ITEMS = 50;
@@ -285,10 +286,32 @@ export default function TokensManager({ items = [] }) {
             <div className="absolute top-0 inset-x-0 h-1.5 bg-blue-500"></div>
             <div className="absolute top-5 right-5 bg-blue-100 text-blue-700 text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">Aanbevolen</div>
             
-            <h3 className="text-lg font-bold text-gray-900">Pro Plan</h3>
-            <div className="mt-2 mb-4">
-              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">€39</span>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-bold text-gray-900">Pro Plan</h3>
+              <div className="flex bg-blue-50/50 p-1 rounded-lg border border-blue-100">
+                <button 
+                  onClick={() => setIsYearly(false)}
+                  className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md transition-all ${!isYearly ? 'bg-white shadow-sm text-blue-700' : 'text-blue-500 hover:text-blue-700'}`}
+                >
+                  Mnd
+                </button>
+                <button 
+                  onClick={() => setIsYearly(true)}
+                  className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md transition-all ${isYearly ? 'bg-white shadow-sm text-blue-700' : 'text-blue-500 hover:text-blue-700'}`}
+                >
+                  Jaar
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-2 mb-4 h-16">
+              <span className="text-4xl font-extrabold text-gray-900 tracking-tight">{isYearly ? '€25' : '€30'}</span>
               <span className="text-gray-500 font-medium"> / maand</span>
+              {isYearly ? (
+                <div className="text-[11px] text-blue-600 font-bold mt-1">€300 jaarlijks (Bespaar €60)</div>
+              ) : (
+                <div className="text-[11px] text-gray-400 font-medium mt-1">Maandelijks opzegbaar</div>
+              )}
             </div>
             <p className="text-sm text-gray-600 mb-6 pb-6 border-b border-blue-100">
               Premium infrastructuur voor professionele kunsthandelaren. Haperingsvrije weergave van originele 4K foto's wereldwijd.
@@ -297,7 +320,7 @@ export default function TokensManager({ items = [] }) {
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 150 Kunstwerken <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">3x Meer</span></li>
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 8 GB Database <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">16x Meer</span></li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 100 GB Media Opslag (4K Ready)</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 100+ GB Media Opslag (4K Ready)</li>
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 250 GB Direct Dataverkeer</li>
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Geavanceerde Analytics (Volledige historie)</li>
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Ongelimiteerd Gecachet CDN Verkeer</li>
