@@ -85,6 +85,107 @@ const VercelList = ({ title, data, valueKey, labelKey, totalValue, asPercentage 
   </motion.div>
 );
 
+const BASE_URL = 'https://fabriceboeken.be';
+
+const UTM_PLATFORMS = [
+  { id: 'facebook',   label: 'Facebook Post',     emoji: '📘', source: 'facebook',   medium: 'social',  campaign: 'organisch' },
+  { id: 'instagram',  label: 'Instagram Post',     emoji: '📸', source: 'instagram',  medium: 'social',  campaign: 'organisch' },
+  { id: 'stories',    label: 'Instagram Stories',  emoji: '🎞️', source: 'instagram',  medium: 'stories', campaign: 'organisch' },
+  { id: 'whatsapp',   label: 'WhatsApp / Directe link', emoji: '💬', source: 'whatsapp', medium: 'chat', campaign: 'organisch' },
+  { id: 'email',      label: 'E-mail Nieuwsbrief', emoji: '📧', source: 'email',      medium: 'newsletter', campaign: 'nieuwsbrief' },
+];
+
+function UtmLinkBuilder() {
+  const [copied, setCopied] = React.useState(null);
+  const [customPage, setCustomPage] = React.useState('/');
+
+  const pages = [
+    { label: 'Homepagina', value: '/' },
+    { label: 'Catalogus', value: '/catalogus' },
+    { label: 'Contact', value: '/#contact' },
+  ];
+
+  const buildUrl = (platform) => {
+    const params = new URLSearchParams({
+      utm_source: platform.source,
+      utm_medium: platform.medium,
+      utm_campaign: platform.campaign,
+    });
+    return `${BASE_URL}${customPage}?${params.toString()}`;
+  };
+
+  const handleCopy = (platform) => {
+    navigator.clipboard.writeText(buildUrl(platform));
+    setCopied(platform.id);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  return (
+    <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', padding: '28px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <div style={{ fontSize: '11px', color: '#888', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <Link size={14} color="#111" /> UTM Tracking Links — voor Posts &amp; Campagnes
+          </div>
+          <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: 1.6, maxWidth: '560px' }}>
+            Plak één van deze links in je social media post in plaats van de gewone website-URL. Zo zie je in het dashboard <strong style={{ color: '#111' }}>exact hoeveel bezoekers</strong> via welk kanaal komen.
+          </p>
+        </div>
+        {/* Page selector */}
+        <select
+          value={customPage}
+          onChange={e => setCustomPage(e.target.value)}
+          style={{ fontSize: '13px', padding: '8px 12px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '8px', backgroundColor: '#fafafa', color: '#111', cursor: 'pointer', outline: 'none' }}
+        >
+          {pages.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+      </div>
+
+      {/* Platform rows */}
+      <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {UTM_PLATFORMS.map(platform => {
+          const url = buildUrl(platform);
+          const isCopied = copied === platform.id;
+          return (
+            <motion.div variants={itemVariants} key={platform.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '10px' }}>
+              <span style={{ fontSize: '20px', flexShrink: 0 }}>{platform.emoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#111', marginBottom: '2px' }}>{platform.label}</div>
+                <code style={{ fontSize: '11px', color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '100%' }}>{url}</code>
+              </div>
+              <button
+                onClick={() => handleCopy(platform)}
+                style={{
+                  flexShrink: 0,
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 14px',
+                  backgroundColor: isCopied ? '#10B981' : '#111',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {isCopied ? '✓ Gekopieerd!' : 'Kopieer Link'}
+              </button>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
+      {/* Tip */}
+      <div style={{ marginTop: '16px', padding: '12px 16px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', fontSize: '12px', color: '#92400e' }}>
+        💡 <strong>Tip:</strong> Gebruik altijd deze links ipv je gewone URL als je iets post op social media of verstuurt via e-mail. Na een week zie je hier de resultaten per kanaal verschijnen.
+      </div>
+    </motion.div>
+  );
+}
+
 export default function AnalyticsManager({ isPro = false, activeTab = 'overview' }) {
   const [loading, setLoading] = useState(true);
   const [pageViews, setPageViews] = useState([]);
@@ -725,6 +826,9 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
 
             <VercelList title="Verkeersbronnen" data={referrersData} valueKey="visitors" labelKey="source" totalValue={metrics.visitors} />
           </div>
+
+          {/* UTM Link Builder */}
+          <UtmLinkBuilder />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
             <VercelList title="Landen" data={countriesData} valueKey="visitors" labelKey="country" totalValue={metrics.visitors} asPercentage />
