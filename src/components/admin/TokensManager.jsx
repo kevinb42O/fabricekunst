@@ -245,6 +245,47 @@ export default function TokensManager({ items = [] }) {
         />
       </div>
 
+      {/* Plan Vergelijking Table */}
+      <div className="bg-white text-gray-900 rounded-xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900">Capaciteit Vergelijking</h2>
+          <p className="text-sm text-gray-500 mt-1">Zie exact hoeveel extra capaciteit uw website krijgt bij een upgrade naar het Pro Plan.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-500 font-bold">
+                <th className="py-4 px-6">Middelen</th>
+                <th className="py-4 px-6">Huidig (Basis)</th>
+                <th className="py-4 px-6 text-blue-600">Pro Plan</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
+              <tr className="hover:bg-gray-50/50 transition-colors">
+                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><HardDrive size={16} className="text-gray-400"/> Database Grootte</td>
+                <td className="py-4 px-6">500 MB</td>
+                <td className="py-4 px-6 font-semibold text-gray-900">8 GB <span className="text-green-600 text-[11px] uppercase tracking-wider font-bold ml-2 bg-green-50 px-2 py-1 rounded">16x Meer</span></td>
+              </tr>
+              <tr className="hover:bg-gray-50/50 transition-colors">
+                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><HardDrive size={16} className="text-gray-400"/> Media Opslag</td>
+                <td className="py-4 px-6">1 GB</td>
+                <td className="py-4 px-6 font-semibold text-gray-900">100 GB <span className="text-green-600 text-[11px] uppercase tracking-wider font-bold ml-2 bg-green-50 px-2 py-1 rounded">100x Meer</span></td>
+              </tr>
+              <tr className="hover:bg-gray-50/50 transition-colors">
+                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><Activity size={16} className="text-gray-400"/> Direct Dataverkeer</td>
+                <td className="py-4 px-6">5 GB / mnd</td>
+                <td className="py-4 px-6 font-semibold text-gray-900">250 GB / mnd <span className="text-green-600 text-[11px] uppercase tracking-wider font-bold ml-2 bg-green-50 px-2 py-1 rounded">50x Meer</span></td>
+              </tr>
+              <tr className="hover:bg-gray-50/50 transition-colors">
+                <td className="py-4 px-6 font-medium text-gray-900 flex items-center gap-2"><Activity size={16} className="text-gray-400"/> Gecachet Verkeer</td>
+                <td className="py-4 px-6">5 GB / mnd</td>
+                <td className="py-4 px-6 font-semibold text-gray-900 flex items-center gap-2">Ongelimiteerd ✨</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div className="bg-white text-gray-900 p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
           <h2 className="text-lg font-semibold flex items-center text-gray-800">
@@ -273,7 +314,7 @@ export default function TokensManager({ items = [] }) {
             <div>
               <h4 className="font-medium text-gray-900 flex items-center">
                 Pro Plan Hosting
-                <span className="ml-3 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Vanaf €30 / maand</span>
+                <span className="ml-3 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Vanaf €39 / maand</span>
               </h4>
               <p className="text-sm text-gray-500 mt-1">
                 Zorg voor een bliksemsnelle, haperingsvrije weergave van uw hoge resolutie afbeeldingen voor élke bezoeker. (Inclusief 50GB extra opslag).
