@@ -3,6 +3,25 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveCo
 import { Lock, Eye, MousePointerClick, Globe, ArrowDown, Activity, X, Monitor, Smartphone, MapPin, Clock, Filter, Flame, Timer, Link, ArrowRight, MousePointer2 } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import UpgradeModal from './UpgradeModal';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24, delay: 0.1 } }
+};
 
 const parseDevice = (userAgent) => {
   if (!userAgent) return 'Desktop';
@@ -39,30 +58,31 @@ const parseReferrer = (referrer) => {
 };
 
 const VercelList = ({ title, data, valueKey, labelKey, totalValue, asPercentage }) => (
-  <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #eaeaea', fontSize: '12px', color: '#666', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+  <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.04)', fontSize: '11px', color: '#888', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
       <span>{title}</span>
       <span>Bezoekers</span>
     </div>
-    <div style={{ padding: '8px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ padding: '12px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
       {data.map((item, i) => {
         const percent = totalValue > 0 ? (item[valueKey] / totalValue) * 100 : 0;
         return (
-          <div key={i} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: '13px', color: '#111', zIndex: 1 }}>
+          <motion.div variants={itemVariants} key={i} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '10px 14px', fontSize: '13px', color: '#111', zIndex: 1, borderRadius: '8px', overflow: 'hidden' }}>
             <div style={{ 
               position: 'absolute', left: 0, top: 0, bottom: 0, width: `${percent}%`, 
-              backgroundColor: 'rgba(0,0,0,0.04)', borderRadius: '4px', zIndex: -1 
+              background: 'linear-gradient(90deg, rgba(17,17,17,0.03) 0%, rgba(17,17,17,0.06) 100%)', zIndex: -1,
+              transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)'
             }}></div>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {item.flag && <span>{item.flag}</span>}
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 500 }}>
+              {item.flag && <span style={{ fontSize: '15px' }}>{item.flag}</span>}
               {item[labelKey]}
             </span>
-            <span>{asPercentage ? `${Math.round(percent)}%` : item[valueKey]}</span>
-          </div>
+            <span style={{ fontWeight: 600 }}>{asPercentage ? `${Math.round(percent)}%` : item[valueKey]}</span>
+          </motion.div>
         );
       })}
-    </div>
-  </div>
+    </motion.div>
+  </motion.div>
 );
 
 export default function AnalyticsManager({ isPro = false, activeTab = 'overview' }) {
@@ -565,21 +585,21 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
           {/* Top Metrics */}
-          <div style={{ display: 'flex', gap: '1px', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
-              <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Bezoekers</div>
+          <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', gap: '1px', backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+            <motion.div variants={itemVariants} style={{ backgroundColor: '#fff', padding: '20px 24px', flex: 1 }}>
+              <div style={{ color: '#888', fontSize: '11px', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bezoekers</div>
               <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.visitors}</div>
-            </div>
-            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
-              <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Weergaven</div>
+            </motion.div>
+            <motion.div variants={itemVariants} style={{ backgroundColor: '#fff', padding: '20px 24px', flex: 1 }}>
+              <div style={{ color: '#888', fontSize: '11px', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Weergaven</div>
               <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{metrics.pageViews}</div>
-            </div>
-            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
-              <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>Gem. Sessieduur <Timer size={14} /></div>
+            </motion.div>
+            <motion.div variants={itemVariants} style={{ backgroundColor: '#fff', padding: '20px 24px', flex: 1 }}>
+              <div style={{ color: '#888', fontSize: '11px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Gem. Sessieduur <Timer size={14} /></div>
               <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{advancedAnalytics.avgDurationStr}</div>
-            </div>
-            <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1, position: 'relative' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>
+            </motion.div>
+            <motion.div variants={itemVariants} style={{ backgroundColor: '#fff', padding: '20px 24px', flex: 1, position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#888', fontSize: '11px', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 <div style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
                 Nu Online
                 <style>{`
@@ -591,14 +611,14 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
                 `}</style>
               </div>
               <div style={{ color: '#10B981', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{activeNow}</div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             {/* Chart */}
-            <div style={{ border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px 0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '0 24px', marginBottom: '16px', fontSize: '13px', color: '#111', fontWeight: 600, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Eye size={16} /> Bezoekers over tijd
+            <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', padding: '24px 0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+              <div style={{ padding: '0 24px', marginBottom: '16px', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Eye size={16} color="#111" /> Bezoekers over tijd
               </div>
               <div style={{ height: '300px', width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -616,33 +636,35 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </motion.div>
 
             {/* Live Activity Ticker */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '400px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 24px', borderBottom: '1px solid #eaeaea', fontSize: '13px', color: '#111', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                <Activity size={16} /> Live Activity Ticker
+            <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 24px', borderBottom: '1px solid rgba(0,0,0,0.04)', fontSize: '11px', color: '#888', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                <Activity size={16} color="#111" /> Live Activity Ticker
               </div>
               <div style={{ overflowY: 'auto', flexGrow: 1, padding: '0' }}>
                 {liveActivity.length === 0 ? (
-                  <div style={{ padding: '2rem', textAlign: 'center', color: '#999', fontSize: '13px' }}>Geen recente activiteit</div>
+                  <div style={{ padding: '3rem', textAlign: 'center', color: '#999', fontSize: '13px' }}>Geen recente activiteit</div>
                 ) : (
-                  liveActivity.map((act, idx) => (
-                    <div key={idx} onClick={() => setSelectedSessionId(act.session_id)} style={{ display: 'flex', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #fafafa', alignItems: 'flex-start', cursor: 'pointer', transition: 'background-color 0.2s', backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                      <div style={{ color: '#999', marginTop: '2px' }}>
-                        {act.type === 'view' ? <Eye size={14} /> : act.event_name === 'cta_click' ? <MousePointerClick size={14} color="#0070F3" /> : act.event_name === 'scroll_depth' ? <ArrowDown size={14} /> : act.event_name === 'rage_click' ? <Flame size={14} color="#ef4444" /> : act.event_name === 'utm_visit' ? <Link size={14} color="#f59e0b" /> : <Globe size={14} />}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '13px', color: '#111', marginBottom: '4px' }}>
-                          {act.type === 'view' ? (<>Bezoeker bekeek <strong>{act.page_url === '/' ? 'Home' : act.page_url}</strong></>) : act.event_name === 'cta_click' ? (<>Bezoeker klikte op <strong>{act.event_data?.button || 'Knop'}</strong></>) : act.event_name === 'scroll_depth' ? (<>Bezoeker scrolde naar <strong>{act.event_data?.depth}%</strong> op {act.page_url}</>) : act.event_name === 'rage_click' ? (<span style={{ color: '#ef4444' }}>Bezoeker raakte gefrustreerd: <strong>klikte razendsnel op "{act.event_data?.target || 'iets'}"</strong></span>) : act.event_name === 'utm_visit' ? (<span style={{ color: '#d97706' }}>Kwam binnen via campagne <strong>{act.event_data?.campaign} ({act.event_data?.source})</strong></span>) : (<>Bezoeker deed actie: <strong>{act.event_name}</strong></>)}
+                  <motion.div variants={containerVariants} initial="hidden" animate="show">
+                    {liveActivity.map((act, idx) => (
+                      <motion.div variants={itemVariants} key={idx} onClick={() => setSelectedSessionId(act.session_id)} style={{ display: 'flex', gap: '14px', padding: '14px 24px', borderBottom: '1px solid rgba(0,0,0,0.03)', alignItems: 'flex-start', cursor: 'pointer', transition: 'background-color 0.2s', backgroundColor: 'transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.01)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <div style={{ color: '#888', marginTop: '2px', backgroundColor: 'rgba(0,0,0,0.03)', padding: '6px', borderRadius: '6px' }}>
+                          {act.type === 'view' ? <Eye size={14} /> : act.event_name === 'cta_click' ? <MousePointerClick size={14} color="#171717" /> : act.event_name === 'scroll_depth' ? <ArrowDown size={14} /> : act.event_name === 'rage_click' ? <Flame size={14} color="#ef4444" /> : act.event_name === 'utm_visit' ? <Link size={14} color="#b87333" /> : <Globe size={14} />}
                         </div>
-                        <div style={{ fontSize: '11px', color: '#999' }}>{new Date(act.created_at).toLocaleTimeString('nl-NL')} • {act.type === 'view' ? parseDevice(act.user_agent) : 'Interactie'}</div>
-                      </div>
-                    </div>
-                  ))
+                        <div>
+                          <div style={{ fontSize: '13px', color: '#111', marginBottom: '4px' }}>
+                            {act.type === 'view' ? (<>Bezoeker bekeek <strong style={{ fontWeight: 600 }}>{act.page_url === '/' ? 'Home' : act.page_url}</strong></>) : act.event_name === 'cta_click' ? (<>Bezoeker klikte op <strong style={{ fontWeight: 600 }}>{act.event_data?.button || 'Knop'}</strong></>) : act.event_name === 'scroll_depth' ? (<>Bezoeker scrolde naar <strong style={{ fontWeight: 600 }}>{act.event_data?.depth}%</strong> op {act.page_url}</>) : act.event_name === 'rage_click' ? (<span style={{ color: '#ef4444' }}>Bezoeker raakte gefrustreerd: <strong style={{ fontWeight: 600 }}>klikte razendsnel op "{act.event_data?.target || 'iets'}"</strong></span>) : act.event_name === 'utm_visit' ? (<span style={{ color: '#b87333' }}>Kwam binnen via campagne <strong style={{ fontWeight: 600 }}>{act.event_data?.campaign} ({act.event_data?.source})</strong></span>) : (<>Bezoeker deed actie: <strong style={{ fontWeight: 600 }}>{act.event_name}</strong></>)}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#888', fontWeight: 500 }}>{new Date(act.created_at).toLocaleTimeString('nl-NL')} • {act.type === 'view' ? parseDevice(act.user_agent) : 'Interactie'}</div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
@@ -653,39 +675,41 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
             {/* Marketing Campaigns (UTM) */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+            <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div style={{ fontSize: '13px', color: '#111', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Link size={16} /> Marketing Campagnes
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Link size={16} color="#111" /> Marketing Campagnes
                 </div>
               </div>
               
               {advancedAnalytics.campaigns.length === 0 ? (
-                <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center', color: '#666' }}>
-                  <Link size={32} color="#eaeaea" style={{ marginBottom: '12px' }} />
-                  <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Nog geen campagnes gemeten</div>
-                  <div style={{ fontSize: '12px' }}>Deel links met <code style={{ backgroundColor: '#fafafa', padding: '2px 4px', borderRadius: '4px' }}>?utm_source=facebook</code> eraan vastgeplakt om hier resultaten te zien.</div>
+                <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center', color: '#888' }}>
+                  <Link size={32} color="rgba(0,0,0,0.1)" style={{ marginBottom: '12px' }} />
+                  <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#111' }}>Nog geen campagnes gemeten</div>
+                  <div style={{ fontSize: '12px' }}>Deel links met <code style={{ backgroundColor: 'rgba(0,0,0,0.03)', padding: '2px 4px', borderRadius: '4px' }}>?utm_source=facebook</code> eraan vastgeplakt om hier resultaten te zien.</div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 12px 8px', fontSize: '11px', color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 12px 8px', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     <span style={{ flex: 2 }}>Campagne / Bron</span>
                     <span style={{ flex: 1, textAlign: 'center' }}>Sessies</span>
                     <span style={{ flex: 1, textAlign: 'right' }}>Conversies</span>
                   </div>
-                  {advancedAnalytics.campaigns.map((camp, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fafafa', border: '1px solid #eaeaea', borderRadius: '6px' }}>
-                      <div style={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#111' }}>{camp.campaign}</span>
-                        <span style={{ fontSize: '11px', color: '#666' }}>Bron: {camp.source}</span>
-                      </div>
-                      <div style={{ flex: 1, textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#111' }}>{camp.visitors}</div>
-                      <div style={{ flex: 1, textAlign: 'right', fontSize: '14px', fontWeight: 600, color: camp.conversions > 0 ? '#10B981' : '#666' }}>{camp.conversions}</div>
-                    </div>
-                  ))}
+                  <motion.div variants={containerVariants} initial="hidden" animate="show">
+                    {advancedAnalytics.campaigns.map((camp, idx) => (
+                      <motion.div variants={itemVariants} key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)', borderRadius: '8px', marginBottom: '8px' }}>
+                        <div style={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#111' }}>{camp.campaign}</span>
+                          <span style={{ fontSize: '11px', color: '#888', fontWeight: 500 }}>Bron: {camp.source}</span>
+                        </div>
+                        <div style={{ flex: 1, textAlign: 'center', fontSize: '14px', fontWeight: 600, color: '#111' }}>{camp.visitors}</div>
+                        <div style={{ flex: 1, textAlign: 'right', fontSize: '14px', fontWeight: 600, color: camp.conversions > 0 ? '#10B981' : '#888' }}>{camp.conversions}</div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             <VercelList title="Verkeersbronnen" data={referrersData} valueKey="visitors" labelKey="source" totalValue={metrics.visitors} />
           </div>
@@ -704,14 +728,15 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
             {/* User Journey Funnel */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+            {/* User Journey Funnel */}
+            <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div style={{ fontSize: '13px', color: '#111', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Filter size={16} /> User Journey (Sales Funnel)
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Filter size={16} color="#111" /> User Journey (Sales Funnel)
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
+              <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
                 {(() => {
                   const maxCount = Math.max(advancedAnalytics.funnel[0].count, 1);
                   return advancedAnalytics.funnel.map((step, index) => {
@@ -720,8 +745,8 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
                     const dropOff = prevCount > 0 ? 100 - Math.round((step.count / prevCount) * 100) : 0;
 
                     return (
-                      <div key={index} style={{ position: 'relative' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#fafafa', border: '1px solid #eaeaea', borderRadius: '6px', zIndex: 2, position: 'relative' }}>
+                      <motion.div variants={itemVariants} key={index} style={{ position: 'relative' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)', borderRadius: '8px', zIndex: 2, position: 'relative' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>{index + 1}</div>
                             <span style={{ fontSize: '14px', fontWeight: 600, color: '#111' }}>{step.name}</span>
@@ -734,35 +759,35 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
                           </div>
                         </div>
                         {index < advancedAnalytics.funnel.length - 1 && (
-                          <div style={{ width: '2px', height: '16px', backgroundColor: '#eaeaea', margin: '0 28px' }}></div>
+                          <div style={{ width: '2px', height: '16px', backgroundColor: 'rgba(0,0,0,0.06)', margin: '0 28px' }}></div>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   });
                 })()}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Conversions & Scroll Depth */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div style={{ display: 'flex', gap: '1px', backgroundColor: '#eaeaea', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden' }}>
-                <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
-                  <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>CTA Kliks (Aanvragen)</div>
+              <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', gap: '1px', backgroundColor: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                <motion.div variants={itemVariants} style={{ backgroundColor: '#fff', padding: '20px 24px', flex: 1 }}>
+                  <div style={{ color: '#888', fontSize: '11px', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>CTA Kliks (Aanvragen)</div>
                   <div style={{ color: '#111', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{conversionData.clicks}</div>
-                </div>
-                <div style={{ backgroundColor: '#fff', padding: '16px 24px', flex: 1 }}>
-                  <div style={{ color: '#666', fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>Conversieratio</div>
+                </motion.div>
+                <motion.div variants={itemVariants} style={{ backgroundColor: '#fff', padding: '20px 24px', flex: 1 }}>
+                  <div style={{ color: '#888', fontSize: '11px', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Conversieratio</div>
                   <div style={{ color: '#0070F3', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.02em' }}>{conversionData.rate}%</div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
-              <div style={{ backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <motion.div variants={cardVariants} initial="hidden" animate="show" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '12px', padding: '24px', flexGrow: 1, display: 'flex', flexDirection: 'column', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <div style={{ fontSize: '13px', color: '#666', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Scroll-diepte (Betrokkenheid)</div>
+                  <div style={{ fontSize: '11px', color: '#888', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Scroll-diepte (Betrokkenheid)</div>
                   <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>Hoe ver lezen je bezoekers naar beneden?</div>
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
+                <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
                   {(() => {
                     const maxScrollValue = Math.max(...scrollDepthData.map(d => d.value), 1);
                     return scrollDepthData.map((item) => {
@@ -774,19 +799,19 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
                       if (item.name === '100%') { title = 'Tot 100% gescrold'; subtitle = '(Lazen tot het einde)'; }
                       
                       return (
-                        <div key={item.name} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '14px 16px', fontSize: '13px', color: '#111', zIndex: 1, borderRadius: '6px', border: '1px solid #eaeaea', backgroundColor: '#fff', overflow: 'hidden' }}>
-                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${percent}%`, backgroundColor: '#f5f5f5', borderRight: '2px solid #ddd', zIndex: -1 }}></div>
+                        <motion.div variants={itemVariants} key={item.name} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '14px 16px', fontSize: '13px', color: '#111', zIndex: 1, borderRadius: '8px', border: '1px solid rgba(0,0,0,0.04)', backgroundColor: '#fff', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${percent}%`, background: 'linear-gradient(90deg, rgba(17,17,17,0.03) 0%, rgba(17,17,17,0.06) 100%)', zIndex: -1, transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)' }}></div>
                           <span style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ color: '#111', fontWeight: 600 }}>{title}</span> 
-                            <span style={{ color: '#666', fontStyle: 'italic' }}>{subtitle}</span>
+                            <span style={{ color: '#888', fontStyle: 'italic' }}>{subtitle}</span>
                           </span>
-                          <span style={{ fontWeight: 600 }}>{item.value} <span style={{ color: '#999', fontWeight: 400, marginLeft: '4px' }}>x bereikt</span></span>
-                        </div>
+                          <span style={{ fontWeight: 600 }}>{item.value} <span style={{ color: '#888', fontWeight: 500, marginLeft: '4px' }}>x bereikt</span></span>
+                        </motion.div>
                       );
                     });
                   })()}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
 

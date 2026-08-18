@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink, Landmark, ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Search, Upload, Copy, Star, CheckCircle2, Image as ImageIcon, BookOpen, Layers, Palette, Bookmark, History, Loader2, Globe, Award, ShieldCheck, Check, Sparkles, Download, MoreVertical, ExternalLink, Landmark, ArrowDown, ArrowUp, ArrowUpDown, Filter } from 'lucide-react';
 import {
   CATEGORIES,
   COLLECTION_GROUPS,
@@ -965,124 +965,104 @@ export default function ItemManager({
   return (
     <div className="admin-items space-y-6 text-[#111111] animate-fade-in">
       
-      {/* Top Filter & Toolbar Bar (Screenshot Style) */}
-      <div className="admin-items__toolbar p-4 sm:p-5 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm flex flex-wrap items-center justify-between gap-3">
+      {/* Toolbar & Filters (Refactored for cleaner layout) */}
+      <div className="admin-items__toolbar p-4 sm:p-5 rounded-2xl bg-white border border-gray-200 shadow-sm flex flex-col gap-4">
         
-        {/* Left: Primary Action Button */}
-        <button
-          onClick={handleCreateNew}
-          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#111111] to-[#2A2825] hover:from-[#B8860B] hover:to-[#D4AF37] text-white text-xs font-serif font-bold transition-all shadow-md flex items-center space-x-2 shrink-0 cursor-pointer"
-        >
-          <Plus className="w-4 h-4 text-[#D4AF37]" />
-          <span>Nieuw object</span>
-        </button>
+        {/* Top Row: Search & Action */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Search Box */}
+          <div className="relative w-full sm:flex-1 sm:max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+              placeholder="Zoek in collectie (titel, auteur, ID...)"
+              className="w-full pl-10 pr-8 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all"
+            />
+            {filterQuery && (
+              <button 
+                onClick={() => setFilterQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-        {/* Center: Search Box */}
-        <div className="relative flex-1 min-w-[240px] max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
-          <input
-            type="text"
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-            placeholder="Zoek in collectie (titel, auteur, ID...)"
-            className="w-full pl-10 pr-8 py-2 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] transition-all"
-          />
-          {filterQuery && (
-            <button 
-              onClick={() => setFilterQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#111111]"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* Type Filter Buttons */}
-        <div className="flex items-center space-x-1 p-1 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-serif">
-          <span className="text-[10px] font-mono text-[#888888] px-1.5 hidden sm:inline">Type:</span>
+          {/* Primary Action Button */}
           <button
-            onClick={() => setTypeFilter('Alle')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              typeFilter === 'Alle' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-            }`}
+            onClick={handleCreateNew}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition-colors shadow-sm flex items-center justify-center space-x-2 shrink-0 cursor-pointer"
           >
-            All
-          </button>
-          {ITEM_TYPES.map((itemType) => (
-            <button
-              key={itemType.slug}
-              onClick={() => setTypeFilter(itemType.slug)}
-              className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                typeFilter === itemType.slug ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-              }`}
-            >
-              {getLocalizedItemType(itemType.slug, 'nl', true)}
-            </button>
-          ))}
-        </div>
-
-        {/* Status Filter Buttons */}
-        <div className="flex items-center space-x-1 p-1 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs font-serif">
-          <span className="text-[10px] font-mono text-[#888888] px-1.5 hidden sm:inline">Status:</span>
-          <button
-            onClick={() => setStatusFilter('Alle')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              statusFilter === 'Alle' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setStatusFilter('Beschikbaar')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              statusFilter === 'Beschikbaar' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-            }`}
-          >
-            Beschikbaar
-          </button>
-          <button
-            onClick={() => setStatusFilter('Gereserveerd')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              statusFilter === 'Gereserveerd' ? 'bg-[#111111] text-white' : 'text-[#555555] hover:text-[#111111]'
-            }`}
-          >
-            Gereserveerd
+            <Plus className="w-4 h-4 text-gray-300" />
+            <span>Nieuw object</span>
           </button>
         </div>
 
-        {/* Category Filter Select Dropdown */}
-        <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-[#FAF7F2] border border-[#D8CEB8] text-xs">
-          <span className="text-[10px] font-mono text-[#888888] px-1 hidden md:inline">Categorie:</span>
+        {/* Bottom Row: Filters */}
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 uppercase tracking-wider mr-2 hidden sm:flex">
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filters</span>
+          </div>
+
+          {/* Type Filter */}
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-gray-400 cursor-pointer"
+          >
+            <option value="Alle">Type: Alle</option>
+            {ITEM_TYPES.map((itemType) => (
+              <option key={itemType.slug} value={itemType.slug}>
+                {getLocalizedItemType(itemType.slug, 'nl', true)}
+              </option>
+            ))}
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-gray-400 cursor-pointer"
+          >
+            <option value="Alle">Status: Alle</option>
+            <option value="Beschikbaar">Beschikbaar</option>
+            <option value="Gereserveerd">Gereserveerd</option>
+            <option value="Verkocht">Verkocht</option>
+          </select>
+
+          {/* Category Filter */}
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-transparent text-xs font-semibold text-[#111111] focus:outline-none cursor-pointer pr-2"
+            className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-gray-400 cursor-pointer"
           >
-            <option value="Alle">Alle Categorieën</option>
+            <option value="Alle">Categorie: Alle</option>
             {CATEGORIES.map((category) => (
               <option key={category.slug} value={category.slug}>
                 {getLocalizedCategoryLabel(category.slug, 'nl')}
               </option>
             ))}
           </select>
-        </div>
 
-        {/* Topstuk Toggle Switch */}
-        <div className="flex items-center space-x-2 border-l border-[#D8CEB8] pl-3 py-1">
-          <span className="text-xs font-serif font-bold text-[#111111]">Topstuk</span>
-          <button
-            onClick={() => setOnlyTopstukken(!onlyTopstukken)}
-            className={`w-9 h-5 rounded-full transition-colors relative p-0.5 ${
-              onlyTopstukken ? 'bg-[#B8860B]' : 'bg-stone-300'
-            }`}
-            title="Filter alleen topstukken"
-          >
-            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
-              onlyTopstukken ? 'translate-x-4' : 'translate-x-0'
-            }`} />
-          </button>
+          {/* Topstuk Toggle */}
+          <div className="flex items-center space-x-2 sm:ml-auto pl-2">
+            <span className="text-sm font-medium text-gray-700">Topstuk</span>
+            <button
+              onClick={() => setOnlyTopstukken(!onlyTopstukken)}
+              className={`w-9 h-5 rounded-full transition-colors relative p-0.5 ${
+                onlyTopstukken ? 'bg-[#111111]' : 'bg-[#e5e7eb]'
+              }`}
+              title="Filter alleen topstukken"
+            >
+              <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                onlyTopstukken ? 'translate-x-4' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
         </div>
-
       </div>
 
       {/* Collection Sub-header & Metrics Summary */}

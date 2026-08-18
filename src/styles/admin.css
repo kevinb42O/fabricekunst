@@ -102,8 +102,8 @@
 .admin-brand__identity img {
   display: block;
   width: auto;
-  height: 27px;
-  max-width: 150px;
+  height: 40px;
+  max-width: 200px;
   object-fit: contain;
 }
 

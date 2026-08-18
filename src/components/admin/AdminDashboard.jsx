@@ -34,6 +34,7 @@ import AdminTooltip from './AdminTooltip';
 import AnalyticsManager from './AnalyticsManager';
 import TokensManager from './TokensManager';
 import { supabase } from '../../utils/supabaseClient';
+import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
@@ -214,7 +215,6 @@ export default function AdminDashboard({
         <div className="admin-brand">
           <div className="admin-brand__identity">
             <img src="/images/Atelier Rembrandt.png" alt="Atelier Rembrandt" />
-            <span>Admin</span>
           </div>
           <button type="button" className="admin-icon-button admin-sidebar__close" onClick={() => setMobileMenuOpen(false)} aria-label="Menu sluiten">
             <X aria-hidden="true" />
@@ -229,7 +229,7 @@ export default function AdminDashboard({
             <React.Fragment key={id}>
               <button
                 type="button"
-                className={`admin-nav__item flex items-center justify-between ${activeTab === id ? 'is-active' : ''}`}
+                className={`admin-nav__item ${activeTab === id ? 'is-active' : ''}`}
                 aria-current={activeTab === id ? 'page' : undefined}
                 style={{ fontWeight: isExpanded ? '600' : undefined, color: isExpanded ? 'var(--admin-text)' : undefined }}
                 onClick={() => {
@@ -243,10 +243,8 @@ export default function AdminDashboard({
                   }
                 }}
               >
-                <div className="flex items-center gap-3">
-                  <Icon aria-hidden="true" />
-                  <span>{label}</span>
-                </div>
+                <Icon aria-hidden="true" />
+                <span>{label}</span>
                 <div className="ml-auto flex items-center gap-2">
                   {count !== undefined && <span className="admin-nav__count">{count}</span>}
                   {alert && <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>}
@@ -255,21 +253,29 @@ export default function AdminDashboard({
                   )}
                 </div>
               </button>
-              {isExpanded && (
-                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '12px', gap: '4px', marginTop: '-4px', marginBottom: '8px' }}>
-                  {subItems.map(sub => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      className={`admin-nav__item ${activeTab === sub.id ? 'is-active' : ''}`}
-                      onClick={() => navigateTo(sub.id)}
-                    >
-                      <div className="w-[18px]"></div>
-                      <span style={{ fontSize: '13px' }}>{sub.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', marginLeft: '12px', gap: '4px', marginTop: '-4px', marginBottom: '8px' }}
+                  >
+                    {subItems.map(sub => (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        className={`admin-nav__item ${activeTab === sub.id ? 'is-active' : ''}`}
+                        onClick={() => navigateTo(sub.id)}
+                      >
+                        <div className="w-[18px]"></div>
+                        <span style={{ fontSize: '13px' }}>{sub.label}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </React.Fragment>
             );
           })}
@@ -314,62 +320,73 @@ export default function AdminDashboard({
         </header>
 
         <main className="admin-content" id="admin-main">
-          {activeTab === 'dashboard' && (
-            <DashboardOverview
-              items={activeItems}
-              inquiries={activeInquiries}
-              onNavigateTab={navigateTo}
-              onCreateNewItem={handleCreateItem}
-              onOpenLiveSite={handleClose}
-            />
-          )}
-          {activeTab.startsWith('analytics-') && <AnalyticsManager isPro={isPro} activeTab={activeTab.replace('analytics-', '')} />}
-          {activeTab === 'items' && (
-            <ItemManager
-              items={activeItems}
-              onSaveItem={onSaveItem}
-              onDeleteItem={onDeleteItem}
-              onShowToast={showToast}
-              createRequestKey={createItemRequest}
-              onCreateRequestHandled={() => setCreateItemRequest(0)}
-              onOpenCertificate={(item) => {
-                setCertificateForItem(item);
-                navigateTo('certificates');
-              }}
-            />
-          )}
-          {activeTab === 'certificates' && (
-            <CertificateManager
-              items={activeItems}
-              initialItem={certificateForItem}
-              onBackToItems={() => {
-                setCertificateForItem(null);
-                navigateTo('items');
-              }}
-              onShowToast={showToast}
-            />
-          )}
-          {activeTab === 'hero' && (
-            <HeroSlidesManager
-              heroImage={heroImage}
-              mobileHeroImage={mobileHeroImage}
-              onSaveHeroImage={onSaveHeroImage}
-              onSaveMobileHeroImage={onSaveMobileHeroImage}
-              onShowToast={showToast}
-            />
-          )}
-          {activeTab === 'provenance' && (
-            <ProvenanceManager provenanceData={provenanceData} onSaveProvenance={onSaveProvenance} showToast={showToast} />
-          )}
-          {activeTab === 'faq' && (
-            <FaqManager faqItems={faqItems} onSaveFaqItems={onSaveFaqItems} onShowToast={showToast} />
-          )}
-          {activeTab === 'inquiries' && (
-            <InquiriesManager inquiries={activeInquiries} onStatusChange={onUpdateInquiries} onShowToast={showToast} />
-          )}
-          {activeTab === 'customers' && <CustomersManager inquiries={activeInquiries} />}
-          {activeTab === 'tokens' && <TokensManager items={activeItems} />}
-          {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              style={{ width: '100%', minHeight: '100%' }}
+            >
+              {activeTab === 'dashboard' && (
+                <DashboardOverview
+                  items={activeItems}
+                  inquiries={activeInquiries}
+                  onNavigateTab={navigateTo}
+                  onCreateNewItem={handleCreateItem}
+                  onOpenLiveSite={handleClose}
+                />
+              )}
+              {activeTab.startsWith('analytics-') && <AnalyticsManager isPro={isPro} activeTab={activeTab.replace('analytics-', '')} />}
+              {activeTab === 'items' && (
+                <ItemManager
+                  items={activeItems}
+                  onSaveItem={onSaveItem}
+                  onDeleteItem={onDeleteItem}
+                  onShowToast={showToast}
+                  createRequestKey={createItemRequest}
+                  onCreateRequestHandled={() => setCreateItemRequest(0)}
+                  onOpenCertificate={(item) => {
+                    setCertificateForItem(item);
+                    navigateTo('certificates');
+                  }}
+                />
+              )}
+              {activeTab === 'certificates' && (
+                <CertificateManager
+                  items={activeItems}
+                  initialItem={certificateForItem}
+                  onBackToItems={() => {
+                    setCertificateForItem(null);
+                    navigateTo('items');
+                  }}
+                  onShowToast={showToast}
+                />
+              )}
+              {activeTab === 'hero' && (
+                <HeroSlidesManager
+                  heroImage={heroImage}
+                  mobileHeroImage={mobileHeroImage}
+                  onSaveHeroImage={onSaveHeroImage}
+                  onSaveMobileHeroImage={onSaveMobileHeroImage}
+                  onShowToast={showToast}
+                />
+              )}
+              {activeTab === 'provenance' && (
+                <ProvenanceManager provenanceData={provenanceData} onSaveProvenance={onSaveProvenance} showToast={showToast} />
+              )}
+              {activeTab === 'faq' && (
+                <FaqManager faqItems={faqItems} onSaveFaqItems={onSaveFaqItems} onShowToast={showToast} />
+              )}
+              {activeTab === 'inquiries' && (
+                <InquiriesManager inquiries={activeInquiries} onStatusChange={onUpdateInquiries} onShowToast={showToast} />
+              )}
+              {activeTab === 'customers' && <CustomersManager inquiries={activeInquiries} />}
+              {activeTab === 'tokens' && <TokensManager items={activeItems} />}
+              {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
