@@ -268,8 +268,9 @@ export default function TokensManager({ items = [] }) {
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> Capaciteit voor 50 Kunstwerken</li>
               <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 500 MB Database Grootte</li>
-              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 1 GB Media Opslag (Sterk gecomprimeerd)</li>
+              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 1 GB Media Opslag (Gecomprimeerd)</li>
               <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> 5 GB/mnd Gedeeld Dataverkeer</li>
+              <li className="flex items-start text-sm text-gray-600"><Check size={18} className="text-gray-400 mr-3 mt-0.5 flex-shrink-0" /> Bezoekersstatistieken (30 dgn historie)</li>
               <li className="flex items-start text-sm text-gray-400"><X size={18} className="text-gray-300 mr-3 mt-0.5 flex-shrink-0" /> Geen Wereldwijd CDN (Tragere laadtijden)</li>
               <li className="flex items-start text-sm text-gray-400"><X size={18} className="text-gray-300 mr-3 mt-0.5 flex-shrink-0" /> Geen Gegarandeerde Uptime</li>
             </ul>
@@ -298,8 +299,9 @@ export default function TokensManager({ items = [] }) {
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 8 GB Database <span className="ml-2 text-[10px] text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">16x Meer</span></li>
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 100 GB Media Opslag (4K Ready)</li>
               <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> 250 GB Direct Dataverkeer</li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Ongelimiteerd Gecachet CDN Verkeer ✨</li>
-              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Automatische Dagelijkse Back-ups</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Geavanceerde Analytics (Volledige historie)</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Ongelimiteerd Gecachet CDN Verkeer</li>
+              <li className="flex items-start text-sm text-gray-900 font-medium"><Check size={18} className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" /> Gegarandeerde Uptime & Back-ups</li>
             </ul>
 
             <button 
@@ -312,14 +314,14 @@ export default function TokensManager({ items = [] }) {
         </div>
       </div>
 
-      {/* Tokens / Extra Kunstwerken */}
+      {/* Capaciteitsuitbreiding */}
       <div className="bg-white text-gray-900 p-8 rounded-2xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-xl font-bold flex items-center text-gray-900">
-              Eenmalige Uitbreidingen
+              Eenmalige Capaciteitsuitbreiding
             </h2>
-            <p className="text-sm text-gray-500 mt-1">Koop extra ruimte in de catalogus (tokens) om meer kunstwerken toe te voegen.</p>
+            <p className="text-sm text-gray-500 mt-1">Verhoog de limiet van uw catalogus blijvend, zonder maandelijkse abonnementskosten.</p>
           </div>
           <ShoppingCart className="text-gray-300" size={32} />
         </div>
@@ -327,16 +329,16 @@ export default function TokensManager({ items = [] }) {
         <div className="flex items-center justify-between bg-gray-50 p-6 rounded-xl border border-gray-200">
           <div>
             <h4 className="font-bold text-gray-900 text-lg flex items-center">
-              Extra Kunstwerken
-              <span className="ml-3 bg-gray-200 text-gray-800 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full">Geen abonnementskosten</span>
+              +50 of +150 Extra Kunstwerken
+              <span className="ml-3 bg-gray-200 text-gray-800 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full">Eenmalige Aankoop</span>
             </h4>
-            <p className="text-sm text-gray-500 mt-2">Zit u aan de limiet van {MAX_ITEMS} kunstwerken? Verhoog dit limiet blijvend met een token-pakket.</p>
+            <p className="text-sm text-gray-500 mt-2">Ideaal wanneer uw collectie groeit, maar u de huidige serverprestaties (Basis Plan) nog voldoende vindt.</p>
           </div>
           <button 
             onClick={() => { setModalProduct('token'); setIsUpgradeModalOpen(true); }}
             className="inline-flex items-center bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-gray-800 hover:shadow-lg transition-all active:scale-95 whitespace-nowrap ml-6"
           >
-            Koop Tokens <span className="ml-2">→</span>
+            Capaciteit Verhogen <span className="ml-2">→</span>
           </button>
         </div>
       </div>

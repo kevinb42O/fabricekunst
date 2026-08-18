@@ -21,7 +21,7 @@ const UpgradeModal = ({ isOpen, onClose, product = 'pro' }) => {
 
   const price = isPro ? proPrice : tokenPrice;
   const description = isPro ? proDesc : tokenDesc;
-  const productName = isPro ? (isYearly ? 'Pro Plan Jaarlijks' : 'Pro Plan Maandelijks') : (isTier1 ? 'Token 50 Kunstwerken' : 'Token 150 Kunstwerken');
+  const productName = isPro ? (isYearly ? 'Pro Plan Jaarlijks' : 'Pro Plan Maandelijks') : (isTier1 ? 'Uitbreiding 50 Kunstwerken' : 'Uitbreiding 150 Kunstwerken');
 
   // EPC QR Code
   const iban = "BE43738004886701";
@@ -44,8 +44,8 @@ const UpgradeModal = ({ isOpen, onClose, product = 'pro' }) => {
         {/* Header */}
         <div className="flex justify-between items-center px-8 py-6">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{isPro ? 'Upgrade naar Pro' : 'Extra Kunstwerken'}</h3>
-            <p className="text-sm text-gray-500 mt-1">{isPro ? 'Kies uw facturatiecyclus' : 'Kies uw uitbreiding'}</p>
+            <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{isPro ? 'Upgrade naar Pro' : 'Capaciteitsuitbreiding'}</h3>
+            <p className="text-sm text-gray-500 mt-1">{isPro ? 'Kies uw facturatiecyclus' : 'Kies hoeveel werken u wilt toevoegen'}</p>
           </div>
           <button 
             onClick={onClose}
