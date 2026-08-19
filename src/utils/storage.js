@@ -1207,55 +1207,60 @@ export const DEFAULT_PROVENANCE_DATA = {
 const mergeProtocolSteps = (savedSteps = []) => {
   return DEFAULT_PROVENANCE_DATA.protocol.steps.map((defaultStep, idx) => {
     const savedStep = savedSteps[idx] || {};
-    return {
-      ...defaultStep,
-      ...savedStep
-    };
+    return { ...defaultStep, ...savedStep };
   });
 };
 
 export const getProvenanceData = () => {
-  // Always return the corrected defaults — never merge with potentially
-  // stale Title-Case data that may be cached in localStorage.
-  return {
-    hero:     { ...DEFAULT_PROVENANCE_DATA.hero },
-    protocol: {
-      ...DEFAULT_PROVENANCE_DATA.protocol,
-      steps: DEFAULT_PROVENANCE_DATA.protocol.steps.map(s => ({ ...s }))
-    },
-    story: { ...DEFAULT_PROVENANCE_DATA.story },
-    cta:   { ...DEFAULT_PROVENANCE_DATA.cta }
-  };
+  try {
+    const saved = localStorage.getItem(PROVENANCE_PAGE_KEY);
+    if (!saved) return DEFAULT_PROVENANCE_DATA;
+    const parsed = JSON.parse(saved);
+    return {
+      hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
+      protocol: {
+        ...DEFAULT_PROVENANCE_DATA.protocol,
+        ...(parsed.protocol || {}),
+        steps: mergeProtocolSteps(parsed.protocol?.steps)
+      },
+      story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
+      cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) }
+    };
+  } catch (err) {
+    console.error("Fout bij ophalen herkomst pagina data:", err);
+    return DEFAULT_PROVENANCE_DATA;
+  }
 };
 
 export const fetchProvenanceDataAsync = async () => {
-  // Always start from the corrected DEFAULT_PROVENANCE_DATA so that any
-  // stale Title-Case strings stored in Supabase or localStorage are ignored.
-  const freshData = {
-    hero:     { ...DEFAULT_PROVENANCE_DATA.hero },
-    protocol: {
-      ...DEFAULT_PROVENANCE_DATA.protocol,
-      steps: DEFAULT_PROVENANCE_DATA.protocol.steps.map(s => ({ ...s }))
-    },
-    story: { ...DEFAULT_PROVENANCE_DATA.story },
-    cta:   { ...DEFAULT_PROVENANCE_DATA.cta }
-  };
-
-  // Persist the clean data back to Supabase so the admin panel is also updated.
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('admin_settings').upsert({
-        key: 'herkomst_page_data',
-        value: JSON.stringify(freshData),
-        updated_at: new Date().toISOString()
-      });
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('*')
+        .eq('key', 'herkomst_page_data')
+        .maybeSingle();
+
+      if (!error && data && data.value) {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        const merged = {
+          hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
+          protocol: {
+            ...DEFAULT_PROVENANCE_DATA.protocol,
+            ...(parsed.protocol || {}),
+            steps: mergeProtocolSteps(parsed.protocol?.steps)
+          },
+          story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
+          cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) }
+        };
+        localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
     } catch (err) {
-      console.warn('Could not sync corrected provenance defaults to Supabase:', err);
+      console.error("Supabase herkomst page fetch error:", err);
     }
   }
-
-  localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(freshData));
-  return freshData;
+  return getProvenanceData();
 };
 
 export const saveProvenanceDataAsync = async (data) => {
