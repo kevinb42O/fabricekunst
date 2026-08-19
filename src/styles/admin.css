@@ -236,12 +236,12 @@
   gap: 9px;
 }
 
-.admin-topbar__title span {
+.admin-topbar__title > span:first-child {
   color: var(--admin-muted);
   font-size: 13px;
 }
 
-.admin-topbar__title span::after {
+.admin-topbar__title > span:first-child::after {
   content: '/';
   margin-left: 9px;
   color: #d4d4d4;
@@ -1591,8 +1591,8 @@
     padding: 0 16px;
   }
 
-  .admin-topbar__title span,
-  .admin-topbar__title span::after {
+  .admin-topbar__title > span:first-child,
+  .admin-topbar__title > span:first-child::after {
     display: none;
   }
 

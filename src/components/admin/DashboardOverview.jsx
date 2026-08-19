@@ -12,6 +12,7 @@ const formatDate = (value) => {
 export default function DashboardOverview({
   items = [],
   inquiries = [],
+  currentUser = null,
   onNavigateTab = () => {},
   onCreateNewItem = () => {},
   onOpenLiveSite = () => {}
@@ -47,8 +48,8 @@ export default function DashboardOverview({
   }, []);
 
   const currentEgress = metricsData?.usages?.find(m => m.metric === 'egress')?.usage || 0;
-  const isPremium = metricsData?.plan === 'premium';
-  const isPro = metricsData?.plan === 'pro' || isPremium;
+  const isPremium = metricsData?.plan === 'premium' || currentUser?.subscription === 'premium';
+  const isPro = metricsData?.plan === 'pro' || currentUser?.subscription === 'pro' || isPremium;
   const MAX_EGRESS = isPremium ? 1000 * 1024 * 1024 * 1024 : (isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024);
   const MAX_ITEMS = isPremium ? 500 : (isPro ? 150 : 50);
   const isTrafficExceeded = currentEgress >= MAX_EGRESS;

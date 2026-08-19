@@ -82,15 +82,15 @@ const UsageCard = ({ title, usageStr, limitStr, percentage, overLimit, icon: Ico
   );
 };
 
-export default function TokensManager({ items = [] }) {
+export default function TokensManager({ items = [], currentUser = null }) {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState('pro'); // 'pro' or 'token'
 
-  const isPremium = metrics?.plan === 'premium';
-  const isPro = metrics?.plan === 'pro' || isPremium;
+  const isPremium = metrics?.plan === 'premium' || currentUser?.subscription === 'premium';
+  const isPro = metrics?.plan === 'pro' || currentUser?.subscription === 'pro' || isPremium;
 
   // Dynamic Limits
   const MAX_ITEMS = isPremium ? 500 : (isPro ? 150 : 50);

@@ -948,7 +948,7 @@ const getAdminProfileForAuthUser = async (authUser) => {
 
   const { data, error } = await supabase
     .from('admin_profiles')
-    .select('user_id, email, name, role, active')
+    .select('*')
     .eq('user_id', authUser.id)
     .maybeSingle();
 
@@ -960,7 +960,8 @@ const getAdminProfileForAuthUser = async (authUser) => {
     id: data.user_id,
     email: data.email || authUser.email,
     name: data.name || authUser.email,
-    role: data.role
+    role: data.role,
+    subscription: data.subscription || authUser.user_metadata?.subscription || authUser.app_metadata?.subscription
   };
 };
 
@@ -1090,77 +1091,77 @@ export const resetToInitialData = () => {
 };
 
 // --- HERKOMST & PROVENANCE PAGE CMS MANAGEMENT ---
-const PROVENANCE_PAGE_KEY = 'atelier_rembrandt_provenance_page';
+const PROVENANCE_PAGE_KEY = 'atelier_rembrandt_provenance_page_v2';
 
 export const DEFAULT_PROVENANCE_DATA = {
   hero: {
-    badge: 'Herkomst & Expertise',
-    badge_en: 'Provenance & Expertise',
-    badge_fr: 'Provenance & Expertise',
-    title: 'Gecertificeerde Provenance & Wetenschappelijk Onderzoek',
-    title_en: 'Certified Provenance & Bibliographical Research',
-    title_fr: 'Provenance Certifiée & Recherche Bibliographique',
+    badge: 'Herkomst & expertise',
+    badge_en: 'Provenance & expertise',
+    badge_fr: 'Provenance & expertise',
+    title: 'Gecertificeerde provenance & wetenschappelijk onderzoek',
+    title_en: 'Certified provenance & bibliographical research',
+    title_fr: 'Provenance certifiée & recherche bibliographique',
     subtitle: 'Elk zeldzaam meesterwerk in onze collectie wordt vergezeld van een aantoonbare herkomstgeschiedenis en een grondig bibliografisch verificatierapport.',
     subtitle_en: 'Every rare masterwork in our collection is accompanied by a documented provenance history and a rigorous bibliographical verification report.',
     subtitle_fr: 'Chaque chef-d’œuvre rare de notre collection est accompagné d’un historique de provenance documenté et d’un rapport de vérification bibliographique rigoureux.',
     bgImage: '/images/hero/hero-voltaire-exlibris.jpg'
   },
   protocol: {
-    badge: 'Gecertificeerd Verificatieprotocol',
-    badge_en: 'Certified Verification Protocol',
-    badge_fr: 'Protocole de Vérification Certifié',
-    title: 'Het Protocol van Authenticiteit & Verificatie',
-    title_en: 'The Protocol of Authenticity & Verification',
-    title_fr: 'Le Protocole d’Authenticité & de Vérification',
+    badge: 'Gecertificeerd verificatieprotocol',
+    badge_en: 'Certified verification protocol',
+    badge_fr: 'Protocole de vérification certifié',
+    title: 'Het protocol van authenticiteit & verificatie',
+    title_en: 'The protocol of authenticity & verification',
+    title_fr: 'Le protocole d’authenticité & de vérification',
     subtitle: 'Voordat een antiquarisch meesterwerk in onze gecureerde collectie wordt opgenomen, doorloopt het ons vierstappen-onderzoeksprotocol.',
     subtitle_en: 'Before an antiquarian masterpiece is included in our curated collection, it undergoes our four-step research protocol.',
     subtitle_fr: 'Avant d’intégrer notre collection sélectionnée, chaque ouvrage précieux franchit notre protocole d’examen en quatre étapes.',
     steps: [
       {
         step: '01',
-        title: 'Fysiek & Materieel Onderzoek',
-        title_en: 'Physical & Material Analysis',
-        title_fr: 'Examen Physique & Matériel',
+        title: 'Fysiek & materieel onderzoek',
+        title_en: 'Physical & material analysis',
+        title_fr: 'Examen physique & matériel',
         description: 'Nauwkeurige inspectie van papierstructuur, watermerken, binding, marmerpapier en 18e-eeuws rood roggevel shagreen leder.',
         description_en: 'Meticulous inspection of paper structure, watermarks, binding, marbled endpapers, and 18th-century red shagreen leather.',
         description_fr: 'Inspection minutieuse de la structure du papier, des filigranes, de la reliure, des papiers marbrés et du chagrin rouge du XVIIIe siècle.'
       },
       {
         step: '02',
-        title: 'Archief & Provenance Check',
-        title_en: 'Archive & Provenance Verification',
-        title_fr: 'Vérification d’Archives & Provenance',
+        title: 'Archief & provenance check',
+        title_en: 'Archive & provenance verification',
+        title_fr: 'Vérification d’archives & provenance',
         description: 'Verificatie van ex-libris stempels, eigenaarsinscripties en historische veilingcatalogi uit adellijke en bibliofiele privécollecties.',
         description_en: 'Verification of bookplates, ownership inscriptions, and historical auction catalogues from noble and bibliophilic private collections.',
         description_fr: 'Vérification des ex-libris, inscriptions de propriété et catalogues de ventes historiques issus de collections privées nobles.'
       },
       {
         step: '03',
-        title: 'Bibliografische Match',
-        title_en: 'Bibliographical Matching',
-        title_fr: 'Concordance Bibliographique',
+        title: 'Bibliografische match',
+        title_en: 'Bibliographical matching',
+        title_fr: 'Concordance bibliographique',
         description: 'Kruisverwijzing met standaard naslagwerken (Brunet, Cohen-de Ricci, Graesse) voor oplage, gravure-aantallen en zeldzaamheid.',
         description_en: 'Cross-referencing with standard reference works (Brunet, Cohen-de Ricci, Graesse) for edition size, plate counts, and rarity.',
         description_fr: 'Recoupement avec les ouvrages de référence (Brunet, Cohen-de Ricci, Graesse) pour les tirages, le nombre de planches et la rareté.'
       },
       {
         step: '04',
-        title: 'Certificaat van Echtheid',
-        title_en: 'Certificate of Authenticity',
-        title_fr: 'Certificat d’Authenticité',
+        title: 'Certificaat van echtheid',
+        title_en: 'Certificate of authenticity',
+        title_fr: 'Certificat d’authenticité',
         description: 'Elk werk wordt geleverd met een officieel Atelier Rembrandt echtheidscertificaat met gedetailleerde conditiestatus en herkomst.',
-        description_en: 'Every work is delivered with an official Atelier Rembrandt Certificate of Authenticity specifying condition status and provenance.',
-        description_fr: 'Chaque œuvre est délivrée avec un Certificat d’Authenticité officiel de l’Atelier Rembrandt détaillant l’état et la provenance.'
+        description_en: 'Every work is delivered with an official Atelier Rembrandt certificate of authenticity specifying condition status and provenance.',
+        description_fr: 'Chaque œuvre est délivrée avec un certificat d’authenticité officiel de l’Atelier Rembrandt détaillant l’état et la provenance.'
       }
     ]
   },
   story: {
-    badge: 'Ex-Libris & Eigendomssporen',
-    badge_en: 'Bookplates & Provenance Traces',
-    badge_fr: 'Ex-Libris & Traces de Propriété',
-    title: 'Aantoonbare Historie van Franse Topverzamelaars',
-    title_en: 'Documented History of Distinguished French Collectors',
-    title_fr: 'Histoire Documentée des Grands Collectionneurs Français',
+    badge: 'Ex-Libris & eigendomssporen',
+    badge_en: 'Bookplates & provenance traces',
+    badge_fr: 'Ex-libris & traces de propriété',
+    title: 'Aantoonbare historie van Franse topverzamelaars',
+    title_en: 'Documented history of distinguished French collectors',
+    title_fr: 'Histoire documentée des grands collectionneurs français',
     quote: 'Een antiek boek ontleent zijn ultieme waarde aan de tastbare bewijzen van zijn reis door de eeuwen heen.',
     quote_en: 'An antique book derives its ultimate value from the tangible evidence of its journey through the centuries.',
     quote_fr: 'Un livre ancien tire sa valeur ultime des preuves tangibles de son voyage à travers les siècles.',
@@ -1175,31 +1176,31 @@ export const DEFAULT_PROVENANCE_DATA = {
     imageCaption_en: 'Vacheron-Poinsot armorial bookplate on handmade marbled endpaper (1829).',
     imageCaption_fr: 'Vacheron-Poinsot ex-libris armorié sur garde marbrée faite main (1829).',
     bullets: [
-      'Adellijk Heraldiek Stempel (Vacheron-Poinsot)',
-      'Ongebroken Eigendomsreeks (1829 – Heden)'
+      'Adellijk heraldiek stempel (Vacheron-Poinsot)',
+      'Ongebroken eigendomsreeks (1829 – heden)'
     ],
     bullets_en: [
-      'Noble Armorial Stamp (Vacheron-Poinsot)',
-      'Unbroken Chain of Ownership (1829 – Present)'
+      'Noble armorial stamp (Vacheron-Poinsot)',
+      'Unbroken chain of ownership (1829 – present)'
     ],
     bullets_fr: [
-      'Timbre Armorié Noble (Vacheron-Poinsot)',
-      'Chaîne de Propriété Ininterrompue (1829 – Présent)'
+      'Timbre armorié noble (Vacheron-Poinsot)',
+      'Chaîne de propriété ininterrompue (1829 – présent)'
     ]
   },
   cta: {
-    badge: 'Particuliere Expertise & Consultatie',
-    badge_en: 'Private Advisory & Consultation',
-    badge_fr: 'Expertise Privée & Consultation',
-    title: 'Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?',
-    title_en: 'Would You Like to Verify the Provenance of Your Collection?',
-    title_fr: 'Souhaitez-vous Faire Vérifier la Provenance de Votre Collection ?',
+    badge: 'Particuliere expertise & consultatie',
+    badge_en: 'Private advisory & consultation',
+    badge_fr: 'Expertise privée & consultation',
+    title: 'Wilt u de herkomst van uw eigen collectie laten verifiëren?',
+    title_en: 'Would you like to verify the provenance of your collection?',
+    title_fr: 'Souhaitez-vous faire vérifier la provenance de votre collection ?',
     subtitle: 'Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.',
     subtitle_en: 'Atelier Rembrandt advises collectors and heirs on valuation, conservation, and authenticity verification for historic private libraries.',
     subtitle_fr: 'L’Atelier Rembrandt conseille les collectionneurs et héritiers pour l’évaluation, la conservation et la vérification d’authenticité de bibliothèques historiques.',
-    buttonText: 'Privé Consultatie Aanvragen',
-    buttonText_en: 'Request Private Consultation',
-    buttonText_fr: 'Demander une Consultation Privée'
+    buttonText: 'Privé consultatie aanvragen',
+    buttonText_en: 'Request private consultation',
+    buttonText_fr: 'Demander une consultation privée'
   }
 };
 

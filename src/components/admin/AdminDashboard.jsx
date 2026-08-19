@@ -147,8 +147,8 @@ export default function AdminDashboard({
   const currentStorage = metricsData?.usages?.find(m => m.metric === 'storage_size')?.usage || 0;
   const currentDb = metricsData?.usages?.find(m => m.metric === 'db_size')?.usage || 0;
 
-  const isPremium = metricsData?.plan === 'premium';
-  const isPro = metricsData?.plan === 'pro' || isPremium;
+  const isPremium = metricsData?.plan === 'premium' || currentUser?.subscription === 'premium';
+  const isPro = metricsData?.plan === 'pro' || currentUser?.subscription === 'pro' || isPremium;
   
   const MAX_CACHED_EGRESS_BYTES = isPremium ? 2000 * 1024 * 1024 * 1024 : (isPro ? 500 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024);
   const MAX_EGRESS = isPremium ? 1000 * 1024 * 1024 * 1024 : (isPro ? 250 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024);
@@ -302,13 +302,17 @@ export default function AdminDashboard({
             <span>Atelier Rembrandt</span>
             <strong>{tabTitles[activeTab]}</strong>
             {isPremium ? (
-              <span className="bg-gradient-to-r from-gray-900 to-black text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">
-                Premium
-              </span>
+              <div className="ml-1.5 px-2 py-[3px] rounded-md border border-gray-800 bg-[#111111] shadow-sm flex items-center justify-center">
+                <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-white leading-none">
+                  Premium
+                </span>
+              </div>
             ) : isPro ? (
-              <span className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">
-                Pro
-              </span>
+              <div className="ml-1.5 px-2 py-[3px] rounded-md border border-gray-200 bg-white shadow-sm flex items-center justify-center">
+                <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-gray-800 leading-none">
+                  Pro
+                </span>
+              </div>
             ) : null}
           </div>
           {newInquiriesCount > 0 && activeTab !== 'inquiries' && (
@@ -333,6 +337,7 @@ export default function AdminDashboard({
                 <DashboardOverview
                   items={activeItems}
                   inquiries={activeInquiries}
+                  currentUser={currentUser}
                   onNavigateTab={navigateTo}
                   onCreateNewItem={handleCreateItem}
                   onOpenLiveSite={handleClose}
@@ -383,7 +388,7 @@ export default function AdminDashboard({
                 <InquiriesManager inquiries={activeInquiries} onStatusChange={onUpdateInquiries} onShowToast={showToast} />
               )}
               {activeTab === 'customers' && <CustomersManager inquiries={activeInquiries} />}
-              {activeTab === 'tokens' && <TokensManager items={activeItems} />}
+              {activeTab === 'tokens' && <TokensManager items={activeItems} currentUser={currentUser} />}
               {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
             </motion.div>
           </AnimatePresence>
