@@ -235,6 +235,7 @@ export default function ItemManager({
   const [formLang, setFormLang] = useState('nl');
   const [editorTab, setEditorTab] = useState('specs'); // 'specs' | 'multilingual'
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const handleSaveFormRef = React.useRef();
   
@@ -638,17 +639,7 @@ export default function ItemManager({
 
   const handleBatchDelete = async () => {
     if (selectedItemIds.length === 0) return;
-    if (window.confirm(`Weet u zeker dat u ${selectedItemIds.length} objecten wilt verwijderen uit de collectie?`)) {
-      const count = selectedItemIds.length;
-      try {
-        await Promise.all(selectedItemIds.map((id) => onDeleteItem(id)));
-        if (onShowToast) onShowToast(`${count} objecten verwijderd uit de collectie.`);
-        setSelectedItemIds([]);
-      } catch (error) {
-        console.error('Batch delete failed:', error);
-        if (onShowToast) onShowToast('Niet alle objecten konden worden verwijderd.', 'error');
-      }
-    }
+    setItemToDelete({ isBatch: true, count: selectedItemIds.length });
   };
 
   const handleToggleFeatured = (item) => {
@@ -1287,7 +1278,7 @@ export default function ItemManager({
 
                           <button
                             type="button"
-                            onClick={() => onDeleteItem(item.id)}
+                            onClick={(e) => { e.stopPropagation(); setItemToDelete(item); }}
                             className="p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
                             aria-label="Object verwijderen"
                             data-admin-tooltip="Verwijderen"
@@ -1589,12 +1580,10 @@ export default function ItemManager({
                             <div className="my-1 border-t border-stone-100" />
 
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setOpenMenuId(null);
-                                if (window.confirm(`Weet je zeker dat je "${item.title}" wilt verwijderen?`)) {
-                                  onDeleteItem(item.id);
-                                  if (onShowToast) onShowToast(`"${item.title}" verwijderd.`);
-                                }
+                                setItemToDelete(item);
                               }}
                               className="w-full px-3.5 py-2 text-left hover:bg-rose-50 text-rose-700 flex items-center space-x-2.5 font-medium transition-colors"
                             >
@@ -2690,6 +2679,57 @@ export default function ItemManager({
                 <Download className="w-4 h-4 text-[#C5A059]" />
                 <span>Toepassen &amp; Vul In</span>
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setItemToDelete(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {itemToDelete.isBatch ? 'Geselecteerde objecten verwijderen' : 'Object verwijderen'}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {itemToDelete.isBatch 
+                  ? `Weet je zeker dat je ${itemToDelete.count} objecten definitief wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.` 
+                  : `Weet je zeker dat je het object "${itemToDelete.title}" definitief wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+              </p>
+              <div className="flex items-center space-x-3">
+                <button 
+                  className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors cursor-pointer"
+                  onClick={() => setItemToDelete(null)}
+                >
+                  Annuleren
+                </button>
+                <button 
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors cursor-pointer flex justify-center"
+                  onClick={async () => {
+                    if (itemToDelete.isBatch) {
+                      const count = selectedItemIds.length;
+                      try {
+                        await Promise.all(selectedItemIds.map((id) => onDeleteItem(id)));
+                        if (onShowToast) onShowToast(`${count} objecten verwijderd uit de collectie.`);
+                        setSelectedItemIds([]);
+                      } catch (error) {
+                        if (onShowToast) onShowToast('Niet alle objecten konden worden verwijderd.', 'error');
+                      }
+                    } else {
+                      onDeleteItem(itemToDelete.id);
+                      if (onShowToast) onShowToast(`"${itemToDelete.title}" verwijderd.`);
+                    }
+                    setItemToDelete(null);
+                  }}
+                >
+                  Definitief Verwijderen
+                </button>
+              </div>
             </div>
           </div>
         </div>,
