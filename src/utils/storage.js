@@ -857,14 +857,14 @@ export const uploadCatalogImage = async (file, { purpose = 'catalog' } = {}) => 
       throw new Error(`R2 heeft de afbeelding geweigerd (${uploadRes.status}).`);
     }
 
-    const verifyRes = await fetch('/api/r2-upload-complete', {
+    const verifyRes = await fetch('/api/r2-presigned-url', {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ objectKey, contentType: file.type, size: file.size, uploadReceipt })
+      body: JSON.stringify({ action: 'complete', objectKey, contentType: file.type, size: file.size, uploadReceipt })
     });
     const verification = await verifyRes.json().catch(() => ({}));
     if (!verifyRes.ok || !verification.ok) {
