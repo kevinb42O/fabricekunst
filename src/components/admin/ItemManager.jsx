@@ -15,7 +15,7 @@ import {
   getLocalizedCollectionGroup,
   getLocalizedItemType
 } from '../../data/catalogTaxonomy';
-import { uploadCatalogImage } from '../../utils/storage';
+import { isR2CatalogImageUrl, uploadCatalogImage } from '../../utils/storage';
 import { isPriceOnRequest, isFieldMarkedEmpty, copyTextToClipboard, parseAiJsonTranslation } from '../../utils/translationService';
 
 const createComparableSale = () => ({
@@ -232,6 +232,7 @@ export default function ItemManager({
   const [editingItem, setEditingItem] = useState(null);
   const [isNew, setIsNew] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState(false);
   const [formLang, setFormLang] = useState('nl');
   const [editorTab, setEditorTab] = useState('specs'); // 'specs' | 'multilingual'
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -297,14 +298,13 @@ export default function ItemManager({
     collationSpecs: '',
     comparableSales: [],
     attributes: {},
-    images: [
-      { url: '/images/scarron-spines-white-bg.jpg', caption: 'Hoofdafbeelding' }
-    ]
+    images: []
   };
 
   const handleCreateNew = () => {
     setEditingItem({ ...emptyItem, id: `item-${Date.now()}` });
     setIsNew(true);
+    setImageUploadError(false);
   };
 
   useEffect(() => {
@@ -322,6 +322,7 @@ export default function ItemManager({
         : []
     });
     setIsNew(false);
+    setImageUploadError(false);
     setFormLang('nl');
   };
 
@@ -658,6 +659,16 @@ export default function ItemManager({
       return;
     }
 
+    if (isUploading) {
+      if (onShowToast) onShowToast('Wacht tot alle afbeeldingen volledig naar R2 zijn geüpload.', 'error');
+      return;
+    }
+
+    if (imageUploadError) {
+      if (onShowToast) onShowToast('Minstens één R2-upload is mislukt. Upload die afbeelding opnieuw voordat u opslaat.', 'error');
+      return;
+    }
+
     const invalidPublishedSaleIndex = (editingItem.comparableSales || [])
       .findIndex(sale => sale.published && !isComparableSaleComplete(sale));
     if (invalidPublishedSaleIndex !== -1) {
@@ -668,12 +679,19 @@ export default function ItemManager({
 
     if (onShowToast) onShowToast(`"${editingItem.title}" wordt opgeslagen...`, 'loading');
 
-    const result = await onSaveItem(editingItem);
-    if (result && result.error) {
-      if (onShowToast) onShowToast(`Cloudsynchronisatie mislukt: ${result.error}`, 'error');
-    } else {
-      if (onShowToast) onShowToast(`"${editingItem.title}" is opgeslagen.`);
+    let result;
+    try {
+      result = await onSaveItem(editingItem);
+    } catch (error) {
+      console.error('Item save failed:', error);
+      if (onShowToast) onShowToast('Opslaan mislukt. Uw invoer blijft open zodat niets verloren gaat.', 'error');
+      return;
     }
+    if (!result || result.success === false || result.error) {
+      if (onShowToast) onShowToast(`Cloudsynchronisatie mislukt: ${result?.error || 'onbekende fout'}`, 'error');
+      return;
+    }
+    if (onShowToast) onShowToast(`"${editingItem.title}" is opgeslagen.`);
     setEditingItem(null);
   };
   handleSaveFormRef.current = handleSaveForm;
@@ -681,7 +699,13 @@ export default function ItemManager({
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    if ((editingItem?.images?.length || 0) + files.length > 30) {
+      if (onShowToast) onShowToast('Een catalogusitem kan maximaal 30 afbeeldingen bevatten.', 'error');
+      e.target.value = '';
+      return;
+    }
     setIsUploading(true);
+    setImageUploadError(false);
 
     for (const file of files) {
       try {
@@ -697,10 +721,12 @@ export default function ItemManager({
         }
       } catch (err) {
         console.error("Fout bij uploaden foto:", err);
-        if (onShowToast) onShowToast("De foto kon niet worden geüpload. Probeer opnieuw.", "error");
+        setImageUploadError(true);
+        if (onShowToast) onShowToast(err?.message || 'De foto kon niet naar R2 worden geüpload.', 'error');
       }
     }
     setIsUploading(false);
+    e.target.value = '';
   };
 
   const addComparableSale = () => {
@@ -741,6 +767,7 @@ export default function ItemManager({
     const file = event.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
+    setImageUploadError(false);
     try {
       const publicUrl = await uploadCatalogImage(file);
       if (publicUrl) {
@@ -749,7 +776,8 @@ export default function ItemManager({
       }
     } catch (err) {
       console.error('Fout bij uploaden comparable sale foto:', err);
-      if (onShowToast) onShowToast('De foto kon niet worden geüpload. Probeer opnieuw.', 'error');
+      setImageUploadError(true);
+      if (onShowToast) onShowToast(err?.message || 'De foto kon niet naar R2 worden geüpload.', 'error');
     } finally {
       setIsUploading(false);
       event.target.value = '';
@@ -759,6 +787,10 @@ export default function ItemManager({
   const handleAddImageUrl = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!newImageUrl.trim()) return;
+    if (!isR2CatalogImageUrl(newImageUrl.trim())) {
+      if (onShowToast) onShowToast('Gebruik uitsluitend een publieke R2-URL (media.atelierrembrandt.com).', 'error');
+      return;
+    }
     setEditingItem(prev => ({
       ...prev,
       images: [

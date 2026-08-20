@@ -395,18 +395,22 @@ export default function App() {
 
   const handleSaveItem = async (itemToSave) => {
     const res = await saveItemAsync(itemToSave);
-    if (res) {
-      const catalogData = Array.isArray(res) ? res : (res.catalog || res);
-      setCatalog(catalogData);
+    if (res && res.success !== false) {
+      setCatalog((currentCatalog) => {
+        const index = currentCatalog.findIndex((item) => item.id === itemToSave.id);
+        if (index === -1) return [itemToSave, ...currentCatalog];
+        const updatedCatalog = [...currentCatalog];
+        updatedCatalog[index] = itemToSave;
+        return updatedCatalog;
+      });
     }
     return res;
   };
 
   const handleDeleteItem = async (idToDelete) => {
     const res = await deleteItemAsync(idToDelete);
-    if (res) {
-      const catalogData = Array.isArray(res) ? res : (res.catalog || res);
-      setCatalog(catalogData);
+    if (res && res.success !== false) {
+      setCatalog((currentCatalog) => currentCatalog.filter((item) => item.id !== idToDelete));
     }
     return res;
   };

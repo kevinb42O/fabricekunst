@@ -9,6 +9,59 @@ const OLD_INQUIRIES_KEY_2 = 'rare_art_books_inquiries';
 const OLD_CATALOG_KEY = 'fabrice_boeken_kunst_catalog';
 const OLD_INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
 
+const CATALOG_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
+const CATALOG_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
+const SUPABASE_STORAGE_URL_PART = '.supabase.co/storage/';
+
+const clearCatalogBrowserCache = () => {
+  try {
+    localStorage.removeItem(CATALOG_KEY);
+    localStorage.removeItem(OLD_CATALOG_KEY_2);
+    localStorage.removeItem(OLD_CATALOG_KEY);
+  } catch (error) {
+    console.warn('Cataloguscache kon niet worden opgeschoond:', error);
+  }
+};
+
+export const isR2CatalogImageUrl = (value) => {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && (
+      url.hostname === 'media.atelierrembrandt.com'
+      || url.hostname.endsWith('.r2.dev')
+    );
+  } catch {
+    return false;
+  }
+};
+
+const isForbiddenCloudImageUrl = (value) => (
+  typeof value === 'string'
+  && (value.startsWith('data:') || value.includes(SUPABASE_STORAGE_URL_PART))
+);
+
+const isManagedImageUrl = (value, { allowLocal = true } = {}) => (
+  isR2CatalogImageUrl(value)
+  || (allowLocal && typeof value === 'string' && value.startsWith('/images/'))
+);
+
+const assertManagedImageUrl = (value, options) => {
+  if (value && !isManagedImageUrl(value, options)) {
+    throw new Error('Afbeeldingen moeten via Cloudflare R2 worden gehost.');
+  }
+};
+
+const validateCatalogImageReferences = (item) => {
+  const urls = [
+    ...(Array.isArray(item?.images) ? item.images.map((image) => image?.url) : []),
+    ...(Array.isArray(item?.comparableSales) ? item.comparableSales.map((sale) => sale?.imageUrl) : [])
+  ];
+  if (urls.some((url) => url && (!isManagedImageUrl(url) || isForbiddenCloudImageUrl(url)))) {
+    throw new Error('Een afbeelding staat niet op R2. Upload de afbeelding opnieuw voordat u opslaat.');
+  }
+};
+
 const HERO_IMAGE_KEY = 'atelier_rembrandt_hero_image';
 const MOBILE_HERO_IMAGE_KEY = 'atelier_rembrandt_mobile_hero_image';
 export const DEFAULT_HERO_IMAGE = '/images/provenience-light-cream-hero.jpg';
@@ -46,6 +99,7 @@ export const fetchHeroImageAsync = async () => {
 };
 
 export const saveHeroImageAsync = async (imageUrl) => {
+  assertManagedImageUrl(imageUrl);
   try {
     localStorage.setItem(HERO_IMAGE_KEY, imageUrl);
   } catch (err) {
@@ -100,6 +154,7 @@ export const fetchMobileHeroImageAsync = async () => {
 };
 
 export const saveMobileHeroImageAsync = async (imageUrl) => {
+  assertManagedImageUrl(imageUrl);
   try {
     localStorage.setItem(MOBILE_HERO_IMAGE_KEY, imageUrl);
   } catch (err) {
@@ -453,6 +508,11 @@ const mapDbInquiryToFrontend = (dbInq) => ({
 // --- CATALOG MANAGEMENT ---
 
 export const getCatalog = () => {
+  if (isSupabaseConfigured()) {
+    clearCatalogBrowserCache();
+    return INITIAL_CATALOG.map(mapDbItemToFrontend);
+  }
+
   try {
     const saved = localStorage.getItem(CATALOG_KEY) || localStorage.getItem(OLD_CATALOG_KEY_2) || localStorage.getItem(OLD_CATALOG_KEY);
     if (!saved) {
@@ -488,7 +548,9 @@ export const fetchCatalogAsync = async () => {
         }
       }
 
-      if (!error && dbItems && dbItems.length > 0) {
+      if (error) throw error;
+
+      if (dbItems && dbItems.length > 0) {
         const mapped = dbItems.map(dbItem => {
           const frontendItem = mapDbItemToFrontend(dbItem);
           const extData = extMap[dbItem.id];
@@ -501,24 +563,10 @@ export const fetchCatalogAsync = async () => {
           return frontendItem;
         });
 
-        // Smart Merge with local data: preserve local non-empty fields if local has newer data
-        const localCatalog = getCatalog();
-        const mergedCatalog = mapped.map(remoteItem => {
-          const localItem = localCatalog.find(l => l.id === remoteItem.id);
-          if (!localItem) return remoteItem;
-          return {
-            ...remoteItem,
-            emptyFields: remoteItem.emptyFields && Object.keys(remoteItem.emptyFields).length > 0 ? remoteItem.emptyFields : (localItem.emptyFields || remoteItem.empty_fields || localItem.empty_fields || {}),
-            empty_fields: remoteItem.empty_fields && Object.keys(remoteItem.empty_fields).length > 0 ? remoteItem.empty_fields : (localItem.empty_fields || remoteItem.emptyFields || localItem.emptyFields || {}),
-            historicalContext: remoteItem.historicalContext || localItem.historicalContext || '',
-            conditionReport: remoteItem.conditionReport || localItem.conditionReport || '',
-            provenanceDetails: remoteItem.provenanceDetails || localItem.provenanceDetails || '',
-            collationSpecs: remoteItem.collationSpecs || localItem.collationSpecs || ''
-          };
-        });
-
-        localStorage.setItem(CATALOG_KEY, JSON.stringify(mergedCatalog));
-        return mergedCatalog;
+        // Supabase is canonical in production. Never duplicate image-heavy catalog
+        // data in localStorage: a cache quota error must not hide valid cloud data.
+        clearCatalogBrowserCache();
+        return mapped;
       }
     } catch (e) {
       console.error("Supabase catalog fetch failed, falling back to local data", e);
@@ -528,6 +576,11 @@ export const fetchCatalogAsync = async () => {
 };
 
 export const saveCatalog = (items) => {
+  if (isSupabaseConfigured()) {
+    clearCatalogBrowserCache();
+    return;
+  }
+
   try {
     localStorage.setItem(CATALOG_KEY, JSON.stringify(items));
   } catch (e) {
@@ -551,6 +604,17 @@ export const formatSupabaseErrorMessage = (error) => {
 };
 
 export const saveCatalogAsync = async (items) => {
+  try {
+    items.forEach(validateCatalogImageReferences);
+  } catch (error) {
+    return {
+      catalog: items,
+      success: false,
+      backend: isSupabaseConfigured() ? 'supabase' : 'local',
+      error: error.message
+    };
+  }
+
   saveCatalog(items);
   let supabaseSuccess = true;
   let supabaseError = null;
@@ -593,6 +657,17 @@ export const saveCatalogAsync = async (items) => {
 };
 
 export const saveItemAsync = async (item) => {
+  try {
+    validateCatalogImageReferences(item);
+  } catch (error) {
+    return {
+      catalog: getCatalog(),
+      success: false,
+      backend: isSupabaseConfigured() ? 'supabase' : 'local',
+      error: error.message
+    };
+  }
+
   const currentCatalog = getCatalog();
   const index = currentCatalog.findIndex(i => i.id === item.id);
   let updatedCatalog;
@@ -641,12 +716,16 @@ export const saveItemAsync = async (item) => {
         console.warn("Could not save item_ext backup:", backupErr);
       }
 
-      // If either main items table OR admin_settings JSON backup succeeded, cloud save is verified!
-      if (mainTableSuccess || extBackupSuccess) {
+      // The item row is mandatory. An item_ext row alone is an orphaned backup and
+      // must never be reported as a successful catalog save.
+      if (mainTableSuccess && extBackupSuccess) {
         supabaseSuccess = true;
         supabaseError = null;
       } else {
         supabaseSuccess = false;
+        supabaseError ||= mainTableSuccess
+          ? 'De catalogusdata is opgeslagen, maar de volledige cloudback-up kon niet worden bevestigd.'
+          : 'Het item kon niet in de cloudcatalogus worden opgeslagen.';
       }
 
     } catch (e) {
@@ -705,12 +784,14 @@ export const uploadCatalogImage = async (file) => {
   if (!file) return null;
 
   if (!isSupabaseConfigured() || !supabase) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(file);
-    });
+    throw new Error('R2-upload is niet beschikbaar: de cloudverbinding is niet geconfigureerd.');
+  }
+
+  if (!CATALOG_IMAGE_TYPES.has(file.type)) {
+    throw new Error('Ongeldig afbeeldingsformaat. Gebruik JPG, PNG, WebP of AVIF.');
+  }
+  if (!Number.isFinite(file.size) || file.size <= 0 || file.size > CATALOG_IMAGE_MAX_BYTES) {
+    throw new Error('De afbeelding is leeg of groter dan 20 MB.');
   }
 
   try {
@@ -730,15 +811,20 @@ export const uploadCatalogImage = async (file) => {
       },
       body: JSON.stringify({
         filename: file.name,
-        contentType: file.type
+        contentType: file.type,
+        size: file.size
       })
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to get presigned URL: ${res.statusText}`);
+      const payload = await res.json().catch(() => ({}));
+      throw new Error(payload.error || `R2 kon geen upload-URL maken (${res.status}).`);
     }
 
     const { presignedUrl, publicUrl } = await res.json();
+    if (!presignedUrl || !isR2CatalogImageUrl(publicUrl)) {
+      throw new Error('R2 gaf geen geldige publieke afbeeldings-URL terug.');
+    }
 
     const uploadRes = await fetch(presignedUrl, {
       method: 'PUT',
@@ -749,17 +835,13 @@ export const uploadCatalogImage = async (file) => {
     });
 
     if (!uploadRes.ok) {
-      throw new Error(`Failed to upload to R2: ${uploadRes.statusText}`);
+      throw new Error(`R2 heeft de afbeelding geweigerd (${uploadRes.status}).`);
     }
 
     return publicUrl;
   } catch (e) {
-    console.error("Image upload exception, falling back to Data URL", e);
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => resolve(ev.target.result);
-      reader.readAsDataURL(file);
-    });
+    console.error('R2 image upload failed:', e);
+    throw new Error(e?.message || 'Upload naar R2 is mislukt. Het bestand is niet opgeslagen.');
   }
 };
 
@@ -1269,6 +1351,8 @@ export const fetchProvenanceDataAsync = async () => {
 };
 
 export const saveProvenanceDataAsync = async (data) => {
+  assertManagedImageUrl(data?.hero?.bgImage);
+  assertManagedImageUrl(data?.story?.image);
   try {
     localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(data));
   } catch (err) {
