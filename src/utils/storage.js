@@ -12,6 +12,47 @@ const OLD_INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
 const CATALOG_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const CATALOG_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 const SUPABASE_STORAGE_URL_PART = '.supabase.co/storage/';
+let publicContentPromise = null;
+
+const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
+  if (force) publicContentPromise = null;
+  if (!publicContentPromise) {
+    publicContentPromise = fetch('/api/public-content', {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    }).then(async (response) => {
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body) throw new Error(`Publieke R2-data niet beschikbaar (${response.status}).`);
+      return body;
+    }).catch((error) => {
+      publicContentPromise = null;
+      throw error;
+    });
+  }
+  return publicContentPromise;
+};
+
+const publishPublicContentSnapshot = async () => {
+  if (!isSupabaseConfigured() || !supabase) return;
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) throw new Error('De beheerderssessie is verlopen; de publieke R2-versie is niet bijgewerkt.');
+
+  const response = await fetch('/api/publish-public-content', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok) {
+    throw new Error(body.error || 'De publieke R2-versie kon niet worden bijgewerkt.');
+  }
+  publicContentPromise = null;
+};
 
 const clearCatalogBrowserCache = () => {
   try {
@@ -79,20 +120,15 @@ export const getHeroImage = () => {
 };
 
 export const fetchHeroImageAsync = async () => {
-  if (isSupabaseConfigured() && supabase) {
+  if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('*')
-        .eq('key', 'hero_image')
-        .maybeSingle();
-
-      if (!error && data && data.value) {
-        localStorage.setItem(HERO_IMAGE_KEY, data.value);
-        return data.value;
+      const snapshot = await fetchPublicContentSnapshot();
+      if (snapshot.heroImage) {
+        localStorage.setItem(HERO_IMAGE_KEY, snapshot.heroImage);
+        return snapshot.heroImage;
       }
     } catch (err) {
-      console.error("Fout bij ophalen hero image van Supabase:", err);
+      console.error("Fout bij ophalen hero image van R2:", err);
     }
   }
   return getHeroImage();
@@ -115,6 +151,7 @@ export const saveHeroImageAsync = async (imageUrl) => {
         updated_at: new Date().toISOString()
       });
       if (error) throw error;
+      await publishPublicContentSnapshot();
     } catch (e) {
       console.error("Supabase hero image save exception:", e);
       throw new Error('De desktop hero-afbeelding is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
@@ -134,20 +171,15 @@ export const getMobileHeroImage = () => {
 };
 
 export const fetchMobileHeroImageAsync = async () => {
-  if (isSupabaseConfigured() && supabase) {
+  if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('*')
-        .eq('key', 'mobile_hero_image')
-        .maybeSingle();
-
-      if (!error && data?.value) {
-        localStorage.setItem(MOBILE_HERO_IMAGE_KEY, data.value);
-        return data.value;
+      const snapshot = await fetchPublicContentSnapshot();
+      if (snapshot.mobileHeroImage) {
+        localStorage.setItem(MOBILE_HERO_IMAGE_KEY, snapshot.mobileHeroImage);
+        return snapshot.mobileHeroImage;
       }
     } catch (err) {
-      console.error("Fout bij ophalen mobiele hero image van Supabase:", err);
+      console.error("Fout bij ophalen mobiele hero image van R2:", err);
     }
   }
   return getMobileHeroImage();
@@ -170,6 +202,7 @@ export const saveMobileHeroImageAsync = async (imageUrl) => {
         updated_at: new Date().toISOString()
       });
       if (error) throw error;
+      await publishPublicContentSnapshot();
     } catch (err) {
       console.error("Supabase mobiele hero image save exception:", err);
       throw new Error('De mobiele hero-afbeelding is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
@@ -528,48 +561,16 @@ export const getCatalog = () => {
 };
 
 export const fetchCatalogAsync = async () => {
-  if (isSupabaseConfigured() && supabase) {
+  if (isSupabaseConfigured()) {
     try {
-      // 1. Fetch items from items table
-      const { data: dbItems, error } = await supabase.from('items').select('*').order('created_at', { ascending: true });
-
-      // 2. Fetch extended item data (translations/extra fields) from admin_settings
-      const { data: extSettings } = await supabase.from('admin_settings').select('*').like('key', 'item_ext_%');
-      const extMap = {};
-      if (extSettings && Array.isArray(extSettings)) {
-        for (const row of extSettings) {
-          try {
-            const itemId = row.key.replace('item_ext_', '');
-            const parsed = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
-            if (itemId && parsed) extMap[itemId] = parsed;
-          } catch (e) {
-            console.error("Fout bij parsen van item_ext row:", e);
-          }
-        }
-      }
-
-      if (error) throw error;
-
-      if (dbItems && dbItems.length > 0) {
-        const mapped = dbItems.map(dbItem => {
-          const frontendItem = mapDbItemToFrontend(dbItem);
-          const extData = extMap[dbItem.id];
-          if (extData) {
-            return normalizeCatalogItemTaxonomy({
-              ...frontendItem,
-              ...extData
-            });
-          }
-          return frontendItem;
-        });
-
-        // Supabase is canonical in production. Never duplicate image-heavy catalog
-        // data in localStorage: a cache quota error must not hide valid cloud data.
+      const snapshot = await fetchPublicContentSnapshot();
+      if (Array.isArray(snapshot.catalog) && snapshot.catalog.length > 0) {
+        const mapped = snapshot.catalog.map(mapDbItemToFrontend);
         clearCatalogBrowserCache();
         return mapped;
       }
     } catch (e) {
-      console.error("Supabase catalog fetch failed, falling back to local data", e);
+      console.error("R2 catalog fetch failed, falling back to bundled data", e);
     }
   }
   return getCatalog();
@@ -635,12 +636,14 @@ export const saveCatalogAsync = async (items) => {
 
       // Save extended items to admin_settings so no translation or detail is ever lost
       for (const item of items) {
-        await supabase.from('admin_settings').upsert({
+        const { error: extError } = await supabase.from('admin_settings').upsert({
           key: `item_ext_${item.id}`,
           value: JSON.stringify(item),
           updated_at: new Date().toISOString()
-        }).catch(() => {});
+        });
+        if (extError) throw extError;
       }
+      if (supabaseSuccess) await publishPublicContentSnapshot();
     } catch (e) {
       console.error("Supabase catalog save failed", e);
       supabaseSuccess = false;
@@ -721,6 +724,7 @@ export const saveItemAsync = async (item) => {
       if (mainTableSuccess && extBackupSuccess) {
         supabaseSuccess = true;
         supabaseError = null;
+        await publishPublicContentSnapshot();
       } else {
         supabaseSuccess = false;
         supabaseError ||= mainTableSuccess
@@ -761,6 +765,8 @@ export const deleteItemAsync = async (itemId) => {
         console.error("Supabase item delete error:", error || extError);
         supabaseSuccess = false;
         supabaseError = formatSupabaseErrorMessage(error || extError);
+      } else {
+        await publishPublicContentSnapshot();
       }
     } catch (e) {
       console.error("Supabase item delete exception:", e);
@@ -1320,16 +1326,11 @@ export const getProvenanceData = () => {
 };
 
 export const fetchProvenanceDataAsync = async () => {
-  if (isSupabaseConfigured() && supabase) {
+  if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('*')
-        .eq('key', 'herkomst_page_data')
-        .maybeSingle();
-
-      if (!error && data && data.value) {
-        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      const snapshot = await fetchPublicContentSnapshot();
+      if (snapshot.provenanceData) {
+        const parsed = snapshot.provenanceData;
         const merged = {
           hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
           protocol: {
@@ -1344,7 +1345,7 @@ export const fetchProvenanceDataAsync = async () => {
         return merged;
       }
     } catch (err) {
-      console.error("Supabase herkomst page fetch error:", err);
+      console.error("R2 herkomst page fetch error:", err);
     }
   }
   return getProvenanceData();
@@ -1371,6 +1372,7 @@ export const saveProvenanceDataAsync = async (data) => {
           updated_at: new Date().toISOString()
         });
       if (error) throw error;
+      await publishPublicContentSnapshot();
     } catch (err) {
       console.error("Supabase herkomst page save exception:", err);
       throw new Error('De herkomstpagina is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
@@ -1460,23 +1462,18 @@ export const getFaqItems = () => {
 };
 
 export const fetchFaqItemsAsync = async () => {
-  if (isSupabaseConfigured() && supabase) {
+  if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
-        .from('admin_settings')
-        .select('*')
-        .eq('key', 'faq_items')
-        .maybeSingle();
-
-      if (!error && data && data.value) {
-        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      const snapshot = await fetchPublicContentSnapshot();
+      if (snapshot.faqItems) {
+        const parsed = snapshot.faqItems;
         if (Array.isArray(parsed)) {
           localStorage.setItem(FAQ_ITEMS_KEY, JSON.stringify(parsed));
           return parsed;
         }
       }
     } catch (err) {
-      console.error("Supabase FAQ fetch error:", err);
+      console.error("R2 FAQ fetch error:", err);
     }
   }
   return getFaqItems();
@@ -1501,6 +1498,7 @@ export const saveFaqItemsAsync = async (faqItems) => {
           updated_at: new Date().toISOString()
         });
       if (error) throw error;
+      await publishPublicContentSnapshot();
     } catch (err) {
       console.error("Supabase FAQ save exception:", err);
       throw new Error('De FAQ is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');

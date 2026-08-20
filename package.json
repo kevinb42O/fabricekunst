@@ -9,6 +9,7 @@
     "build": "vite build",
     "postbuild": "node scripts/generate-static-pages.js",
     "sitemap:preview": "node scripts/generate-sitemap.js",
+    "content:publish": "node scripts/publish-public-content.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
