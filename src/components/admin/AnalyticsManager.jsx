@@ -417,35 +417,35 @@ function DataTable({ caption, columns, rows, emptyMessage = 'Geen resultaten voo
 function TrendPanel({ report }) {
   const data = report.series;
   const hasData = data.some((item) => item.sessions > 0 || item.pageViews > 0 || item.inquiries > 0);
-  const { unit, adjective, column, tickInterval } = granularityMeta(report.range.granularity);
+  const { unit, column, tickInterval } = granularityMeta(report.range.granularity);
   const partialHourNote = unit === 'uur' ? ' Het eerste en laatste uur kunnen gedeeltelijk zijn.' : '';
   return (
-    <Panel title="Sessies over tijd" description={`Deze grafiek toont het aantal sessies per ${unit} in de gekozen periode.${partialHourNote} Open ‘Toon tabelwaarden’ voor paginaweergaven en verstuurde aanvragen per ${unit}.`} icon={BarChart3}>
+    <Panel title="Bezoeken doorheen de tijd" description={`Het aantal websitebezoeken per ${unit}.${partialHourNote}`} icon={BarChart3}>
       {hasData ? (
         <>
-          <div className="analytics-chart" role="img" aria-label={`Grafiek met sessies per ${unit} voor ${report.range.label}.`}>
+          <div className="analytics-chart" role="img" aria-label={`Grafiek met bezoeken per ${unit} voor ${report.range.label}.`}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 12, right: 12, left: -16, bottom: 0 }}>
                 <defs><linearGradient id="analyticsSessionsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1e40af" stopOpacity={0.24} /><stop offset="100%" stopColor="#1e40af" stopOpacity={0} /></linearGradient></defs>
                 <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
                 <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#525252', fontSize: 12 }} minTickGap={unit === 'uur' ? 8 : 24} interval={tickInterval} />
                 <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#525252', fontSize: 12 }} />
-                <Tooltip cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }} contentStyle={{ border: '1px solid #d1d5db', borderRadius: 8, color: '#171717' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Sessies']} />
+                <Tooltip cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }} contentStyle={{ border: '1px solid #d1d5db', borderRadius: 8, color: '#171717' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Bezoeken']} />
                 <Area type="linear" dataKey="sessions" stroke="#1e40af" strokeWidth={2.5} fill="url(#analyticsSessionsFill)" activeDot={{ r: 4 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
           <details className="analytics-chart-data">
-            <summary>Toon tabelwaarden per {unit}</summary>
-            <DataTable caption={`${adjective} analyse voor ${report.range.label}`} rows={data} columns={[
+            <summary>Toon cijfers per {unit}</summary>
+            <DataTable caption={`Overzicht per ${unit} voor ${report.range.label}`} rows={data} columns={[
               { label: column, render: (row) => row.tooltipLabel },
-              { label: 'Sessies', align: 'end', render: (row) => formatNumber(row.sessions) },
-              { label: 'Paginaweergaven', align: 'end', render: (row) => formatNumber(row.pageViews) },
+              { label: 'Bezoeken', align: 'end', render: (row) => formatNumber(row.sessions) },
+              { label: 'Bekeken pagina’s', align: 'end', render: (row) => formatNumber(row.pageViews) },
               { label: 'Aanvragen', align: 'end', render: (row) => formatNumber(row.inquiries) },
             ]} />
           </details>
         </>
-      ) : <EmptyState title="Nog geen sessies in deze periode">Kies een ruimere periode of deel een trackinglink om nieuwe geaggregeerde sessies te zien.</EmptyState>}
+      ) : <EmptyState title="Nog geen bezoeken in deze periode">Kies een ruimere periode of deel een link naar uw website.</EmptyState>}
     </Panel>
   );
 }
@@ -461,37 +461,37 @@ function LegacyTrendPanel({ legacy }) {
 
   return (
     <Panel
-      title="Historische bezoekers over tijd"
-      description={`Geaggregeerde unieke IDs en paginaweergaven per ${unit}${rangeLabelText}.${partialHourNote} Deze v1-IDs waren persistent en zijn niet vergelijkbaar met de tijdelijke v2-sessies hieronder.`}
+      title="Eerdere bezoeken"
+      description={`Een overzicht van bezoeken en bekeken pagina’s per ${unit}${rangeLabelText}.${partialHourNote}`}
       icon={Eye}
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 22px', marginBottom: '18px', color: '#404040', fontSize: '13px' }}>
-        <span><strong style={{ color: '#0070F3', fontSize: '20px' }}>{formatNumber(legacy.summary.uniqueIds)}</strong> historische unieke IDs</span>
-        <span><strong style={{ color: '#0070F3', fontSize: '20px' }}>{formatNumber(legacy.summary.pageViews)}</strong> historische paginaweergaven</span>
+        <span><strong style={{ color: '#0070F3', fontSize: '20px' }}>{formatNumber(legacy.summary.uniqueIds)}</strong> bezoeken</span>
+        <span><strong style={{ color: '#0070F3', fontSize: '20px' }}>{formatNumber(legacy.summary.pageViews)}</strong> bekeken pagina’s</span>
       </div>
       {hasSeries ? (
         <>
-          <div className="analytics-chart" role="img" aria-label={`Grafiek met historische v1 unieke IDs per ${unit}.`}>
+          <div className="analytics-chart" role="img" aria-label={`Grafiek met eerdere bezoeken per ${unit}.`}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs><linearGradient id="analyticsLegacyVisitorsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0070F3" stopOpacity={0.2} /><stop offset="95%" stopColor="#0070F3" stopOpacity={0} /></linearGradient></defs>
                 <XAxis dataKey="label" axisLine={{ stroke: '#eaeaea' }} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dy={10} minTickGap={unit === 'uur' ? 8 : 24} interval={tickInterval} />
                 <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dx={-10} />
-                <Tooltip cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Historische unieke IDs']} />
+                <Tooltip cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Bezoeken']} />
                 <Area type="linear" dataKey="uniqueIds" stroke="#0070F3" strokeWidth={2} fillOpacity={1} fill="url(#analyticsLegacyVisitorsFill)" activeDot={{ r: 4, fill: '#0070F3', stroke: '#fff', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
           <details className="analytics-chart-data">
-            <summary>Toon historische tabelwaarden per {unit}</summary>
-            <DataTable caption={`Historische v1-analyse per ${unit}`} rows={data} columns={[
+            <summary>Toon cijfers per {unit}</summary>
+            <DataTable caption={`Eerdere bezoeken per ${unit}`} rows={data} columns={[
               { label: column, render: (row) => row.tooltipLabel },
-              { label: 'Unieke IDs', align: 'end', render: (row) => formatNumber(row.uniqueIds) },
-              { label: 'Paginaweergaven', align: 'end', render: (row) => formatNumber(row.pageViews) },
+              { label: 'Bezoeken', align: 'end', render: (row) => formatNumber(row.uniqueIds) },
+              { label: 'Bekeken pagina’s', align: 'end', render: (row) => formatNumber(row.pageViews) },
             ]} />
           </details>
         </>
-      ) : <EmptyState title="Historische v1-totalen zonder tijdreeks">De beveiligde analyse-API heeft voor deze periode nog geen geaggregeerde waarden per {unit} teruggegeven.</EmptyState>}
+      ) : <EmptyState title="Nog geen eerdere cijfers beschikbaar">Voor deze periode zijn nog geen cijfers beschikbaar.</EmptyState>}
     </Panel>
   );
 }
@@ -778,7 +778,7 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
   return (
     <div className="analytics-dashboard">
       <header className="analytics-dashboard__header">
-        <div><p className="analytics-eyebrow">Websiteanalyse</p><h1>{currentTitle}</h1><p>Privacyvriendelijke, geaggregeerde inzichten per tijdelijke sessie — geen personenprofielen.</p></div>
+        <div><p className="analytics-eyebrow">Website</p><h1>{currentTitle}</h1><p>Zie in één oogopslag hoe uw website wordt bezocht.</p></div>
         <div className="analytics-dashboard__header-actions">
           <span className="analytics-updated" aria-live="polite"><Clock3 aria-hidden="true" />{report?.generatedAt ? `Bijgewerkt ${formatTimestamp(report.generatedAt, report.timezone)}` : 'Nog niet bijgewerkt'}</span>
           <button type="button" className="analytics-refresh-button" onClick={() => setRefreshKey((key) => key + 1)} disabled={loadState === 'loading' || loadState === 'refreshing'}><RefreshCw aria-hidden="true" className={loadState === 'refreshing' ? 'is-spinning' : ''} />Vernieuwen</button>
@@ -786,8 +786,8 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
       </header>
 
       <fieldset className="analytics-period-control">
-        <legend>Analyseperiode</legend>
-        <div role="group" aria-label="Analyseperiode kiezen">
+        <legend>Periode</legend>
+        <div role="group" aria-label="Periode kiezen">
           {RANGE_OPTIONS.map((range) => {
             const locked = range.isProFeature && !isPro;
             return <button type="button" key={range.id} className={timeRange === range.id ? 'is-active' : ''} aria-pressed={timeRange === range.id} aria-label={locked ? `${range.label}, beschikbaar met Pro` : range.label} onClick={() => handleRangeChange(range)}>{range.label}{locked ? <span className="analytics-period-control__lock">Pro</span> : null}</button>;
@@ -803,16 +803,16 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
         <>
           {report.meta.trackingState === 'legacy' ? <div className="analytics-alert analytics-alert--warning" role="status"><Info aria-hidden="true" /><div><strong>Nieuwe, privacyvriendelijke meting actief</strong><p>{report.meta.message || `Vergelijkbare veilige sessiegegevens zijn beschikbaar vanaf ${formatDate(report.meta.trackingStartedAt, report.timezone)}.`}</p></div></div> : null}
           {report.meta.partial ? <div className="analytics-alert analytics-alert--warning" role="status"><Info aria-hidden="true" /><div><strong>Gedeeltelijke gegevens</strong><p>Een deel van de analyses is tijdelijk niet beschikbaar. Gebruik deze cijfers niet als volledige vergelijking.</p></div></div> : null}
-          {!hasSessions && report.meta.trackingState !== 'legacy' ? <div className="analytics-no-data-banner"><CheckCircle2 aria-hidden="true" /><div><strong>Nog geen sessies in {report.range.label.toLowerCase()}</strong><p>Dit is geen foutmelding: er zijn eenvoudig nog geen veilige, geaggregeerde metingen in deze periode.</p></div></div> : null}
+          {!hasSessions && report.meta.trackingState !== 'legacy' ? <div className="analytics-no-data-banner"><CheckCircle2 aria-hidden="true" /><div><strong>Nog geen bezoeken in {report.range.label.toLowerCase()}</strong><p>Er is nog niets gemeten in deze periode.</p></div></div> : null}
 
           {activeTab === 'overview' ? (
             <div className="analytics-content">
               <LegacyTrendPanel legacy={report.legacy} />
               <section className="analytics-metric-grid" aria-label="Kerncijfers">
-                <MetricCard icon={Mail} label="Verstuurde aanvragen" metric={report.summary.inquiries} description="Succesvol ingediende contactaanvragen." tone="outcome" />
-                <MetricCard icon={CheckCircle2} label="Aanvraagratio" metric={report.summary.inquiryRate} isRate description="Sessies met minstens één verstuurde aanvraag." tone="outcome" />
-                <MetricCard icon={MonitorSmartphone} label="Sessies" metric={report.summary.sessions} description="Tijdelijke sessies; geen unieke personen." />
-                <MetricCard icon={ExternalLink} label="Paginaweergaven" metric={report.summary.pageViews} description="Alle geregistreerde paginaweergaven." />
+                <MetricCard icon={Mail} label="Aanvragen" metric={report.summary.inquiries} description="Verstuurde contactaanvragen." tone="outcome" />
+                <MetricCard icon={CheckCircle2} label="Aanvragen per bezoek" metric={report.summary.inquiryRate} isRate description="Het deel van de bezoeken dat tot een aanvraag leidde." tone="outcome" />
+                <MetricCard icon={MonitorSmartphone} label="Bezoeken" metric={report.summary.sessions} description="Aantal bezoeken aan uw website." />
+                <MetricCard icon={ExternalLink} label="Bekeken pagina’s" metric={report.summary.pageViews} description="Totaal aantal bekeken pagina’s." />
               </section>
               <div className="analytics-overview-grid"><TrendPanel report={report} /><ActivityPanel report={report} onOpenSession={handleOpenSession} /></div>
               <Panel title="Pagina’s met de meeste interesse" description="Gebruik dit om objectpagina’s en landingspagina’s te verbeteren." icon={BarChart3}>
