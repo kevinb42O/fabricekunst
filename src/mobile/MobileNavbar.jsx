@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Mail, Menu, Phone, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { localizePath } from '../utils/locales';
+import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 const MENU_COPY = {
   nl: { menu: 'Menu openen', close: 'Menu sluiten', language: 'Taal', current: 'Huidig', contact: 'Plan een privébezichtiging' },
@@ -18,6 +19,11 @@ export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultat
   const firstLinkRef = useRef(null);
   const labels = MENU_COPY[language] || MENU_COPY.en;
   const shouldReduceMotion = useReducedMotion();
+  const trackContactClick = (eventName) => {
+    if (trackEvent(eventName, { placement: 'mobile_navigation' })) {
+      flushAnalytics({ useBeacon: true });
+    }
+  };
 
   const navLinks = [
     { id: 'home', label: t('nav.home'), href: localizePath('/', language) },
@@ -183,6 +189,7 @@ export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultat
                   <div className="mt-5 grid gap-1 min-[600px]:grid-cols-2 min-[600px]:gap-3">
                     <a
                       href="mailto:contact@atelierrembrandt.com"
+                      onClick={() => trackContactClick('email_clicked')}
                       className="flex min-h-12 min-w-0 items-center gap-3 border-y border-[#D8CEB8]/70 font-serif text-[13px] text-[#332D27] transition-colors active:text-[#8E7035] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035] min-[600px]:border"
                     >
                       <Mail className="h-4 w-4 shrink-0 text-[#8E7035]" strokeWidth={1.7} aria-hidden="true" />
@@ -190,6 +197,7 @@ export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultat
                     </a>
                     <a
                       href="tel:+32484384530"
+                      onClick={() => trackContactClick('phone_clicked')}
                       className="flex min-h-12 items-center gap-3 border-b border-[#D8CEB8]/70 font-serif text-[13px] text-[#332D27] transition-colors active:text-[#8E7035] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035] min-[600px]:border"
                     >
                       <Phone className="h-4 w-4 shrink-0 text-[#8E7035]" strokeWidth={1.7} aria-hidden="true" />

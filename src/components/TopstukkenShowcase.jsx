@@ -8,6 +8,7 @@ import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '..
 import { rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
+import PriceAssurance from './PriceAssurance';
 
 export default function TopstukkenShowcase({ 
   items = [], 
@@ -83,11 +84,11 @@ export default function TopstukkenShowcase({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1.0, ease: LUXURY_EASE }}
-            onClick={() => onOpenItemDetail(spotlightItem)}
+            onClick={() => onOpenItemDetail(spotlightItem, 'home_spotlight')}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                onOpenItemDetail(spotlightItem);
+                onOpenItemDetail(spotlightItem, 'home_spotlight');
               }
             }}
             role="link"
@@ -127,7 +128,7 @@ export default function TopstukkenShowcase({
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-                      onOpenItemDetail(spotlightItem);
+                      onOpenItemDetail(spotlightItem, 'home_spotlight_title');
                     }}
                   >
                     {getItemField(spotlightItem, 'title', language)}
@@ -152,6 +153,7 @@ export default function TopstukkenShowcase({
               <div className="mobile-spotlight-details pt-6 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-6">
                 <div>
                   <span className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">{getLocalizedPrice(spotlightItem.price, language)}</span>
+                  <PriceAssurance compact className="max-w-sm" />
                 </div>
 
                 <button
@@ -207,11 +209,11 @@ export default function TopstukkenShowcase({
                 <motion.div
                   key={item.id}
                   variants={cardVariants}
-                  onClick={() => onOpenItemDetail(item)}
+                  onClick={() => onOpenItemDetail(item, 'home_featured_grid')}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
-                      onOpenItemDetail(item);
+                      onOpenItemDetail(item, 'home_featured_grid');
                     }
                   }}
                   role="link"
@@ -250,7 +252,7 @@ export default function TopstukkenShowcase({
                           onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
-                            onOpenItemDetail(item);
+                            onOpenItemDetail(item, 'home_featured_grid_title');
                           }}
                         >
                           {itemTitle}
@@ -277,6 +279,7 @@ export default function TopstukkenShowcase({
                       <span className="text-lg sm:text-xl font-serif font-bold text-[#111111]">
                         {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                       </span>
+                      <PriceAssurance compact className="max-w-xs" />
                     </div>
                   </div>
                 </motion.div>

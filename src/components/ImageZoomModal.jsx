@@ -285,7 +285,7 @@ export default function ImageZoomModal({ images = [], initialIndex = 0, title = 
             alt={activeImage.caption || title}
             loading="eager"
             decoding="async"
-            fetchPriority="high"
+            fetchpriority="high"
             draggable={false}
             className="max-w-[88vw] max-h-[80vh] object-contain rounded-md shadow-2xl border border-white/10"
           />

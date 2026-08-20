@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import TopstukkenShowcase from './components/TopstukkenShowcase';
@@ -12,12 +11,13 @@ import MobileNavbar from './mobile/MobileNavbar';
 import MobileHero from './mobile/MobileHero';
 import MobileHomeSections from './mobile/MobileHomeSections';
 import MobileFooter from './mobile/MobileFooter';
+import CollectorListSection from './components/CollectorListSection';
 import { useResponsiveMode } from './hooks/useResponsiveMode';
 import { getItemSlug, itemMatchesRoute } from './utils/itemSlug';
 import { useLanguage } from './context/LanguageContext';
 import { applySeoToDocument, buildPageSeo, getPageKind } from './utils/seo';
 import { localizePath, stripLanguagePrefix } from './utils/locales';
-import { useAnalytics } from './hooks/useAnalytics';
+import { AnalyticsConsentBanner, trackEvent, trackItemCardClicked, useAnalytics } from './hooks/useAnalytics';
 
 const AdminLoginModal = lazy(() => import('./components/admin/AdminLoginModal'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -123,7 +123,7 @@ export default function App() {
 
     const checkRoutes = () => {
       const path = stripLanguagePrefix(window.location.pathname).toLowerCase();
-      const hash = window.location.hash.toLowerCase();
+      const hash = window.location.hash.toLowerCase().split('?')[0];
 
       if (path === '/admin' || hash === '#admin') {
         setAdminLoginOpen(true);
@@ -188,7 +188,7 @@ export default function App() {
     let sessionCheckActive = true;
     getCurrentAdminSessionAsync().then(async (result) => {
       const path = stripLanguagePrefix(window.location.pathname).toLowerCase();
-      const hash = window.location.hash.toLowerCase();
+      const hash = window.location.hash.toLowerCase().split('?')[0];
       const isAdminRoute = path === '/admin' || hash === '#admin';
       if (!sessionCheckActive || !isAdminRoute || !result.success) return;
 
@@ -261,8 +261,9 @@ export default function App() {
     }
   };
 
-  const handleOpenItemDetail = (item) => {
+  const handleOpenItemDetail = (item, placement = 'item_link') => {
     if (!item) return;
+    trackItemCardClicked(item, placement);
     const supportsViewTransitions = typeof document.startViewTransition === 'function';
     if (supportsViewTransitions) {
       flushSync(() => setTransitionItemId(item.id));
@@ -414,7 +415,18 @@ export default function App() {
   const [inquiryTargetItem, setInquiryTargetItem] = useState(null);
   const [inquiryRequestType, setInquiryRequestType] = useState('general_query');
 
-  const handleOpenConsultation = (item = null, requestType = item ? 'make_offer' : 'general_query') => {
+  const handleOpenConsultation = (
+    item = null,
+    requestType = item ? 'purchase' : 'general_query',
+    placement = 'inquiry_trigger'
+  ) => {
+    // A single, consistent CTA event covers every public route that opens the
+    // inquiry flow. The current page path is captured by the analytics layer.
+    trackEvent('cta_clicked', {
+      placement,
+      target: 'inquiry',
+      itemId: item?.id
+    });
     setInquiryTargetItem(item);
     setInquiryRequestType(requestType);
     setInquiryModalOpen(true);
@@ -494,13 +506,13 @@ export default function App() {
         <MobileNavbar
           onNavigate={handleNavigate}
           activeTab={activeTab}
-          onRequestConsultation={() => handleOpenConsultation(null)}
+          onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'mobile_navigation')}
         />
       ) : (
         <Navbar
           onNavigate={handleNavigate}
           activeTab={currentPage}
-          onRequestConsultation={() => handleOpenConsultation(null)}
+          onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'navigation')}
         />
       )}
 
@@ -520,7 +532,7 @@ export default function App() {
               catalog={catalog}
               onOpenItemDetail={handleOpenItemDetail}
               onNavigateBack={() => handleNavigate('catalogus')}
-              onRequestInquiry={(item) => handleOpenConsultation(item)}
+              onRequestInquiry={(item) => handleOpenConsultation(item, 'purchase', 'mobile_item_detail')}
             />
           ) : (
             <ItemDetailPage
@@ -533,7 +545,7 @@ export default function App() {
               catalog={catalog}
               onOpenItemDetail={handleOpenItemDetail}
               onNavigateBack={() => handleNavigate('catalogus')}
-              onRequestInquiry={(item) => handleOpenConsultation(item)}
+              onRequestInquiry={(item) => handleOpenConsultation(item, 'purchase', 'item_detail')}
             />
           )
         ) : currentPage === 'catalogus' ? (
@@ -543,7 +555,7 @@ export default function App() {
             transitionItemId={transitionItemId}
             onNavigateHome={() => handleNavigate('home')}
             onOpenItemDetail={handleOpenItemDetail}
-            onRequestInquiry={(item) => handleOpenConsultation(item)}
+            onRequestInquiry={(item) => handleOpenConsultation(item, 'purchase', 'catalog')}
           />
         ) : currentPage === 'herkomst' ? (
           /* Dedicated Luxury Herkomst & Provenance Page (/herkomst) */
@@ -551,19 +563,19 @@ export default function App() {
             provenanceData={provenanceData}
             faqItems={faqItems}
             onNavigateHome={() => handleNavigate('home')}
-            onRequestConsultation={() => handleOpenConsultation(null)}
+            onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'provenance')}
           />
         ) : currentPage === 'privacy' ? (
           /* Production-Ready Privacy Policy Page (/privacy) */
           <PrivacyPage
             onNavigateHome={() => handleNavigate('home')}
-            onRequestConsultation={() => handleOpenConsultation(null)}
+            onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'privacy')}
           />
         ) : currentPage === 'voorwaarden' ? (
           /* Production-Ready Terms & Conditions Page (/voorwaarden) */
           <TermsPage
             onNavigateHome={() => handleNavigate('home')}
-            onRequestConsultation={() => handleOpenConsultation(null)}
+            onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'terms')}
           />
         ) : currentPage === 'not-found' ? (
           <section className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 pt-28 text-center">
@@ -589,13 +601,13 @@ export default function App() {
                 heroImage={heroImage}
                 mobileHeroImage={mobileHeroImage}
                 onExploreCatalog={() => handleNavigate('catalogus')}
-                onRequestConsultation={() => handleOpenConsultation(null)}
+                onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'mobile_hero')}
               />
             ) : (
               <Hero
                 heroImage={heroImage}
                 onExploreCatalog={() => handleNavigate('catalogus')}
-                onRequestConsultation={() => handleOpenConsultation(null)}
+                onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'hero')}
               />
             )}
 
@@ -606,7 +618,7 @@ export default function App() {
                 onOpenFullCatalog={() => handleNavigate('catalogus')}
                 onOpenItemDetail={handleOpenItemDetail}
                 onNavigateProvenance={() => handleNavigate('herkomst')}
-                onRequestConsultation={() => handleOpenConsultation(null)}
+                onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'mobile_home')}
               />
             ) : (
               <>
@@ -616,8 +628,10 @@ export default function App() {
                   transitionItemId={transitionItemId}
                   onOpenFullCatalog={() => handleNavigate('catalogus')}
                   onOpenItemDetail={handleOpenItemDetail}
-                  onRequestInquiry={(item) => handleOpenConsultation(item)}
+                  onRequestInquiry={(item) => handleOpenConsultation(item, 'purchase', 'home_featured')}
                 />
+
+                <CollectorListSection source="homepage_desktop" />
 
                 {/* Museum Herkomst & Provenance Showcase */}
                 <AboutProvenance />
@@ -625,7 +639,7 @@ export default function App() {
                 {/* Interactive Collector FAQ Section */}
                 <FaqSection
                   items={faqItems}
-                  onRequestConsultation={() => handleOpenConsultation(null)}
+                  onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'faq')}
                 />
               </>
             )}
@@ -640,7 +654,7 @@ export default function App() {
       ) : (
         <Footer
           onNavigate={handleNavigate}
-          onRequestConsultation={() => handleOpenConsultation(null)}
+          onRequestConsultation={() => handleOpenConsultation(null, 'general_query', 'footer')}
         />
       )}
 
@@ -657,8 +671,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Vercel Web Analytics */}
-      <Analytics />
+      <AnalyticsConsentBanner />
     </div>
   );
 }

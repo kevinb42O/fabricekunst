@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -31,6 +31,8 @@ import { rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
 import MobileCatalogControls from '../mobile/MobileCatalogControls';
+import { trackEvent } from '../hooks/useAnalytics';
+import PriceAssurance from './PriceAssurance';
 
 const DEFAULT_FILTER_VALUE = 'Alle';
 const DEFAULT_VIEW_MODE = 'grid';
@@ -214,6 +216,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
   const [sortBy, setSortBy] = useState(() => getInitialParam('sort', 'standaard'));
   const [viewMode, setViewMode] = useState(getInitialViewMode);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const filterSignatureRef = useRef(null);
 
   const normalizedItems = useMemo(
     () =>
@@ -302,6 +305,14 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
     if (typeof window === 'undefined') return;
 
     const params = new URLSearchParams();
+    const currentParams = new URLSearchParams(window.location.search);
+    // The page may still be awaiting analytics consent when this effect runs.
+    // Keep only the three supported campaign dimensions so a later opt-in can
+    // attribute the visit without retaining arbitrary query parameters.
+    ['utm_source', 'utm_medium', 'utm_campaign'].forEach((name) => {
+      const value = currentParams.get(name);
+      if (value) params.set(name, value);
+    });
     const trimmedSearch = searchQuery.trim();
 
     if (trimmedSearch) params.set('q', trimmedSearch);
@@ -314,7 +325,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
     if (viewMode !== DEFAULT_VIEW_MODE) params.set('view', viewMode);
 
     const queryString = params.toString();
-    const nextUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ''}${window.location.hash}`;
     window.history.replaceState(window.history.state, '', nextUrl);
   }, [searchQuery, selectedGroup, selectedType, selectedStatus, selectedCentury, selectedCategory, sortBy, viewMode]);
 
@@ -383,6 +394,57 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
       return right.sortYear - left.sortYear;
     });
   }, [filters, language, normalizedItems, sortBy]);
+
+  useEffect(() => {
+    const queryLength = searchQuery.trim().length;
+    if (!queryLength) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      // Search text can contain personal data, so analytics receives only its
+      // length and the result count after a brief typing debounce.
+      trackEvent('catalog_search', {
+        queryLength,
+        resultCount: filteredItems.length
+      }, {
+        dedupeWindowMs: 1500
+      });
+    }, 650);
+
+    return () => window.clearTimeout(timeout);
+  }, [filteredItems.length, searchQuery]);
+
+  useEffect(() => {
+    const filterState = {
+      group: selectedGroup === DEFAULT_FILTER_VALUE ? undefined : selectedGroup,
+      type: selectedType === DEFAULT_FILTER_VALUE ? undefined : selectedType,
+      status: selectedStatus === DEFAULT_FILTER_VALUE ? undefined : selectedStatus,
+      century: selectedCentury === DEFAULT_FILTER_VALUE ? undefined : selectedCentury,
+      category: selectedCategory === DEFAULT_FILTER_VALUE ? undefined : selectedCategory,
+      sort: sortBy === 'standaard' ? undefined : sortBy,
+      hasSearch: Boolean(searchQuery.trim())
+    };
+    const signature = JSON.stringify(filterState);
+
+    if (filterSignatureRef.current === null) {
+      filterSignatureRef.current = signature;
+      return undefined;
+    }
+    if (filterSignatureRef.current === signature) return undefined;
+    filterSignatureRef.current = signature;
+
+    const timeout = window.setTimeout(() => {
+      const filterCount = Object.values(filterState).filter((value) => value && value !== true).length;
+      trackEvent('catalog_filter_applied', {
+        ...filterState,
+        filterCount,
+        resultCount: filteredItems.length
+      }, {
+        dedupeWindowMs: 750
+      });
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [filteredItems.length, searchQuery, selectedCategory, selectedCentury, selectedGroup, selectedStatus, selectedType, sortBy]);
 
   const typePool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'type')), [normalizedItems, filters]);
   const groupPool = useMemo(() => normalizedItems.filter((item) => matchesFilters(item, filters, 'group')), [normalizedItems, filters]);
@@ -456,6 +518,14 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
     setSelectedCentury(DEFAULT_FILTER_VALUE);
     setSelectedCategory(DEFAULT_FILTER_VALUE);
     setSortBy('standaard');
+  };
+
+  const openItemDetail = (item, placement) => {
+    onOpenItemDetail(item, placement);
+  };
+
+  const openInquiry = (item) => {
+    onRequestInquiry(item);
   };
 
   const renderTypeLabel = (value) => {
@@ -752,7 +822,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                       className="group flex flex-col h-full cursor-pointer"
                       onClick={(event) => {
                         event.preventDefault();
-                        onOpenItemDetail(item);
+                        openItemDetail(item, 'catalog_grid');
                       }}
                       aria-label={getItemField(item, 'title', language)}
                     >
@@ -763,7 +833,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                           alt={getItemField(item, 'title', language)}
                           loading={index === 0 ? 'eager' : 'lazy'}
                           decoding="async"
-                          fetchPriority={index === 0 ? 'high' : 'auto'}
+                          fetchpriority={index === 0 ? 'high' : 'auto'}
                           draggable="false"
                           onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
                           style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
@@ -814,6 +884,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             <span className="text-sm font-serif font-bold text-[#111111]">
                               {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                             </span>
+                            <PriceAssurance compact className="max-w-[16rem]" />
                           </div>
 
                         </div>
@@ -845,7 +916,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                             onClick={(event) => {
                               event.preventDefault();
-                              onOpenItemDetail(item);
+                              openItemDetail(item, 'catalog_editorial_image');
                             }}
                             className="block w-full overflow-hidden bg-[#F1ECE3] text-left group"
                           >
@@ -855,7 +926,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                                 alt={getItemField(item, 'title', language)}
                                 loading={index === 0 ? 'eager' : 'lazy'}
                                 decoding="async"
-                                fetchPriority={index === 0 ? 'high' : 'auto'}
+                                fetchpriority={index === 0 ? 'high' : 'auto'}
                                 draggable="false"
                                 onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
                                 style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
@@ -882,7 +953,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                               href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                               onClick={(event) => {
                                 event.preventDefault();
-                                onOpenItemDetail(item);
+                                openItemDetail(item, 'catalog_editorial_title');
                               }}
                             >
                               {getItemField(item, 'title', language)}
@@ -906,7 +977,8 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                           </p>
 
                           <div className="mt-6 flex flex-col gap-4 border-t border-[#E8DFCF]/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-4">
+                            <div>
+                              <div className="flex items-center gap-4">
                               <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] ${statusTone.text}`}>
                                 <span className={`h-1.5 w-1.5 rounded-full ${statusTone.dot}`} />
                                 <span>{getLocalizedStatus(item.status, language)}</span>
@@ -915,6 +987,8 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                               <span className="text-lg font-serif font-bold text-[#111111] lg:text-xl">
                                 {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                               </span>
+                              </div>
+                              <PriceAssurance compact className="max-w-xl" />
                             </div>
 
                             <div className="flex items-center gap-x-6">
@@ -922,7 +996,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                                 href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                                 onClick={(event) => {
                                   event.preventDefault();
-                                  onOpenItemDetail(item);
+                                  openItemDetail(item, 'catalog_editorial_details');
                                 }}
                                 className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:text-[#B8860B]"
                               >
@@ -932,7 +1006,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                               {item.status !== 'Verkocht' && (
                                 <button
                                   type="button"
-                                  onClick={() => onRequestInquiry(item)}
+                                  onClick={() => openInquiry(item)}
                                   className="border-b border-[#111111] pb-0.5 text-xs font-mono font-bold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:border-[#B8860B] hover:text-[#B8860B]"
                                 >
                                   {t('catalog.inquire')}

@@ -450,21 +450,6 @@ const mapDbInquiryToFrontend = (dbInq) => ({
   notes: dbInq.notes
 });
 
-// Map frontend inquiry to database inquiry (snake_case)
-const mapFrontendInquiryToDb = (inq) => ({
-  id: inq.id,
-  date: inq.date || new Date().toISOString(),
-  item_title: inq.itemTitle,
-  item_ref: inq.itemRef,
-  name: inq.name,
-  email: inq.email,
-  phone: inq.phone,
-  type: inq.type,
-  message: inq.message,
-  status: inq.status || 'Nieuw',
-  notes: inq.notes
-});
-
 // --- CATALOG MANAGEMENT ---
 
 export const getCatalog = () => {
@@ -830,34 +815,54 @@ export const saveInquiry = (inquiry) => {
 
 export const saveInquiryAsync = async (inquiry) => {
   if (isSupabaseConfigured() && supabase) {
-    const newInquiry = {
-      id: `inq-${crypto.randomUUID()}`,
-      date: new Date().toISOString(),
-      status: 'Nieuw',
-      ...inquiry
-    };
-
     try {
-      const dbInq = mapFrontendInquiryToDb(newInquiry);
-      const { error } = await supabase.from('inquiries').insert(dbInq);
-      if (error) {
-        console.error("Supabase inquiry insert error", error);
-        throw new Error('Aanvraag kon niet veilig worden opgeslagen.');
-      } else {
-        // Trigger push notification to admin securely via Vercel serverless function
-        fetch('/api/send-push', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            inquiryId: newInquiry.id
-          })
-        }).catch(err => console.error("Fout bij triggeren push API:", err));
+      // Public submissions are validated and rate-limited by the server. Do
+      // not reintroduce a direct Supabase INSERT fallback here: it would bypass
+      // server-generated identifiers, timestamps, and abuse controls.
+      const response = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          itemTitle: inquiry.itemTitle,
+          itemRef: inquiry.itemRef,
+          name: inquiry.name,
+          email: inquiry.email,
+          phone: inquiry.phone || '',
+          type: inquiry.type,
+          message: inquiry.message
+        })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body?.inquiry?.id) {
+        const message = response.status === 429
+          ? 'Er zijn te veel aanvragen verstuurd. Probeer het over enkele minuten opnieuw.'
+          : body?.error || 'Aanvraag kon niet veilig worden opgeslagen.';
+        throw new Error(message);
       }
+
+      const newInquiry = {
+        ...inquiry,
+        id: body.inquiry.id,
+        date: body.inquiry.date,
+        createdAt: body.inquiry.createdAt,
+        status: body.inquiry.status || 'Nieuw'
+      };
+
+      // The existing endpoint atomically claims the fresh server-generated ID,
+      // so repeated client calls cannot send duplicate administrator alerts.
+      fetch('/api/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ inquiryId: newInquiry.id })
+      }).catch(err => console.error("Fout bij triggeren push API:", err));
+
+      return newInquiry;
     } catch (e) {
-      console.error("Supabase inquiry insert exception", e);
-      throw e;
+      console.error("Veilige aanvraagverzending mislukt", e);
+      throw new Error(e?.message || 'Aanvraag kon niet veilig worden opgeslagen.');
     }
-    return newInquiry;
   }
 
   return saveInquiry(inquiry);

@@ -24,6 +24,9 @@ import {
   getLocalizedPrice,
   getLocalizedStatus
 } from '../utils/translationService';
+import { trackItemViewed } from '../hooks/useAnalytics';
+import PriceAssurance from '../components/PriceAssurance';
+import ArtworkContactActions from '../components/ArtworkContactActions';
 
 const COPY = {
   nl: { share: 'Delen', shared: 'Link gekopieerd', photo: 'Foto', enlarge: 'Foto vergroten', previous: 'Vorige foto', next: 'Volgende foto', details: 'Objectdetails', provenance: 'Herkomst & Provenantie', history: 'Historische context', inquire: 'Aanvragen', more: 'Meer uit de collecties' },
@@ -42,6 +45,10 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
     setSelectedImageIndex(0);
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [item]);
+
+  useEffect(() => {
+    if (item?.id) trackItemViewed(item, 'mobile_item_detail');
+  }, [item?.id]);
 
   if (!item) {
     return (
@@ -73,6 +80,10 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
     : (normalizedStatus.includes('verkocht') || normalizedStatus.includes('sold') || normalizedStatus.includes('vendu'))
       ? 'border-stone-300 bg-stone-100 text-stone-700'
       : 'border-emerald-300 bg-emerald-50 text-emerald-800';
+
+  const handleInquiryClick = () => {
+    onRequestInquiry?.(item);
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -208,7 +219,7 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
             alt={activeImage.caption || getItemField(item, 'title', language)}
             loading="eager"
             decoding="async"
-            fetchPriority="high"
+            fetchpriority="high"
             className="max-h-[62svh] w-full object-contain"
           />
 
@@ -276,6 +287,7 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
             <div>
               <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6A6056]">{t('item_detail.valuationPrice')}</span>
               <strong className="mt-1 block font-serif text-2xl text-[#8E7035]">{getLocalizedPrice(item.price, language)}</strong>
+              <PriceAssurance compact className="col-span-2 max-w-[18rem]" />
             </div>
             <div className="text-right">
               <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6A6056]">{t('item_detail.status')}</span>
@@ -284,6 +296,12 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
               </span>
             </div>
           </div>
+
+          <section aria-labelledby="mobile-artwork-contact" className="mt-8 border-y border-[#D8CEB8] py-6">
+            <h2 id="mobile-artwork-contact" className="font-serif text-2xl font-bold text-[#111111]">{t('commerce.askArtwork')}</h2>
+            <p className="mt-2 font-serif text-sm leading-6 text-[#5A5047]">{t('commerce.askArtworkDesc')}</p>
+            <div className="mt-5"><ArtworkContactActions item={item} onPurchase={handleInquiryClick} compact /></div>
+          </section>
 
           <section aria-labelledby="mobile-object-details" className="mt-12">
             <h2 id="mobile-object-details" className="font-serif text-3xl font-bold text-[#111111]">{labels.details}</h2>
@@ -329,13 +347,14 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
                 <button
                   key={candidate.id}
                   type="button"
-                  onClick={() => onOpenItemDetail(candidate)}
+                  onClick={() => onOpenItemDetail(candidate, candidate.id === previousItem?.id ? 'mobile_item_detail_previous' : 'mobile_item_detail_next')}
                   className="grid min-h-[88px] grid-cols-[72px_1fr_auto] items-center gap-4 border border-[#D8CEB8] bg-white p-2 text-left"
                 >
                   <img src={candidate.images?.[0]?.url} alt="" loading="lazy" className="h-[72px] w-[72px] object-cover" />
                   <span className="min-w-0">
                     <span className="line-clamp-2 font-serif text-base font-bold leading-tight text-[#111111]">{getItemField(candidate, 'title', language)}</span>
                     <span className="mt-1 block font-sans text-[10px] uppercase tracking-wider text-[#8E7035]">{getLocalizedPrice(candidate.price, language)}</span>
+                    <PriceAssurance compact />
                   </span>
                   <ArrowRight className="h-4 w-4 text-[#8E7035]" />
                 </button>
@@ -348,11 +367,11 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#D8CEB8] bg-[#FFFEFC]/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-10px_30px_rgba(38,29,20,0.1)] backdrop-blur-xl min-[390px]:px-5">
         <button
           type="button"
-          onClick={() => onRequestInquiry(item)}
+          onClick={handleInquiryClick}
           disabled={item.status === 'Verkocht'}
           className="flex min-h-12 w-full items-center justify-between bg-[#1C1A17] px-5 font-sans text-[10px] font-bold uppercase tracking-[0.13em] text-white disabled:opacity-45"
         >
-          {labels.inquire}
+          {String(item.status || '').toLowerCase().includes('verkocht') ? t('commerce.sold') : t('commerce.purchase')}
           <ArrowRight className="h-4 w-4 text-[#D4AF37]" />
         </button>
       </div>

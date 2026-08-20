@@ -5,9 +5,13 @@ import FacebookIcon from './FacebookIcon';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 import { localizePath } from '../utils/locales';
+import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 export default function Footer({ onNavigate }) {
   const { t, language } = useLanguage();
+  const trackContactClick = (eventName, data) => {
+    if (trackEvent(eventName, data)) flushAnalytics({ useBeacon: true });
+  };
 
   return (
     <footer id="contact" className="relative z-30 bg-white text-[#444444] pt-10 sm:pt-16 pb-8 sm:pb-12 overflow-hidden">
@@ -77,13 +81,21 @@ export default function Footer({ onNavigate }) {
             <ul className="space-y-2.5 text-xs sm:text-sm font-serif">
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                <a href="mailto:contact@atelierrembrandt.com" className="hover:text-[#B8860B] transition-colors font-medium">
+                <a
+                  href="mailto:contact@atelierrembrandt.com"
+                  onClick={() => trackContactClick('email_clicked', { placement: 'footer' })}
+                  className="hover:text-[#B8860B] transition-colors font-medium"
+                >
                   contact@atelierrembrandt.com
                 </a>
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Phone className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                <a href="tel:+32484384530" className="hover:text-[#B8860B] transition-colors font-medium">
+                <a
+                  href="tel:+32484384530"
+                  onClick={() => trackContactClick('phone_clicked', { placement: 'footer' })}
+                  className="hover:text-[#B8860B] transition-colors font-medium"
+                >
                   0484 38 45 30
                 </a>
               </li>
@@ -93,6 +105,7 @@ export default function Footer({ onNavigate }) {
                   href="https://www.facebook.com/profile.php?id=61592459230449"
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() => trackContactClick('cta_clicked', { placement: 'footer', target: 'facebook' })}
                   className="font-medium transition-colors hover:text-[#B8860B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035]"
                 >
                   {t('footer.facebook')}

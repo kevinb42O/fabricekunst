@@ -118,7 +118,14 @@ CREATE TABLE IF NOT EXISTS public.admin_settings (
 -- 4. Enable Row Level Security with fail-closed base policies
 ALTER TABLE public.items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inquiries FORCE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+
+-- A fresh setup must start fail-closed too. The versioned inquiry migration
+-- later re-grants only active-admin management; public form writes go through
+-- the server-side /api/inquiries handler.
+REVOKE ALL ON TABLE public.inquiries FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE public.inquiries TO service_role;
 
 -- Items Policies
 DROP POLICY IF EXISTS "Public read items" ON public.items;
@@ -130,12 +137,10 @@ DROP POLICY IF EXISTS "Allow write items" ON public.items;
 DROP POLICY IF EXISTS "Public read inquiries" ON public.inquiries;
 DROP POLICY IF EXISTS "Allow write inquiries" ON public.inquiries;
 DROP POLICY IF EXISTS "Public create inquiries" ON public.inquiries;
-CREATE POLICY "Public create inquiries" ON public.inquiries FOR INSERT TO anon, authenticated
-WITH CHECK (
-    status = 'Nieuw'
-    AND NULLIF(BTRIM(COALESCE(notes, '')), '') IS NULL
-    AND created_at BETWEEN NOW() - INTERVAL '5 minutes' AND NOW() + INTERVAL '1 minute'
-);
+-- Public inquiry submission is server-mediated. Run
+-- 202608200002_inquiry_submission_security.sql before enabling the form; it
+-- creates the validated /api/inquiries boundary and leaves browser roles with
+-- no direct INSERT permission on this table.
 
 -- Admin Settings Policies
 DROP POLICY IF EXISTS "Public read admin_settings" ON public.admin_settings;
@@ -335,8 +340,13 @@ DROP POLICY IF EXISTS "Public read push_subscriptions" ON public.push_subscripti
 DROP POLICY IF EXISTS "Allow write push_subscriptions" ON public.push_subscriptions;
 
 -- ========================================================
--- Analytics Tables (Page Views & Events)
+-- Legacy Analytics Tables (v1, retained only for migration)
 -- ========================================================
+-- Do not add public INSERT or SELECT policies here. The versioned
+-- 202608200001_analytics_v2_security.sql migration removes any historic
+-- permissive policies, locks these tables down, and creates the server-only
+-- analytics_events_v2 collector schema. Fresh deployments must run that
+-- migration before enabling analytics in the web application.
 CREATE TABLE IF NOT EXISTS public.page_views (
     id BIGSERIAL PRIMARY KEY,
     page_url TEXT,
@@ -348,16 +358,9 @@ CREATE TABLE IF NOT EXISTS public.page_views (
 );
 
 ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Anon insert page_views" ON public.page_views;
-CREATE POLICY "Anon insert page_views"
-  ON public.page_views FOR INSERT TO anon, authenticated
-  WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read page_views" ON public.page_views;
-CREATE POLICY "Public read page_views"
-  ON public.page_views FOR SELECT TO anon, authenticated
-  USING (true);
+ALTER TABLE public.page_views FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.page_views FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE public.page_views TO service_role;
 
 CREATE TABLE IF NOT EXISTS public.analytics_events (
     id BIGSERIAL PRIMARY KEY,
@@ -369,13 +372,6 @@ CREATE TABLE IF NOT EXISTS public.analytics_events (
 );
 
 ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Anon insert analytics_events" ON public.analytics_events;
-CREATE POLICY "Anon insert analytics_events"
-  ON public.analytics_events FOR INSERT TO anon, authenticated
-  WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read analytics_events" ON public.analytics_events;
-CREATE POLICY "Public read analytics_events"
-  ON public.analytics_events FOR SELECT TO anon, authenticated
-  USING (true);
+ALTER TABLE public.analytics_events FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.analytics_events FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE public.analytics_events TO service_role;

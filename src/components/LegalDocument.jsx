@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { LUXURY_EASE } from '../utils/motion';
+import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 export const BUSINESS = {
   legalName: 'Andor CommV',
@@ -19,11 +20,24 @@ const UPDATED = '13 augustus 2026';
 
 export function LegalLink({ href, children }) {
   const external = href?.startsWith('http');
+  const trackContactClick = () => {
+    const eventName = href?.startsWith('mailto:')
+      ? 'email_clicked'
+      : href?.startsWith('tel:')
+        ? 'phone_clicked'
+        : null;
+
+    if (eventName && trackEvent(eventName, { placement: 'legal_document' })) {
+      flushAnalytics({ useBeacon: true });
+    }
+  };
+
   return (
     <a
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noreferrer' : undefined}
+      onClick={trackContactClick}
       className="legal-link"
     >
       {children}

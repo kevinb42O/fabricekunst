@@ -9,6 +9,7 @@ import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
 import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
+import PriceAssurance from './PriceAssurance';
 
 export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
   const { t, language } = useLanguage();
@@ -163,6 +164,7 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 <div>
                   <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
                   <span className="text-2xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
+                  <PriceAssurance compact className="max-w-sm" />
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>

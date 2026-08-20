@@ -50,7 +50,7 @@ export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
       id: 'prijs',
       title: 'Prijs, belastingen en betaling',
       content: <>
-        <p>Prijzen luiden in euro. Voor Consumenten vermelden wij de totale prijs inclusief toepasselijke btw of margeregeling en alle vooraf berekenbare kosten. Leverings-, verzekerings-, invoer- of uitvoerkosten die niet in de prijs zijn inbegrepen, worden vóór de overeenkomst meegedeeld. Voor professionele Kopers kan een prijs exclusief btw worden vermeld wanneer dat ondubbelzinnig is aangegeven.</p>
+        <p>Prijzen luiden in euro. Voor Consumenten vermelden wij de totale prijs inclusief toepasselijke btw of margeregeling en alle vooraf berekenbare kosten. De op de website vermelde of persoonlijk bevestigde aankoopprijs omvat wereldwijd verzekerde standaardverzending en de bij het Object behorende beschikbare certificaat- en objectdocumentatie. Eventuele invoerrechten, invoer-btw, lokale belastingen, bijzondere overheidsformaliteiten en door de Koper gevraagde afwijkende leveringsdiensten zijn niet inbegrepen, tenzij wij schriftelijk anders bevestigen. Voor professionele Kopers kan een prijs exclusief btw worden vermeld wanneer dat ondubbelzinnig is aangegeven.</p>
         <p>Betaling gebeurt via de op de offerte of factuur vermelde methode en termijn. Het Object blijft eigendom van Atelier Rembrandt tot de volledige prijs en overeengekomen kosten zijn ontvangen. Voor ingebrekestelling, rente en invorderingskosten gelden de dwingende Belgische regels; tegenover Consumenten worden geen kosten aangerekend zonder de wettelijk vereiste kosteloze herinnering en termijnen.</p>
       </>,
     },
@@ -58,7 +58,7 @@ export default function TermsPage({ onNavigateHome, onRequestConsultation }) {
       id: 'levering',
       title: 'Levering, verzekering en risico',
       content: <>
-        <p>Wij verpakken het Object volgens aard, conditie, waarde en bestemming. De overeengekomen vervoerder, prijs, verzekerde waarde en eventuele relevante dekkingsbeperkingen worden vóór verzending bevestigd. Tenzij anders overeengekomen leveren wij zonder onnodige vertraging en bij een Consumentenkoop uiterlijk binnen 30 dagen na de overeenkomst.</p>
+        <p>Wij verpakken het Object volgens aard, conditie, waarde en bestemming en verzenden het wereldwijd via een passende verzekerde vervoerder. De verzekerde waarde en eventuele objectieve dekkings- of bestemmingsbeperkingen worden vóór het sluiten van de overeenkomst bevestigd. Wanneer standaard verzekerde verzending naar een bestemming wettelijk of feitelijk onmogelijk is, informeren wij de Koper vóór de overeenkomst en zoeken wij een passende oplossing. Tenzij anders overeengekomen leveren wij zonder onnodige vertraging en bij een Consumentenkoop uiterlijk binnen 30 dagen na de overeenkomst.</p>
         <p>Bij een Consumentenkoop gaat het risico pas over wanneer de Consument of een door hem aangewezen derde het Object fysiek ontvangt, behalve wanneer de Consument zelf een niet door ons aangeboden vervoerder kiest. Voor professionele Kopers gaat het risico over volgens de schriftelijk overeengekomen leveringsvoorwaarde.</p>
         <p>Controleer de verpakking bij ontvangst en meld zichtbare transportschade zo snel mogelijk, bij voorkeur met foto’s. Een laattijdige melding ontneemt een Consument geen dwingende rechten, maar kan het onderzoek of een verzekeringsclaim bemoeilijken.</p>
       </>,

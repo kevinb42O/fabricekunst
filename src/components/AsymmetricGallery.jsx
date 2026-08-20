@@ -5,6 +5,7 @@ import ImageZoomModal from './ImageZoomModal';
 import ItemDetailModal from './ItemDetailModal';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
+import PriceAssurance from './PriceAssurance';
 
 export default function AsymmetricGallery({ items, filteredItems: overrideFilteredItems, onOpenItemDetail, onRequestInquiry, hideHeader = false, hideControls = false }) {
   const { t, language } = useLanguage();
@@ -358,6 +359,7 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                           <div>
                             <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-[#777777] block">{t('item_detail.valuationPrice')}</span>
                             <span className="text-xl font-serif font-bold text-[#111111]">{getLocalizedPrice(item.price, language)}</span>
+                            <PriceAssurance compact className="max-w-sm" />
                           </div>
 
                           <div className="flex items-center space-x-6">

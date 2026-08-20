@@ -1,5 +1,6 @@
 import React from 'react';
 import LegalDocument, { BUSINESS, BusinessIdentity, LegalLink } from './LegalDocument';
+import { AnalyticsConsentSettings } from '../hooks/useAnalytics';
 
 const BulletList = ({ children }) => <ul>{children}</ul>;
 
@@ -20,10 +21,11 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
         <p>Afhankelijk van uw contact met ons kunnen wij de volgende gegevens verwerken:</p>
         <BulletList>
           <li><strong>Identificatie- en contactgegevens:</strong> naam, e-mailadres, telefoonnummer, adres en uw voorkeurskanaal voor contact.</li>
-          <li><strong>Aanvraag- en correspondentiegegevens:</strong> uw bericht, het betrokken object, afspraken, biedingen en verdere correspondentie.</li>
+          <li><strong>Aanvraag- en correspondentiegegevens:</strong> uw bericht, het betrokken object, aankoopaanvragen, afspraken en verdere correspondentie.</li>
+          <li><strong>Collector’s List:</strong> uw e-mailadres, taal, inschrijfbron, toestemmingsversie en de tijdstippen van inschrijving, bevestiging of uitschrijving.</li>
           <li><strong>Transactiegegevens:</strong> bestel-, betaal-, factuur-, leverings-, retour- en verzekeringsgegevens. Wij ontvangen geen volledige betaalkaartgegevens wanneer een betalingsdienstverlener de betaling verwerkt.</li>
           <li><strong>Object- en certificatiedossier:</strong> gegevens die nodig zijn voor herkomstonderzoek, facturatie, levering en een eventueel certificaat, waaronder de naam van de eigenaar wanneer dat noodzakelijk is.</li>
-          <li><strong>Technische en analytische gegevens:</strong> tijdstip, aangevraagde pagina, apparaat- en browserinformatie, ruwe schatting van uw land (op basis van tijdzone), website-interacties (zoals scroll- en klikgedrag) en technische loggegevens die hosting- en beveiligingssystemen automatisch kunnen verwerken. Wij slaan uw IP-adres <strong>niet</strong> op in onze eigen analysesystemen.</li>
+          <li><strong>Technische en analytische gegevens (alleen na uw toestemming):</strong> tijdstip, de pagina zonder zoektermen, een tijdelijke sessiecode, UTM-brongegevens, een brede apparaat- en browsercategorie en een beperkte set gebruiksgebeurtenissen, zoals een bekeken object, het aantal actieve filters, de lengte van een zoekopdracht, een contactactie of een scroll-drempel. Wij slaan in ons analysesysteem <strong>geen</strong> IP-adres, permanente bezoekerscode, volledige user-agent, volledige referrer-URL, zoektekst, formulierinhoud, klikcoördinaten, CSS-selectors of precieze locatie op.</li>
           <li><strong>Voorkeuren:</strong> de gekozen taal en functionele instellingen die lokaal in uw browser worden bewaard.</li>
         </BulletList>
         <p>Wij vragen u geen gevoelige persoonsgegevens mee te delen. Doet u dat toch in een vrij tekstveld, dan verwijderen wij die informatie zodra zij niet noodzakelijk is.</p>
@@ -41,8 +43,8 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
               <tr><td>Verkoop, betaling, facturatie, levering, retour, verzekering en certificatie afhandelen.</td><td>Uitvoering van de overeenkomst; wettelijke verplichtingen.</td></tr>
               <tr><td>Boekhouding, fiscale administratie en medewerking aan bevoegde overheden.</td><td>Wettelijke verplichting.</td></tr>
               <tr><td>Fraude, misbruik en beveiligingsincidenten voorkomen en juridische aanspraken vaststellen.</td><td>Ons gerechtvaardigd belang in een veilige dienstverlening en rechtsbescherming.</td></tr>
-              <tr><td>U op uw verzoek informeren over nieuwe aanwinsten.</td><td>Uw toestemming; die kan u altijd intrekken.</td></tr>
-              <tr><td>Inzicht verkrijgen in websitegebruik, verkeersbronnen en prestaties om de website te verbeteren.</td><td>Ons gerechtvaardigd belang om het functioneren en de effectiviteit van onze website te meten door middel van privacyvriendelijke first-party analytics (zonder opslag van IP-adressen).</td></tr>
+              <tr><td>U via de Collector’s List vóór de publieke aanbieding informeren over nieuwe aanwinsten en relevante besloten uitnodigingen.</td><td>Uw uitdrukkelijke toestemming; die kunt u altijd intrekken via de uitschrijflink of ons contactadres.</td></tr>
+              <tr><td>Inzicht verkrijgen in websitegebruik, verkeersbronnen en prestaties om de website te verbeteren.</td><td>Uw voorafgaande toestemming voor privacyvriendelijke first-party analytics. U kunt die keuze hieronder of via uw browser op elk moment wijzigen.</td></tr>
               <tr><td>Uw taalkeuze onthouden en de gevraagde websitefuncties leveren.</td><td>Gerechtvaardigd belang en de door u gevraagde elektronische dienst.</td></tr>
             </tbody>
           </table>
@@ -88,7 +90,9 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
           <li><strong>Contract-, factuur-, betaal- en leveringsgegevens:</strong> 10 jaar vanaf 1 januari van het jaar dat volgt op het relevante document, of langer wanneer een wettelijke procedure dit vereist.</li>
           <li><strong>Certificaat- en herkomstdossiers:</strong> zolang dit redelijkerwijs nodig is om authenticiteit, eigendomsgeschiedenis en afgegeven documentatie te kunnen verifiëren. Wij beperken het dossier tot wat daarvoor noodzakelijk is.</li>
           <li><strong>Technische beveiligingslogs:</strong> in beginsel maximaal 12 maanden, tenzij een incident langer onderzoek vereist.</li>
+          <li><strong>Collector’s List:</strong> zolang uw toestemming actief is. Na uitschrijving bewaren wij het e-mailadres en het uitschrijftijdstip uitsluitend op een suppressielijst zolang dat nodig is om uw keuze te respecteren en opnieuw mailen te voorkomen.</li>
           <li><strong>Taalvoorkeur:</strong> maximaal 12 maanden na plaatsing; u kunt deze eerder via uw browser wissen.</li>
+          <li><strong>Analytics:</strong> de privacybeperkte gebeurtenisgegevens maximaal 395 dagen. Uw toestemming wordt na 180 dagen opnieuw gevraagd. De tijdelijke sessiecode en eventuele UTM-toeschrijving blijven alleen in de sessieopslag van uw browser en verlopen na 30 minuten inactiviteit of wanneer u het tabblad sluit. Een eenrichtingscode voor misbruikbeperking kan maximaal 3 dagen op onze server blijven; die bevat geen opgeslagen IP-adres.</li>
         </BulletList>
         <p>Na afloop verwijderen of anonimiseren wij de gegevens veilig.</p>
       </>,
@@ -97,18 +101,21 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
       id: 'cookies',
       title: 'Cookies, lokale opslag en analyse',
       content: <>
-        <p>Onze publieke website plaatst <strong>geen tracking- of advertentiecookies van derde partijen</strong>. Wel gebruiken wij een eigen, privacyvriendelijk en anoniem analysesysteem om het websitegebruik te meten. Hierbij maken wij gebruik van de volgende browseropslag:</p>
+        <p>Onze publieke website plaatst <strong>geen tracking- of advertentiecookies van derde partijen</strong>. Alleen wanneer u daarvoor kiest, gebruiken wij een eigen, privacyvriendelijk analysesysteem om het websitegebruik te meten. Hierbij maken wij gebruik van de volgende browseropslag:</p>
         <div className="legal-table-wrap">
           <table>
             <thead><tr><th>Naam / techniek</th><th>Doel</th><th>Duur</th></tr></thead>
             <tbody>
               <tr><td><code>atelier_language</code> (local storage)</td><td>De door u gekozen taal onthouden.</td><td>Maximaal 12 maanden.</td></tr>
-              <tr><td><code>analytics_visitor_id</code> (local storage)</td><td>Genereren van geanonimiseerde bezoekersstatistieken en analyseren van websitegebruik, uitsluitend voor eigen inzichten (first-party analytics).</td><td>Maximaal 12 maanden.</td></tr>
+              <tr><td><code>atelier_analytics_consent_v2</code> (local storage)</td><td>Uw keuze voor optionele website-analyse bewaren.</td><td>180 dagen; daarna vragen wij opnieuw.</td></tr>
+              <tr><td><code>atelier_analytics_visit_v2</code> (session storage)</td><td>Een tijdelijke sessie herkennen om gebeurtenissen binnen één bezoek te groeperen. Dit is geen permanente bezoekerscode.</td><td>Tot sluiting van het tabblad of 30 minuten inactiviteit.</td></tr>
+              <tr><td><code>atelier_analytics_attribution_v2</code> (session storage)</td><td>Een UTM-bron, -medium en -campagne binnen dezelfde tijdelijke sessie koppelen.</td><td>Tot sluiting van het tabblad of 30 minuten inactiviteit.</td></tr>
               <tr><td>Service-worker cache</td><td>Statische websitebestanden sneller en stabieler laden; bevat geen formulierinhoud.</td><td>Tot de cache door een nieuwe versie wordt vervangen of door u wordt gewist.</td></tr>
             </tbody>
           </table>
         </div>
         <p>Browseropslag kan via uw browserinstellingen worden gewist. Als later niet-noodzakelijke cookies of vergelijkbare technieken worden toegevoegd, vragen wij vooraf geldige toestemming en passen wij deze verklaring aan.</p>
+        <div className="mt-6"><AnalyticsConsentSettings /></div>
       </>,
     },
     {

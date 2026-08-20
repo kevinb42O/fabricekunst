@@ -11,11 +11,12 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
   const { isMobile } = useResponsiveMode();
   const dialogRef = useRef(null);
   const previouslyFocusedRef = useRef(null);
+  const formStartedRef = useRef(false);
   const titleId = useId();
 
   const allRequestTypes = [
+    { key: 'purchase', label: t('commerce.purchase'), fullTitle: t('commerce.purchase') },
     { key: 'private_viewing', label: t('inquiry.tabViewing'), fullTitle: t('inquiry.optPrivateViewing') },
-    { key: 'make_offer', label: t('inquiry.tabOffer'), fullTitle: t('inquiry.optMakeOffer') },
     { key: 'request_photos', label: t('inquiry.tabPhotos'), fullTitle: t('inquiry.optPhotos') },
     { key: 'general_query', label: t('inquiry.tabGeneral'), fullTitle: t('inquiry.optGeneral') },
   ];
@@ -48,6 +49,16 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
       setSelectedItem(item);
     }
   }, [item]);
+
+  useEffect(() => {
+    trackEvent('inquiry_opened', {
+      context: item ? 'item' : 'general',
+      itemId: item?.id,
+      requestType: initialRequestType
+    }, {
+      dedupeWindowMs: 1500
+    });
+  }, [initialRequestType, item?.id]);
 
   useEffect(() => {
     const originalStyle = document.body.style.overflow;
@@ -101,23 +112,48 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
   const isNameValid = (name) => name.trim().length >= 2;
   const isMessageValid = (msg) => msg.trim().length >= 3;
 
+  const trackFormStarted = () => {
+    if (formStartedRef.current) return;
+    formStartedRef.current = true;
+    trackEvent('form_started', {
+      form: 'inquiry',
+      context: selectedItem ? 'item' : 'general',
+      itemId: selectedItem?.id
+    }, {
+      dedupeWindowMs: 30 * 60 * 1000
+    });
+  };
+
+  const trackValidationError = (field) => {
+    trackEvent('form_validation_error', {
+      form: 'inquiry',
+      field
+    }, {
+      dedupeWindowMs: 1200
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
     if (!isNameValid(formData.name)) {
+      trackValidationError('name');
       setErrorMessage(t('inquiry.errNameRequired'));
       return;
     }
     if (!isEmailValid(formData.email)) {
+      trackValidationError('email');
       setErrorMessage(t('inquiry.errEmailInvalid'));
       return;
     }
     if ((contactPref === 'phone' || contactPref === 'whatsapp') && (!formData.phone || formData.phone.trim().length < 6)) {
+      trackValidationError('phone');
       setErrorMessage(t('inquiry.errPhoneRequired'));
       return;
     }
     if (!isMessageValid(formData.message)) {
+      trackValidationError('message');
       setErrorMessage(t('inquiry.errMessageRequired'));
       return;
     }
@@ -138,8 +174,14 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
     };
 
     try {
-      await saveInquiryAsync(payload);
-      trackEvent('cta_click', { button: 'Neem contact op / Verzenden', type: typeTitle });
+      const savedInquiry = await saveInquiryAsync(payload);
+      if (savedInquiry?.id) {
+        // This conversion carries only the server-generated inquiry identifier.
+        // The collector independently verifies it before retaining the event.
+        trackEvent('inquiry_submitted', { inquiryId: savedInquiry.id }, {
+          dedupeWindowMs: 30 * 60 * 1000
+        });
+      }
       setSubmitted(true);
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -335,7 +377,15 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
                 </div>}
 
                 {/* Form Controls */}
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form
+                  onSubmit={handleSubmit}
+                  onFocusCapture={trackFormStarted}
+                  onInvalidCapture={(event) => {
+                    const field = event.target?.name;
+                    if (field) trackValidationError(field);
+                  }}
+                  className="space-y-3"
+                >
                   
                   {/* Name & Email */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -344,6 +394,7 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
                         {t('inquiry.formName')} *
                       </label>
                       <input
+                        name="name"
                         type="text"
                         required
                         value={formData.name}
@@ -358,6 +409,7 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
                         {t('inquiry.formEmail')} *
                       </label>
                       <input
+                        name="email"
                         type="email"
                         required
                         value={formData.email}
@@ -375,6 +427,7 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
                         {t('inquiry.formPhone')}{(contactPref === 'phone' || contactPref === 'whatsapp') ? ' *' : ''}
                       </label>
                       <input
+                        name="phone"
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -440,6 +493,7 @@ export default function InquiryModal({ item, catalog = [], initialRequestType = 
                       {t('inquiry.formMessage')} *
                     </label>
                     <textarea
+                      name="message"
                       rows={2}
                       required
                       value={formData.message}

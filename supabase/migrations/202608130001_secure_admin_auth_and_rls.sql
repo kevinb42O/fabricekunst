@@ -136,7 +136,6 @@ revoke all on table public.push_subscriptions from anon, authenticated;
 grant select on table public.items to anon, authenticated;
 grant insert, update, delete on table public.items to authenticated;
 
-grant insert on table public.inquiries to anon, authenticated;
 grant select, update, delete on table public.inquiries to authenticated;
 
 grant select on table public.admin_settings to anon, authenticated;
@@ -171,24 +170,9 @@ create policy items_admin_delete
   to authenticated
   using ((select private.is_admin()));
 
-create policy inquiries_public_create
-  on public.inquiries for insert
-  to anon, authenticated
-  with check (
-    id ~* '^inq-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-    and status = 'Nieuw'
-    and nullif(btrim(coalesce(notes, '')), '') is null
-    and notification_sent_at is null
-    and date between now() - interval '5 minutes' and now() + interval '1 minute'
-    and created_at between now() - interval '5 minutes' and now() + interval '1 minute'
-    and char_length(btrim(name)) between 1 and 200
-    and char_length(btrim(email)) between 3 and 320
-    and char_length(coalesce(phone, '')) <= 100
-    and char_length(coalesce(type, '')) <= 100
-    and char_length(coalesce(item_title, '')) <= 500
-    and char_length(coalesce(item_ref, '')) <= 100
-    and char_length(coalesce(message, '')) <= 5000
-  );
+-- Public inquiry submission is intentionally server-mediated. The later
+-- 202608200002_inquiry_submission_security.sql migration adds the rate-limited
+-- /api/inquiries boundary; browser roles receive no direct INSERT policy.
 
 create policy inquiries_admin_read
   on public.inquiries for select

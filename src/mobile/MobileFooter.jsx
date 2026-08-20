@@ -3,6 +3,7 @@ import { Mail, Phone } from 'lucide-react';
 import FacebookIcon from '../components/FacebookIcon';
 import { useLanguage } from '../context/LanguageContext';
 import { localizePath } from '../utils/locales';
+import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 const COPY = {
   nl: { selected: 'Selectie', collection: 'Collecties', provenance: 'Herkomst' },
@@ -13,6 +14,9 @@ const COPY = {
 export default function MobileFooter({ onNavigate }) {
   const { language, t } = useLanguage();
   const labels = COPY[language] || COPY.en;
+  const trackContactClick = (eventName, data) => {
+    if (trackEvent(eventName, data)) flushAnalytics({ useBeacon: true });
+  };
 
   return (
     <footer id="contact" className="border-t border-[#D8CEB8] bg-white px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-10 text-[#332D27] min-[390px]:px-5 min-[600px]:px-8 lg:hidden">
@@ -20,11 +24,19 @@ export default function MobileFooter({ onNavigate }) {
         <img src="/images/Atelier Rembrandt.png" alt="Atelier Rembrandt" loading="lazy" decoding="async" className="h-9 w-auto object-contain" />
 
         <div className="mt-7 grid gap-2">
-          <a href="mailto:contact@atelierrembrandt.com" className="flex min-h-11 items-center gap-3 font-serif text-sm">
+          <a
+            href="mailto:contact@atelierrembrandt.com"
+            onClick={() => trackContactClick('email_clicked', { placement: 'mobile_footer' })}
+            className="flex min-h-11 items-center gap-3 font-serif text-sm"
+          >
             <Mail className="h-4 w-4 text-[#8E7035]" aria-hidden="true" />
             contact@atelierrembrandt.com
           </a>
-          <a href="tel:+32484384530" className="flex min-h-11 items-center gap-3 font-serif text-sm">
+          <a
+            href="tel:+32484384530"
+            onClick={() => trackContactClick('phone_clicked', { placement: 'mobile_footer' })}
+            className="flex min-h-11 items-center gap-3 font-serif text-sm"
+          >
             <Phone className="h-4 w-4 text-[#8E7035]" aria-hidden="true" />
             0484 38 45 30
           </a>
@@ -32,6 +44,7 @@ export default function MobileFooter({ onNavigate }) {
             href="https://www.facebook.com/profile.php?id=61592459230449"
             target="_blank"
             rel="noreferrer"
+            onClick={() => trackContactClick('cta_clicked', { placement: 'mobile_footer', target: 'facebook' })}
             className="flex min-h-11 items-center gap-3 font-serif text-sm transition-colors active:text-[#8E7035] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035]"
           >
             <FacebookIcon className="h-4 w-4 shrink-0 text-[#8E7035]" />

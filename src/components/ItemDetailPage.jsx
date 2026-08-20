@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, ShieldCheck, Award, Maximize2, ChevronLeft, ChevronRight, 
-  Bookmark, History, BookOpen, Share2, PhoneCall,
+  Bookmark, History, BookOpen, Share2,
   ArrowRight, FileText
 } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
@@ -12,6 +12,9 @@ import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
 import { getItemField, getLocalizedStatus, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { getImagePresentation, rememberImagePresentation } from '../utils/imagePresentation';
+import { trackItemViewed } from '../hooks/useAnalytics';
+import PriceAssurance from './PriceAssurance';
+import ArtworkContactActions from './ArtworkContactActions';
 
 export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry, catalog = [], onOpenItemDetail }) {
   const { t, language } = useLanguage();
@@ -36,6 +39,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
   useEffect(() => {
     setImagePresentation(getImagePresentation(currentImage.url));
   }, [currentImage.url]);
+
+  useEffect(() => {
+    if (item?.id) trackItemViewed(item, 'item_detail');
+  }, [item?.id]);
 
   if (!item) {
     return (
@@ -79,6 +86,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
     navigator.clipboard.writeText(window.location.href);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleInquiryClick = () => {
+    onRequestInquiry?.(item);
   };
 
   return (
@@ -144,7 +155,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   alt={currentImage.caption || getItemField(item, 'title', language)}
                   loading="eager"
                   decoding="async"
-                  fetchPriority="high"
+                  fetchpriority="high"
                   draggable="false"
                   onLoad={(event) => setImagePresentation(rememberImagePresentation(currentImage.url, event.currentTarget))}
                   style={{ viewTransitionName: selectedImageIndex === 0 ? getArtworkImageTransitionName(item.id) : 'none' }}
@@ -419,6 +430,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               <div>
                 <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
                 <span className="text-3xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
+                <PriceAssurance showDuties className="max-w-md" />
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>
@@ -448,25 +460,14 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             <div className="detail-summary-action border-y border-[#D8CEB8] py-5 sm:py-6 space-y-4">
               <div className="space-y-1">
                 <h3 className="text-xl font-serif font-bold text-[#111111]">
-                  {t('item_detail.addToCollection')}
+                  {t('commerce.askArtwork')}
                 </h3>
                 <p className="text-sm text-[#555555] font-serif leading-relaxed">
-                  {t('item_detail.inquiryContactText')}
+                  {t('commerce.askArtworkDesc')}
                 </p>
               </div>
 
-              <button
-                onClick={() => onRequestInquiry(item)}
-                disabled={item.status === 'Verkocht'}
-                className={`w-full py-3.5 text-xs font-serif font-semibold uppercase tracking-[0.16em] transition-colors flex items-center justify-center space-x-2 cursor-pointer min-h-[48px] ${
-                  item.status === 'Verkocht'
-                    ? 'bg-[#E8E3DA] text-[#777777] cursor-not-allowed border border-[#D8CEB8]'
-                    : 'bg-[#1C1A17] hover:bg-[#4A1521] text-white border border-[#1C1A17]'
-                }`}
-              >
-                <PhoneCall className="w-4 h-4" />
-                <span>{item.status === 'Verkocht' ? t('item_detail.soldArchive') : t('item_detail.requestPurchaseBtn')}</span>
-              </button>
+              <ArtworkContactActions item={item} onPurchase={handleInquiryClick} />
 
             </div>
 
@@ -492,7 +493,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             {/* Previous Item Card */}
             {prevItem ? (
               <div 
-                onClick={() => onOpenItemDetail ? onOpenItemDetail(prevItem) : window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => onOpenItemDetail ? onOpenItemDetail(prevItem, 'item_detail_previous') : window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="group p-5 rounded-2xl bg-white border border-[#D8CEB8] hover:border-[#111111] transition-all flex items-center space-x-4 cursor-pointer shadow-sm hover:shadow-md"
               >
                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-[#FAF7F2] border border-[#D8CEB8]">
@@ -509,6 +510,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   <p className="text-xs font-mono text-[#666666]">
                     {getLocalizedCentury(prevItem.century, language)} • {getLocalizedPrice(prevItem.price, language)}
                   </p>
+                  <PriceAssurance compact />
                 </div>
               </div>
             ) : (
@@ -520,7 +522,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
             {/* Next Item Card */}
             {nextItem ? (
               <div 
-                onClick={() => onOpenItemDetail ? onOpenItemDetail(nextItem) : window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => onOpenItemDetail ? onOpenItemDetail(nextItem, 'item_detail_next') : window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="group p-5 rounded-2xl bg-white border border-[#D8CEB8] hover:border-[#111111] transition-all flex items-center justify-between space-x-4 cursor-pointer shadow-sm hover:shadow-md text-right"
               >
                 <div className="space-y-1 min-w-0 flex-1">
@@ -534,6 +536,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   <p className="text-xs font-mono text-[#666666]">
                     {getLocalizedCentury(nextItem.century, language)} • {getLocalizedPrice(nextItem.price, language)}
                   </p>
+                  <PriceAssurance compact />
                 </div>
                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-[#FAF7F2] border border-[#D8CEB8]">
                   <img src={nextItem.images[0]?.url} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -569,13 +572,14 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           <span className="text-base font-serif font-bold text-[#111111] block leading-tight truncate">
             {getLocalizedPrice(item.price, language)}
           </span>
+          <span className="mt-0.5 block truncate font-sans text-[7px] font-bold uppercase tracking-[0.08em] text-[#6A6056]">{t('commerce.shippingIncluded')}</span>
         </div>
 
         <button
-          onClick={() => onRequestInquiry && onRequestInquiry(item)}
+          onClick={handleInquiryClick}
           className="px-5 py-3 rounded-md bg-[#1C1A17] hover:bg-[#B8860B] text-[#FAF7F2] hover:text-[#111111] font-serif text-xs font-semibold uppercase tracking-[0.14em] shadow-md transition-all duration-300 flex items-center space-x-2 shrink-0 cursor-pointer min-h-[44px]"
         >
-          <span>{t('item_detail.inquireAction') || 'Aanvragen'}</span>
+          <span>{t('commerce.purchase')}</span>
           <ArrowRight className="w-3.5 h-3.5 text-[#D4AF37]" />
         </button>
       </div>

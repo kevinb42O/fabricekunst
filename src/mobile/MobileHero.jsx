@@ -33,7 +33,7 @@ export default function MobileHero({ heroImage, mobileHeroImage, onExploreCatalo
             alt={MOBILE_ALT[language] || MOBILE_ALT.en}
             loading="eager"
             decoding="async"
-            fetchPriority="high"
+            fetchpriority="high"
             draggable="false"
             className="h-full w-full object-cover object-center"
           />

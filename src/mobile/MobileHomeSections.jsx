@@ -4,6 +4,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCategory, getLocalizedPrice, getLocalizedStatus } from '../utils/translationService';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
+import PriceAssurance from '../components/PriceAssurance';
+import CollectorListSection from '../components/CollectorListSection';
 
 const COPY = {
   nl: {
@@ -96,7 +98,7 @@ export default function MobileHomeSections({
                   href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
                   onClick={(event) => {
                     event.preventDefault();
-                    onOpenItemDetail(item);
+                    onOpenItemDetail(item, 'mobile_home_featured');
                   }}
                   className={`block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80 ${index === 0 ? 'min-[600px]:col-span-2' : ''}`}
                 >
@@ -127,8 +129,11 @@ export default function MobileHomeSections({
                     <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-[#8E7035]" aria-hidden="true" />
                   </span>
 
-                  <span className="mt-5 flex items-center justify-between gap-4 border-t border-[#E8DFCF] pt-4">
-                    <strong className="font-serif text-lg text-[#111111]">{getLocalizedPrice(item.price, language)}</strong>
+                  <span className="mt-5 flex items-start justify-between gap-4 border-t border-[#E8DFCF] pt-4">
+                    <span>
+                      <strong className="font-serif text-lg text-[#111111]">{getLocalizedPrice(item.price, language)}</strong>
+                      <PriceAssurance compact className="max-w-[17rem]" />
+                    </span>
                     {!isAvailable && (
                       <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6D5A3A]">{status}</span>
                     )}
@@ -151,6 +156,8 @@ export default function MobileHomeSections({
           </a>
         </div>
       </section>}
+
+      <CollectorListSection source="homepage_mobile" className="border-y border-[#2B2823]" />
 
       <section id="herkomst" aria-labelledby="mobile-why-title" className="border-y border-[#E8DFCF] bg-[#F7F3EC] px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
         <div className="mx-auto max-w-3xl">

@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Award, Bookmark } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedPrice } from '../utils/translationService';
+import PriceAssurance from './PriceAssurance';
 
 export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
   const { t, language } = useLanguage();
@@ -81,9 +82,10 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
-            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">
-              {itemPrice}
-            </span>
+            <div>
+              <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{itemPrice}</span>
+              <PriceAssurance compact className="max-w-sm" />
+            </div>
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
               whileTap={{ scale: 0.96 }}
@@ -247,4 +249,3 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
     </section>
   );
 }
-

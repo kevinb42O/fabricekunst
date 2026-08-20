@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  ListPlus,
   Menu,
   Settings,
   ShieldCheck,
@@ -33,13 +34,14 @@ import CertificateManager from './CertificateManager';
 import AdminTooltip from './AdminTooltip';
 import AnalyticsManager from './AnalyticsManager';
 import TokensManager from './TokensManager';
-import { supabase } from '../../utils/supabaseClient';
+import CollectorListManager from './CollectorListManager';
+import { authenticatedAdminFetch } from '../../utils/adminApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
   'dashboard', 'analytics-overview', 'analytics-acquisition', 'analytics-behavior', 'items', 'certificates', 'hero', 'provenance', 'faq',
-  'inquiries', 'customers', 'settings', 'tokens'
+  'inquiries', 'customers', 'collectors', 'settings', 'tokens'
 ]);
 
 const getTabFromHash = () => {
@@ -86,31 +88,24 @@ export default function AdminDashboard({
   const toastTimer = useRef(null);
 
   useEffect(() => {
-    fetch('/api/hosting-metrics')
-      .then(async res => {
-        const text = await res.text();
-        if (text.startsWith('<')) throw new Error('Vite fallback');
-        return JSON.parse(text);
-      })
-      .then(data => setMetricsData(data))
-      .catch(async err => {
-        // Local dev fallback when Vercel API is not available
-        let plan = 'basis';
-        try {
-          const { data } = await supabase.from('admin_settings').select('value').eq('key', 'hosting_plan').single();
-          if (data) plan = data.value;
-        } catch (e) { }
+    let cancelled = false;
 
-        setMetricsData({
-          plan,
-          usages: [
-            { metric: 'cached_egress', usage: 6503673364, limit: 5368709120 },
-            { metric: 'egress', usage: 2099157893, limit: 5368709120 },
-            { metric: 'db_size', usage: 31138512, limit: 536870912 },
-            { metric: 'storage_size', usage: 170724966, limit: 1073741824 }
-          ]
-        });
-      });
+    const loadMetrics = async () => {
+      try {
+        const response = await authenticatedAdminFetch('/api/hosting-metrics');
+        if (!response.ok) throw new Error(`Hosting metrics request failed (${response.status})`);
+        const data = await response.json();
+        if (!cancelled) setMetricsData(data);
+      } catch (error) {
+        // Do not render invented capacity values when the protected API is
+        // unavailable (for example while using the local Vite server).
+        console.warn('[admin] Hosting metrics unavailable:', error.message);
+        if (!cancelled) setMetricsData(null);
+      }
+    };
+
+    loadMetrics();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -181,6 +176,7 @@ export default function AdminDashboard({
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
     { id: 'inquiries', label: 'Berichten', icon: Mail, count: newInquiriesCount || undefined },
     { id: 'customers', label: 'Klanten', icon: Users },
+    { id: 'collectors', label: 'Collector’s List', icon: ListPlus },
     { id: 'tokens', label: 'Tokens', icon: Award, alert: hasExceededLimits },
     { id: 'settings', label: 'Account', icon: Settings }
   ];
@@ -196,6 +192,7 @@ export default function AdminDashboard({
     faq: 'Veelgestelde vragen',
     inquiries: 'Berichten',
     customers: 'Klanten',
+    collectors: 'Collector’s List',
     tokens: 'Hosting & Tokens',
     settings: 'Account'
   };
@@ -326,7 +323,7 @@ export default function AdminDashboard({
         <main className="admin-content" id="admin-main">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
+              key={activeTab.startsWith('analytics-') ? 'analytics' : activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -338,6 +335,7 @@ export default function AdminDashboard({
                   items={activeItems}
                   inquiries={activeInquiries}
                   currentUser={currentUser}
+                  metricsData={metricsData}
                   onNavigateTab={navigateTo}
                   onCreateNewItem={handleCreateItem}
                   onOpenLiveSite={handleClose}
@@ -388,6 +386,7 @@ export default function AdminDashboard({
                 <InquiriesManager inquiries={activeInquiries} onStatusChange={onUpdateInquiries} onShowToast={showToast} />
               )}
               {activeTab === 'customers' && <CustomersManager inquiries={activeInquiries} />}
+              {activeTab === 'collectors' && <CollectorListManager onShowToast={showToast} />}
               {activeTab === 'tokens' && <TokensManager items={activeItems} currentUser={currentUser} />}
               {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
             </motion.div>

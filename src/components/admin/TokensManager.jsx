@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, AlertCircle, ShoppingCart, Info, HardDrive, LayoutGrid, Activity, Check, X } from 'lucide-react';
 import UpgradeModal from './UpgradeModal';
+import { authenticatedAdminFetch } from '../../utils/adminApi';
 
 const CircularProgress = ({ percentage, color = '#24b47e' }) => {
   const radius = 9;
@@ -103,7 +104,7 @@ export default function TokensManager({ items = [], currentUser = null }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/hosting-metrics');
+      const res = await authenticatedAdminFetch('/api/hosting-metrics');
       if (!res.ok) {
         throw new Error('Failed to load metrics');
       }
@@ -117,27 +118,9 @@ export default function TokensManager({ items = [], currentUser = null }) {
       const data = JSON.parse(text);
       setMetrics(data);
     } catch (err) {
-      console.warn("API failed (waarschijnlijk omdat je lokaal via Vite draait in plaats van Vercel). Terugvallen op test-data.", err);
-      
-      let plan = 'basis';
-      try {
-        const { supabase } = await import('../../utils/supabaseClient');
-        const { data } = await supabase.from('admin_settings').select('value').eq('key', 'hosting_plan').single();
-        if (data) plan = data.value;
-      } catch (e) { }
-
-      // Fallback test-data voor lokale ontwikkeling
-      setMetrics({
-        plan,
-        usages: [
-          { metric: 'cached_egress', usage: 6503673364, limit: 5368709120, unit: 'bytes' },
-          { metric: 'egress', usage: 2099157893, limit: 5368709120, unit: 'bytes' },
-          { metric: 'db_size', usage: 31138512, limit: 536870912, unit: 'bytes' },
-          { metric: 'storage_size', usage: 170724966, limit: 1073741824, unit: 'bytes' }
-        ],
-        is_mock: true
-      });
-      setError('Er konden geen live statistieken worden opgehaald.');
+      console.warn('[tokens] Hosting metrics unavailable:', err);
+      setMetrics(null);
+      setError('De live hostingstatistieken zijn tijdelijk niet beschikbaar. Er worden geen geschatte waarden getoond.');
     } finally {
       setLoading(false);
     }
@@ -192,6 +175,16 @@ export default function TokensManager({ items = [], currentUser = null }) {
         <h1 className="text-2xl font-semibold mb-2">Hosting & Tokens</h1>
         <p className="text-gray-500">Beheer de opslag, het dataverkeer en de capaciteit van uw website.</p>
       </header>
+
+      {loading && <p className="mb-6 text-sm text-gray-500" role="status">Hostingstatistieken laden…</p>}
+      {error && (
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={fetchMetrics} className="shrink-0 rounded-lg border border-amber-300 px-3 py-1.5 font-semibold hover:bg-amber-100">
+            Opnieuw proberen
+          </button>
+        </div>
+      )}
 
       {hasExceeded && (
         <div className="bg-red-50 text-red-900 p-4 rounded-lg mb-8 border border-red-200 flex items-start">

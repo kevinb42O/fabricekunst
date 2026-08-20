@@ -13,6 +13,7 @@ export default function DashboardOverview({
   items = [],
   inquiries = [],
   currentUser = null,
+  metricsData = null,
   onNavigateTab = () => {},
   onCreateNewItem = () => {},
   onOpenLiveSite = () => {}
@@ -25,27 +26,6 @@ export default function DashboardOverview({
   const byMostRecent = (a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0);
   const recentInquiries = [...inquiries].sort(byMostRecent).slice(0, 4);
   const recentItems = [...items].slice(-5).reverse();
-
-  const [metricsData, setMetricsData] = React.useState(null);
-  
-  React.useEffect(() => {
-    fetch('/api/hosting-metrics')
-      .then(async res => {
-        const text = await res.text();
-        if (text.startsWith('<')) throw new Error('Vite fallback');
-        return JSON.parse(text);
-      })
-      .then(data => setMetricsData(data))
-      .catch(err => {
-        // Fallback for local dev when running via Vite
-        setMetricsData({
-          usages: [
-            { metric: 'egress', usage: 6496035143 },
-            { metric: 'storage_size', usage: 159000000 }
-          ]
-        });
-      });
-  }, []);
 
   const currentEgress = metricsData?.usages?.find(m => m.metric === 'egress')?.usage || 0;
   const isPremium = metricsData?.plan === 'premium' || currentUser?.subscription === 'premium';

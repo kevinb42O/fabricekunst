@@ -57,7 +57,7 @@ export default function Hero({ heroImage, onExploreCatalog }) {
             alt="Atelier Rembrandt Provenience Collecties"
             loading="eager"
             decoding="async"
-            fetchPriority="high"
+            fetchpriority="high"
             draggable="false"
             className="w-full h-full object-cover object-right md:object-center filter brightness-[1.01] contrast-[1.02] transform-gpu"
           />
