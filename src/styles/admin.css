@@ -2353,6 +2353,8 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
   text-align: right;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .analytics-live-count > span {
@@ -2360,6 +2362,10 @@
   height: 7px;
   border-radius: 50%;
   background: #0f766e;
+}
+
+.analytics-panel--activity .analytics-panel__header > div:first-child {
+  min-width: 0;
 }
 
 .analytics-activity-list,
@@ -3229,6 +3235,14 @@
 }
 
 @media (max-width: 479px) {
+  .analytics-panel--activity .analytics-panel__header {
+    flex-wrap: wrap;
+  }
+
+  .analytics-panel--activity .analytics-live-count {
+    margin-left: auto;
+  }
+
   .analytics-metric-grid,
   .analytics-skeleton-grid {
     grid-template-columns: 1fr;

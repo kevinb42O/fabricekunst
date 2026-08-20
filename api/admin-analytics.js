@@ -62,6 +62,7 @@ const RANGE_LABELS = {
 };
 
 const MAX_PAGE_SIZE = 1_000;
+const HOUR_MS = 60 * 60 * 1000;
 
 const reportEventLimit = () => {
   const parsed = Number.parseInt(process.env.ANALYTICS_REPORT_MAX_EVENTS || '25000', 10);
@@ -86,15 +87,105 @@ const localDateKey = (value) => {
   return `${year}-${month}-${day}`;
 };
 
-const localDateLabel = (key) => {
-  const [year, month, day] = key.split('-').map(Number);
-  return new Intl.DateTimeFormat('nl-BE', {
-    timeZone: TIMEZONE,
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
+const localMonthKey = (value) => {
+  const { year, month } = getDateParts(new Date(value));
+  return `${year}-${month}`;
 };
+
+// The key date is only a calendar carrier. Noon UTC is always the same local
+// civil day in Brussels, including either side of a DST transition.
+const dateForLocalDay = (key) => {
+  const [year, month, day] = key.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 12));
+};
+
+const dateForLocalMonth = (key) => {
+  const [year, month] = key.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, 15, 12));
+};
+
+const nextLocalDayKey = (key) => {
+  const date = dateForLocalDay(key);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
+};
+
+const nextLocalMonthKey = (key) => {
+  const [year, month] = key.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+};
+
+const seriesGranularityFor = (key, start, end) => {
+  if (key === '24h') return 'hour';
+  if (key === '7d' || key === '30d') return 'day';
+  if (key === 'all') {
+    const duration = new Date(end).getTime() - new Date(start).getTime();
+    return duration <= 45 * 24 * HOUR_MS ? 'day' : 'month';
+  }
+  return 'month';
+};
+
+const bucketKeyFor = (value, granularity) => {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  if (granularity === 'hour') return new Date(Math.floor(date.getTime() / HOUR_MS) * HOUR_MS).toISOString();
+  return granularity === 'month' ? localMonthKey(date) : localDateKey(date);
+};
+
+const bucketDescriptor = (key, granularity) => {
+  if (granularity === 'hour') {
+    const date = new Date(key);
+    return {
+      date: key,
+      label: new Intl.DateTimeFormat('nl-BE', { timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date),
+      // Include the zone to disambiguate repeated local hours when DST ends.
+      tooltipLabel: new Intl.DateTimeFormat('nl-BE', { timeZone: TIMEZONE, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short' }).format(date),
+    };
+  }
+
+  const date = granularity === 'month' ? dateForLocalMonth(key) : dateForLocalDay(key);
+  const shortOptions = granularity === 'month'
+    ? { month: 'short', year: 'numeric' }
+    : { day: 'numeric', month: 'short' };
+  const fullOptions = granularity === 'month'
+    ? { month: 'long', year: 'numeric' }
+    : { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  return {
+    date: key,
+    label: new Intl.DateTimeFormat('nl-BE', { timeZone: TIMEZONE, ...shortOptions }).format(date),
+    tooltipLabel: new Intl.DateTimeFormat('nl-BE', { timeZone: TIMEZONE, ...fullOptions }).format(date),
+  };
+};
+
+// Generate calendar buckets from the requested range rather than from rows,
+// so a sparse period remains a true zero-filled linear time series.
+const bucketDescriptorsFor = (range) => {
+  const start = new Date(range.start).getTime();
+  const end = new Date(range.end).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return [];
+
+  const descriptors = [];
+  if (range.granularity === 'hour') {
+    for (let current = Math.floor(start / HOUR_MS) * HOUR_MS; current < end; current += HOUR_MS) {
+      descriptors.push(bucketDescriptor(new Date(current).toISOString(), 'hour'));
+    }
+    return descriptors;
+  }
+
+  const finalInstant = new Date(end - 1);
+  let current = range.granularity === 'month' ? localMonthKey(start) : localDateKey(start);
+  const final = range.granularity === 'month' ? localMonthKey(finalInstant) : localDateKey(finalInstant);
+  while (current <= final) {
+    descriptors.push(bucketDescriptor(current, range.granularity));
+    current = range.granularity === 'month' ? nextLocalMonthKey(current) : nextLocalDayKey(current);
+  }
+  return descriptors;
+};
+
+const zeroFilledSeriesMap = (range, makeValues) => new Map(
+  bucketDescriptorsFor(range).map((bucket) => [bucket.date, { ...bucket, ...makeValues() }])
+);
 
 const localYear = (date) => Number(new Intl.DateTimeFormat('en', {
   timeZone: TIMEZONE,
@@ -145,6 +236,7 @@ const buildRange = (key, now, earliest) => {
         end: toIso(end),
         previousStart: null,
         previousEnd: null,
+        granularity: seriesGranularityFor(key, start, end),
       };
     default:
       return null;
@@ -158,6 +250,7 @@ const buildRange = (key, now, earliest) => {
     end: toIso(end),
     previousStart: toIso(new Date(start.getTime() - duration)),
     previousEnd: toIso(start),
+    granularity: seriesGranularityFor(key, start, end),
   };
 };
 
@@ -348,26 +441,26 @@ const funnelStagesForSession = (events) => {
   return stages;
 };
 
-const overviewFor = (events) => {
+const overviewFor = (events, range) => {
   const sessionMap = new Map();
-  const seriesMap = new Map();
+  const seriesMap = zeroFilledSeriesMap(range, () => ({
+    sessions: new Set(),
+    pageViews: 0,
+    inquiries: new Set(),
+  }));
   const pageMap = new Map();
 
   for (const event of events) {
     if (!sessionMap.has(event.visit_id)) sessionMap.set(event.visit_id, []);
     sessionMap.get(event.visit_id).push(event);
 
-    const date = localDateKey(event.received_at);
-    const series = incrementBreakdown(seriesMap, date, () => ({
-      date,
-      label: localDateLabel(date),
-      sessions: new Set(),
-      pageViews: 0,
-      inquiries: new Set(),
-    }));
-    series.sessions.add(event.visit_id);
-    if (event.event_name === 'page_view') series.pageViews += 1;
-    if (event.event_name === 'inquiry_submitted') series.inquiries.add(event.visit_id);
+    const bucketKey = bucketKeyFor(event.received_at, range.granularity);
+    const series = bucketKey ? seriesMap.get(bucketKey) : null;
+    if (series) {
+      series.sessions.add(event.visit_id);
+      if (event.event_name === 'page_view') series.pageViews += 1;
+      if (event.event_name === 'inquiry_submitted') series.inquiries.add(event.visit_id);
+    }
   }
 
   const sourceMap = new Map();
@@ -529,11 +622,11 @@ const overviewFor = (events) => {
     .map((row) => ({
       date: row.date,
       label: row.label,
+      tooltipLabel: row.tooltipLabel,
       sessions: row.sessions.size,
       pageViews: row.pageViews,
       inquiries: row.inquiries.size,
-    }))
-    .sort((left, right) => left.date.localeCompare(right.date));
+    }));
 
   return {
     summary: {
@@ -557,9 +650,12 @@ const overviewFor = (events) => {
   };
 };
 
-const legacyOverviewFor = (views) => {
+const legacyOverviewFor = (views, range) => {
   const uniqueIds = new Set();
-  const seriesMap = new Map();
+  const seriesMap = zeroFilledSeriesMap(range, () => ({
+    uniqueIds: new Set(),
+    pageViews: 0,
+  }));
   const pageMap = new Map();
   let firstSeen = null;
   let lastSeen = null;
@@ -578,15 +674,12 @@ const legacyOverviewFor = (views) => {
     if (!firstSeen || occurredAtMs < new Date(firstSeen).getTime()) firstSeen = occurredAt;
     if (!lastSeen || occurredAtMs > new Date(lastSeen).getTime()) lastSeen = occurredAt;
 
-    const date = localDateKey(occurredAt);
-    const series = incrementBreakdown(seriesMap, date, () => ({
-      date,
-      label: localDateLabel(date),
-      uniqueIds: new Set(),
-      pageViews: 0,
-    }));
-    series.uniqueIds.add(opaqueId);
-    series.pageViews += 1;
+    const bucketKey = bucketKeyFor(occurredAt, range.granularity);
+    const series = bucketKey ? seriesMap.get(bucketKey) : null;
+    if (series) {
+      series.uniqueIds.add(opaqueId);
+      series.pageViews += 1;
+    }
 
     const path = safeLegacyPath(view.page_url);
     const page = incrementBreakdown(pageMap, path, () => ({
@@ -608,10 +701,10 @@ const legacyOverviewFor = (views) => {
       .map((row) => ({
         date: row.date,
         label: row.label,
+        tooltipLabel: row.tooltipLabel,
         uniqueIds: row.uniqueIds.size,
         pageViews: row.pageViews,
-      }))
-      .sort((left, right) => left.date.localeCompare(right.date)),
+      })),
     pages: [...pageMap.values()]
       .map((row) => ({
         path: row.path,
@@ -754,10 +847,20 @@ export default async function handler(req, res) {
         : Promise.resolve({ rows: [], partial: false, unavailable: false }),
     ]);
 
-    const current = overviewFor(currentRows);
-    const previous = overviewFor(previousResult.rows);
-    const currentLegacy = legacyOverviewFor(currentLegacyRows);
-    const previousLegacy = legacyOverviewFor(previousLegacyResult.rows);
+    const previousRange = range.previousStart && range.previousEnd
+      ? {
+        ...range,
+        label: `Vorige ${range.label.toLowerCase()}`,
+        start: range.previousStart,
+        end: range.previousEnd,
+        previousStart: null,
+        previousEnd: null,
+      }
+      : null;
+    const current = overviewFor(currentRows, range);
+    const previous = overviewFor(previousResult.rows, previousRange || range);
+    const currentLegacy = legacyOverviewFor(currentLegacyRows, range);
+    const previousLegacy = legacyOverviewFor(previousLegacyResult.rows, previousRange || range);
     const legacyAvailable = Boolean(firstLegacyView);
     const legacyIncluded = currentLegacy.summary.pageViews > 0;
     const hasV2Data = currentRows.length > 0;
@@ -788,6 +891,7 @@ export default async function handler(req, res) {
           label: range.label,
           start: range.start,
           end: range.end,
+          granularity: range.granularity,
         },
         summary: {
           uniqueIds: {

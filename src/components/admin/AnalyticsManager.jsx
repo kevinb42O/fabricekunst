@@ -122,6 +122,16 @@ const formatTimestamp = (value, timeZone) => formatDate(value, timeZone, {
   minute: '2-digit',
 });
 
+const GRANULARITY_META = Object.freeze({
+  hour: { unit: 'uur', adjective: 'Uurlijkse', column: 'Uur', tickInterval: 'preserveStartEnd' },
+  day: { unit: 'dag', adjective: 'Dagelijkse', column: 'Datum', tickInterval: 'preserveEnd' },
+  month: { unit: 'maand', adjective: 'Maandelijkse', column: 'Maand', tickInterval: 'preserveEnd' },
+});
+
+const normaliseGranularity = (value) => (Object.hasOwn(GRANULARITY_META, value) ? value : 'day');
+const granularityMeta = (value) => GRANULARITY_META[normaliseGranularity(value)];
+const tooltipBucketLabel = (label, payload) => asString(payload?.[0]?.payload?.tooltipLabel, asString(label, '—'));
+
 const normaliseBreakdown = (items, nameKeys) => asArray(items).map((item, index) => {
   const explicitName = nameKeys.map((key) => item?.[key]).find((value) => typeof value === 'string' && value.trim());
   const name = explicitName || (item?.source === 'direct' ? 'Direct / niet getagd' : asString(item?.source, 'Onbekend'));
@@ -147,7 +157,7 @@ const normaliseLegacy = (legacy, timezone) => {
       available: false,
       included: false,
       label: '',
-      range: { start: null, end: null, label: '' },
+      range: { start: null, end: null, label: '', granularity: 'day' },
       summary: { uniqueIds: 0, pageViews: 0 },
       series: [],
     };
@@ -158,6 +168,7 @@ const normaliseLegacy = (legacy, timezone) => {
     id: asString(item?.id, `${item?.date || item?.bucket || item?.label || 'legacy-period'}-${index}`),
     date: item?.date || item?.bucket || item?.label || '',
     label: asString(item?.label, '') || formatDate(item?.date || item?.bucket, timezone),
+    tooltipLabel: asString(item?.tooltipLabel, '') || asString(item?.label, '') || formatDate(item?.date || item?.bucket, timezone),
     uniqueIds: asNumber(item?.uniqueIds ?? item?.uniqueVisitors ?? item?.visitors ?? item?.sessions),
     pageViews: asNumber(item?.pageViews ?? item?.views),
   }));
@@ -173,6 +184,7 @@ const normaliseLegacy = (legacy, timezone) => {
       start: legacy.range?.start || null,
       end: legacy.range?.end || null,
       label: asString(legacy.range?.label, ''),
+      granularity: normaliseGranularity(legacy.range?.granularity ?? legacy.granularity),
     },
     summary: { uniqueIds, pageViews },
     series,
@@ -197,6 +209,7 @@ const normaliseReport = (payload, requestedRange) => {
       end: source.range?.end || null,
       previousStart: source.range?.previousStart || null,
       previousEnd: source.range?.previousEnd || null,
+      granularity: normaliseGranularity(source.range?.granularity),
     },
     meta: {
       trackingState: asString(meta.trackingState || source.trackingState, 'ready'),
@@ -214,6 +227,7 @@ const normaliseReport = (payload, requestedRange) => {
       id: asString(item?.id, `${item?.date || item?.label || 'period'}-${index}`),
       date: item?.date || item?.bucket || item?.label || '',
       label: asString(item?.label, '') || formatDate(item?.date || item?.bucket, timezone),
+      tooltipLabel: asString(item?.tooltipLabel, '') || asString(item?.label, '') || formatDate(item?.date || item?.bucket, timezone),
       sessions: asNumber(item?.sessions),
       pageViews: asNumber(item?.pageViews ?? item?.views),
       inquiries: asNumber(item?.inquiries ?? item?.submittedInquiries),
@@ -393,26 +407,28 @@ function DataTable({ caption, columns, rows, emptyMessage = 'Geen resultaten voo
 function TrendPanel({ report }) {
   const data = report.series;
   const hasData = data.some((item) => item.sessions > 0 || item.pageViews > 0 || item.inquiries > 0);
+  const { unit, adjective, column, tickInterval } = granularityMeta(report.range.granularity);
+  const partialHourNote = unit === 'uur' ? ' Het eerste en laatste uur kunnen gedeeltelijk zijn.' : '';
   return (
-    <Panel title="Sessies over tijd" description="Deze grafiek toont het aantal sessies per dag in de gekozen periode. Open ‘Toon tabelwaarden’ voor paginaweergaven en verstuurde aanvragen per dag." icon={BarChart3}>
+    <Panel title="Sessies over tijd" description={`Deze grafiek toont het aantal sessies per ${unit} in de gekozen periode.${partialHourNote} Open ‘Toon tabelwaarden’ voor paginaweergaven en verstuurde aanvragen per ${unit}.`} icon={BarChart3}>
       {hasData ? (
         <>
-          <div className="analytics-chart" role="img" aria-label={`Grafiek met sessies per dag voor ${report.range.label}.`}>
+          <div className="analytics-chart" role="img" aria-label={`Grafiek met sessies per ${unit} voor ${report.range.label}.`}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 12, right: 12, left: -16, bottom: 0 }}>
                 <defs><linearGradient id="analyticsSessionsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1e40af" stopOpacity={0.24} /><stop offset="100%" stopColor="#1e40af" stopOpacity={0} /></linearGradient></defs>
                 <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
-                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#525252', fontSize: 12 }} minTickGap={24} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#525252', fontSize: 12 }} minTickGap={unit === 'uur' ? 8 : 24} interval={tickInterval} />
                 <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#525252', fontSize: 12 }} />
-                <Tooltip cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }} contentStyle={{ border: '1px solid #d1d5db', borderRadius: 8, color: '#171717' }} formatter={(value) => [formatNumber(value), 'Sessies']} />
-                <Area type="monotone" dataKey="sessions" stroke="#1e40af" strokeWidth={2.5} fill="url(#analyticsSessionsFill)" activeDot={{ r: 4 }} />
+                <Tooltip cursor={{ stroke: '#94a3b8', strokeDasharray: '4 4' }} contentStyle={{ border: '1px solid #d1d5db', borderRadius: 8, color: '#171717' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Sessies']} />
+                <Area type="linear" dataKey="sessions" stroke="#1e40af" strokeWidth={2.5} fill="url(#analyticsSessionsFill)" activeDot={{ r: 4 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
           <details className="analytics-chart-data">
-            <summary>Toon tabelwaarden</summary>
-            <DataTable caption={`Dagelijkse analyse voor ${report.range.label}`} rows={data} columns={[
-              { label: 'Datum', render: (row) => row.label },
+            <summary>Toon tabelwaarden per {unit}</summary>
+            <DataTable caption={`${adjective} analyse voor ${report.range.label}`} rows={data} columns={[
+              { label: column, render: (row) => row.tooltipLabel },
               { label: 'Sessies', align: 'end', render: (row) => formatNumber(row.sessions) },
               { label: 'Paginaweergaven', align: 'end', render: (row) => formatNumber(row.pageViews) },
               { label: 'Aanvragen', align: 'end', render: (row) => formatNumber(row.inquiries) },
@@ -430,11 +446,13 @@ function LegacyTrendPanel({ legacy }) {
   const data = legacy.series;
   const hasSeries = data.some((item) => item.uniqueIds > 0 || item.pageViews > 0);
   const rangeLabelText = legacy.range.label ? ` in ${legacy.range.label.toLowerCase()}` : '';
+  const { unit, column, tickInterval } = granularityMeta(legacy.range.granularity);
+  const partialHourNote = unit === 'uur' ? ' Het eerste en laatste uur kunnen gedeeltelijk zijn.' : '';
 
   return (
     <Panel
       title="Historische bezoekers over tijd"
-      description={`Geaggregeerde unieke IDs en paginaweergaven${rangeLabelText}. Deze v1-IDs waren persistent en zijn niet vergelijkbaar met de tijdelijke v2-sessies hieronder.`}
+      description={`Geaggregeerde unieke IDs en paginaweergaven per ${unit}${rangeLabelText}.${partialHourNote} Deze v1-IDs waren persistent en zijn niet vergelijkbaar met de tijdelijke v2-sessies hieronder.`}
       icon={Eye}
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 22px', marginBottom: '18px', color: '#404040', fontSize: '13px' }}>
@@ -443,27 +461,27 @@ function LegacyTrendPanel({ legacy }) {
       </div>
       {hasSeries ? (
         <>
-          <div className="analytics-chart" role="img" aria-label="Grafiek met historische v1 unieke IDs over tijd.">
+          <div className="analytics-chart" role="img" aria-label={`Grafiek met historische v1 unieke IDs per ${unit}.`}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs><linearGradient id="analyticsLegacyVisitorsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0070F3" stopOpacity={0.2} /><stop offset="95%" stopColor="#0070F3" stopOpacity={0} /></linearGradient></defs>
-                <XAxis dataKey="label" axisLine={{ stroke: '#eaeaea' }} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dy={10} minTickGap={24} />
+                <XAxis dataKey="label" axisLine={{ stroke: '#eaeaea' }} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dy={10} minTickGap={unit === 'uur' ? 8 : 24} interval={tickInterval} />
                 <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dx={-10} />
-                <Tooltip cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} formatter={(value) => [formatNumber(value), 'Historische unieke IDs']} />
+                <Tooltip cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Historische unieke IDs']} />
                 <Area type="linear" dataKey="uniqueIds" stroke="#0070F3" strokeWidth={2} fillOpacity={1} fill="url(#analyticsLegacyVisitorsFill)" activeDot={{ r: 4, fill: '#0070F3', stroke: '#fff', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
           <details className="analytics-chart-data">
-            <summary>Toon historische tabelwaarden</summary>
-            <DataTable caption="Historische v1-analyse per periode" rows={data} columns={[
-              { label: 'Datum', render: (row) => row.label },
+            <summary>Toon historische tabelwaarden per {unit}</summary>
+            <DataTable caption={`Historische v1-analyse per ${unit}`} rows={data} columns={[
+              { label: column, render: (row) => row.tooltipLabel },
               { label: 'Unieke IDs', align: 'end', render: (row) => formatNumber(row.uniqueIds) },
               { label: 'Paginaweergaven', align: 'end', render: (row) => formatNumber(row.pageViews) },
             ]} />
           </details>
         </>
-      ) : <EmptyState title="Historische v1-totalen zonder tijdreeks">De beveiligde analyse-API heeft voor deze periode nog geen geaggregeerde v1-dagwaarden teruggegeven.</EmptyState>}
+      ) : <EmptyState title="Historische v1-totalen zonder tijdreeks">De beveiligde analyse-API heeft voor deze periode nog geen geaggregeerde waarden per {unit} teruggegeven.</EmptyState>}
     </Panel>
   );
 }
@@ -498,8 +516,11 @@ function ProgressList({ items, kind, totalSessions }) {
 
 function ActivityPanel({ report, onOpenSession }) {
   const activity = report.live.activity;
+  const activeSessions = asNumber(report.live.activeSessions);
+  const sessionLabel = activeSessions === 1 ? 'sessie' : 'sessies';
+  const liveBadgeText = `${formatNumber(activeSessions)} ${sessionLabel} · 5 min`;
   return (
-    <Panel title="Recente sessieactiviteit" description="Alleen geaggregeerde of geredigeerde signalen; geen identificeerbare bezoekersgegevens. ‘Actief’ betekent minstens één ontvangen signaal in de laatste 5 minuten, geen live aanwezigheid." icon={Activity} action={<span className="analytics-live-count"><span aria-hidden="true" />{formatNumber(report.live.activeSessions)} actief in de laatste 5 min</span>}>
+    <Panel title="Recente activiteit" description="Acties uit de afgelopen 5 minuten." icon={Activity} className="analytics-panel--activity" action={<span className="analytics-live-count" aria-label={`${formatNumber(activeSessions)} ${sessionLabel} met activiteit in de afgelopen 5 minuten`}><span aria-hidden="true" />{liveBadgeText}</span>}>
       {activity.length ? (
         <ol className="analytics-activity-list">
           {activity.map((item) => (
