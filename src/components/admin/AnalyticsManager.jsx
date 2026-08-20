@@ -253,7 +253,8 @@ const normaliseReport = (payload, requestedRange) => {
     })),
     legacy: normaliseLegacy(source.legacy, timezone),
     live: {
-      activeSessions: asNumber(live.activeSessions ?? live.activeNow),
+      windowHours: Math.max(1, Math.round(asNumber(live.windowHours) || 24)),
+      activityCount: asNumber(live.activityCount ?? live.actionsCount ?? live.count ?? asArray(live.activity).length),
       activity: asArray(live.activity).map((item, index) => ({
         id: asString(item?.id, `activity-${index}`),
         occurredAt: item?.occurredAt || item?.createdAt || item?.timestamp || null,
@@ -516,11 +517,11 @@ function ProgressList({ items, kind, totalSessions }) {
 
 function ActivityPanel({ report, onOpenSession }) {
   const activity = report.live.activity;
-  const activeSessions = asNumber(report.live.activeSessions);
-  const sessionLabel = activeSessions === 1 ? 'sessie' : 'sessies';
-  const liveBadgeText = `${formatNumber(activeSessions)} ${sessionLabel} · 5 min`;
+  const activityCount = asNumber(report.live.activityCount);
+  const actionLabel = activityCount === 1 ? 'actie' : 'acties';
+  const liveBadgeText = `${formatNumber(activityCount)} ${actionLabel} · 24 uur`;
   return (
-    <Panel title="Recente activiteit" description="Acties uit de afgelopen 5 minuten." icon={Activity} className="analytics-panel--activity" action={<span className="analytics-live-count" aria-label={`${formatNumber(activeSessions)} ${sessionLabel} met activiteit in de afgelopen 5 minuten`}><span aria-hidden="true" />{liveBadgeText}</span>}>
+    <Panel title="Recente activiteit" description="De laatste acties van de afgelopen 24 uur." icon={Activity} className="analytics-panel--activity" action={<span className="analytics-live-count" aria-label={`${formatNumber(activityCount)} ${actionLabel} in de afgelopen 24 uur`}><span aria-hidden="true" />{liveBadgeText}</span>}>
       {activity.length ? (
         <ol className="analytics-activity-list">
           {activity.map((item) => (
@@ -542,7 +543,7 @@ function ActivityPanel({ report, onOpenSession }) {
             </li>
           ))}
         </ol>
-      ) : <EmptyState title="Nog geen recente activiteit">Nieuwe sessies verschijnen hier wanneer de veilige analyse-API ze heeft verwerkt.</EmptyState>}
+      ) : <EmptyState title="Nog geen activiteit in de afgelopen 24 uur">Er zijn in deze periode nog geen acties.</EmptyState>}
     </Panel>
   );
 }

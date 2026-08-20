@@ -2368,6 +2368,10 @@
   min-width: 0;
 }
 
+.analytics-panel--activity {
+  align-self: start;
+}
+
 .analytics-activity-list,
 .analytics-progress-list,
 .analytics-segment-list,

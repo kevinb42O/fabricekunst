@@ -735,22 +735,52 @@ const eventDetail = (event) => {
   return safePathLabel(event.page_path);
 };
 
-const liveFor = (events, now) => {
-  const fiveMinutesAgo = now.getTime() - 5 * 60 * 1000;
-  const liveEvents = events
-    .filter((event) => new Date(event.received_at).getTime() >= fiveMinutesAgo)
-    .sort((left, right) => new Date(right.received_at).getTime() - new Date(left.received_at).getTime());
+const RECENT_ACTIVITY_WINDOW_HOURS = 24;
+const RECENT_ACTIVITY_LIMIT = 20;
 
-  return {
-    activeSessions: new Set(liveEvents.map((event) => event.visit_id)).size,
-    activity: liveEvents.slice(0, 12).map((event) => ({
-      id: String(event.id),
+// This stays aggregate-safe: v2 details are the existing redacted labels and
+// legacy rows deliberately expose neither their identifiers nor their paths,
+// referrers, user agents, or any clickable detail.
+const liveFor = (events, legacyViews, now) => {
+  const cutoff = now.getTime() - RECENT_ACTIVITY_WINDOW_HOURS * HOUR_MS;
+  const activity = [];
+
+  for (const event of events) {
+    const receivedAtMs = new Date(event.received_at).getTime();
+    if (!Number.isFinite(receivedAtMs) || receivedAtMs < cutoff || receivedAtMs >= now.getTime()) continue;
+    const occurredAtMs = new Date(event.occurred_at).getTime();
+    activity.push({
+      // Receipt time is the trusted window boundary; occurrence time keeps
+      // the visible feed naturally ordered for the administrator.
+      sortAt: Number.isFinite(occurredAtMs) ? occurredAtMs : receivedAtMs,
+      id: `v2-${event.id}`,
       occurredAt: event.occurred_at,
       type: event.event_name,
       label: EVENT_LABELS[event.event_name] || 'Activiteit geregistreerd',
       detail: eventDetail(event),
       sessionId: event.visit_id,
-    })),
+    });
+  }
+
+  legacyViews.forEach((view, index) => {
+    const occurredAtMs = new Date(view.created_at).getTime();
+    if (!Number.isFinite(occurredAtMs) || occurredAtMs < cutoff || occurredAtMs >= now.getTime()) return;
+    activity.push({
+      sortAt: occurredAtMs,
+      // Synthetic per-response ID: never pass a legacy row/session ID out.
+      id: `legacy-${occurredAtMs}-${index}`,
+      occurredAt: view.created_at,
+      type: 'legacy_page_view',
+      label: 'Pagina bekeken',
+      detail: '',
+    });
+  });
+
+  activity.sort((left, right) => right.sortAt - left.sortAt || left.id.localeCompare(right.id));
+  return {
+    windowHours: RECENT_ACTIVITY_WINDOW_HOURS,
+    activityCount: activity.length,
+    activity: activity.slice(0, RECENT_ACTIVITY_LIMIT).map(({ sortAt, ...item }) => item),
   };
 };
 
@@ -831,11 +861,15 @@ export default async function handler(req, res) {
       .filter(Boolean)
       .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())[0] || null;
     const range = buildRange(rangeKey, now, earliest);
+    const recentActivityStart = new Date(now.getTime() - RECENT_ACTIVITY_WINDOW_HOURS * HOUR_MS).toISOString();
+    const recentActivityEnd = now.toISOString();
     const [
       { rows: currentRows, partial: currentPartial },
       previousResult,
       { rows: currentLegacyRows, partial: currentLegacyPartial },
       previousLegacyResult,
+      { rows: recentRows, partial: recentPartial },
+      { rows: recentLegacyRows, partial: recentLegacyPartial },
     ] = await Promise.all([
       fetchEvents(supabase, range.start, range.end),
       range.previousStart && range.previousEnd
@@ -845,6 +879,10 @@ export default async function handler(req, res) {
       range.previousStart && range.previousEnd
         ? fetchLegacyPageViews(supabase, range.previousStart, range.previousEnd)
         : Promise.resolve({ rows: [], partial: false, unavailable: false }),
+      // The activity feed is intentionally independent of the selected report
+      // range and its row cap, so a wide/all report cannot hide recent events.
+      fetchEvents(supabase, recentActivityStart, recentActivityEnd),
+      fetchLegacyPageViews(supabase, recentActivityStart, recentActivityEnd),
     ]);
 
     const previousRange = range.previousStart && range.previousEnd
@@ -882,7 +920,7 @@ export default async function handler(req, res) {
       breakdowns: current.breakdowns,
       funnel: current.funnel,
       scrollDepth: current.scrollDepth,
-      live: liveFor(currentRows, now),
+      live: liveFor(recentRows, recentLegacyRows, now),
       legacy: {
         available: legacyAvailable,
         included: legacyIncluded,
@@ -914,7 +952,7 @@ export default async function handler(req, res) {
         trackingStartedAt: firstEvent?.received_at || null,
         legacyAvailable,
         legacyIncluded,
-        partial: currentPartial || previousResult.partial || currentLegacyPartial || previousLegacyResult.partial,
+        partial: currentPartial || previousResult.partial || currentLegacyPartial || previousLegacyResult.partial || recentPartial || recentLegacyPartial,
       },
     });
   } catch (error) {
