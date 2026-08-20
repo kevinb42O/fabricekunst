@@ -812,6 +812,8 @@ export const uploadCatalogImage = async (file, { purpose = 'catalog' } = {}) => 
     throw new Error('De afbeelding is leeg of groter dan 20 MB.');
   }
 
+  let phase = 'de beveiligde upload voorbereiden';
+
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData?.session?.access_token;
@@ -845,7 +847,8 @@ export const uploadCatalogImage = async (file, { purpose = 'catalog' } = {}) => 
       throw new Error('R2 gaf geen geldige publieke afbeeldings-URL terug.');
     }
 
-    const uploadRes = await fetch(presignedUrl, {
+    phase = 'de afbeelding naar R2 sturen';
+    const putToR2 = () => fetch(presignedUrl, {
       method: 'PUT',
       body: file,
       headers: {
@@ -853,10 +856,23 @@ export const uploadCatalogImage = async (file, { purpose = 'catalog' } = {}) => 
       }
     });
 
+    // A signed R2 URL is valid for five minutes. Retrying one transient
+    // browser/network failure is safe: the same object key is overwritten,
+    // never duplicated, and the server still verifies the exact file.
+    let uploadRes;
+    try {
+      uploadRes = await putToR2();
+    } catch (firstUploadError) {
+      if (firstUploadError?.name !== 'TypeError') throw firstUploadError;
+      await new Promise((resolve) => window.setTimeout(resolve, 350));
+      uploadRes = await putToR2();
+    }
+
     if (!uploadRes.ok) {
       throw new Error(`R2 heeft de afbeelding geweigerd (${uploadRes.status}).`);
     }
 
+    phase = 'de R2-upload bevestigen';
     const verifyRes = await fetch('/api/r2-presigned-url', {
       method: 'POST',
       credentials: 'same-origin',
@@ -874,6 +890,9 @@ export const uploadCatalogImage = async (file, { purpose = 'catalog' } = {}) => 
     return publicUrl;
   } catch (e) {
     console.error('R2 image upload failed:', e);
+    if (e?.name === 'TypeError' && /failed to fetch/i.test(e?.message || '')) {
+      throw new Error(`De verbinding viel weg tijdens ${phase}. Probeer opnieuw; het bestand is niet opgeslagen.`);
+    }
     throw new Error(e?.message || 'Upload naar R2 is mislukt. Het bestand is niet opgeslagen.');
   }
 };

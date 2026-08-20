@@ -30,6 +30,10 @@ export const getR2ConfigurationError = () => {
 export const getR2Client = () => new S3Client({
   region: 'auto',
   endpoint: process.env.R2_ENDPOINT,
+  // Cloudflare R2's S3 endpoint is path-style. Without this, the AWS SDK
+  // signs URLs for `<bucket>.<account>.r2.cloudflarestorage.com`, a hostname
+  // that Cloudflare does not serve and browsers report only as “Failed to fetch”.
+  forcePathStyle: true,
   credentials: {
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,

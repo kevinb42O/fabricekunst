@@ -12,6 +12,10 @@ export const R2_CORS_RULES = [{
   AllowedOrigins: [
     'https://www.atelierrembrandt.com',
     'https://atelierrembrandt.com',
+    // Canonical Vercel aliases used by the production admin. Keeping these
+    // explicit avoids opening the bucket to arbitrary third-party origins.
+    'https://rareartbooks.vercel.app',
+    'https://rareartbooks-lanternnetworks-projects.vercel.app',
     'http://localhost:5173',
   ],
   AllowedMethods: ['GET', 'HEAD', 'PUT'],
@@ -23,6 +27,7 @@ export const R2_CORS_RULES = [{
 const r2 = new S3Client({
   region: 'auto',
   endpoint: process.env.R2_ENDPOINT,
+  forcePathStyle: true,
   credentials: {
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
