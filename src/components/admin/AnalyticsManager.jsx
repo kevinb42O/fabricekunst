@@ -196,6 +196,13 @@ const normaliseReport = (payload, requestedRange) => {
   const summary = source.summary || {};
   const breakdowns = source.breakdowns || {};
   const live = source.live || {};
+  const liveActivity = asArray(live.activity);
+  const reportedActivityCount = Math.max(0, Math.floor(asNumber(live.activityCount ?? live.actionsCount ?? live.count ?? liveActivity.length)));
+  const reportedShownCount = live.shownCount === null || live.shownCount === undefined
+    ? liveActivity.length
+    : Math.max(0, Math.floor(asNumber(live.shownCount)));
+  const activityCount = Math.max(reportedActivityCount, liveActivity.length);
+  const shownCount = reportedShownCount === liveActivity.length ? reportedShownCount : liveActivity.length;
   const meta = source.meta || {};
   const timezone = asString(source.timezone, 'Europe/Brussels');
 
@@ -254,8 +261,10 @@ const normaliseReport = (payload, requestedRange) => {
     legacy: normaliseLegacy(source.legacy, timezone),
     live: {
       windowHours: Math.max(1, Math.round(asNumber(live.windowHours) || 24)),
-      activityCount: asNumber(live.activityCount ?? live.actionsCount ?? live.count ?? asArray(live.activity).length),
-      activity: asArray(live.activity).map((item, index) => ({
+      activityCount,
+      shownCount,
+      hasMore: live.hasMore === true && activityCount > shownCount,
+      activity: liveActivity.map((item, index) => ({
         id: asString(item?.id, `activity-${index}`),
         occurredAt: item?.occurredAt || item?.createdAt || item?.timestamp || null,
         type: asString(item?.type, 'event'),
@@ -518,31 +527,35 @@ function ProgressList({ items, kind, totalSessions }) {
 function ActivityPanel({ report, onOpenSession }) {
   const activity = report.live.activity;
   const activityCount = asNumber(report.live.activityCount);
+  const shownCount = asNumber(report.live.shownCount);
   const actionLabel = activityCount === 1 ? 'actie' : 'acties';
   const liveBadgeText = `${formatNumber(activityCount)} ${actionLabel} · 24 uur`;
   return (
     <Panel title="Recente activiteit" description="De laatste acties van de afgelopen 24 uur." icon={Activity} className="analytics-panel--activity" action={<span className="analytics-live-count" aria-label={`${formatNumber(activityCount)} ${actionLabel} in de afgelopen 24 uur`}><span aria-hidden="true" />{liveBadgeText}</span>}>
       {activity.length ? (
-        <ol className="analytics-activity-list">
-          {activity.map((item) => (
-            <li key={item.id}>
-              {item.sessionId ? (
-                <button type="button" onClick={(event) => onOpenSession(item, event)} className="analytics-activity-button">
-                  <span className="analytics-activity-button__icon" aria-hidden="true"><Clock3 /></span>
-                  <span><strong>{item.label}</strong>{item.detail ? <small>{item.detail}</small> : null}</span>
-                  <time dateTime={item.occurredAt || undefined}>{formatTimestamp(item.occurredAt, report.timezone)}</time>
-                  <ChevronRight aria-hidden="true" /><span className="analytics-visually-hidden">Open geanonimiseerde sessiedetails</span>
-                </button>
-              ) : (
-                <div className="analytics-activity-row">
-                  <span className="analytics-activity-button__icon" aria-hidden="true"><Clock3 /></span>
-                  <span><strong>{item.label}</strong>{item.detail ? <small>{item.detail}</small> : null}</span>
-                  <time dateTime={item.occurredAt || undefined}>{formatTimestamp(item.occurredAt, report.timezone)}</time>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
+        <>
+          <ol className="analytics-activity-list">
+            {activity.map((item) => (
+              <li key={item.id}>
+                {item.sessionId ? (
+                  <button type="button" onClick={(event) => onOpenSession(item, event)} className="analytics-activity-button">
+                    <span className="analytics-activity-button__icon" aria-hidden="true"><Clock3 /></span>
+                    <span><strong>{item.label}</strong>{item.detail ? <small>{item.detail}</small> : null}</span>
+                    <time dateTime={item.occurredAt || undefined}>{formatTimestamp(item.occurredAt, report.timezone)}</time>
+                    <ChevronRight aria-hidden="true" /><span className="analytics-visually-hidden">Open geanonimiseerde sessiedetails</span>
+                  </button>
+                ) : (
+                  <div className="analytics-activity-row">
+                    <span className="analytics-activity-button__icon" aria-hidden="true"><Clock3 /></span>
+                    <span><strong>{item.label}</strong>{item.detail ? <small>{item.detail}</small> : null}</span>
+                    <time dateTime={item.occurredAt || undefined}>{formatTimestamp(item.occurredAt, report.timezone)}</time>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+          {report.live.hasMore ? <p className="analytics-activity-truncation">{formatNumber(shownCount)} nieuwste van {formatNumber(activityCount)} {actionLabel}.</p> : null}
+        </>
       ) : <EmptyState title="Nog geen activiteit in de afgelopen 24 uur">Er zijn in deze periode nog geen acties.</EmptyState>}
     </Panel>
   );

@@ -738,23 +738,65 @@ const eventDetail = (event) => {
 const RECENT_ACTIVITY_WINDOW_HOURS = 24;
 const RECENT_ACTIVITY_LIMIT = 20;
 
+const exactActivityCount = (count, source) => {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new Error(`Recent ${source} activity count is unavailable.`);
+  }
+  return count;
+};
+
+// Recent activity is intentionally queried independently from the report
+// readers. Those readers are oldest-first and capped for aggregate reporting;
+// this pair is newest-first and asks PostgREST for the exact window count.
+const fetchRecentV2Activity = async (supabase, start, end) => {
+  const { data, error, count } = await supabase
+    .from('analytics_events_v2')
+    .select(EVENT_COLUMNS, { count: 'exact' })
+    .gte('received_at', start)
+    .lt('received_at', end)
+    .order('received_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(RECENT_ACTIVITY_LIMIT);
+
+  if (error) throw new Error(`Recent analytics activity query failed: ${error.message}`);
+  return { rows: data || [], count: exactActivityCount(count, 'v2') };
+};
+
+const fetchRecentLegacyActivity = async (supabase, start, end) => {
+  // Deliberately select no legacy IDs, paths, sessions, referrers, or UA data.
+  const { data, error, count } = await supabase
+    .from('page_views')
+    .select('created_at', { count: 'exact' })
+    .gte('created_at', start)
+    .lt('created_at', end)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(RECENT_ACTIVITY_LIMIT);
+
+  if (error) {
+    if (isMissingLegacyTableError(error)) return { rows: [], count: 0, unavailable: true };
+    throw new Error(`Recent historical analytics activity query failed: ${error.message}`);
+  }
+  return { rows: data || [], count: exactActivityCount(count, 'legacy'), unavailable: false };
+};
+
 // This stays aggregate-safe: v2 details are the existing redacted labels and
 // legacy rows deliberately expose neither their identifiers nor their paths,
 // referrers, user agents, or any clickable detail.
-const liveFor = (events, legacyViews, now) => {
-  const cutoff = now.getTime() - RECENT_ACTIVITY_WINDOW_HOURS * HOUR_MS;
+const liveFor = (recentV2, recentLegacy) => {
+  const { rows: events, count: v2Count } = recentV2;
+  const { rows: legacyViews, count: legacyCount } = recentLegacy;
   const activity = [];
 
   for (const event of events) {
     const receivedAtMs = new Date(event.received_at).getTime();
-    if (!Number.isFinite(receivedAtMs) || receivedAtMs < cutoff || receivedAtMs >= now.getTime()) continue;
-    const occurredAtMs = new Date(event.occurred_at).getTime();
+    if (!Number.isFinite(receivedAtMs)) continue;
     activity.push({
-      // Receipt time is the trusted window boundary; occurrence time keeps
-      // the visible feed naturally ordered for the administrator.
-      sortAt: Number.isFinite(occurredAtMs) ? occurredAtMs : receivedAtMs,
+      // Client occurrence time is untrusted; use server receipt time for both
+      // the visible timestamp and ordering so it matches the queried window.
+      sortAt: receivedAtMs,
       id: `v2-${event.id}`,
-      occurredAt: event.occurred_at,
+      occurredAt: event.received_at,
       type: event.event_name,
       label: EVENT_LABELS[event.event_name] || 'Activiteit geregistreerd',
       detail: eventDetail(event),
@@ -764,7 +806,7 @@ const liveFor = (events, legacyViews, now) => {
 
   legacyViews.forEach((view, index) => {
     const occurredAtMs = new Date(view.created_at).getTime();
-    if (!Number.isFinite(occurredAtMs) || occurredAtMs < cutoff || occurredAtMs >= now.getTime()) return;
+    if (!Number.isFinite(occurredAtMs)) return;
     activity.push({
       sortAt: occurredAtMs,
       // Synthetic per-response ID: never pass a legacy row/session ID out.
@@ -777,10 +819,15 @@ const liveFor = (events, legacyViews, now) => {
   });
 
   activity.sort((left, right) => right.sortAt - left.sortAt || left.id.localeCompare(right.id));
+  // The global newest 20 must be contained in the newest 20 from each source.
+  const shownActivity = activity.slice(0, RECENT_ACTIVITY_LIMIT).map(({ sortAt, ...item }) => item);
+  const activityCount = v2Count + legacyCount;
   return {
     windowHours: RECENT_ACTIVITY_WINDOW_HOURS,
-    activityCount: activity.length,
-    activity: activity.slice(0, RECENT_ACTIVITY_LIMIT).map(({ sortAt, ...item }) => item),
+    activityCount,
+    shownCount: shownActivity.length,
+    hasMore: activityCount > shownActivity.length,
+    activity: shownActivity,
   };
 };
 
@@ -868,8 +915,8 @@ export default async function handler(req, res) {
       previousResult,
       { rows: currentLegacyRows, partial: currentLegacyPartial },
       previousLegacyResult,
-      { rows: recentRows, partial: recentPartial },
-      { rows: recentLegacyRows, partial: recentLegacyPartial },
+      recentV2Activity,
+      recentLegacyActivity,
     ] = await Promise.all([
       fetchEvents(supabase, range.start, range.end),
       range.previousStart && range.previousEnd
@@ -881,8 +928,8 @@ export default async function handler(req, res) {
         : Promise.resolve({ rows: [], partial: false, unavailable: false }),
       // The activity feed is intentionally independent of the selected report
       // range and its row cap, so a wide/all report cannot hide recent events.
-      fetchEvents(supabase, recentActivityStart, recentActivityEnd),
-      fetchLegacyPageViews(supabase, recentActivityStart, recentActivityEnd),
+      fetchRecentV2Activity(supabase, recentActivityStart, recentActivityEnd),
+      fetchRecentLegacyActivity(supabase, recentActivityStart, recentActivityEnd),
     ]);
 
     const previousRange = range.previousStart && range.previousEnd
@@ -920,7 +967,7 @@ export default async function handler(req, res) {
       breakdowns: current.breakdowns,
       funnel: current.funnel,
       scrollDepth: current.scrollDepth,
-      live: liveFor(recentRows, recentLegacyRows, now),
+      live: liveFor(recentV2Activity, recentLegacyActivity),
       legacy: {
         available: legacyAvailable,
         included: legacyIncluded,
@@ -952,7 +999,7 @@ export default async function handler(req, res) {
         trackingStartedAt: firstEvent?.received_at || null,
         legacyAvailable,
         legacyIncluded,
-        partial: currentPartial || previousResult.partial || currentLegacyPartial || previousLegacyResult.partial || recentPartial || recentLegacyPartial,
+        partial: currentPartial || previousResult.partial || currentLegacyPartial || previousLegacyResult.partial,
       },
     });
   } catch (error) {

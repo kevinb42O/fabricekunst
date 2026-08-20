@@ -2391,6 +2391,13 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.analytics-activity-truncation {
+  margin: 10px 0 0;
+  color: var(--analytics-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .analytics-activity-button,
 .analytics-activity-row {
   width: 100%;
