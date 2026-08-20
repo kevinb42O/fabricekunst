@@ -34,8 +34,8 @@ export default async function handler(req, res) {
     JSON.parse(snapshot);
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400, stale-if-error=604800');
-    res.setHeader('CDN-Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400, stale-if-error=604800');
+    res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=86400, stale-if-error=604800');
+    res.setHeader('CDN-Cache-Control', 'public, s-maxage=15, stale-while-revalidate=86400, stale-if-error=604800');
     return res.status(200).send(snapshot);
   } catch (error) {
     console.error('Public content read failed:', error);
