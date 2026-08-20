@@ -30,7 +30,9 @@ export default function HeroSlidesManager({
     if (!file) return;
     setUploadingTarget(target);
     try {
-      const publicUrl = await uploadCatalogImage(file);
+      const publicUrl = await uploadCatalogImage(file, {
+        purpose: target === 'desktop' ? 'home-hero' : 'mobile-hero'
+      });
       if (!publicUrl) throw new Error('Upload leverde geen URL op.');
       if (target === 'desktop') setImageUrl(publicUrl);
       else setMobileImageUrl(publicUrl);
@@ -53,6 +55,10 @@ export default function HeroSlidesManager({
   };
 
   const handleSave = async () => {
+    if (uploadingTarget) {
+      onShowToast('Wacht tot de R2-upload volledig bevestigd is.', 'error');
+      return;
+    }
     setIsSaving(true);
     try {
       await Promise.all([
@@ -99,7 +105,7 @@ export default function HeroSlidesManager({
           <h1>Hero-afbeeldingen</h1>
           <p>Beheer de desktop- en mobiele presentatie onafhankelijk van elkaar.</p>
         </div>
-        <button type="button" className="admin-button admin-button--primary" onClick={handleSave} disabled={isSaving}>
+        <button type="button" className="admin-button admin-button--primary" onClick={handleSave} disabled={isSaving || Boolean(uploadingTarget)}>
           {isSaved ? <Check aria-hidden="true" /> : <Save aria-hidden="true" />}
           {isSaving ? 'Opslaan…' : isSaved ? 'Opgeslagen' : 'Wijzigingen opslaan'}
         </button>
@@ -130,7 +136,7 @@ export default function HeroSlidesManager({
                 <strong>{uploadingTarget === panel.id ? 'Uploaden…' : 'Afbeelding vervangen'}</strong>
                 <small>JPG, PNG of WebP</small>
               </span>
-              <input type="file" accept="image/*" disabled={Boolean(uploadingTarget)} onChange={(event) => handleImageUpload(event, panel.id)} />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={isSaving || Boolean(uploadingTarget)} onChange={(event) => handleImageUpload(event, panel.id)} />
             </label>
 
             <label className="admin-field">

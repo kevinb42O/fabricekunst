@@ -20,13 +20,20 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   const [formLang, setFormLang] = useState('nl'); // 'nl' | 'en' | 'fr'
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingStory, setUploadingStory] = useState(false);
+  const [uploadFailures, setUploadFailures] = useState({ hero: null, story: null });
   const [saving, setSaving] = useState(false);
   const [showAiImportModal, setShowAiImportModal] = useState(false);
   const [aiJsonInput, setAiJsonInput] = useState('');
+  const hasLocalEdits = React.useRef(false);
+
+  const updateFormData = (updater) => {
+    hasLocalEdits.current = true;
+    setFormData(updater);
+  };
 
   // Sync formData when provenanceData prop updates asynchronously
   React.useEffect(() => {
-    if (provenanceData) {
+    if (provenanceData && !hasLocalEdits.current) {
       setFormData(provenanceData);
     }
   }, [provenanceData]);
@@ -41,7 +48,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   };
 
   const updateFieldValue = (section, field, value) => {
-    setFormData(prev => {
+    updateFormData(prev => {
       const sectionData = { ...(prev[section] || {}) };
       if (formLang === 'nl') {
         sectionData[field] = value;
@@ -65,7 +72,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   };
 
   const updateStepField = (index, field, value) => {
-    setFormData(prev => {
+    updateFormData(prev => {
       const newSteps = [...(prev.protocol?.steps || [])];
       const targetStep = { ...(newSteps[index] || {}) };
       if (formLang === 'nl') {
@@ -94,7 +101,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   };
 
   const updateBulletValue = (index, value) => {
-    setFormData(prev => {
+    updateFormData(prev => {
       const story = { ...(prev.story || {}) };
       if (formLang === 'nl') {
         const newBullets = [...(story.bullets || [])];
@@ -118,17 +125,19 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingHero(true);
+    setUploadFailures(prev => ({ ...prev, hero: null }));
     try {
-      const url = await uploadCatalogImage(file);
+      const url = await uploadCatalogImage(file, { purpose: 'provenance-hero' });
       if (!url) throw new Error('Upload leverde geen URL op.');
-      setFormData(prev => ({
+      updateFormData(prev => ({
         ...prev,
         hero: { ...(prev.hero || {}), bgImage: url }
       }));
-      if (showToast) showToast('Hero-afbeelding voor de herkomstpagina geüpload.', 'info');
+      if (showToast) showToast('Hero-afbeelding is geüpload en door R2 bevestigd.', 'info');
     } catch (err) {
       console.error('Provenance hero image upload error', err);
-      if (showToast) showToast('Uploaden van de hero-afbeelding is mislukt.', 'error');
+      setUploadFailures(prev => ({ ...prev, hero: err?.message || 'Upload mislukt.' }));
+      if (showToast) showToast(err?.message || 'Uploaden van de hero-afbeelding is mislukt.', 'error');
     } finally {
       setUploadingHero(false);
       e.target.value = '';
@@ -139,31 +148,42 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingStory(true);
+    setUploadFailures(prev => ({ ...prev, story: null }));
     try {
-      const url = await uploadCatalogImage(file);
-      if (url) {
-        setFormData(prev => ({
-          ...prev,
-          story: { ...(prev.story || {}), image: url }
-        }));
-        if (showToast) showToast('Story afbeelding geüpload!');
-      }
+      const url = await uploadCatalogImage(file, { purpose: 'provenance-story' });
+      if (!url) throw new Error('Upload leverde geen URL op.');
+      updateFormData(prev => ({
+        ...prev,
+        story: { ...(prev.story || {}), image: url }
+      }));
+      if (showToast) showToast('Showcase-afbeelding is geüpload en door R2 bevestigd.', 'info');
     } catch (err) {
       console.error("Story image upload error", err);
-      if (showToast) showToast('Upload mislukt.');
+      setUploadFailures(prev => ({ ...prev, story: err?.message || 'Upload mislukt.' }));
+      if (showToast) showToast(err?.message || 'Uploaden van de showcase-afbeelding is mislukt.', 'error');
     } finally {
       setUploadingStory(false);
+      e.target.value = '';
     }
   };
 
   const handleSave = async () => {
+    if (uploadingHero || uploadingStory) {
+      if (showToast) showToast('Wacht tot beide R2-uploads volledig bevestigd zijn.', 'error');
+      return;
+    }
+    if (uploadFailures.hero || uploadFailures.story) {
+      if (showToast) showToast('Los de mislukte afbeeldingsupload op voordat u publiceert.', 'error');
+      return;
+    }
     setSaving(true);
     try {
       await onSaveProvenance(formData);
-      if (showToast) showToast('Herkomst & Provenance pagina succesvol opgeslagen!');
+      hasLocalEdits.current = false;
+      if (showToast) showToast('Herkomstpagina en beide R2-afbeeldingsreferenties zijn gepubliceerd.');
     } catch (err) {
       console.error("Save error:", err);
-      if (showToast) showToast('Fout bij opslaan.');
+      if (showToast) showToast(err?.message || 'Publiceren is mislukt; de live pagina bleef ongewijzigd.', 'error');
     } finally {
       setSaving(false);
     }
@@ -171,7 +191,12 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
   const handleReset = () => {
     if (window.confirm("Weet u zeker dat u alle Herkomst-teksten wilt herstellen naar de oorspronkelijke standaardwaarden?")) {
-      setFormData(DEFAULT_PROVENANCE_DATA);
+      updateFormData(prev => ({
+        ...DEFAULT_PROVENANCE_DATA,
+        hero: { ...DEFAULT_PROVENANCE_DATA.hero, bgImage: prev.hero?.bgImage || '' },
+        story: { ...DEFAULT_PROVENANCE_DATA.story, image: prev.story?.image || '' }
+      }));
+      setUploadFailures({ hero: null, story: null });
       if (showToast) showToast('Standaardwaarden hersteld. Vergeet niet op Opslaan te klikken.');
     }
   };
@@ -244,7 +269,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
       return;
     }
 
-    setFormData(prev => {
+    updateFormData(prev => {
       const next = { ...prev };
       Object.keys(data).forEach(fullKey => {
         const val = data[fullKey];
@@ -319,11 +344,11 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || uploadingHero || uploadingStory || Boolean(uploadFailures.hero || uploadFailures.story)}
             className="px-6 py-2.5 bg-[#1C1A18] hover:bg-[#C5A059] text-white hover:text-[#1C1A18] rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 shadow-md flex items-center space-x-2 cursor-pointer disabled:opacity-50"
           >
             <Save className="w-4 h-4 text-[#C5A059] group-hover:text-[#1C1A18]" />
-            <span>{saving ? 'Opslaan...' : 'Wijzigingen Opslaan'}</span>
+            <span>{saving ? 'Publiceren…' : uploadingHero || uploadingStory ? 'R2-upload bezig…' : 'Wijzigingen Publiceren'}</span>
           </button>
         </div>
       </div>
@@ -449,17 +474,20 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D8CEB8] bg-white px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#1C1A18] transition-colors hover:border-[#B8860B]">
                 <Upload className="h-4 w-4 text-[#B8860B]" aria-hidden="true" />
                 <span>{uploadingHero ? 'Uploaden…' : 'Afbeelding uploaden'}</span>
-                <input type="file" accept="image/*" className="sr-only" disabled={uploadingHero} onChange={handleHeroImageUpload} />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="sr-only" disabled={saving || uploadingHero || uploadingStory} onChange={handleHeroImageUpload} />
               </label>
               <label className="block space-y-2">
                 <span className="block text-xs font-mono font-bold uppercase tracking-wider text-[#555555]">Afbeeldings-URL</span>
                 <input
                   type="url"
                   value={formData.hero?.bgImage || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hero: { ...(prev.hero || {}), bgImage: e.target.value } }))}
-                  className="w-full rounded-xl border border-[#E8E2D6] bg-white px-4 py-3 text-sm text-[#1C1A18] focus:border-[#C5A059] focus:outline-none"
-                  placeholder="/images/herkomst-hero.jpg"
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full rounded-xl border border-[#E8E2D6] bg-[#F3F0EA] px-4 py-3 text-sm text-[#555555]"
+                  placeholder="Wordt automatisch ingevuld na een bevestigde R2-upload"
                 />
+                <span className="block text-[11px] text-[#78736B]">Alleen-lezen: wijzigen kan uitsluitend via een gecontroleerde R2-upload.</span>
+                {uploadFailures.hero && <span role="alert" className="block text-xs font-medium text-red-700">{uploadFailures.hero}</span>}
               </label>
             </div>
             <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#D8CEB8] bg-white">
@@ -736,9 +764,10 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                   <input
                     type="text"
                     value={formData.story?.image || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, story: { ...prev.story, image: e.target.value } }))}
-                    className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8E2D6] rounded-xl text-xs font-mono text-[#1C1A18] focus:outline-none focus:border-[#C5A059]"
-                    placeholder="/images/voltaire-marbled-endpaper-exlibris.jpg of Supabase URL"
+                    readOnly
+                    aria-readonly="true"
+                    className="w-full px-4 py-2.5 bg-[#F3F0EA] border border-[#E8E2D6] rounded-xl text-xs font-mono text-[#555555]"
+                    placeholder="Wordt automatisch ingevuld na een bevestigde R2-upload"
                   />
 
                   <input
@@ -752,8 +781,10 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                   <label className="inline-flex items-center space-x-2 px-4 py-2 bg-[#1C1A18] hover:bg-[#C5A059] text-white hover:text-[#1C1A18] text-xs font-mono uppercase font-bold tracking-wider rounded-lg transition-colors cursor-pointer">
                     <Upload className="w-3.5 h-3.5" />
                     <span>{uploadingStory ? 'Uploaden...' : 'Showcase Foto Uploaden'}</span>
-                    <input type="file" accept="image/*" onChange={handleStoryImageUpload} className="hidden" />
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={saving || uploadingHero || uploadingStory} onChange={handleStoryImageUpload} className="hidden" />
                   </label>
+                  <p className="text-[11px] text-[#78736B]">De URL wordt uitsluitend door de R2-uploader ingesteld.</p>
+                  {uploadFailures.story && <p role="alert" className="text-xs font-medium text-red-700">{uploadFailures.story}</p>}
                 </div>
               </div>
             </div>

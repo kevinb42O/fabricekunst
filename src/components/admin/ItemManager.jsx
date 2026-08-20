@@ -769,7 +769,7 @@ export default function ItemManager({
     setIsUploading(true);
     setImageUploadError(false);
     try {
-      const publicUrl = await uploadCatalogImage(file);
+      const publicUrl = await uploadCatalogImage(file, { purpose: 'comparable' });
       if (publicUrl) {
         updateComparableSale(index, 'imageUrl', publicUrl);
         updateComparableSale(index, 'imageCaption', file.name);

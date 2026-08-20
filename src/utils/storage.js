@@ -12,6 +12,10 @@ const OLD_INQUIRIES_KEY = 'fabrice_boeken_kunst_inquiries';
 const CATALOG_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const CATALOG_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 const SUPABASE_STORAGE_URL_PART = '.supabase.co/storage/';
+const MANAGED_R2_HOSTS = new Set([
+  'media.atelierrembrandt.com',
+  'pub-8ac0d70685884231aa572bff64e4de8b.r2.dev'
+]);
 let publicContentPromise = null;
 
 const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
@@ -68,10 +72,7 @@ export const isR2CatalogImageUrl = (value) => {
   if (typeof value !== 'string' || !value.trim()) return false;
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && (
-      url.hostname === 'media.atelierrembrandt.com'
-      || url.hostname.endsWith('.r2.dev')
-    );
+    return url.protocol === 'https:' && MANAGED_R2_HOSTS.has(url.hostname);
   } catch {
     return false;
   }
@@ -84,7 +85,18 @@ const isForbiddenCloudImageUrl = (value) => (
 
 const isManagedImageUrl = (value, { allowLocal = true } = {}) => (
   isR2CatalogImageUrl(value)
-  || (allowLocal && typeof value === 'string' && value.startsWith('/images/'))
+  || (allowLocal && typeof value === 'string' && (
+    value.startsWith('/images/')
+    || (() => {
+      try {
+        const url = new URL(value);
+        return ['atelierrembrandt.com', 'www.atelierrembrandt.com'].includes(url.hostname)
+          && url.pathname.startsWith('/images/');
+      } catch {
+        return false;
+      }
+    })()
+  ))
 );
 
 const assertManagedImageUrl = (value, options) => {
@@ -786,7 +798,7 @@ export const deleteItemAsync = async (itemId) => {
 
 // --- IMAGE UPLOAD HELPER ---
 
-export const uploadCatalogImage = async (file) => {
+export const uploadCatalogImage = async (file, { purpose = 'catalog' } = {}) => {
   if (!file) return null;
 
   if (!isSupabaseConfigured() || !supabase) {
@@ -818,7 +830,8 @@ export const uploadCatalogImage = async (file) => {
       body: JSON.stringify({
         filename: file.name,
         contentType: file.type,
-        size: file.size
+        size: file.size,
+        purpose
       })
     });
 
@@ -827,8 +840,8 @@ export const uploadCatalogImage = async (file) => {
       throw new Error(payload.error || `R2 kon geen upload-URL maken (${res.status}).`);
     }
 
-    const { presignedUrl, publicUrl } = await res.json();
-    if (!presignedUrl || !isR2CatalogImageUrl(publicUrl)) {
+    const { presignedUrl, publicUrl, objectKey, uploadReceipt } = await res.json();
+    if (!presignedUrl || !objectKey || !uploadReceipt || !isR2CatalogImageUrl(publicUrl)) {
       throw new Error('R2 gaf geen geldige publieke afbeeldings-URL terug.');
     }
 
@@ -842,6 +855,20 @@ export const uploadCatalogImage = async (file) => {
 
     if (!uploadRes.ok) {
       throw new Error(`R2 heeft de afbeelding geweigerd (${uploadRes.status}).`);
+    }
+
+    const verifyRes = await fetch('/api/r2-upload-complete', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ objectKey, contentType: file.type, size: file.size, uploadReceipt })
+    });
+    const verification = await verifyRes.json().catch(() => ({}));
+    if (!verifyRes.ok || !verification.ok) {
+      throw new Error(verification.error || 'R2 kon de geüploade afbeelding niet bevestigen.');
     }
 
     return publicUrl;
@@ -1352,31 +1379,34 @@ export const fetchProvenanceDataAsync = async () => {
 };
 
 export const saveProvenanceDataAsync = async (data) => {
-  assertManagedImageUrl(data?.hero?.bgImage);
-  assertManagedImageUrl(data?.story?.image);
+  assertManagedImageUrl(data?.hero?.bgImage, { allowLocal: false });
+  assertManagedImageUrl(data?.story?.image, { allowLocal: false });
+  if (isSupabaseConfigured() && supabase) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) throw new Error('De beheerderssessie is verlopen. Log opnieuw in om te publiceren.');
+    const response = await fetch('/api/save-provenance', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ provenanceData: data })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || 'De herkomstpagina kon niet veilig naar R2 worden gepubliceerd.');
+    }
+    publicContentPromise = null;
+  }
+
+  // Browser state is updated only after the authoritative save and R2
+  // publication have both succeeded.
   try {
     localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(data));
   } catch (err) {
-    console.error("Fout bij lokaal opslaan herkomst page data:", err);
-    throw new Error('De herkomstpagina kon niet lokaal worden opgeslagen.');
-  }
-
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const payload = JSON.stringify(data);
-      const { error } = await supabase
-        .from('admin_settings')
-        .upsert({
-          key: 'herkomst_page_data',
-          value: payload,
-          updated_at: new Date().toISOString()
-        });
-      if (error) throw error;
-      await publishPublicContentSnapshot();
-    } catch (err) {
-      console.error("Supabase herkomst page save exception:", err);
-      throw new Error('De herkomstpagina is lokaal bewaard, maar niet naar de cloud gesynchroniseerd.');
-    }
+    console.warn('Herkomstpagina is gepubliceerd, maar de browsercache kon niet worden bijgewerkt:', err);
   }
   return data;
 };

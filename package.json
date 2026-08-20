@@ -11,6 +11,7 @@
     "sitemap:preview": "node scripts/generate-sitemap.js",
     "content:publish": "node scripts/publish-public-content.js",
     "lint": "eslint .",
+    "test": "node --test tests/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
