@@ -24,6 +24,12 @@ export default function CollectorListSection({ source = 'homepage', className = 
     window.setTimeout(() => feedbackRef.current?.focus(), 0);
   };
 
+  const markStarted = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackEvent('collector_list_started', { placement: source, locale: language });
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
@@ -73,29 +79,34 @@ export default function CollectorListSection({ source = 'homepage', className = 
   };
 
   return (
-    <section aria-labelledby={`${emailId}-title`} className={`relative overflow-hidden bg-[#171512] text-white ${className}`}>
-      <div className="pointer-events-none absolute inset-0 opacity-35" aria-hidden="true">
-        <div className="absolute -right-24 -top-32 h-80 w-80 rounded-full border border-[#C5A059]/30" />
-        <div className="absolute -right-10 -top-16 h-52 w-52 rounded-full border border-[#C5A059]/20" />
+    <section aria-labelledby={`${emailId}-title`} className={`relative overflow-hidden border-y border-[#D8CEB8] bg-[#F7F3EC] text-[#171512] ${className}`}>
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute -right-28 -top-32 h-80 w-80 rounded-full border border-[#B8860B]/10 sm:h-96 sm:w-96" />
+        <div className="absolute -right-8 -top-16 h-52 w-52 rounded-full border border-[#B8860B]/10 sm:h-64 sm:w-64" />
+        <div className="absolute inset-y-0 left-[clamp(1rem,3vw,5rem)] hidden w-px bg-[#B8860B]/20 lg:block" />
       </div>
 
-      <div className="page-shell-wide relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(440px,1.1fr)] lg:items-center lg:gap-20 lg:py-24">
-        <div>
-          <span className="font-sans text-[10px] font-bold uppercase tracking-[0.24em] text-[#D4AF37]">{t('collectorList.eyebrow')}</span>
-          <h2 id={`${emailId}-title`} className="mt-4 max-w-2xl font-serif text-4xl font-bold leading-[1.04] tracking-[-0.025em] sm:text-5xl lg:text-6xl">
+      <div className="page-shell-wide relative grid gap-10 py-14 sm:py-16 lg:grid-cols-[minmax(0,0.82fr)_minmax(31rem,1.18fr)] lg:items-center lg:gap-16 lg:py-20 xl:gap-24">
+        <div className="lg:pl-8">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-[#8E7035]" aria-hidden="true" />
+            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.24em] text-[#8E7035]">{t('collectorList.eyebrow')}</span>
+          </div>
+          <h2 id={`${emailId}-title`} className="mt-4 max-w-xl text-balance font-serif text-[2.6rem] font-semibold leading-[0.98] tracking-[-0.025em] text-[#251B18] sm:text-5xl lg:text-[3.5rem]">
             {t('collectorList.title')}
           </h2>
-          <p className="mt-5 max-w-xl font-serif text-lg leading-relaxed text-white/80 sm:text-xl">{t('collectorList.subtitle')}</p>
-          <p className="mt-5 font-sans text-[10px] font-semibold uppercase tracking-[0.13em] text-[#CFC5B5]">{t('collectorList.benefits')}</p>
+          <p className="mt-5 max-w-xl font-serif text-lg leading-relaxed text-[#5C5149] sm:text-xl">{t('collectorList.subtitle')}</p>
+          <p className="mt-5 max-w-xl border-t border-[#D8CEB8] pt-4 font-sans text-[9px] font-semibold uppercase leading-relaxed tracking-[0.13em] text-[#74695F] sm:text-[10px]">{t('collectorList.benefits')}</p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="border border-white/15 bg-white/[0.055] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-7">
-          <label htmlFor={emailId} className="block font-sans text-[10px] font-bold uppercase tracking-[0.15em] text-white/75">
+        <form onSubmit={handleSubmit} noValidate className="relative border border-[#D8CEB8] bg-[#FFFEFC] p-5 shadow-[0_18px_50px_rgba(70,48,30,0.07)] sm:p-7 lg:p-8">
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-[#541520]" aria-hidden="true" />
+          <label htmlFor={emailId} className="block font-sans text-[10px] font-bold uppercase tracking-[0.16em] text-[#655A51]">
             {t('collectorList.emailLabel')}
           </label>
-          <div className="mt-2.5 grid gap-2.5 sm:grid-cols-[1fr_auto]">
+          <div className="mt-2.5 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#C5A059]" aria-hidden="true" />
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8E7035]" aria-hidden="true" />
               <input
                 id={emailId}
                 type="email"
@@ -107,16 +118,16 @@ export default function CollectorListSection({ source = 'homepage', className = 
                 aria-invalid={status === 'error' ? 'true' : undefined}
                 aria-describedby={feedback ? `${emailId}-feedback` : undefined}
                 placeholder={t('collectorList.emailPlaceholder')}
-                className="min-h-14 w-full border border-white/25 bg-[#FFFEFC] py-3 pl-11 pr-4 font-serif text-base text-[#1C1A17] placeholder:text-[#81766B] focus:border-[#D4AF37] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/35"
+                className="min-h-14 w-full border border-[#CFC4B3] bg-white py-3 pl-11 pr-4 font-serif text-base text-[#251B18] placeholder:text-[#81766B] focus:border-[#8E7035] focus:outline-none focus:ring-2 focus:ring-[#B8860B]/20"
               />
             </div>
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="flex min-h-14 items-center justify-between gap-5 bg-[#C5A059] px-5 font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#171512] transition-colors duration-200 hover:bg-[#D4AF37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#171512] disabled:cursor-wait disabled:opacity-65 sm:justify-center"
+              className="group flex min-h-14 items-center justify-between gap-6 bg-[#541520] px-5 font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-white transition-colors duration-200 hover:bg-[#6B1D2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E7035] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFEFC] disabled:cursor-wait disabled:opacity-65 md:justify-center"
             >
               <span>{status === 'loading' ? t('collectorList.submitting') : t('collectorList.submit')}</span>
-              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
             </button>
           </div>
 
@@ -125,18 +136,18 @@ export default function CollectorListSection({ source = 'homepage', className = 
             <input id={`${emailId}-website`} name="website" tabIndex="-1" autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
           </div>
 
-          <div className="mt-4 flex items-start gap-3">
+          <div className="mt-5 flex items-start gap-3">
             <input
               id={consentId}
               type="checkbox"
               checked={consent}
               onFocus={markStarted}
               onChange={(event) => setConsent(event.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#C5A059] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-[#541520] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E7035]"
             />
-            <label htmlFor={consentId} className="font-sans text-[11px] leading-[1.55] text-white/72">
+            <label htmlFor={consentId} className="font-sans text-[11px] leading-[1.65] text-[#655A51] sm:text-xs">
               {t('collectorList.consent')}{' '}
-              <a href={localizePath('/privacy', language)} className="text-white underline decoration-[#C5A059] underline-offset-2 hover:text-[#D4AF37]">
+              <a href={localizePath('/privacy', language)} className="font-semibold text-[#541520] underline decoration-[#B8860B]/60 underline-offset-2 hover:text-[#8E7035]">
                 {t('collectorList.privacy')}
               </a>
             </label>
@@ -148,14 +159,14 @@ export default function CollectorListSection({ source = 'homepage', className = 
               ref={feedbackRef}
               tabIndex="-1"
               role={status === 'error' ? 'alert' : 'status'}
-              className={`mt-5 flex items-start gap-2.5 border px-4 py-3 font-sans text-xs leading-relaxed ${status === 'success' ? 'border-emerald-300/35 bg-emerald-950/30 text-emerald-100' : 'border-red-300/35 bg-red-950/30 text-red-100'}`}
+              className={`mt-5 flex items-start gap-2.5 border px-4 py-3 font-sans text-xs leading-relaxed ${status === 'success' ? 'border-emerald-700/25 bg-emerald-50 text-emerald-900' : 'border-red-700/25 bg-red-50 text-red-900'}`}
             >
               {status === 'success' ? <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> : <Mail className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />}
               <span><strong className="block">{status === 'success' ? t('collectorList.successTitle') : ''}</strong>{feedback}</span>
             </div>
           )}
 
-          <p className="mt-4 flex items-center gap-2 font-sans text-[9px] uppercase tracking-[0.12em] text-white/50">
+          <p className="mt-5 flex items-start gap-2 border-t border-[#E5DCCF] pt-4 font-sans text-[9px] uppercase leading-relaxed tracking-[0.12em] text-[#7B7168]">
             <LockKeyhole className="h-3 w-3" aria-hidden="true" />
             {t('collectorList.privacyPromise')}
           </p>
@@ -164,8 +175,3 @@ export default function CollectorListSection({ source = 'homepage', className = 
     </section>
   );
 }
-  const markStarted = () => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    trackEvent('collector_list_started', { placement: source, locale: language });
-  };

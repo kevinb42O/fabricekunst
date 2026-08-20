@@ -155,7 +155,7 @@ export default function MobileHomeSections({
         </div>
       </section>}
 
-      <CollectorListSection source="homepage_mobile" className="border-y border-[#2B2823]" />
+      <CollectorListSection source="homepage_mobile" />
 
       <section id="herkomst" aria-labelledby="mobile-why-title" className="border-y border-[#E8DFCF] bg-[#F7F3EC] px-4 py-16 min-[390px]:px-5 min-[600px]:px-8">
         <div className="mx-auto max-w-3xl">

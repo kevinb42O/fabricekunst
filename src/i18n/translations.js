@@ -22,7 +22,7 @@ export const translations = {
       consent: 'Ik geef toestemming om per e-mail nieuwe aanwinsten en uitnodigingen van Atelier Rembrandt te ontvangen. Ik kan mij op elk moment uitschrijven.',
       privacy: 'Lees het privacybeleid',
       privacyPromise: 'Geen spam · gegevens worden niet verkocht · altijd uitschrijfbaar',
-      submit: 'Join the Collector’s List',
+      submit: 'Schrijf mij in',
       submitting: 'Inschrijving verwerken…',
       successTitle: 'Welkom op de lijst',
       successPending: 'Controleer uw inbox en bevestig uw inschrijving via de persoonlijke link.',
