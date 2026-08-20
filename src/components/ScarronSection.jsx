@@ -3,9 +3,8 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Award, Bookmark } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedPrice } from '../utils/translationService';
-import PriceAssurance from './PriceAssurance';
 
-export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
+export default function ScarronSection({ item, onOpenItemDetail }) {
   const { t, language } = useLanguage();
   const [activeImage, setActiveImage] = useState(0);
 
@@ -30,20 +29,6 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
   const itemDescription = item ? getItemField(item, 'description', language) : t('scarron.description');
   const itemBinding = item ? getItemField(item, 'binding', language) : t('scarron.detailBinding');
   const itemProvenance = item ? getItemField(item, 'provenance', language) : null;
-
-  const scarronItem = item || {
-    id: 'scarron-1713-oeuvres',
-    title: itemTitle,
-    ref: 'FB-1713-SCA',
-    author: 'Paul Scarron',
-    year: '1713',
-    price: itemPrice,
-    images
-  };
-
-  const handleRequestInquiry = () => {
-    if (onRequestInquiry) onRequestInquiry(scarronItem);
-  };
 
   return (
     <section 
@@ -81,19 +66,8 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
             </p>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
-            <div>
-              <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{itemPrice}</span>
-              <PriceAssurance compact className="max-w-sm" />
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
-              whileTap={{ scale: 0.96 }}
-              onClick={handleRequestInquiry}
-              className="px-6 py-3.5 rounded-sm bg-[#1C1A17] text-[#FAF7F2] font-semibold text-xs uppercase tracking-[0.18em] border border-[#B8860B]/40 hover:border-[#B8860B] transition-colors duration-300 shadow-sm cursor-pointer font-mono whitespace-nowrap shrink-0"
-            >
-              <span>{t('voltaire.inquireBtn')}</span>
-            </motion.button>
+          <div className="shrink-0">
+            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{itemPrice}</span>
           </div>
         </div>
 
@@ -232,14 +206,6 @@ export default function ScarronSection({ item, onInquirySuccess, onOpenItemDetai
                 </motion.button>
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleRequestInquiry}
-                className="w-full py-3 rounded-sm bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white font-semibold text-xs uppercase tracking-wider border border-[#D8CEB8] transition-colors duration-300 text-center block cursor-pointer font-mono"
-              >
-                <span>{t('voltaire.requestPrivateViewing')}</span>
-              </motion.button>
             </div>
           </motion.div>
 

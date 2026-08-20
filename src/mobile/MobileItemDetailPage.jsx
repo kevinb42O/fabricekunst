@@ -354,7 +354,6 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
                   <span className="min-w-0">
                     <span className="line-clamp-2 font-serif text-base font-bold leading-tight text-[#111111]">{getItemField(candidate, 'title', language)}</span>
                     <span className="mt-1 block font-sans text-[10px] uppercase tracking-wider text-[#8E7035]">{getLocalizedPrice(candidate.price, language)}</span>
-                    <PriceAssurance compact />
                   </span>
                   <ArrowRight className="h-4 w-4 text-[#8E7035]" />
                 </button>

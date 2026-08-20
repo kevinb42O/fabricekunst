@@ -4,7 +4,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCategory, getLocalizedPrice, getLocalizedStatus } from '../utils/translationService';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
-import PriceAssurance from '../components/PriceAssurance';
 import CollectorListSection from '../components/CollectorListSection';
 
 const COPY = {
@@ -132,7 +131,6 @@ export default function MobileHomeSections({
                   <span className="mt-5 flex items-start justify-between gap-4 border-t border-[#E8DFCF] pt-4">
                     <span>
                       <strong className="font-serif text-lg text-[#111111]">{getLocalizedPrice(item.price, language)}</strong>
-                      <PriceAssurance compact className="max-w-[17rem]" />
                     </span>
                     {!isAvailable && (
                       <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6D5A3A]">{status}</span>

@@ -4,9 +4,8 @@ import { Award, Bookmark, ZoomIn } from 'lucide-react';
 import ImageZoomModal from './ImageZoomModal';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedPrice } from '../utils/translationService';
-import PriceAssurance from './PriceAssurance';
 
-export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDetail, onRequestInquiry }) {
+export default function VoltaireSection({ item, onOpenItemDetail }) {
   const { t, language } = useLanguage();
   const [activeImage, setActiveImage] = useState(0);
   const [zoomModalOpen, setZoomModalOpen] = useState(false);
@@ -37,20 +36,6 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
   const itemPublisher = item ? getItemField(item, 'publisher', language) : '';
   const itemProvenanceDetails = item ? getItemField(item, 'provenanceDetails', language) : null;
   const itemBinding = item ? getItemField(item, 'binding', language) : null;
-
-  const voltaireItem = item || {
-    id: 'voltaire-1829-52delig',
-    title: itemTitle,
-    ref: 'FB-1829-VOL',
-    author: 'Voltaire',
-    year: '1829–1833',
-    price: itemPrice,
-    images
-  };
-
-  const handleRequestInquiry = () => {
-    if (onRequestInquiry) onRequestInquiry(voltaireItem);
-  };
 
   return (
     <section 
@@ -88,19 +73,8 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center md:shrink-0">
-            <div>
-              <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{itemPrice}</span>
-              <PriceAssurance compact className="max-w-sm" />
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.04, backgroundColor: "#B8860B", color: "#111111" }}
-              whileTap={{ scale: 0.96 }}
-              onClick={handleRequestInquiry}
-              className="w-full rounded-sm border border-[#B8860B]/40 bg-[#1C1A17] px-5 py-3.5 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#FAF7F2] shadow-sm transition-colors duration-300 hover:border-[#B8860B] sm:w-auto sm:shrink-0 sm:whitespace-nowrap sm:px-6 sm:tracking-[0.18em]"
-            >
-              <span>{t('voltaire.inquireBtn')}</span>
-            </motion.button>
+          <div className="md:shrink-0">
+            <span className="text-xl sm:text-2xl font-serif font-bold text-[#B8860B] whitespace-nowrap">{itemPrice}</span>
           </div>
         </div>
 
@@ -278,14 +252,6 @@ export default function VoltaireSection({ item, onInquirySuccess, onOpenItemDeta
                 </motion.button>
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleRequestInquiry}
-                className="w-full py-3 rounded-sm bg-[#FAF7F2] text-[#111111] hover:bg-[#111111] hover:text-white font-semibold text-xs uppercase tracking-wider border border-[#D8CEB8] transition-colors duration-300 text-center block cursor-pointer font-mono"
-              >
-                <span>{t('voltaire.requestPrivateViewing')}</span>
-              </motion.button>
             </div>
           </motion.div>
 

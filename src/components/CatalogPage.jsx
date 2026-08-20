@@ -32,7 +32,6 @@ import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
 import MobileCatalogControls from '../mobile/MobileCatalogControls';
 import { trackEvent } from '../hooks/useAnalytics';
-import PriceAssurance from './PriceAssurance';
 
 const DEFAULT_FILTER_VALUE = 'Alle';
 const DEFAULT_VIEW_MODE = 'grid';
@@ -199,7 +198,7 @@ function getStatusOrderIndex(status) {
   return index === -1 ? STATUS_ORDER.length : index;
 }
 
-export default function CatalogPage({ items, transitionItemId, onNavigateHome, onOpenItemDetail, onRequestInquiry }) {
+export default function CatalogPage({ items, transitionItemId, onNavigateHome, onOpenItemDetail }) {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState(() => getInitialParam('q', ''));
   const [selectedGroup, setSelectedGroup] = useState(() => getInitialParam('group', DEFAULT_FILTER_VALUE));
@@ -522,10 +521,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
 
   const openItemDetail = (item, placement) => {
     onOpenItemDetail(item, placement);
-  };
-
-  const openInquiry = (item) => {
-    onRequestInquiry(item);
   };
 
   const renderTypeLabel = (value) => {
@@ -884,7 +879,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                             <span className="text-sm font-serif font-bold text-[#111111]">
                               {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                             </span>
-                            <PriceAssurance compact className="max-w-[16rem]" />
                           </div>
 
                         </div>
@@ -977,8 +971,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                           </p>
 
                           <div className="mt-6 flex flex-col gap-4 border-t border-[#E8DFCF]/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4">
                               <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] ${statusTone.text}`}>
                                 <span className={`h-1.5 w-1.5 rounded-full ${statusTone.dot}`} />
                                 <span>{getLocalizedStatus(item.status, language)}</span>
@@ -987,8 +980,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                               <span className="text-lg font-serif font-bold text-[#111111] lg:text-xl">
                                 {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
                               </span>
-                              </div>
-                              <PriceAssurance compact className="max-w-xl" />
                             </div>
 
                             <div className="flex items-center gap-x-6">
@@ -1003,15 +994,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                                 <span>{t('topstukken.viewDetails')}</span>
                                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                               </a>
-                              {item.status !== 'Verkocht' && (
-                                <button
-                                  type="button"
-                                  onClick={() => openInquiry(item)}
-                                  className="border-b border-[#111111] pb-0.5 text-xs font-mono font-bold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:border-[#B8860B] hover:text-[#B8860B]"
-                                >
-                                  {t('catalog.inquire')}
-                                </button>
-                              )}
                             </div>
                           </div>
                         </div>

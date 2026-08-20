@@ -555,7 +555,6 @@ export default function App() {
             transitionItemId={transitionItemId}
             onNavigateHome={() => handleNavigate('home')}
             onOpenItemDetail={handleOpenItemDetail}
-            onRequestInquiry={(item) => handleOpenConsultation(item, 'purchase', 'catalog')}
           />
         ) : currentPage === 'herkomst' ? (
           /* Dedicated Luxury Herkomst & Provenance Page (/herkomst) */
@@ -628,7 +627,6 @@ export default function App() {
                   transitionItemId={transitionItemId}
                   onOpenFullCatalog={() => handleNavigate('catalogus')}
                   onOpenItemDetail={handleOpenItemDetail}
-                  onRequestInquiry={(item) => handleOpenConsultation(item, 'purchase', 'home_featured')}
                 />
 
                 <CollectorListSection source="homepage_desktop" />

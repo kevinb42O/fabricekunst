@@ -5,7 +5,6 @@ import ImageZoomModal from './ImageZoomModal';
 import ItemDetailModal from './ItemDetailModal';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
-import PriceAssurance from './PriceAssurance';
 
 export default function AsymmetricGallery({ items, filteredItems: overrideFilteredItems, onOpenItemDetail, onRequestInquiry, hideHeader = false, hideControls = false }) {
   const { t, language } = useLanguage();
@@ -359,7 +358,6 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                           <div>
                             <span className="text-[10px] uppercase tracking-[0.2em] font-mono text-[#777777] block">{t('item_detail.valuationPrice')}</span>
                             <span className="text-xl font-serif font-bold text-[#111111]">{getLocalizedPrice(item.price, language)}</span>
-                            <PriceAssurance compact className="max-w-sm" />
                           </div>
 
                           <div className="flex items-center space-x-6">
@@ -373,20 +371,6 @@ export default function AsymmetricGallery({ items, filteredItems: overrideFilter
                               <span>{t('topstukken.viewDetails')}</span>
                             </button>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onRequestInquiry(item);
-                              }}
-                              disabled={item.status === 'Verkocht'}
-                              className={`text-xs font-mono font-bold uppercase tracking-[0.18em] pb-1 border-b cursor-pointer transition-colors duration-300 ${
-                                item.status === 'Verkocht'
-                                  ? 'text-[#888888] border-[#888888] cursor-not-allowed'
-                                  : 'text-[#111111] border-[#111111] hover:text-[#B8860B] hover:border-[#B8860B]'
-                              }`}
-                            >
-                              <span>{item.status === 'Verkocht' ? t('catalog.sold') : t('topstukken.buyInquire')}</span>
-                            </button>
                           </div>
                         </div>
                       </div>

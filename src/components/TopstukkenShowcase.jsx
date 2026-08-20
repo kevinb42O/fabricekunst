@@ -8,14 +8,12 @@ import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '..
 import { rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
-import PriceAssurance from './PriceAssurance';
 
 export default function TopstukkenShowcase({ 
   items = [], 
   transitionItemId,
   onOpenFullCatalog = () => {}, 
-  onOpenItemDetail = () => {}, 
-  onRequestInquiry = () => {} 
+  onOpenItemDetail = () => {}
 }) {
   const { t, language } = useLanguage();
   // Filter items marked as featured (Op Homepage Tonen)
@@ -150,22 +148,8 @@ export default function TopstukkenShowcase({
                 </div>
               )}
 
-              <div className="mobile-spotlight-details pt-6 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-6">
-                <div>
-                  <span className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">{getLocalizedPrice(spotlightItem.price, language)}</span>
-                  <PriceAssurance compact className="max-w-sm" />
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRequestInquiry(spotlightItem);
-                  }}
-                  className="inline-flex items-center space-x-2 text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] border-b border-[#111111] pb-1 hover:opacity-60 transition-opacity duration-300 cursor-pointer"
-                >
-                  <span>{t('topstukken.buyInquire')}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+              <div className="mobile-spotlight-details border-t border-[#D8CEB8]/60 pt-6">
+                <span className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">{getLocalizedPrice(spotlightItem.price, language)}</span>
               </div>
             </div>
           </motion.div>
@@ -275,12 +259,9 @@ export default function TopstukkenShowcase({
 
                   {/* Pinned Bottom Details Bar */}
                   <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-auto">
-                    <div>
-                      <span className="text-lg sm:text-xl font-serif font-bold text-[#111111]">
-                        {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
-                      </span>
-                      <PriceAssurance compact className="max-w-xs" />
-                    </div>
+                    <span className="text-lg sm:text-xl font-serif font-bold text-[#111111]">
+                      {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
+                    </span>
                   </div>
                 </motion.div>
               );

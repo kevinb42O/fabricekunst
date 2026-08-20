@@ -510,7 +510,6 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   <p className="text-xs font-mono text-[#666666]">
                     {getLocalizedCentury(prevItem.century, language)} • {getLocalizedPrice(prevItem.price, language)}
                   </p>
-                  <PriceAssurance compact />
                 </div>
               </div>
             ) : (
@@ -536,7 +535,6 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
                   <p className="text-xs font-mono text-[#666666]">
                     {getLocalizedCentury(nextItem.century, language)} • {getLocalizedPrice(nextItem.price, language)}
                   </p>
-                  <PriceAssurance compact />
                 </div>
                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-[#FAF7F2] border border-[#D8CEB8]">
                   <img src={nextItem.images[0]?.url} alt="" loading="lazy" decoding="async" draggable="false" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

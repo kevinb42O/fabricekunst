@@ -4,7 +4,6 @@ import { ArrowRight, Award, BookOpen } from 'lucide-react';
 import ItemDetailModal from './ItemDetailModal';
 import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
-import PriceAssurance from './PriceAssurance';
 
 export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDetail, onRequestInquiry }) {
   const { t, language } = useLanguage();
@@ -126,7 +125,6 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
                   <div>
                     <span className="text-[9px] uppercase font-bold text-[#888888] block font-mono">{t('item_detail.labels.price')}</span>
                     <span className="text-base font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
-                    <PriceAssurance compact className="max-w-[16rem]" />
                   </div>
 
                   <motion.button
