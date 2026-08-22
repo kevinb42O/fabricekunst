@@ -254,31 +254,33 @@ export function buildStructuredData({ page, item, language = 'nl', canonical, it
       .filter((image) => image?.url && !image.__ext__)
       .map((image) => absoluteUrl(image.url))
       .filter(Boolean);
-    const product = {
-      '@type': 'Product',
-      '@id': `${canonical}#product`,
-      url: canonical,
-      name: localizedField(item, 'title', language),
-      description: truncate(localizedField(item, 'description', language) || localizedField(item, 'subtitle', language), 5000),
-      image: images,
-      sku: item.ref || item.id,
-      category: localizedField(item, 'category', language) || item.category,
-      itemCondition: 'https://schema.org/UsedCondition',
-      brand: { '@type': 'Brand', name: SITE_NAME },
-      seller: { '@id': `${SITE_URL}/#organization` }
-    };
+    // Google Product rich results require an Offer, review, or aggregateRating.
+    // "Prijs op aanvraag" is deliberately a non-price value managed in the admin
+    // dashboard, so do not publish incomplete Product markup for those items.
     if (price) {
-      product.offers = {
-        '@type': 'Offer',
+      graph.push({
+        '@type': 'Product',
+        '@id': `${canonical}#product`,
         url: canonical,
-        price,
-        priceCurrency: 'EUR',
-        availability: availabilityFor(item.status),
+        name: localizedField(item, 'title', language),
+        description: truncate(localizedField(item, 'description', language) || localizedField(item, 'subtitle', language), 5000),
+        image: images,
+        sku: item.ref || item.id,
+        category: localizedField(item, 'category', language) || item.category,
         itemCondition: 'https://schema.org/UsedCondition',
-        seller: { '@id': `${SITE_URL}/#organization` }
-      };
+        brand: { '@type': 'Brand', name: SITE_NAME },
+        seller: { '@id': `${SITE_URL}/#organization` },
+        offers: {
+          '@type': 'Offer',
+          url: canonical,
+          price,
+          priceCurrency: 'EUR',
+          availability: availabilityFor(item.status),
+          itemCondition: 'https://schema.org/UsedCondition',
+          seller: { '@id': `${SITE_URL}/#organization` }
+        }
+      });
     }
-    graph.push(product);
   }
 
   return { '@context': 'https://schema.org', '@graph': graph };
