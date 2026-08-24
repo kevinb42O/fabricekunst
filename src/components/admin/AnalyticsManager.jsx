@@ -10,7 +10,6 @@ import {
   Clipboard,
   Clock3,
   ExternalLink,
-  Eye,
   FileQuestion,
   Info,
   Link2,
@@ -421,8 +420,9 @@ function TrendPanel({ report }) {
   const partialHourNote = unit === 'uur' ? ' Het eerste en laatste uur kunnen gedeeltelijk zijn.' : '';
   return (
     <Panel title="Bezoeken doorheen de tijd" description={`Het aantal websitebezoeken per ${unit}.${partialHourNote}`} icon={BarChart3}>
-      {hasData ? (
+      {data.length ? (
         <>
+          {!hasData ? <p className="analytics-chart-zero-note">Nog geen bezoeken gemeten in deze periode. De uurgrafiek blijft zichtbaar en wordt automatisch bijgewerkt.</p> : null}
           <div className="analytics-chart" role="img" aria-label={`Grafiek met bezoeken per ${unit} voor ${report.range.label}.`}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 12, right: 12, left: -16, bottom: 0 }}>
@@ -445,53 +445,7 @@ function TrendPanel({ report }) {
             ]} />
           </details>
         </>
-      ) : <EmptyState title="Nog geen bezoeken in deze periode">Kies een ruimere periode of deel een link naar uw website.</EmptyState>}
-    </Panel>
-  );
-}
-
-function LegacyTrendPanel({ legacy }) {
-  if (!legacy.included) return null;
-
-  const data = legacy.series;
-  const hasSeries = data.some((item) => item.uniqueIds > 0 || item.pageViews > 0);
-  const rangeLabelText = legacy.range.label ? ` in ${legacy.range.label.toLowerCase()}` : '';
-  const { unit, column, tickInterval } = granularityMeta(legacy.range.granularity);
-  const partialHourNote = unit === 'uur' ? ' Het eerste en laatste uur kunnen gedeeltelijk zijn.' : '';
-
-  return (
-    <Panel
-      title="Eerdere bezoeken"
-      description={`Een overzicht van bezoeken en bekeken pagina’s per ${unit}${rangeLabelText}.${partialHourNote}`}
-      icon={Eye}
-    >
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 22px', marginBottom: '18px', color: '#404040', fontSize: '13px' }}>
-        <span><strong style={{ color: '#0070F3', fontSize: '20px' }}>{formatNumber(legacy.summary.uniqueIds)}</strong> bezoeken</span>
-        <span><strong style={{ color: '#0070F3', fontSize: '20px' }}>{formatNumber(legacy.summary.pageViews)}</strong> bekeken pagina’s</span>
-      </div>
-      {hasSeries ? (
-        <>
-          <div className="analytics-chart" role="img" aria-label={`Grafiek met eerdere bezoeken per ${unit}.`}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <defs><linearGradient id="analyticsLegacyVisitorsFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0070F3" stopOpacity={0.2} /><stop offset="95%" stopColor="#0070F3" stopOpacity={0} /></linearGradient></defs>
-                <XAxis dataKey="label" axisLine={{ stroke: '#eaeaea' }} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dy={10} minTickGap={unit === 'uur' ? 8 : 24} interval={tickInterval} />
-                <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 12 }} dx={-10} />
-                <Tooltip cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#eaeaea', borderRadius: '6px', color: '#111', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} labelFormatter={tooltipBucketLabel} formatter={(value) => [formatNumber(value), 'Bezoeken']} />
-                <Area type="linear" dataKey="uniqueIds" stroke="#0070F3" strokeWidth={2} fillOpacity={1} fill="url(#analyticsLegacyVisitorsFill)" activeDot={{ r: 4, fill: '#0070F3', stroke: '#fff', strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <details className="analytics-chart-data">
-            <summary>Toon cijfers per {unit}</summary>
-            <DataTable caption={`Eerdere bezoeken per ${unit}`} rows={data} columns={[
-              { label: column, render: (row) => row.tooltipLabel },
-              { label: 'Bezoeken', align: 'end', render: (row) => formatNumber(row.uniqueIds) },
-              { label: 'Bekeken pagina’s', align: 'end', render: (row) => formatNumber(row.pageViews) },
-            ]} />
-          </details>
-        </>
-      ) : <EmptyState title="Nog geen eerdere cijfers beschikbaar">Voor deze periode zijn nog geen cijfers beschikbaar.</EmptyState>}
+      ) : <EmptyState title="Grafiek niet beschikbaar">De analyse-API heeft geen tijdvakken voor deze periode teruggegeven.</EmptyState>}
     </Panel>
   );
 }
@@ -807,14 +761,14 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
 
           {activeTab === 'overview' ? (
             <div className="analytics-content">
-              <LegacyTrendPanel legacy={report.legacy} />
+              <TrendPanel report={report} />
               <section className="analytics-metric-grid" aria-label="Kerncijfers">
                 <MetricCard icon={Mail} label="Aanvragen" metric={report.summary.inquiries} description="Verstuurde contactaanvragen." tone="outcome" />
                 <MetricCard icon={CheckCircle2} label="Aanvragen per bezoek" metric={report.summary.inquiryRate} isRate description="Het deel van de bezoeken dat tot een aanvraag leidde." tone="outcome" />
                 <MetricCard icon={MonitorSmartphone} label="Bezoeken" metric={report.summary.sessions} description="Aantal bezoeken aan uw website." />
                 <MetricCard icon={ExternalLink} label="Bekeken pagina’s" metric={report.summary.pageViews} description="Totaal aantal bekeken pagina’s." />
               </section>
-              <div className="analytics-overview-grid"><TrendPanel report={report} /><ActivityPanel report={report} onOpenSession={handleOpenSession} /></div>
+              <ActivityPanel report={report} onOpenSession={handleOpenSession} />
               <Panel title="Pagina’s met de meeste interesse" description="Gebruik dit om objectpagina’s en landingspagina’s te verbeteren." icon={BarChart3}>
                 <DataTable caption="Pagina-interesse" rows={report.breakdowns.pages} emptyMessage="Er zijn nog geen paginaresultaten voor deze periode." columns={[
                   { label: 'Pagina', render: (row) => <span className="analytics-table__primary">{row.label || row.path}</span> },

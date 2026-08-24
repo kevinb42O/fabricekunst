@@ -13,7 +13,10 @@ import {
   BellOff,
   Info,
   AlertCircle,
-  Smartphone
+  Smartphone,
+  CalendarDays,
+  Clock3,
+  Crown
 } from 'lucide-react';
 import { updateAdminPasswordAsync } from '../../utils/storage';
 import { supabase } from '../../utils/supabaseClient';
@@ -29,6 +32,18 @@ import {
 export default function SecuritySettings({ currentUser, onShowToast }) {
   const userEmail = currentUser?.email || 'admin@atelierrembrandt.com';
   const userName = currentUser?.name || 'Admin';
+
+  // The Pro membership is paid for one full year: 18 August 2026 up to
+  // (but not including) 18 August 2027, using the administrator's local time.
+  const membershipStart = new Date(2026, 7, 18);
+  const membershipEnd = new Date(2027, 7, 18);
+  const [now, setNow] = useState(() => new Date());
+  const membershipDuration = membershipEnd.getTime() - membershipStart.getTime();
+  const remainingMilliseconds = Math.max(0, membershipEnd.getTime() - now.getTime());
+  const remainingDays = Math.floor(remainingMilliseconds / (1000 * 60 * 60 * 24));
+  const remainingHours = Math.floor((remainingMilliseconds / (1000 * 60 * 60)) % 24);
+  const remainingMinutes = Math.floor((remainingMilliseconds / (1000 * 60)) % 60);
+  const membershipProgress = Math.min(100, Math.max(0, ((now.getTime() - membershipStart.getTime()) / membershipDuration) * 100));
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -47,6 +62,11 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [testingPush, setTestingPush] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Load current subscription status
   useEffect(() => {
@@ -177,6 +197,55 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
           </div>
         </div>
       </div>
+
+      {/* Pro membership */}
+      <section className="p-6 sm:p-8 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm space-y-5" aria-labelledby="pro-membership-title">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] flex items-center justify-center">
+              <Crown className="w-5 h-5 text-[#B8860B]" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-[#B8860B]">Actief abonnement</p>
+              <h2 id="pro-membership-title" className="mt-0.5 text-lg font-serif font-bold text-[#111111]">Pro lidmaatschap</h2>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            Actief
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-[#E9E0CE] bg-[#FFFCF7] p-5">
+          {remainingMilliseconds > 0 ? (
+            <>
+              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[#666666]">
+                <Clock3 className="h-4 w-4 text-[#B8860B]" aria-hidden="true" />
+                Resterende tijd
+              </div>
+              <p className="mt-2 text-3xl sm:text-4xl font-serif font-bold tabular-nums text-[#111111]">
+                {remainingDays} dagen <span className="text-xl sm:text-2xl text-[#555555]">{remainingHours} uur · {remainingMinutes} min</span>
+              </p>
+              <p className="mt-2 text-sm text-[#555555]">Uw Pro lidmaatschap eindigt op 18 augustus 2027.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-bold text-[#111111]">Uw Pro lidmaatschap is verlopen.</p>
+              <p className="mt-1 text-sm text-[#555555]">De betaalde periode eindigde op 18 augustus 2027.</p>
+            </>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="h-1.5 overflow-hidden rounded-full bg-[#EEE7DA]" role="progressbar" aria-label="Verstreken periode van Pro lidmaatschap" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(membershipProgress)}>
+            <div className="h-full rounded-full bg-[#B8860B] transition-[width] duration-500" style={{ width: `${membershipProgress}%` }} />
+          </div>
+          <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-[#666666]">
+            <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" aria-hidden="true" /> Gestart op 18 augustus 2026</span>
+            <span>Eindigt op 18 augustus 2027</span>
+          </div>
+        </div>
+      </section>
 
       {/* Change Password Form */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#D8CEB8] shadow-sm space-y-6">

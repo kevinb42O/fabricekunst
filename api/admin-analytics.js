@@ -204,7 +204,7 @@ const subtractMonths = (date, months) => {
 
 const toIso = (date) => date.toISOString();
 
-const buildRange = (key, now, earliest) => {
+export const buildRange = (key, now, earliest) => {
   const end = new Date(now);
   let start;
 
@@ -441,7 +441,7 @@ const funnelStagesForSession = (events) => {
   return stages;
 };
 
-const overviewFor = (events, range) => {
+export const overviewFor = (events, range) => {
   const sessionMap = new Map();
   const seriesMap = zeroFilledSeriesMap(range, () => ({
     sessions: new Set(),
@@ -650,7 +650,7 @@ const overviewFor = (events, range) => {
   };
 };
 
-const legacyOverviewFor = (views, range) => {
+export const legacyOverviewFor = (views, range) => {
   const uniqueIds = new Set();
   const seriesMap = zeroFilledSeriesMap(range, () => ({
     uniqueIds: new Set(),
@@ -716,6 +716,57 @@ const legacyOverviewFor = (views, range) => {
       .slice(0, 12),
     firstSeen,
     lastSeen,
+  };
+};
+
+// V1 stopped before V2 was enabled, so overview-level visit and page-view
+// totals can be presented as one continuous report. Keep the richer V2-only
+// acquisition and behaviour breakdowns separate: legacy rows do not contain
+// comparable campaign, device, funnel, or conversion data.
+export const combineOverviewReports = (current, legacy) => {
+  const legacySeries = new Map(legacy.series.map((row) => [row.date, row]));
+  const series = current.series.map((row) => {
+    const historical = legacySeries.get(row.date);
+    return {
+      ...row,
+      sessions: row.sessions + (historical?.uniqueIds || 0),
+      pageViews: row.pageViews + (historical?.pageViews || 0),
+    };
+  });
+
+  const pages = new Map(current.breakdowns.pages.map((row) => [row.path, { ...row }]));
+  for (const historical of legacy.pages) {
+    const row = pages.get(historical.path) || {
+      path: historical.path,
+      label: historical.label,
+      sessions: 0,
+      pageViews: 0,
+      inquiries: 0,
+    };
+    row.sessions += historical.uniqueIds;
+    row.pageViews += historical.pageViews;
+    pages.set(historical.path, row);
+  }
+
+  const sessions = current.summary.sessions + legacy.summary.uniqueIds;
+  const pageViews = current.summary.pageViews + legacy.summary.pageViews;
+  return {
+    ...current,
+    summary: {
+      ...current.summary,
+      sessions,
+      pageViews,
+      inquiryRate: sessions
+        ? Number(((current.summary.inquiries / sessions) * 100).toFixed(1))
+        : 0,
+    },
+    series,
+    breakdowns: {
+      ...current.breakdowns,
+      pages: [...pages.values()]
+        .sort((left, right) => right.pageViews - left.pageViews || right.sessions - left.sessions)
+        .slice(0, 12),
+    },
   };
 };
 
@@ -942,10 +993,12 @@ export default async function handler(req, res) {
         previousEnd: null,
       }
       : null;
-    const current = overviewFor(currentRows, range);
-    const previous = overviewFor(previousResult.rows, previousRange || range);
+    const currentV2 = overviewFor(currentRows, range);
+    const previousV2 = overviewFor(previousResult.rows, previousRange || range);
     const currentLegacy = legacyOverviewFor(currentLegacyRows, range);
     const previousLegacy = legacyOverviewFor(previousLegacyResult.rows, previousRange || range);
+    const current = combineOverviewReports(currentV2, currentLegacy);
+    const previous = combineOverviewReports(previousV2, previousLegacy);
     const legacyAvailable = Boolean(firstLegacyView);
     const legacyIncluded = currentLegacy.summary.pageViews > 0;
     const hasV2Data = currentRows.length > 0;

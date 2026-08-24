@@ -2321,6 +2321,12 @@
   min-width: 0;
 }
 
+.analytics-chart-zero-note {
+  margin: 0 0 12px;
+  color: var(--analytics-muted);
+  font-size: 13px;
+}
+
 .analytics-chart-data {
   margin-top: 14px;
   color: var(--analytics-muted);
