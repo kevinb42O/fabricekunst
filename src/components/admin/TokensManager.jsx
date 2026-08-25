@@ -27,8 +27,8 @@ const CircularProgress = ({ percentage, color = '#24b47e' }) => {
   );
 };
 
-const UsageCard = ({ title, usageStr, limitStr, percentage, overLimit, icon: Icon, tooltip }) => {
-  const fillWidth = Math.min(percentage, 100);
+const UsageCard = ({ title, usageStr, limitStr, percentage, overLimit, icon: Icon, tooltip, unavailable = false }) => {
+  const fillWidth = unavailable ? 0 : Math.min(percentage, 100);
   const barColor = overLimit ? 'bg-red-500' : (percentage > 80 ? 'bg-amber-500' : 'bg-gray-900');
   const textColor = overLimit ? 'text-red-600' : (percentage > 80 ? 'text-amber-600' : 'text-gray-900');
 
@@ -58,8 +58,8 @@ const UsageCard = ({ title, usageStr, limitStr, percentage, overLimit, icon: Ico
       {/* Progress Bar & Status */}
       <div className="w-full">
         <div className="flex justify-between items-baseline mb-2">
-          <span className={`text-xs font-bold ${textColor}`}>
-            {overLimit ? 'Limiet bereikt' : `${Math.round(percentage)}% gebruikt`}
+          <span className={`text-xs font-bold ${unavailable ? 'text-gray-500' : textColor}`}>
+            {unavailable ? 'Live data niet beschikbaar' : (overLimit ? 'Limiet bereikt' : `${Math.round(percentage)}% gebruikt`)}
           </span>
           {overLimit && (
             <span className="bg-red-100 text-red-700 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded">Vol</span>
@@ -131,7 +131,8 @@ export default function TokensManager({ items = [], currentUser = null }) {
   }, []);
 
   const formatBytes = (bytes) => {
-    if (bytes === 0 || !bytes) return '0 GB';
+    if (!Number.isFinite(bytes)) return 'Niet beschikbaar';
+    if (bytes === 0) return '0 GB';
     const gb = bytes / (1024 * 1024 * 1024);
     return `${gb.toFixed(3)} GB`;
   };
@@ -146,25 +147,28 @@ export default function TokensManager({ items = [], currentUser = null }) {
   const itemsPercentage = (currentItems / MAX_ITEMS) * 100;
   
   // Storage (From API)
-  const currentStorage = usages['storage_size']?.usage || 0;
-  const storagePercentage = (currentStorage / MAX_STORAGE_BYTES) * 100;
+  const getUsage = (metric) => Number.isFinite(usages[metric]?.usage) ? usages[metric].usage : null;
+  const getPercentage = (usage, limit) => Number.isFinite(usage) ? (usage / limit) * 100 : null;
+
+  const currentStorage = getUsage('storage_size');
+  const storagePercentage = getPercentage(currentStorage, MAX_STORAGE_BYTES);
 
   // Database (From API)
-  const currentDb = usages['db_size']?.usage || 0;
-  const dbPercentage = (currentDb / MAX_DB_BYTES) * 100;
+  const currentDb = getUsage('db_size');
+  const dbPercentage = getPercentage(currentDb, MAX_DB_BYTES);
 
   // Direct Egress (From API)
-  const currentEgress = usages['egress']?.usage || 0;
-  const egressPercentage = (currentEgress / MAX_EGRESS_BYTES) * 100;
+  const currentEgress = getUsage('egress');
+  const egressPercentage = getPercentage(currentEgress, MAX_EGRESS_BYTES);
 
   // Cached Egress (From API)
-  const currentCachedEgress = usages['cached_egress']?.usage || 0;
-  const cachedEgressPercentage = (currentCachedEgress / MAX_CACHED_EGRESS_BYTES) * 100;
+  const currentCachedEgress = getUsage('cached_egress');
+  const cachedEgressPercentage = getPercentage(currentCachedEgress, MAX_CACHED_EGRESS_BYTES);
 
-  const isOverCachedEgress = currentCachedEgress >= MAX_CACHED_EGRESS_BYTES;
-  const isOverEgress = currentEgress >= MAX_EGRESS_BYTES;
-  const isOverStorage = currentStorage >= MAX_STORAGE_BYTES;
-  const isOverDb = currentDb >= MAX_DB_BYTES;
+  const isOverCachedEgress = Number.isFinite(currentCachedEgress) && currentCachedEgress >= MAX_CACHED_EGRESS_BYTES;
+  const isOverEgress = Number.isFinite(currentEgress) && currentEgress >= MAX_EGRESS_BYTES;
+  const isOverStorage = Number.isFinite(currentStorage) && currentStorage >= MAX_STORAGE_BYTES;
+  const isOverDb = Number.isFinite(currentDb) && currentDb >= MAX_DB_BYTES;
   const isOverItems = currentItems >= MAX_ITEMS;
 
   const hasExceeded = isOverCachedEgress || isOverEgress || isOverStorage || isOverItems || isOverDb;
@@ -183,6 +187,12 @@ export default function TokensManager({ items = [], currentUser = null }) {
           <button type="button" onClick={fetchMetrics} className="shrink-0 rounded-lg border border-amber-300 px-3 py-1.5 font-semibold hover:bg-amber-100">
             Opnieuw proberen
           </button>
+        </div>
+      )}
+      {!error && metrics?.warnings?.length > 0 && (
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="status">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>Niet alle live verbruiksbronnen zijn beschikbaar. Ontbrekende cijfers worden niet als 0 weergegeven.</span>
         </div>
       )}
 
@@ -220,6 +230,7 @@ export default function TokensManager({ items = [], currentUser = null }) {
           limitStr={isPremium ? "500 GB" : (isPro ? "100 GB" : "1 GB")} 
           percentage={storagePercentage} 
           overLimit={isOverStorage} 
+          unavailable={!Number.isFinite(currentStorage)}
           icon={HardDrive} 
           tooltip={isOverStorage ? "Opslaglimiet bereikt! U kunt geen nieuwe afbeeldingen meer uploaden totdat u uw pakket heeft geüpgraded." : "De totale opslagruimte die wordt gebruikt door al uw geüploade afbeeldingen in hoge resolutie."}
         />
@@ -229,6 +240,7 @@ export default function TokensManager({ items = [], currentUser = null }) {
           limitStr={isPremium ? "20 GB" : (isPro ? "8 GB" : "0.5 GB")} 
           percentage={dbPercentage} 
           overLimit={isOverDb} 
+          unavailable={!Number.isFinite(currentDb)}
           icon={HardDrive} 
           tooltip={isOverDb ? "Databaselimiet bereikt! Er kunnen geen nieuwe teksten of gegevens meer worden opgeslagen." : "De opslagruimte die nodig is voor de onderliggende data (teksten, aanvragen en instellingen)."}
         />
@@ -238,6 +250,7 @@ export default function TokensManager({ items = [], currentUser = null }) {
           limitStr={isPremium ? "1 TB" : (isPro ? "250 GB" : "5 GB")} 
           percentage={egressPercentage} 
           overLimit={isOverEgress} 
+          unavailable={!Number.isFinite(currentEgress)}
           icon={Activity} 
           tooltip={isOverEgress ? "Verkeerslimiet bereikt! Uw website zal vertragen of tijdelijk onbereikbaar worden." : "De standaard hoeveelheid data die direct van de server is gedownload door bezoekers."}
         />
@@ -247,6 +260,7 @@ export default function TokensManager({ items = [], currentUser = null }) {
           limitStr={isPremium ? "2 TB" : (isPro ? "500 GB" : "5 GB")} 
           percentage={cachedEgressPercentage} 
           overLimit={isOverCachedEgress} 
+          unavailable={!Number.isFinite(currentCachedEgress)}
           icon={Activity} 
           tooltip={isOverCachedEgress ? "Limiet overschreden! De website kan vertragen, tijdelijk onbereikbaar worden of afbeeldingen niet meer inladen voor uw bezoekers totdat het pakket wordt geüpgraded." : "De hoeveelheid data die via het snelle cache-netwerk naar uw bezoekers wordt verstuurd."}
         />

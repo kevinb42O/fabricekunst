@@ -1,8 +1,18 @@
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
 
-const SUPABASE_PAT = process.env.SUPABASE_PAT;
-const SUPABASE_PROJECT_REF = process.env.SUPABASE_PROJECT_REF;
+const SUPABASE_MANAGEMENT_TOKEN = process.env.SUPABASE_PAT || process.env.SUPABASE_ACCESS_TOKEN;
+
+const getSupabaseProjectRef = () => {
+  if (process.env.SUPABASE_PROJECT_REF) return process.env.SUPABASE_PROJECT_REF;
+
+  try {
+    const hostname = new URL(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL).hostname;
+    return hostname.endsWith('.supabase.co') ? hostname.split('.')[0] : null;
+  } catch {
+    return null;
+  }
+};
 
 const supabase = getServerSupabase();
 
@@ -62,6 +72,94 @@ async function getHostingPlan() {
   }
 }
 
+const normalizeUsage = (usage) => {
+  if (!usage || typeof usage.metric !== 'string') return null;
+  const value = Number(usage.usage);
+  if (!Number.isFinite(value) || value < 0) return null;
+  return { ...usage, usage: value };
+};
+
+const setUsage = (usages, metric, usage, source) => {
+  if (!Number.isFinite(usage) || usage < 0) return;
+  const existing = usages.find(item => item.metric === metric);
+  const next = { metric, usage, unit: 'bytes', source };
+  if (existing) Object.assign(existing, next);
+  else usages.push(next);
+};
+
+async function getSupabaseUsage() {
+  const projectRef = getSupabaseProjectRef();
+  if (!SUPABASE_MANAGEMENT_TOKEN || !projectRef) {
+    return {
+      usages: [],
+      error: 'Supabase Management API is niet geconfigureerd.',
+    };
+  }
+
+  try {
+    const response = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/usage`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_MANAGEMENT_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error(`request failed (${response.status})`);
+
+    const payload = await response.json();
+    const usages = Array.isArray(payload?.usages)
+      ? payload.usages.map(normalizeUsage).filter(Boolean).map(usage => ({ ...usage, source: 'supabase' }))
+      : [];
+
+    if (usages.length === 0) throw new Error('response contained no usage metrics');
+    return { usages, error: null };
+  } catch (error) {
+    console.error('[hosting-metrics] Supabase usage unavailable:', error.message);
+    return { usages: [], error: 'Supabase-verbruik kon niet worden opgehaald.' };
+  }
+}
+
+async function getR2Egress() {
+  if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) {
+    return { usage: null, error: 'Cloudflare-verbruik is niet geconfigureerd.' };
+  }
+
+  try {
+    const date30DaysAgo = new Date();
+    date30DaysAgo.setDate(date30DaysAgo.getDate() - 30);
+    const dateStr = date30DaysAgo.toISOString();
+    const query = `
+      query {
+        viewer {
+          accounts(filter: {accountTag: "${process.env.CLOUDFLARE_ACCOUNT_ID}"}) {
+            r2OperationsAdaptiveGroups(limit: 1, filter: {datetime_gt: "${dateStr}"}) {
+              sum { responseBytes }
+            }
+          }
+        }
+      }
+    `;
+    const response = await fetch('https://api.cloudflare.com/client/v4/graphql', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    });
+    if (!response.ok) throw new Error(`request failed (${response.status})`);
+
+    const payload = await response.json();
+    if (payload?.errors?.length) throw new Error(payload.errors[0]?.message || 'GraphQL request failed');
+    const usage = Number(payload?.data?.viewer?.accounts?.[0]?.r2OperationsAdaptiveGroups?.[0]?.sum?.responseBytes);
+    if (!Number.isFinite(usage) || usage < 0) throw new Error('response contained no responseBytes value');
+    return { usage, error: null };
+  } catch (error) {
+    console.error('[hosting-metrics] Cloudflare egress unavailable:', error.message);
+    return { usage: null, error: 'Cloudflare-verbruik kon niet worden opgehaald.' };
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -77,99 +175,44 @@ export default async function handler(req, res) {
   if (!admin.ok) return sendJson(res, admin.status, { error: 'Beheerderssessie vereist.' });
 
   try {
-    // 1. Fetch real bucket size from R2
-    const r2Size = await getR2BucketSize();
-    
-    // 2. Fetch hosting plan from DB
-    const plan = await getHostingPlan();
+    const [r2Size, plan, supabaseResult, r2EgressResult] = await Promise.all([
+      getR2BucketSize(),
+      getHostingPlan(),
+      getSupabaseUsage(),
+      getR2Egress(),
+    ]);
 
-    // Fetch only actual provider values. Never substitute hard-coded figures:
-    // fabricated usage can trigger incorrect capacity warnings and decisions.
-    const supabaseData = { usages: [] };
-    if (SUPABASE_PAT && SUPABASE_PROJECT_REF) {
-      const response = await fetch(`https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_REF}/usage`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_PAT}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) throw new Error(`Supabase usage request failed (${response.status})`);
-      const usagePayload = await response.json();
-      supabaseData.usages = Array.isArray(usagePayload?.usages) ? usagePayload.usages : [];
-    }
+    const usages = [...supabaseResult.usages];
 
-    // Overwrite storage only when R2 reported a real value. An unconfigured or
-    // unavailable bucket must remain unknown rather than becoming zero.
+    // Uploaded website media lives in R2. Keep Supabase Storage separate from
+    // this customer-facing media figure and only fall back to it when R2 is not
+    // available.
     if (Number.isFinite(r2Size)) {
-      const storageMetricIndex = supabaseData.usages.findIndex(u => u.metric === 'storage_size');
-      if (storageMetricIndex !== -1) {
-        supabaseData.usages[storageMetricIndex].usage = r2Size;
-      } else {
-        supabaseData.usages.push({
-          metric: 'storage_size',
-          usage: r2Size,
-          limit: null,
-          unit: 'bytes'
-        });
-      }
+      setUsage(usages, 'storage_size', r2Size, 'cloudflare_r2');
     }
 
-    // 4b. Add Cloudflare Egress if on PRO plan (cross-fade migration)
-    if (plan === 'pro' && process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN) {
-      try {
-        const date30DaysAgo = new Date();
-        date30DaysAgo.setDate(date30DaysAgo.getDate() - 30);
-        const dateStr = date30DaysAgo.toISOString();
-        
-        const query = `
-          query {
-            viewer {
-              accounts(filter: {accountTag: "${process.env.CLOUDFLARE_ACCOUNT_ID}"}) {
-                r2OperationsAdaptiveGroups(limit: 1, filter: {datetime_gt: "${dateStr}"}) {
-                  sum {
-                    responseBytes
-                  }
-                }
-              }
-            }
-          }
-        `;
-        
-        const cfRes = await fetch('https://api.cloudflare.com/client/v4/graphql', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ query })
-        });
-        
-        if (cfRes.ok) {
-          const cfData = await cfRes.json();
-          const r2Egress = cfData?.data?.viewer?.accounts?.[0]?.r2OperationsAdaptiveGroups?.[0]?.sum?.responseBytes || 0;
-          
-          // Add R2 Egress to the rolling 30-day Supabase Egress for a seamless cross-fade
-          const egressIndex = supabaseData.usages.findIndex(u => u.metric === 'egress');
-          if (egressIndex !== -1) {
-            supabaseData.usages[egressIndex].usage += r2Egress;
-          }
-          
-          // For cached egress, we can also add it, or keep it static. Let's add it to direct as well so both grow.
-          const cachedIndex = supabaseData.usages.findIndex(u => u.metric === 'cached_egress');
-          if (cachedIndex !== -1) {
-            supabaseData.usages[cachedIndex].usage += (r2Egress * 0.8); // Estimate 80% is cached CDN traffic
-          }
-        }
-      } catch (cfErr) {
-        console.error("Failed to fetch Cloudflare egress", cfErr);
-      }
+    // Direct traffic is the actual uncached Supabase egress plus bytes served
+    // by R2. Never manufacture cached traffic from a percentage estimate.
+    if (Number.isFinite(r2EgressResult.usage)) {
+      const supabaseEgress = usages.find(item => item.metric === 'egress')?.usage;
+      setUsage(
+        usages,
+        'egress',
+        (Number.isFinite(supabaseEgress) ? supabaseEgress : 0) + r2EgressResult.usage,
+        Number.isFinite(supabaseEgress) ? 'supabase+cloudflare_r2' : 'cloudflare_r2'
+      );
     }
 
-    // 5. Append plan
-    supabaseData.plan = plan;
+    const requiredMetrics = ['storage_size', 'db_size', 'egress', 'cached_egress'];
+    const unavailableMetrics = requiredMetrics.filter(metric => !usages.some(item => item.metric === metric));
+    const warnings = [supabaseResult.error, r2EgressResult.error].filter(Boolean);
 
-    return sendJson(res, 200, supabaseData);
+    return sendJson(res, 200, {
+      usages,
+      plan,
+      unavailableMetrics,
+      warnings,
+    });
     
   } catch (error) {
     console.error('[hosting-metrics] Unexpected failure:', error.message);
