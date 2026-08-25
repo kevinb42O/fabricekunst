@@ -125,7 +125,14 @@ async function getSupabaseUsage() {
       ? payload.usages
           .map(usage => {
             const metric = SUPABASE_USAGE_METRICS[usage?.metric];
-            return metric ? normalizeUsage({ ...usage, metric }) : null;
+            // The organization usage endpoint exposes billable/normalized units
+            // in `usage` and the actual byte count in `usage_original`.
+            // Every metric returned by this endpoint is normalized to bytes for
+            // the dashboard, so always prefer the original value.
+            const rawBytes = Number.isFinite(Number(usage?.usage_original))
+              ? usage.usage_original
+              : usage?.usage;
+            return metric ? normalizeUsage({ ...usage, metric, usage: rawBytes }) : null;
           })
           .filter(Boolean)
           .map(usage => ({ ...usage, source: 'supabase' }))
