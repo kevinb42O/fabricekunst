@@ -2,6 +2,14 @@ import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
 
 const SUPABASE_MANAGEMENT_TOKEN = process.env.SUPABASE_PAT || process.env.SUPABASE_ACCESS_TOKEN;
+const SUPABASE_ORG_SLUG = process.env.SUPABASE_ORG_SLUG;
+
+const SUPABASE_USAGE_METRICS = {
+  EGRESS: 'egress',
+  CACHED_EGRESS: 'cached_egress',
+  DATABASE_SIZE: 'db_size',
+  STORAGE_SIZE: 'storage_size',
+};
 
 const getSupabaseProjectRef = () => {
   if (process.env.SUPABASE_PROJECT_REF) return process.env.SUPABASE_PROJECT_REF;
@@ -89,7 +97,7 @@ const setUsage = (usages, metric, usage, source) => {
 
 async function getSupabaseUsage() {
   const projectRef = getSupabaseProjectRef();
-  if (!SUPABASE_MANAGEMENT_TOKEN || !projectRef) {
+  if (!SUPABASE_MANAGEMENT_TOKEN || !SUPABASE_ORG_SLUG || !projectRef) {
     return {
       usages: [],
       error: 'Supabase Management API is niet geconfigureerd.',
@@ -97,7 +105,13 @@ async function getSupabaseUsage() {
   }
 
   try {
-    const response = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/usage`, {
+    const usageUrl = new URL(
+      `/platform/organizations/${encodeURIComponent(SUPABASE_ORG_SLUG)}/usage`,
+      'https://api.supabase.com'
+    );
+    usageUrl.searchParams.set('project_ref', projectRef);
+
+    const response = await fetch(usageUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${SUPABASE_MANAGEMENT_TOKEN}`,
@@ -108,7 +122,13 @@ async function getSupabaseUsage() {
 
     const payload = await response.json();
     const usages = Array.isArray(payload?.usages)
-      ? payload.usages.map(normalizeUsage).filter(Boolean).map(usage => ({ ...usage, source: 'supabase' }))
+      ? payload.usages
+          .map(usage => {
+            const metric = SUPABASE_USAGE_METRICS[usage?.metric];
+            return metric ? normalizeUsage({ ...usage, metric }) : null;
+          })
+          .filter(Boolean)
+          .map(usage => ({ ...usage, source: 'supabase' }))
       : [];
 
     if (usages.length === 0) throw new Error('response contained no usage metrics');
