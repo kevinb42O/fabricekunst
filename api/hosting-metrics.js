@@ -2,15 +2,6 @@ import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
 
 const SUPABASE_MANAGEMENT_TOKEN = process.env.SUPABASE_PAT || process.env.SUPABASE_ACCESS_TOKEN;
-const SUPABASE_ORG_SLUG = process.env.SUPABASE_ORG_SLUG;
-
-const SUPABASE_USAGE_METRICS = {
-  EGRESS: 'egress',
-  CACHED_EGRESS: 'cached_egress',
-  DATABASE_SIZE: 'db_size',
-  STORAGE_SIZE: 'storage_size',
-};
-
 const getSupabaseProjectRef = () => {
   if (process.env.SUPABASE_PROJECT_REF) return process.env.SUPABASE_PROJECT_REF;
 
@@ -80,13 +71,6 @@ async function getHostingPlan() {
   }
 }
 
-const normalizeUsage = (usage) => {
-  if (!usage || typeof usage.metric !== 'string') return null;
-  const value = Number(usage.usage);
-  if (!Number.isFinite(value) || value < 0) return null;
-  return { ...usage, usage: value };
-};
-
 const setUsage = (usages, metric, usage, source) => {
   if (!Number.isFinite(usage) || usage < 0) return;
   const existing = usages.find(item => item.metric === metric);
@@ -95,54 +79,42 @@ const setUsage = (usages, metric, usage, source) => {
   else usages.push(next);
 };
 
-async function getSupabaseUsage() {
+async function getSupabaseDatabaseSize() {
   const projectRef = getSupabaseProjectRef();
-  if (!SUPABASE_MANAGEMENT_TOKEN || !SUPABASE_ORG_SLUG || !projectRef) {
+  if (!SUPABASE_MANAGEMENT_TOKEN || !projectRef) {
     return {
-      usages: [],
+      usage: null,
       error: 'Supabase Management API is niet geconfigureerd.',
     };
   }
 
   try {
-    const usageUrl = new URL(
-      `/platform/organizations/${encodeURIComponent(SUPABASE_ORG_SLUG)}/usage`,
-      'https://api.supabase.com'
-    );
-    usageUrl.searchParams.set('project_ref', projectRef);
-
-    const response = await fetch(usageUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${SUPABASE_MANAGEMENT_TOKEN}`,
-        'Content-Type': 'application/json'
+    // Supabase's internal organization billing endpoint only accepts a
+    // dashboard session and rejects Personal Access Tokens. The supported
+    // Management API can, however, run this official read-only size query.
+    const response = await fetch(
+      `https://api.supabase.com/v1/projects/${encodeURIComponent(projectRef)}/database/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_MANAGEMENT_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: 'select sum(pg_database_size(pg_database.datname))::text as bytes from pg_database',
+          read_only: true,
+        }),
       }
-    });
+    );
     if (!response.ok) throw new Error(`request failed (${response.status})`);
 
     const payload = await response.json();
-    const usages = Array.isArray(payload?.usages)
-      ? payload.usages
-          .map(usage => {
-            const metric = SUPABASE_USAGE_METRICS[usage?.metric];
-            // The organization usage endpoint exposes billable/normalized units
-            // in `usage` and the actual byte count in `usage_original`.
-            // Every metric returned by this endpoint is normalized to bytes for
-            // the dashboard, so always prefer the original value.
-            const rawBytes = Number.isFinite(Number(usage?.usage_original))
-              ? usage.usage_original
-              : usage?.usage;
-            return metric ? normalizeUsage({ ...usage, metric, usage: rawBytes }) : null;
-          })
-          .filter(Boolean)
-          .map(usage => ({ ...usage, source: 'supabase' }))
-      : [];
-
-    if (usages.length === 0) throw new Error('response contained no usage metrics');
-    return { usages, error: null };
+    const usage = Number(payload?.[0]?.bytes);
+    if (!Number.isFinite(usage) || usage < 0) throw new Error('response contained no database size');
+    return { usage, error: null };
   } catch (error) {
-    console.error('[hosting-metrics] Supabase usage unavailable:', error.message);
-    return { usages: [], error: 'Supabase-verbruik kon niet worden opgehaald.' };
+    console.error('[hosting-metrics] Supabase database size unavailable:', error.message);
+    return { usage: null, error: 'Supabase-databasegrootte kon niet worden opgehaald.' };
   }
 }
 
@@ -202,14 +174,23 @@ export default async function handler(req, res) {
   if (!admin.ok) return sendJson(res, admin.status, { error: 'Beheerderssessie vereist.' });
 
   try {
-    const [r2Size, plan, supabaseResult, r2EgressResult] = await Promise.all([
+    const [r2Size, plan, databaseSizeResult, r2EgressResult] = await Promise.all([
       getR2BucketSize(),
       getHostingPlan(),
-      getSupabaseUsage(),
+      getSupabaseDatabaseSize(),
       getR2Egress(),
     ]);
 
-    const usages = [...supabaseResult.usages];
+    const usages = [];
+
+    if (Number.isFinite(databaseSizeResult.usage)) {
+      setUsage(usages, 'db_size', databaseSizeResult.usage, 'supabase_database');
+    }
+
+    // Cached egress is Supabase Smart CDN traffic. This application serves its
+    // media through Cloudflare R2 instead of Supabase Storage, so no Supabase
+    // cached egress is generated.
+    setUsage(usages, 'cached_egress', 0, 'not_applicable_supabase_cdn');
 
     // Uploaded website media lives in R2. Keep Supabase Storage separate from
     // this customer-facing media figure and only fall back to it when R2 is not
@@ -218,8 +199,8 @@ export default async function handler(req, res) {
       setUsage(usages, 'storage_size', r2Size, 'cloudflare_r2');
     }
 
-    // Direct traffic is the actual uncached Supabase egress plus bytes served
-    // by R2. Never manufacture cached traffic from a percentage estimate.
+    // Website media traffic is served by R2. Never manufacture traffic from a
+    // percentage estimate.
     if (Number.isFinite(r2EgressResult.usage)) {
       const supabaseEgress = usages.find(item => item.metric === 'egress')?.usage;
       setUsage(
@@ -232,7 +213,7 @@ export default async function handler(req, res) {
 
     const requiredMetrics = ['storage_size', 'db_size', 'egress', 'cached_egress'];
     const unavailableMetrics = requiredMetrics.filter(metric => !usages.some(item => item.metric === metric));
-    const warnings = [supabaseResult.error, r2EgressResult.error].filter(Boolean);
+    const warnings = [databaseSizeResult.error, r2EgressResult.error].filter(Boolean);
 
     return sendJson(res, 200, {
       usages,
