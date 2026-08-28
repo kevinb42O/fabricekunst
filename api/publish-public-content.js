@@ -1,8 +1,12 @@
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
 import { getR2ConfigurationError } from './_lib/r2.js';
 import { publishPublicContentSnapshot } from './_lib/publicContent.js';
+import rembrandtProjectHandler from './_lib/rembrandtProjectEndpoint.js';
 
 export default async function handler(req, res) {
+  if (req.query?.resource === 'rembrandt-project') {
+    return rembrandtProjectHandler(req, res);
+  }
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method Not Allowed' });
 
   const supabase = getServerSupabase();

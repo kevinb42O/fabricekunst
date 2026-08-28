@@ -11,7 +11,7 @@ const MENU_COPY = {
   fr: { menu: 'Ouvrir le menu', close: 'Fermer le menu', language: 'Langue', current: 'Actuel', contact: 'Planifier une présentation privée' }
 };
 
-export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultation }) {
+export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultation, showRembrandtProject = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const drawerId = useId();
@@ -29,8 +29,9 @@ export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultat
     { id: 'home', label: t('nav.home'), href: localizePath('/', language) },
     { id: 'topstukken', label: t('nav.topstukken'), href: localizePath('/topstukken', language) },
     { id: 'catalogus', label: t('nav.collectie'), href: localizePath('/collectie', language) },
-    { id: 'herkomst', label: t('nav.herkomst'), href: localizePath('/herkomst', language) }
-  ];
+    { id: 'herkomst', label: t('nav.herkomst'), href: localizePath('/herkomst', language) },
+    { id: 'rembrandt-project', label: t('nav.rembrandtProject'), href: localizePath('/rembrandt-project', language) }
+  ].filter((link) => link.id !== 'rembrandt-project' || showRembrandtProject);
 
   useEffect(() => {
     if (!isOpen) return undefined;

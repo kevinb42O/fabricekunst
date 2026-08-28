@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    host: true
+    host: '127.0.0.1',
+    allowedHosts: ['localhost', '127.0.0.1'],
+    cors: {
+      origin: /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+    }
   },
   build: {
     rollupOptions: {

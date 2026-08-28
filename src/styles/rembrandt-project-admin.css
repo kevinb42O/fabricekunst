@@ -1,0 +1,802 @@
+.rp-admin {
+  color-scheme: light;
+  display: grid;
+  gap: 1.25rem;
+  color: var(--admin-text);
+}
+.rp-admin-header {
+  padding: 1.5rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.rp-admin-header > div:first-child > p,
+.rp-admin-card__heading p {
+  margin: 0 0 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #8e7035;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rp-admin-header > div:first-child > p svg {
+  width: 14px;
+  height: 14px;
+}
+.rp-admin-header h1 {
+  margin: 0;
+  font:
+    600 28px/1.1 Geist,
+    Inter,
+    sans-serif;
+}
+.rp-admin-header > div:first-child > span {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+.rp-admin-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.rp-admin-header__actions > span {
+  color: var(--admin-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.rp-admin-header__actions > span.is-dirty {
+  color: #8a6116;
+}
+.rp-admin-tabs {
+  padding: 4px;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  background: var(--admin-surface);
+  display: flex;
+  gap: 3px;
+}
+.rp-admin-tabs button {
+  min-height: 44px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-muted-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 12px;
+  font-weight: 600;
+}
+.rp-admin-tabs button.is-active {
+  background: var(--admin-subtle);
+  color: var(--admin-text);
+}
+.rp-admin-tabs button span {
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 5px;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  display: inline-grid;
+  place-items: center;
+  background: white;
+  font-size: 10px;
+}
+.rp-admin-language {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  background: var(--admin-surface);
+  display: flex;
+  gap: 0.5rem;
+}
+.rp-admin-language button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  background: white;
+  color: var(--admin-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.rp-admin-language button.is-active {
+  border-color: #aa9160;
+  background: #faf7f2;
+  color: var(--admin-text);
+}
+.rp-admin-language strong {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.rp-admin-language span {
+  font-size: 11px;
+}
+.rp-admin-page-grid,
+.rp-admin-publish-grid {
+  display: grid;
+  gap: 1rem;
+}
+.rp-admin-card,
+.rp-admin-editor {
+  padding: 1.5rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+}
+.rp-admin-card__heading {
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rp-admin-card__heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+.rp-admin-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--admin-muted-strong);
+  font-size: 11px;
+  cursor: pointer;
+}
+.rp-admin-switch input {
+  width: 16px;
+  height: 16px;
+  accent-color: #541520;
+}
+.rp-admin-form-grid {
+  display: grid;
+  gap: 1rem;
+}
+.rp-admin-form-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.rp-admin-form-grid--two .rp-admin-field:nth-child(n + 3) {
+  grid-column: span 1;
+}
+.rp-admin-field {
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+  color: var(--admin-muted-strong);
+  font-size: 11px;
+  font-weight: 600;
+}
+.rp-admin-field > small {
+  color: var(--admin-muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.rp-admin-field input,
+.rp-admin-field textarea,
+.rp-admin-field select,
+.rp-admin-editor__publication select,
+.rp-admin-editor__publication input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--admin-text);
+  font:
+    400 13px/1.5 Geist,
+    Inter,
+    sans-serif;
+  resize: vertical;
+}
+.rp-admin-field textarea {
+  min-height: 88px;
+}
+.rp-admin-field input:focus,
+.rp-admin-field textarea:focus,
+.rp-admin-field select:focus {
+  border-color: #9c8558;
+  box-shadow: 0 0 0 3px rgba(142, 112, 53, 0.09);
+  outline: 0;
+}
+.rp-admin-media-row {
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.5fr) 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+.rp-admin-media-preview {
+  min-height: 9rem;
+  border: 1px dashed var(--admin-border-strong);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--admin-subtle);
+  display: grid;
+  place-items: center;
+  color: #a3a3a3;
+}
+.rp-admin-media-preview img {
+  width: 100%;
+  height: 100%;
+  max-height: 17rem;
+  object-fit: contain;
+  background: #fafafa;
+}
+.rp-admin-media-preview svg {
+  width: 2rem;
+  height: 2rem;
+  stroke-width: 1.4;
+}
+.rp-admin-media-row > div:last-child > p {
+  max-width: 50rem;
+  color: var(--admin-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.rp-admin input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.rp-admin label.admin-button:focus-within {
+  outline: 2px solid #541520;
+  outline-offset: 2px;
+}
+.rp-admin .admin-button {
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.rp-admin .admin-button svg,
+.rp-admin .admin-text-button svg {
+  width: 15px;
+  height: 15px;
+}
+.rp-admin .admin-button--primary {
+  border-color: #541520;
+  background: #541520;
+  color: white;
+}
+.rp-admin .admin-button--primary:hover {
+  background: #6e2530;
+}
+.rp-admin .admin-button--secondary {
+  background: white;
+  color: var(--admin-text);
+}
+.rp-admin .admin-button--secondary:hover {
+  background: var(--admin-subtle);
+}
+.rp-admin .admin-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.rp-admin .admin-text-button {
+  min-height: 44px;
+  padding: 0 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--admin-muted-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+}
+.rp-admin .admin-text-button--danger {
+  color: var(--admin-danger);
+}
+.rp-admin-phases {
+  display: grid;
+  gap: 0.5rem;
+}
+.rp-admin-phases > div {
+  min-height: 46px;
+  padding: 0.3rem 0.45rem 0.3rem 0.8rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  display: grid;
+  grid-template-columns: 2rem minmax(10rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.rp-admin-phases > div > span {
+  color: #8e7035;
+  font-size: 10px;
+}
+.rp-admin-phases input {
+  min-height: 36px;
+  border: 0;
+  color: var(--admin-text);
+  font-size: 12px;
+}
+.rp-admin-phase-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+.rp-admin-phases button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--admin-subtle);
+  display: grid;
+  place-items: center;
+}
+.rp-admin-phases button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.rp-admin-revisions {
+  display: grid;
+  gap: 0.5rem;
+}
+.rp-admin-revisions > div {
+  min-height: 58px;
+  padding: 0.65rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rp-admin-revisions > div > div {
+  display: grid;
+  gap: 0.2rem;
+}
+.rp-admin-revisions strong {
+  font-size: 12px;
+}
+.rp-admin-revisions span {
+  color: var(--admin-muted);
+  font-size: 10px;
+}
+.rp-admin-phases button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.rp-admin-updates-layout {
+  display: grid;
+  grid-template-columns: 19rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.rp-admin-update-list {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100dvh - 8rem);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.rp-admin-list-tools {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  gap: 0.5rem;
+}
+.rp-admin-list-tools label {
+  min-width: 0;
+  height: 40px;
+  padding-inline: 0.65rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.rp-admin-list-tools label svg {
+  width: 14px;
+  height: 14px;
+  color: var(--admin-muted);
+}
+.rp-admin-list-tools input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  font-size: 11px;
+}
+.rp-admin-list-tools > button {
+  border: 0;
+  border-radius: 6px;
+  background: #541520;
+  color: white;
+  display: grid;
+  place-items: center;
+}
+.rp-admin-list-tools > button svg {
+  width: 16px;
+  height: 16px;
+}
+.rp-admin-update-list > div:last-child {
+  overflow-y: auto;
+}
+.rp-admin-update-list > div:last-child > button {
+  width: 100%;
+  padding: 0.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--admin-border);
+  background: white;
+  display: grid;
+  grid-template-columns: 1.7rem 1fr;
+  gap: 0.55rem;
+  text-align: left;
+}
+.rp-admin-update-list > div:last-child > button:hover {
+  background: #fafafa;
+}
+.rp-admin-update-list > div:last-child > button.is-active {
+  background: #faf7f2;
+  box-shadow: inset 3px 0 #8e7035;
+}
+.rp-admin-update-list button > span {
+  padding-top: 0.15rem;
+  color: #8e7035;
+  font-size: 9px;
+}
+.rp-admin-update-list button strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--admin-text);
+  font-size: 11px;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.rp-admin-update-list button small {
+  display: block;
+  margin: 0.25rem 0 0.45rem;
+  color: var(--admin-muted);
+  font-size: 9px;
+}
+.rp-admin-status {
+  width: max-content;
+  min-height: 22px;
+  padding: 0 0.45rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 11px;
+  background: white;
+  color: var(--admin-muted-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 9px;
+  font-weight: 650;
+}
+.rp-admin-status svg {
+  width: 11px;
+  height: 11px;
+}
+.rp-admin-status--published {
+  border-color: #b9d7c8;
+  color: #067647;
+  background: #f3fbf7;
+}
+.rp-admin-status--archived {
+  color: #5f5f5f;
+  background: #f5f5f5;
+}
+.rp-admin-editor {
+  padding: 0;
+  overflow: hidden;
+}
+.rp-admin-editor__header {
+  min-height: 76px;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rp-admin-editor__header h2 {
+  margin: 0.4rem 0 0;
+  font-size: 17px;
+}
+.rp-admin-editor__header > div:last-child {
+  display: flex;
+  gap: 0.35rem;
+}
+.rp-admin-editor__header > div:last-child button {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  background: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--admin-muted-strong);
+  font-size: 10px;
+}
+.rp-admin-editor__header button svg {
+  width: 14px;
+  height: 14px;
+}
+.rp-admin-editor__header button.is-confirm-delete {
+  border-color: #f0b9b4;
+  background: #fff4f2;
+  color: var(--admin-danger);
+}
+.rp-admin-editor__publication {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: #fafafa;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.rp-admin-editor__content,
+.rp-admin-editor__media {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+.rp-admin-editor__media {
+  border-top: 1px solid var(--admin-border);
+  background: #fdfdfd;
+}
+.rp-admin-card__heading--gallery {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--admin-border);
+}
+.rp-admin-gallery-editor {
+  display: grid;
+  gap: 1rem;
+}
+.rp-admin-gallery-item {
+  padding: 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.45fr) 1fr;
+  gap: 1rem;
+}
+.rp-admin-gallery-item__fields {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+.rp-admin-gallery-item__fields > strong {
+  font-size: 12px;
+}
+.rp-admin-empty {
+  min-height: 25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.rp-admin-empty > svg {
+  width: 2rem;
+  height: 2rem;
+  color: #8e7035;
+}
+.rp-admin-empty h2 {
+  margin: 1rem 0 0.3rem;
+}
+.rp-admin-empty p {
+  margin: 0 0 1rem;
+  color: var(--admin-muted);
+}
+.rp-admin-summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.rp-admin-summary > div {
+  padding: 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  background: #fafafa;
+}
+.rp-admin-summary dt {
+  color: var(--admin-muted);
+  font-size: 10px;
+}
+.rp-admin-summary dd {
+  margin: 0.35rem 0 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.rp-admin-publish-note {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-left: 3px solid #8e7035;
+  background: #faf7f2;
+  display: flex;
+  gap: 0.7rem;
+  color: var(--admin-muted-strong);
+}
+.rp-admin-publish-note svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: #8e7035;
+}
+.rp-admin-publish-note p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.rp-admin-publish-button {
+  margin-top: 1rem;
+}
+.rp-admin-readiness {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #b9d7c8;
+  border-radius: 7px;
+  color: #067647;
+  background: #f3fbf7;
+  font-size: 11px;
+}
+.rp-admin-readiness.has-issues {
+  border-color: #f0c9a5;
+  color: #7a4310;
+  background: #fff8f0;
+}
+.rp-admin-readiness ul {
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+  line-height: 1.45;
+}
+.rp-admin-card--reset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.rp-admin-card--reset > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.7rem;
+}
+.rp-admin-card--reset svg {
+  grid-row: span 2;
+  width: 18px;
+  height: 18px;
+  color: #8e7035;
+}
+.rp-admin-card--reset h2,
+.rp-admin-card--reset p {
+  margin: 0;
+}
+.rp-admin-card--reset h2 {
+  font-size: 14px;
+}
+.rp-admin-card--reset p {
+  color: var(--admin-muted);
+  font-size: 10px;
+}
+.rp-admin-loading {
+  min-height: 28rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: white;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  color: var(--admin-muted);
+}
+.rp-admin-loading svg {
+  width: 24px;
+  height: 24px;
+  animation: rp-spin 0.8s linear infinite;
+}
+.rp-admin-loading p {
+  margin: 0;
+}
+.is-spinning {
+  animation: rp-spin 0.8s linear infinite;
+}
+@keyframes rp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 70rem) {
+  .rp-admin-updates-layout {
+    grid-template-columns: 16rem minmax(0, 1fr);
+  }
+  .rp-admin-editor__publication {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 52rem) {
+  .rp-admin-header {
+    flex-direction: column;
+  }
+  .rp-admin-header__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .rp-admin-updates-layout {
+    grid-template-columns: 1fr;
+  }
+  .rp-admin-update-list {
+    position: static;
+    max-height: 24rem;
+  }
+  .rp-admin-form-grid--two,
+  .rp-admin-gallery-item,
+  .rp-admin-media-row {
+    grid-template-columns: 1fr;
+  }
+  .rp-admin-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 36rem) {
+  .rp-admin-header,
+  .rp-admin-card,
+  .rp-admin-editor__content,
+  .rp-admin-editor__media {
+    padding: 1rem;
+  }
+  .rp-admin-header__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .rp-admin-tabs {
+    overflow-x: auto;
+  }
+  .rp-admin-language button span {
+    display: none;
+  }
+  .rp-admin-editor__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .rp-admin-editor__publication,
+  .rp-admin-summary {
+    grid-template-columns: 1fr;
+  }
+  .rp-admin-card--reset {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

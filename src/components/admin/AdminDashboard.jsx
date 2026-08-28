@@ -18,6 +18,7 @@ import {
   Activity,
   Globe,
   MousePointer2,
+  Search,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -35,13 +36,14 @@ import AdminTooltip from './AdminTooltip';
 import AnalyticsManager from './AnalyticsManager';
 import TokensManager from './TokensManager';
 import CollectorListManager from './CollectorListManager';
+import RembrandtProjectManager from './RembrandtProjectManager';
 import { authenticatedAdminFetch } from '../../utils/adminApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/admin.css';
 
 const VALID_TABS = new Set([
   'dashboard', 'analytics-overview', 'analytics-acquisition', 'analytics-behavior', 'items', 'certificates', 'hero', 'provenance', 'faq',
-  'inquiries', 'customers', 'collectors', 'settings', 'tokens'
+  'inquiries', 'customers', 'collectors', 'rembrandt-project', 'settings', 'tokens'
 ]);
 
 const getTabFromHash = () => {
@@ -66,6 +68,7 @@ export default function AdminDashboard({
   onSaveMobileHeroImage = () => {},
   onSaveProvenance = () => {},
   onSaveFaqItems = () => {},
+  onRembrandtProjectPublished = () => {},
   onLogout = () => {},
   onCloseAdmin,
   onClose
@@ -75,6 +78,7 @@ export default function AdminDashboard({
   const handleClose = onCloseAdmin || onClose || (() => {});
 
   const [activeTab, setActiveTab] = useState(getTabFromHash);
+  const [projectManagerOpened, setProjectManagerOpened] = useState(() => getTabFromHash() === 'rembrandt-project');
   const [certificateForItem, setCertificateForItem] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -109,7 +113,11 @@ export default function AdminDashboard({
   }, []);
 
   useEffect(() => {
-    const handleHashChange = () => setActiveTab(getTabFromHash());
+    const handleHashChange = () => {
+      const tab = getTabFromHash();
+      setActiveTab(tab);
+      if (tab === 'rembrandt-project') setProjectManagerOpened(true);
+    };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -119,6 +127,7 @@ export default function AdminDashboard({
   const navigateTo = (tab) => {
     if (!VALID_TABS.has(tab)) return;
     setActiveTab(tab);
+    if (tab === 'rembrandt-project') setProjectManagerOpened(true);
     setMobileMenuOpen(false);
     const nextHash = `#${tab}`;
     if (window.location.hash !== nextHash) window.history.replaceState(null, '', nextHash);
@@ -174,6 +183,7 @@ export default function AdminDashboard({
     { id: 'hero', label: 'Hero', icon: ImageIcon },
     { id: 'provenance', label: 'Herkomst', icon: ShieldCheck },
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
+    { id: 'rembrandt-project', label: 'Rembrandt Project', icon: Search },
     { id: 'inquiries', label: 'Berichten', icon: Mail, count: newInquiriesCount || undefined },
     { id: 'customers', label: 'Klanten', icon: Users },
     { id: 'collectors', label: 'Collector’s List', icon: ListPlus },
@@ -190,6 +200,7 @@ export default function AdminDashboard({
     hero: 'Hero-afbeeldingen',
     provenance: 'Herkomstpagina',
     faq: 'Veelgestelde vragen',
+    'rembrandt-project': 'The Rembrandt Project',
     inquiries: 'Berichten',
     customers: 'Klanten',
     collectors: 'Collector’s List',
@@ -321,7 +332,12 @@ export default function AdminDashboard({
         </header>
 
         <main className="admin-content" id="admin-main">
-          <AnimatePresence mode="wait">
+          {projectManagerOpened && (
+            <div hidden={activeTab !== 'rembrandt-project'}>
+              <RembrandtProjectManager onPublished={onRembrandtProjectPublished} onShowToast={showToast} />
+            </div>
+          )}
+          {activeTab !== 'rembrandt-project' && <AnimatePresence mode="wait">
             <motion.div
               key={activeTab.startsWith('analytics-') ? 'analytics' : activeTab}
               initial={{ opacity: 0, y: 10 }}
@@ -390,7 +406,7 @@ export default function AdminDashboard({
               {activeTab === 'tokens' && <TokensManager items={activeItems} currentUser={currentUser} />}
               {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
             </motion.div>
-          </AnimatePresence>
+          </AnimatePresence>}
         </main>
       </div>
 

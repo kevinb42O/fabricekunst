@@ -6,12 +6,12 @@ import { localizePath } from '../utils/locales';
 import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 const COPY = {
-  nl: { selected: 'Selectie', collection: 'Collecties', provenance: 'Herkomst' },
-  en: { selected: 'Selected works', collection: 'Collections', provenance: 'Provenance' },
-  fr: { selected: 'Œuvres', collection: 'Collections', provenance: 'Provenance' }
+  nl: { selected: 'Selectie', collection: 'Collecties', provenance: 'Herkomst', project: 'Rembrandt Project' },
+  en: { selected: 'Selected works', collection: 'Collections', provenance: 'Provenance', project: 'Rembrandt Project' },
+  fr: { selected: 'Œuvres', collection: 'Collections', provenance: 'Provenance', project: 'Projet Rembrandt' }
 };
 
-export default function MobileFooter({ onNavigate }) {
+export default function MobileFooter({ onNavigate, showRembrandtProject = true }) {
   const { language, t } = useLanguage();
   const labels = COPY[language] || COPY.en;
   const trackContactClick = (eventName, data) => {
@@ -52,10 +52,11 @@ export default function MobileFooter({ onNavigate }) {
           </a>
         </div>
 
-        <nav aria-label={t('footer.quickLinks')} className="mt-7 grid grid-cols-3 border-y border-[#E8DFCF] py-2">
+        <nav aria-label={t('footer.quickLinks')} className="mt-7 grid grid-cols-2 border-y border-[#E8DFCF] py-2">
           <a href={localizePath('/topstukken', language)} onClick={(event) => { event.preventDefault(); onNavigate('topstukken'); }} className="flex min-h-11 items-center text-left font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.selected}</a>
-          <a href={localizePath('/collectie', language)} onClick={(event) => { event.preventDefault(); onNavigate('catalogus'); }} className="flex min-h-11 items-center justify-center text-center font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.collection}</a>
-          <a href={localizePath('/herkomst', language)} onClick={(event) => { event.preventDefault(); onNavigate('herkomst'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.provenance}</a>
+          <a href={localizePath('/collectie', language)} onClick={(event) => { event.preventDefault(); onNavigate('catalogus'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.collection}</a>
+          <a href={localizePath('/herkomst', language)} onClick={(event) => { event.preventDefault(); onNavigate('herkomst'); }} className="flex min-h-11 items-center text-left font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.provenance}</a>
+          {showRembrandtProject && <a href={localizePath('/rembrandt-project', language)} onClick={(event) => { event.preventDefault(); onNavigate('rembrandt-project'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.project}</a>}
         </nav>
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-4 font-serif text-[11px] text-[#6B6258]">

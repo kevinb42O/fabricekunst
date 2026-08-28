@@ -1,75 +1,42 @@
-import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { loadCatalogForBuild } from "./catalog-source.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read env variables
-let supabaseUrl = process.env.VITE_SUPABASE_URL;
-let supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  try {
-    const envPath = path.resolve(__dirname, '../.env');
-    if (fs.existsSync(envPath)) {
-      const envContent = fs.readFileSync(envPath, 'utf-8');
-      envContent.split('\n').forEach(line => {
-        const [key, ...valueParts] = line.split('=');
-        if (key && valueParts.length > 0) {
-          const val = valueParts.join('=').trim();
-          if (key.trim() === 'VITE_SUPABASE_URL') supabaseUrl = val;
-          if (key.trim() === 'VITE_SUPABASE_ANON_KEY') supabaseAnonKey = val;
-        }
-      });
-    }
-  } catch (e) {
-    console.warn('Could not load .env file:', e.message);
-  }
-}
-
-import { INITIAL_CATALOG } from '../src/data/initialCatalog.js';
-import { getLocalizedCategoryLabel } from '../src/data/catalogTaxonomy.js';
-import { getItemSlug } from '../src/utils/itemSlug.js';
+import { getLocalizedCategoryLabel } from "../src/data/catalogTaxonomy.js";
+import { getItemSlug } from "../src/utils/itemSlug.js";
 
 export async function generateLlmsContent() {
-  let catalogItems = [];
+  const { items: catalogItems, project } = await loadCatalogForBuild();
 
-  if (supabaseUrl && supabaseAnonKey) {
-    try {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .order('created_at', { ascending: true })
-        .order('id', { ascending: true });
+  const itemsMarkdown = catalogItems
+    .map((item, index) => {
+      const url = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(getItemSlug(item))}`;
+      const priceStr = item.price ? ` | Prijs: ${item.price}` : "";
+      const statusStr = item.status ? ` | Status: ${item.status}` : "";
+      const authorStr = item.author
+        ? `\n- **Auteur/Kunstenaar**: ${item.author.trim()}`
+        : "";
+      const yearStr = item.year
+        ? `\n- **Jaar/Periode**: ${item.year} (${item.century || ""})`
+        : "";
+      const categoryStr = item.category
+        ? `\n- **Categorie**: ${getLocalizedCategoryLabel(item.category, "nl")}`
+        : "";
+      const provenanceStr = item.provenance
+        ? `\n- **Herkomst (Provenance)**: ${item.provenance}`
+        : "";
+      const descStr = item.description
+        ? `\n- **Beschrijving**: ${item.description}`
+        : "";
 
-      if (!error && data && data.length > 0) {
-        catalogItems = data;
-      }
-    } catch (err) {
-      console.error('Supabase fetch error for llms.txt:', err.message);
-    }
-  }
-
-  if (catalogItems.length === 0) {
-    catalogItems = INITIAL_CATALOG;
-  }
-
-  const itemsMarkdown = catalogItems.map((item, index) => {
-    const url = `https://www.atelierrembrandt.com/collectie/${encodeURIComponent(getItemSlug(item))}`;
-    const priceStr = item.price ? ` | Prijs: ${item.price}` : '';
-    const statusStr = item.status ? ` | Status: ${item.status}` : '';
-    const authorStr = item.author ? `\n- **Auteur/Kunstenaar**: ${item.author.trim()}` : '';
-    const yearStr = item.year ? `\n- **Jaar/Periode**: ${item.year} (${item.century || ''})` : '';
-    const categoryStr = item.category ? `\n- **Categorie**: ${getLocalizedCategoryLabel(item.category, 'nl')}` : '';
-    const provenanceStr = item.provenance ? `\n- **Herkomst (Provenance)**: ${item.provenance}` : '';
-    const descStr = item.description ? `\n- **Beschrijving**: ${item.description}` : '';
-
-    return `### ${index + 1}. [${item.title}](${url})
+      return `### ${index + 1}. [${item.title}](${url})
 - **URL**: ${url}${priceStr}${statusStr}${authorStr}${yearStr}${categoryStr}${provenanceStr}${descStr}`;
-  }).join('\n\n');
+    })
+    .join("\n\n");
 
   return `# Atelier Rembrandt — Antiquariaat & Boekenkunst
 
@@ -80,6 +47,7 @@ export async function generateLlmsContent() {
 - [Exclusieve Collectie](https://www.atelierrembrandt.com/collectie): Volledige live catalogus van alle zeldzame werken.
 - [Topstukken Showcase](https://www.atelierrembrandt.com/topstukken): Geselecteerde meesterwerken.
 - [Herkomst & Provenance Documentatie](https://www.atelierrembrandt.com/herkomst): Certificering, adellijke ex-libris archieven en echtheidsgaranties.
+${project?.isEnabled ? "- [The Rembrandt Project](https://www.atelierrembrandt.com/rembrandt-project): Doorlopend onderzoeksjournaal over de mogelijke ontdekking van een verloren werk, met transparante updates, bevindingen en voorbehouden.\n" : ""}\
 - [Algemene Voorwaarden](https://www.atelierrembrandt.com/voorwaarden)
 - [Privacybeleid](https://www.atelierrembrandt.com/privacy)
 
@@ -93,11 +61,13 @@ Private viewings, deskundige consultaties en aankoopaanvragen verlopen via vertr
 }
 
 async function run() {
-  console.log('🔄 Generating comprehensive llms.txt with all live catalog items...');
+  console.log(
+    "Generating comprehensive llms.txt with all live catalog items...",
+  );
   const content = await generateLlmsContent();
-  const outputPath = path.resolve(__dirname, '../public/llms.txt');
-  fs.writeFileSync(outputPath, content, 'utf-8');
-  console.log(`🎉 Successfully created hyper-detailed llms.txt at: ${outputPath}`);
+  const outputPath = path.resolve(__dirname, "../public/llms.txt");
+  fs.writeFileSync(outputPath, content, "utf-8");
+  console.log(`Created hyper-detailed llms.txt at: ${outputPath}`);
 }
 
 run();

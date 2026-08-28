@@ -7,7 +7,7 @@ import { LUXURY_EASE } from '../utils/motion';
 import { localizePath } from '../utils/locales';
 import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
-export default function Footer({ onNavigate }) {
+export default function Footer({ onNavigate, showRembrandtProject = true }) {
   const { t, language } = useLanguage();
   const trackContactClick = (eventName, data) => {
     if (trackEvent(eventName, data)) flushAnalytics({ useBeacon: true });
@@ -61,6 +61,11 @@ export default function Footer({ onNavigate }) {
                   {t('nav.herkomst')}
                 </a>
               </li>
+              {showRembrandtProject && <li>
+                <a href={localizePath('/rembrandt-project', language)} onClick={(event) => { event.preventDefault(); onNavigate('rembrandt-project'); }} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
+                  {t('nav.rembrandtProject')}
+                </a>
+              </li>}
               <li>
                 <button 
                   onClick={() => {
