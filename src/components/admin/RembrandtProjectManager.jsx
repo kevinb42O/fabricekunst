@@ -320,7 +320,7 @@ export default function RembrandtProjectManager({
       setSavedSnapshot(JSON.stringify(result.project));
       onPublished(result.project);
       onShowToast(
-        "The Rembrandt Project is veilig opgeslagen en de R2-versie is bijgewerkt.",
+        "The Rembrandt Project is veilig opgeslagen en op de website gepubliceerd.",
       );
     } catch (error) {
       onShowToast(error.message, "error");
@@ -509,7 +509,7 @@ export default function RembrandtProjectManager({
                 },
           ),
         }));
-      onShowToast("Afbeelding rechtstreeks naar R2 geüpload.", "info");
+      onShowToast("Afbeelding veilig geüpload.", "info");
     } catch (error) {
       onShowToast(error.message, "error");
     } finally {
@@ -794,8 +794,8 @@ export default function RembrandtProjectManager({
               </div>
               <div>
                 <p>
-                  Afbeeldingen worden rechtstreeks naar Cloudflare R2 gestuurd.
-                  Supabase ontvangt alleen de URL.
+                  Afbeeldingen worden veilig opgeslagen en na een geslaagde upload
+                  automatisch aan deze pagina gekoppeld.
                 </p>
                 <label className="admin-button admin-button--secondary">
                   <Upload aria-hidden="true" />
@@ -1340,7 +1340,7 @@ export default function RembrandtProjectManager({
                           <Upload aria-hidden="true" />
                           {uploading.has(`gallery-${image.id}`)
                             ? "Uploaden…"
-                            : "Upload naar R2"}
+                            : "Afbeelding uploaden"}
                           <input
                             type="file"
                             accept="image/jpeg,image/png,image/webp,image/avif"
@@ -1540,15 +1540,14 @@ export default function RembrandtProjectManager({
               </div>
               <div>
                 <dt>Afbeeldingen</dt>
-                <dd>{uniqueR2ImageCount} uniek op R2</dd>
+                <dd>{uniqueR2ImageCount} unieke afbeeldingen online</dd>
               </div>
             </dl>
             <div className="rp-admin-publish-note">
               <Eye aria-hidden="true" />
               <p>
-                Alle publieke bezoekers lezen uitsluitend de R2-snapshot.
-                Supabase wordt alleen aangesproken wanneer een beheerder deze
-                module opent of publiceert.
+                Bezoekers zien uitsluitend de laatst gepubliceerde websiteversie.
+                Wijzigingen blijven een concept totdat u ze hier publiceert.
               </p>
             </div>
             <div
@@ -1578,7 +1577,7 @@ export default function RembrandtProjectManager({
               ) : (
                 <Save aria-hidden="true" />
               )}
-              {saving ? "Veilig publiceren…" : "Opslaan & R2-versie publiceren"}
+              {saving ? "Veilig publiceren…" : "Opslaan & websiteversie publiceren"}
             </button>
           </section>
           {revisions.length > 0 && (
@@ -1623,7 +1622,7 @@ export default function RembrandtProjectManager({
               <h2>Startinhoud herstellen</h2>
               <p>
                 Zet alle teksten en updates terug naar de zorgvuldig voorbereide
-                basisversie. Afbeeldingen worden niet uit R2 verwijderd.
+                basisversie. Geüploade afbeeldingen blijven veilig bewaard.
               </p>
             </div>
             <button

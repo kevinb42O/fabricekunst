@@ -47,7 +47,7 @@ const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
         const body = await response.json().catch(() => null);
         if (!response.ok || !body)
           throw new Error(
-            `Publieke R2-data niet beschikbaar (${response.status}).`,
+            `De gepubliceerde websitegegevens zijn niet beschikbaar (${response.status}).`,
           );
         return body;
       })
@@ -65,7 +65,7 @@ const publishPublicContentSnapshot = async () => {
   const token = data?.session?.access_token;
   if (!token)
     throw new Error(
-      "De beheerderssessie is verlopen; de publieke R2-versie is niet bijgewerkt.",
+      "De beheerderssessie is verlopen; de websiteversie is niet bijgewerkt.",
     );
 
   const response = await fetch("/api/publish-public-content", {
@@ -79,7 +79,7 @@ const publishPublicContentSnapshot = async () => {
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.ok) {
     throw new Error(
-      body.error || "De publieke R2-versie kon niet worden bijgewerkt.",
+      body.error || "De websiteversie kon niet worden bijgewerkt.",
     );
   }
   publicContentPromise = null;
@@ -129,7 +129,7 @@ const isManagedImageUrl = (value, { allowLocal = true } = {}) =>
 
 const assertManagedImageUrl = (value, options) => {
   if (value && !isManagedImageUrl(value, options)) {
-    throw new Error("Afbeeldingen moeten via Cloudflare R2 worden gehost.");
+    throw new Error("Afbeeldingen moeten via de online mediabibliotheek worden geüpload.");
   }
 };
 
@@ -149,7 +149,7 @@ const validateCatalogImageReferences = (item) => {
     )
   ) {
     throw new Error(
-      "Een afbeelding staat niet op R2. Upload de afbeelding opnieuw voordat u opslaat.",
+      "Een afbeelding staat niet in de online mediabibliotheek. Upload de afbeelding opnieuw voordat u opslaat.",
     );
   }
 };
@@ -1017,7 +1017,7 @@ export const uploadCatalogImage = async (
 
   if (!isSupabaseConfigured() || !supabase) {
     throw new Error(
-      "R2-upload is niet beschikbaar: de cloudverbinding is niet geconfigureerd.",
+      "Afbeeldingen uploaden is niet beschikbaar: de online mediabibliotheek is niet geconfigureerd.",
     );
   }
 
@@ -1062,7 +1062,7 @@ export const uploadCatalogImage = async (
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}));
       throw new Error(
-        payload.error || `R2 kon geen upload-URL maken (${res.status}).`,
+        payload.error || `De upload kon niet worden voorbereid (${res.status}).`,
       );
     }
 
@@ -1075,10 +1075,10 @@ export const uploadCatalogImage = async (
       !cacheControl ||
       !isR2CatalogImageUrl(publicUrl)
     ) {
-      throw new Error("R2 gaf geen geldige publieke afbeeldings-URL terug.");
+      throw new Error("De uploadservice gaf geen geldige afbeeldings-URL terug.");
     }
 
-    phase = "de afbeelding naar R2 sturen";
+    phase = "de afbeelding uploaden";
     const putToR2 = () =>
       fetch(presignedUrl, {
         method: "PUT",
@@ -1103,11 +1103,11 @@ export const uploadCatalogImage = async (
 
     if (!uploadRes.ok) {
       throw new Error(
-        `R2 heeft de afbeelding geweigerd (${uploadRes.status}).`,
+        `De uploadservice heeft de afbeelding geweigerd (${uploadRes.status}).`,
       );
     }
 
-    phase = "de R2-upload bevestigen";
+    phase = "de upload bevestigen";
     const verifyRes = await fetch("/api/r2-presigned-url", {
       method: "POST",
       credentials: "same-origin",
@@ -1126,7 +1126,7 @@ export const uploadCatalogImage = async (
     const verification = await verifyRes.json().catch(() => ({}));
     if (!verifyRes.ok || !verification.ok) {
       throw new Error(
-        verification.error || "R2 kon de geüploade afbeelding niet bevestigen.",
+        verification.error || "De geüploade afbeelding kon niet worden bevestigd.",
       );
     }
 
@@ -1140,7 +1140,7 @@ export const uploadCatalogImage = async (
     }
     throw new Error(
       e?.message ||
-        "Upload naar R2 is mislukt. Het bestand is niet opgeslagen.",
+        "De upload is mislukt. Het bestand is niet opgeslagen.",
     );
   }
 };
@@ -1906,7 +1906,7 @@ export const saveProvenanceDataAsync = async (data) => {
     if (!response.ok || !result.ok) {
       throw new Error(
         result.error ||
-          "De herkomstpagina kon niet veilig naar R2 worden gepubliceerd.",
+          "De herkomstpagina kon niet veilig worden gepubliceerd.",
       );
     }
     publicContentPromise = null;

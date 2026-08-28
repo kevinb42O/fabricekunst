@@ -104,7 +104,7 @@ const managedR2Image = (value) => {
     ![configuredHost, "media.atelierrembrandt.com"].includes(url.hostname)
   ) {
     throw new RequestError(
-      "Every project image must be hosted in the managed R2 bucket",
+      "Elke projectafbeelding moet via de online mediabibliotheek zijn geüpload.",
     );
   }
   const objectKey = decodeURIComponent(url.pathname.replace(/^\//, ""));
@@ -216,7 +216,7 @@ const validateProject = async (project) => {
     throw new RequestError("The project payload is too large");
 
   if (imageUrls.length) {
-    if (getR2ConfigurationError()) throw new RequestError("R2 storage is unavailable");
+    if (getR2ConfigurationError()) throw new RequestError("De online mediabibliotheek is tijdelijk niet beschikbaar.");
     const r2 = getR2Client();
     const verifyImage = async (url) => {
       const objectKey = managedR2Image(url);
@@ -231,7 +231,7 @@ const validateProject = async (project) => {
         !object.ContentLength ||
         object.ContentLength > 20 * 1024 * 1024
       ) {
-        throw new RequestError("A referenced R2 object is not a valid project image");
+        throw new RequestError("Een gekoppelde afbeelding is niet beschikbaar of ongeldig.");
       }
     };
     for (let index = 0; index < imageUrls.length; index += 6) {
@@ -421,7 +421,7 @@ export default async function handler(req, res) {
         error instanceof RequestError
           ? error.message
           : req.method === "POST"
-            ? "Het project is niet gepubliceerd. Controleer de inhoud en R2-afbeeldingen en probeer opnieuw."
+            ? "Het project is niet gepubliceerd. Controleer de inhoud en afbeeldingen en probeer opnieuw."
             : "Het project kon niet worden geladen.",
       },
     );

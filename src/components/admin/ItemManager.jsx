@@ -660,12 +660,12 @@ export default function ItemManager({
     }
 
     if (isUploading) {
-      if (onShowToast) onShowToast('Wacht tot alle afbeeldingen volledig naar R2 zijn geüpload.', 'error');
+      if (onShowToast) onShowToast('Wacht tot alle afbeeldingen volledig zijn geüpload.', 'error');
       return;
     }
 
     if (imageUploadError) {
-      if (onShowToast) onShowToast('Minstens één R2-upload is mislukt. Upload die afbeelding opnieuw voordat u opslaat.', 'error');
+      if (onShowToast) onShowToast('Minstens één afbeelding kon niet worden geüpload. Probeer die afbeelding opnieuw voordat u opslaat.', 'error');
       return;
     }
 
@@ -722,7 +722,7 @@ export default function ItemManager({
       } catch (err) {
         console.error("Fout bij uploaden foto:", err);
         setImageUploadError(true);
-        if (onShowToast) onShowToast(err?.message || 'De foto kon niet naar R2 worden geüpload.', 'error');
+        if (onShowToast) onShowToast(err?.message || 'De foto kon niet worden geüpload.', 'error');
       }
     }
     setIsUploading(false);
@@ -777,7 +777,7 @@ export default function ItemManager({
     } catch (err) {
       console.error('Fout bij uploaden comparable sale foto:', err);
       setImageUploadError(true);
-      if (onShowToast) onShowToast(err?.message || 'De foto kon niet naar R2 worden geüpload.', 'error');
+      if (onShowToast) onShowToast(err?.message || 'De foto kon niet worden geüpload.', 'error');
     } finally {
       setIsUploading(false);
       event.target.value = '';
@@ -788,7 +788,7 @@ export default function ItemManager({
     if (e && e.preventDefault) e.preventDefault();
     if (!newImageUrl.trim()) return;
     if (!isR2CatalogImageUrl(newImageUrl.trim())) {
-      if (onShowToast) onShowToast('Gebruik uitsluitend een publieke R2-URL (media.atelierrembrandt.com).', 'error');
+      if (onShowToast) onShowToast('Gebruik een afbeelding uit de online mediabibliotheek (media.atelierrembrandt.com).', 'error');
       return;
     }
     setEditingItem(prev => ({

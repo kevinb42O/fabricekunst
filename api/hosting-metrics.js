@@ -120,7 +120,7 @@ async function getSupabaseDatabaseSize() {
 
 async function getR2Egress() {
   if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) {
-    return { usage: null, error: 'Cloudflare-verbruik is niet geconfigureerd.' };
+    return { usage: null, error: 'Het mediaverbruik is niet geconfigureerd.' };
   }
 
   try {
@@ -155,7 +155,7 @@ async function getR2Egress() {
     return { usage, error: null };
   } catch (error) {
     console.error('[hosting-metrics] Cloudflare egress unavailable:', error.message);
-    return { usage: null, error: 'Cloudflare-verbruik kon niet worden opgehaald.' };
+    return { usage: null, error: 'Het mediaverbruik kon niet worden opgehaald.' };
   }
 }
 

@@ -56,7 +56,7 @@ export default function HeroSlidesManager({
 
   const handleSave = async () => {
     if (uploadingTarget) {
-      onShowToast('Wacht tot de R2-upload volledig bevestigd is.', 'error');
+      onShowToast('Wacht tot de afbeelding volledig is geüpload.', 'error');
       return;
     }
     setIsSaving(true);

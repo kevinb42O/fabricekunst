@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   const supabase = getServerSupabase();
   const authorization = await requireActiveAdmin(req, supabase);
   if (!authorization.ok) return sendJson(res, authorization.status, { error: authorization.error });
-  if (getR2ConfigurationError()) return sendJson(res, 503, { error: 'R2 storage is unavailable.' });
+  if (getR2ConfigurationError()) return sendJson(res, 503, { error: 'De online mediabibliotheek is tijdelijk niet beschikbaar.' });
 
   const provenanceData = req.body?.provenanceData;
   try {
@@ -116,6 +116,6 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('Provenance save failed:', error);
-    return sendJson(res, 422, { error: 'De herkomstpagina is niet gepubliceerd; controleer de R2-afbeeldingen en probeer opnieuw.' });
+    return sendJson(res, 422, { error: 'De herkomstpagina is niet gepubliceerd; controleer de afbeeldingen en probeer opnieuw.' });
   }
 }

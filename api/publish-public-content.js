@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   const configurationError = getR2ConfigurationError();
   if (configurationError) {
     console.error(configurationError);
-    return sendJson(res, 503, { error: 'R2 public content storage is unavailable.' });
+    return sendJson(res, 503, { error: 'De websiteversie kan momenteel niet worden gepubliceerd.' });
   }
 
   try {
@@ -30,6 +30,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Public content publish failed:', error);
-    return sendJson(res, 500, { error: 'De publieke R2-versie kon niet worden gepubliceerd.' });
+    return sendJson(res, 500, { error: 'De websiteversie kon niet worden gepubliceerd.' });
   }
 }

@@ -41,7 +41,7 @@ export default async function handler(req, res) {
   const configurationError = getR2ConfigurationError();
   if (configurationError) {
     console.error(configurationError);
-    return sendJson(res, 503, { error: "R2 image storage is unavailable" });
+    return sendJson(res, 503, { error: "De online mediabibliotheek is tijdelijk niet beschikbaar." });
   }
 
   if (req.body?.action === "complete") {
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
         (prefix) => objectKey.startsWith(prefix),
       )
     ) {
-      return sendJson(res, 400, { error: "Invalid R2 object key." });
+      return sendJson(res, 400, { error: "De upload bevat een ongeldige bestandssleutel." });
     }
     if (
       !ALLOWED_IMAGE_TYPES.has(contentType) ||
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         process.env.R2_SECRET_ACCESS_KEY,
       )
     ) {
-      return sendJson(res, 403, { error: "Invalid R2 upload receipt." });
+      return sendJson(res, 403, { error: "De uploadbevestiging is ongeldig of verlopen." });
     }
     try {
       const object = await getR2Client().send(
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         object.CacheControl !== IMMUTABLE_IMAGE_CACHE
       ) {
         return sendJson(res, 409, {
-          error: "R2 upload verification did not match the selected file.",
+          error: "De uploadbevestiging komt niet overeen met het geselecteerde bestand.",
         });
       }
       return sendJson(res, 200, {
@@ -101,7 +101,7 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error("R2 upload verification failed:", error);
       return sendJson(res, 502, {
-        error: "R2 could not confirm the uploaded image.",
+        error: "De geüploade afbeelding kon niet worden bevestigd.",
       });
     }
   }

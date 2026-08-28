@@ -133,7 +133,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
         ...prev,
         hero: { ...(prev.hero || {}), bgImage: url }
       }));
-      if (showToast) showToast('Hero-afbeelding is geüpload en door R2 bevestigd.', 'info');
+      if (showToast) showToast('Hero-afbeelding is veilig geüpload.', 'info');
     } catch (err) {
       console.error('Provenance hero image upload error', err);
       setUploadFailures(prev => ({ ...prev, hero: err?.message || 'Upload mislukt.' }));
@@ -156,7 +156,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
         ...prev,
         story: { ...(prev.story || {}), image: url }
       }));
-      if (showToast) showToast('Showcase-afbeelding is geüpload en door R2 bevestigd.', 'info');
+      if (showToast) showToast('Showcase-afbeelding is veilig geüpload.', 'info');
     } catch (err) {
       console.error("Story image upload error", err);
       setUploadFailures(prev => ({ ...prev, story: err?.message || 'Upload mislukt.' }));
@@ -169,7 +169,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
 
   const handleSave = async () => {
     if (uploadingHero || uploadingStory) {
-      if (showToast) showToast('Wacht tot beide R2-uploads volledig bevestigd zijn.', 'error');
+      if (showToast) showToast('Wacht tot beide afbeeldingen volledig zijn geüpload.', 'error');
       return;
     }
     if (uploadFailures.hero || uploadFailures.story) {
@@ -180,7 +180,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     try {
       await onSaveProvenance(formData);
       hasLocalEdits.current = false;
-      if (showToast) showToast('Herkomstpagina en beide R2-afbeeldingsreferenties zijn gepubliceerd.');
+      if (showToast) showToast('Herkomstpagina en beide afbeeldingen zijn gepubliceerd.');
     } catch (err) {
       console.error("Save error:", err);
       if (showToast) showToast(err?.message || 'Publiceren is mislukt; de live pagina bleef ongewijzigd.', 'error');
@@ -348,7 +348,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
             className="px-6 py-2.5 bg-[#1C1A18] hover:bg-[#C5A059] text-white hover:text-[#1C1A18] rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 shadow-md flex items-center space-x-2 cursor-pointer disabled:opacity-50"
           >
             <Save className="w-4 h-4 text-[#C5A059] group-hover:text-[#1C1A18]" />
-            <span>{saving ? 'Publiceren…' : uploadingHero || uploadingStory ? 'R2-upload bezig…' : 'Wijzigingen Publiceren'}</span>
+            <span>{saving ? 'Publiceren…' : uploadingHero || uploadingStory ? 'Afbeeldingen uploaden…' : 'Wijzigingen Publiceren'}</span>
           </button>
         </div>
       </div>
@@ -484,9 +484,9 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                   readOnly
                   aria-readonly="true"
                   className="w-full rounded-xl border border-[#E8E2D6] bg-[#F3F0EA] px-4 py-3 text-sm text-[#555555]"
-                  placeholder="Wordt automatisch ingevuld na een bevestigde R2-upload"
+                  placeholder="Wordt automatisch ingevuld na een veilige upload"
                 />
-                <span className="block text-[11px] text-[#78736B]">Alleen-lezen: wijzigen kan uitsluitend via een gecontroleerde R2-upload.</span>
+                <span className="block text-[11px] text-[#78736B]">Alleen-lezen: wijzigen kan uitsluitend door een nieuwe afbeelding te uploaden.</span>
                 {uploadFailures.hero && <span role="alert" className="block text-xs font-medium text-red-700">{uploadFailures.hero}</span>}
               </label>
             </div>
@@ -767,7 +767,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                     readOnly
                     aria-readonly="true"
                     className="w-full px-4 py-2.5 bg-[#F3F0EA] border border-[#E8E2D6] rounded-xl text-xs font-mono text-[#555555]"
-                    placeholder="Wordt automatisch ingevuld na een bevestigde R2-upload"
+                    placeholder="Wordt automatisch ingevuld na een veilige upload"
                   />
 
                   <input
@@ -783,7 +783,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                     <span>{uploadingStory ? 'Uploaden...' : 'Showcase Foto Uploaden'}</span>
                     <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={saving || uploadingHero || uploadingStory} onChange={handleStoryImageUpload} className="hidden" />
                   </label>
-                  <p className="text-[11px] text-[#78736B]">De URL wordt uitsluitend door de R2-uploader ingesteld.</p>
+                  <p className="text-[11px] text-[#78736B]">De URL wordt automatisch ingesteld wanneer de afbeelding is geüpload.</p>
                   {uploadFailures.story && <p role="alert" className="text-xs font-medium text-red-700">{uploadFailures.story}</p>}
                 </div>
               </div>
