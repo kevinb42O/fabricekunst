@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildStructuredData } from "../src/utils/seo.js";
+import { buildPageSeo, buildStructuredData } from "../src/utils/seo.js";
 import { cloneDefaultRembrandtProject } from "../src/data/defaultRembrandtProject.js";
 
 const canonical = "https://www.atelierrembrandt.com/collectie/test-item";
@@ -97,4 +97,15 @@ test("a disabled Rembrandt Project publishes no research structured data", () =>
       entry["@id"]?.endsWith("#research-updates"),
     ),
   );
+});
+
+test("a private Rembrandt preview is always noindex", () => {
+  const project = cloneDefaultRembrandtProject();
+  const seo = buildPageSeo({
+    page: "rembrandtProject",
+    pathname: "/rembrandt-project/preview",
+    projectData: project,
+  });
+  assert.equal(seo.robots, "noindex, nofollow");
+  assert.equal(seo.canonical, "https://www.atelierrembrandt.com/rembrandt-project");
 });

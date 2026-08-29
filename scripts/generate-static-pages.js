@@ -109,6 +109,7 @@ const staticRoutes = [
   // fail-closed with noindex; after publication the client can load R2 even
   // before the next deployment refreshes the static SEO metadata.
   { route: "/rembrandt-project", page: "rembrandtProject" },
+  { route: "/rembrandt-project/preview", page: "rembrandtProject" },
   { route: "/voorwaarden", page: "voorwaarden" },
   { route: "/privacy", page: "privacy" },
 ];

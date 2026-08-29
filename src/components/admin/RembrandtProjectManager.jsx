@@ -9,11 +9,13 @@ import {
   EyeOff,
   FileText,
   Image as ImageIcon,
+  Link2,
   Loader2,
   Plus,
   RotateCcw,
   Save,
   Search,
+  ShieldCheck,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -29,6 +31,9 @@ import {
 import {
   fetchRembrandtProjectAdminAsync,
   fetchRembrandtProjectRevisionAsync,
+  fetchRembrandtPreviewLinkAsync,
+  createRembrandtPreviewLinkAsync,
+  revokeRembrandtPreviewLinkAsync,
   saveRembrandtProjectDataAsync,
   uploadCatalogImage,
 } from "../../utils/storage";
@@ -148,10 +153,17 @@ export default function RembrandtProjectManager({
   const [loadError, setLoadError] = useState("");
   const [savedVersion, setSavedVersion] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [accessSaving, setAccessSaving] = useState(false);
   const [uploading, setUploading] = useState(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [revisions, setRevisions] = useState([]);
+  const [previewLink, setPreviewLink] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewDays, setPreviewDays] = useState(30);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [confirmPublicEnable, setConfirmPublicEnable] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
 
   const loadProject = () => {
     let active = true;
@@ -178,6 +190,9 @@ export default function RembrandtProjectManager({
 
   useEffect(() => {
     const cancel = loadProject();
+    fetchRembrandtPreviewLinkAsync()
+      .then(setPreviewLink)
+      .catch(() => setPreviewLink(null));
     return cancel;
   }, []);
 
@@ -185,6 +200,53 @@ export default function RembrandtProjectManager({
     () => savedSnapshot && JSON.stringify(project) !== savedSnapshot,
     [project, savedSnapshot],
   );
+  const savedPublicEnabled = useMemo(() => {
+    try {
+      return JSON.parse(savedSnapshot || "{}").isEnabled === true;
+    } catch {
+      return false;
+    }
+  }, [savedSnapshot]);
+
+  const createPreviewLink = async () => {
+    setPreviewBusy(true);
+    try {
+      const result = await createRembrandtPreviewLinkAsync({ days: previewDays });
+      setPreviewLink(result.link);
+      setPreviewUrl(result.url);
+      setConfirmRevoke(false);
+      onShowToast("Nieuwe privélink aangemaakt.");
+    } catch (error) {
+      onShowToast(error.message, "error");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const copyPreviewLink = async () => {
+    try {
+      await navigator.clipboard.writeText(previewUrl);
+      onShowToast("Privélink gekopieerd.", "info");
+    } catch {
+      onShowToast("Kopiëren is mislukt. Selecteer en kopieer de link handmatig.", "error");
+    }
+  };
+
+  const revokePreviewLink = async () => {
+    if (!previewLink?.id) return;
+    setPreviewBusy(true);
+    try {
+      await revokeRembrandtPreviewLinkAsync(previewLink.id);
+      setPreviewLink(null);
+      setPreviewUrl("");
+      setConfirmRevoke(false);
+      onShowToast("De privélink is ingetrokken.");
+    } catch (error) {
+      onShowToast(error.message, "error");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
   const selectedUpdate =
     project.updates.find((update) => update.id === selectedId) || null;
   const filteredUpdates = project.updates
@@ -326,6 +388,38 @@ export default function RembrandtProjectManager({
       onShowToast(error.message, "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const changePublicAccess = async (enabled) => {
+    if (accessSaving || saving) return;
+    if (dirty) {
+      onShowToast("Sla uw inhoudswijzigingen eerst op voordat u de publieke toegang verandert.", "error");
+      return;
+    }
+    if (enabled && publicationIssues.length) {
+      onShowToast(publicationIssues[0], "error");
+      return;
+    }
+    setAccessSaving(true);
+    try {
+      const result = await saveRembrandtProjectDataAsync(
+        { ...project, isEnabled: enabled },
+        savedVersion,
+      );
+      setProject(result.project);
+      setSavedVersion(result.version);
+      setSavedSnapshot(JSON.stringify(result.project));
+      onPublished(result.project);
+      onShowToast(
+        enabled
+          ? "The Rembrandt Project is nu openbaar."
+          : "The Rembrandt Project is niet meer openbaar.",
+      );
+    } catch (error) {
+      onShowToast(error.message, "error");
+    } finally {
+      setAccessSaving(false);
     }
   };
 
@@ -652,23 +746,6 @@ export default function RembrandtProjectManager({
                 <p>01</p>
                 <h2>Introductie & status</h2>
               </div>
-              <label className="rp-admin-switch">
-                <input
-                  type="checkbox"
-                  checked={project.isEnabled !== false}
-                  onChange={(event) =>
-                    setProject((current) => ({
-                      ...current,
-                      isEnabled: event.target.checked,
-                    }))
-                  }
-                />
-                <span>
-                  {project.isEnabled !== false
-                    ? "Pagina zichtbaar"
-                    : "Pagina verborgen"}
-                </span>
-              </label>
             </div>
             <div className="rp-admin-form-grid">
               <Field label="Bovenregel">
@@ -1504,12 +1581,116 @@ export default function RembrandtProjectManager({
                 <h2>Publicatiestatus</h2>
               </div>
             </div>
+            <div className={`rp-admin-access ${project.isEnabled ? "is-public" : "is-private"}`}>
+              <div className="rp-admin-access__main">
+                <div className="rp-admin-access__icon">
+                  {project.isEnabled ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
+                </div>
+                <div>
+                  <span className="rp-admin-access__eyebrow">Publieke toegang</span>
+                  <strong>{project.isEnabled ? "Openbaar" : "Niet openbaar"}</strong>
+                  <p>
+                    {project.isEnabled
+                      ? "Het project verschijnt in de navigatie en is toegankelijk voor alle bezoekers."
+                      : "Het project blijft volledig beheerbaar, maar is niet toegankelijk voor gewone bezoekers."}
+                  </p>
+                </div>
+                <label className="rp-admin-switch rp-admin-switch--access">
+                  <input
+                    type="checkbox"
+                    checked={project.isEnabled === true}
+                    disabled={accessSaving || saving}
+                    aria-label="Project publiek zichtbaar"
+                    onChange={(event) => {
+                      if (event.target.checked) {
+                        if (dirty) {
+                          onShowToast("Sla uw inhoudswijzigingen eerst op voordat u de publieke toegang verandert.", "error");
+                        } else {
+                          setConfirmPublicEnable(true);
+                        }
+                      } else {
+                        setConfirmPublicEnable(false);
+                        changePublicAccess(false);
+                      }
+                    }}
+                  />
+                  <span>{accessSaving ? "Toegang bijwerken…" : "Project publiek zichtbaar"}</span>
+                </label>
+              </div>
+              {confirmPublicEnable && !project.isEnabled && (
+                <div className="rp-admin-inline-confirm" role="alert">
+                  <p>Het volledige project wordt publiek zichtbaar en verschijnt opnieuw in de navigatie.</p>
+                  <div>
+                    <button type="button" className="admin-button admin-button--secondary" onClick={() => setConfirmPublicEnable(false)}>Annuleren</button>
+                    <button type="button" className="admin-button admin-button--primary" onClick={() => { setConfirmPublicEnable(false); changePublicAccess(true); }}>Project openbaar maken</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="rp-admin-preview-link">
+              <div className="rp-admin-preview-link__heading">
+                <div className="rp-admin-access__icon"><ShieldCheck aria-hidden="true" /></div>
+                <div>
+                  <span className="rp-admin-access__eyebrow">Privévoorbeeld delen</span>
+                  <strong>{previewLink ? "Privélink actief" : "Geen actieve privélink"}</strong>
+                  <p>De link toont alleen opgeslagen, gepubliceerde updates en verschijnt nergens op de openbare website.</p>
+                </div>
+              </div>
+              {previewLink ? (
+                <div className="rp-admin-preview-link__active">
+                  <dl>
+                    <div><dt>Geldig tot</dt><dd>{new Intl.DateTimeFormat("nl-BE", { dateStyle: "long", timeStyle: "short" }).format(new Date(previewLink.expiresAt))}</dd></div>
+                  </dl>
+                  {previewUrl ? (
+                    <div className="rp-admin-preview-link__copy">
+                      <input readOnly aria-label="Privélink" value={previewUrl} onFocus={(event) => event.target.select()} />
+                      <button type="button" className="admin-button admin-button--secondary" onClick={copyPreviewLink}><Copy aria-hidden="true" /> Link kopiëren</button>
+                    </div>
+                  ) : (
+                    <p className="rp-admin-preview-link__notice">Om veiligheidsredenen wordt de bestaande link niet opnieuw getoond. Maak een nieuwe link als u hem opnieuw wilt delen.</p>
+                  )}
+                  {confirmRevoke ? (
+                    <div className="rp-admin-inline-confirm" role="alert">
+                      <p>Deze link stopt onmiddellijk met werken.</p>
+                      <div>
+                        <button type="button" className="admin-button admin-button--secondary" onClick={() => setConfirmRevoke(false)}>Behouden</button>
+                        <button type="button" className="admin-button admin-button--danger" disabled={previewBusy} onClick={revokePreviewLink}>Link intrekken</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rp-admin-preview-link__actions">
+                      <button type="button" className="admin-text-button" onClick={() => setConfirmRevoke(true)}>Actieve link intrekken</button>
+                      {!savedPublicEnabled && <button type="button" className="admin-text-button" disabled={previewBusy} onClick={createPreviewLink}>Nieuwe link maken</button>}
+                    </div>
+                  )}
+                </div>
+              ) : savedPublicEnabled ? (
+                <p className="rp-admin-preview-link__notice">Maak het project eerst niet openbaar voordat u een privélink aanmaakt.</p>
+              ) : (
+                <div className="rp-admin-preview-link__create">
+                  <label>
+                    <span>Geldigheid</span>
+                    <select value={previewDays} onChange={(event) => setPreviewDays(Number(event.target.value))}>
+                      <option value="7">7 dagen</option>
+                      <option value="14">14 dagen</option>
+                      <option value="30">30 dagen</option>
+                      <option value="60">60 dagen</option>
+                    </select>
+                  </label>
+                  <button type="button" className="admin-button admin-button--secondary" disabled={previewBusy} onClick={createPreviewLink}>
+                    {previewBusy ? <Loader2 className="is-spinning" aria-hidden="true" /> : <Link2 aria-hidden="true" />}
+                    Privélink aanmaken
+                  </button>
+                </div>
+              )}
+            </div>
             <dl className="rp-admin-summary">
               <div>
                 <dt>Pagina</dt>
                 <dd>
                   {savedVersion
-                    ? project.isEnabled
+                    ? savedPublicEnabled
                       ? "Zichtbaar"
                       : "Verborgen"
                     : project.isEnabled

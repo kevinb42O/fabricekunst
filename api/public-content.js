@@ -1,5 +1,9 @@
 import { getR2ConfigurationError } from "./_lib/r2.js";
 import { readPublicContentSnapshot } from "./_lib/publicContentReader.js";
+import {
+  readRembrandtProjectAccess,
+  redactHiddenRembrandtProject,
+} from "./_lib/rembrandtProjectAccess.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET")
@@ -12,18 +16,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { serialized: snapshot } = await readPublicContentSnapshot();
+    const [{ snapshot }, access] = await Promise.all([
+      readPublicContentSnapshot(),
+      readRembrandtProjectAccess(),
+    ]);
+    const serialized = JSON.stringify(redactHiddenRembrandtProject(snapshot, access));
 
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader(
-      "Cache-Control",
-      "public, s-maxage=15, stale-while-revalidate=86400, stale-if-error=604800",
-    );
-    res.setHeader(
-      "CDN-Cache-Control",
-      "public, s-maxage=15, stale-while-revalidate=86400, stale-if-error=604800",
-    );
-    return res.status(200).send(snapshot);
+    res.setHeader("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+    res.setHeader("CDN-Cache-Control", "no-store");
+    return res.status(200).send(serialized);
   } catch (error) {
     console.error("Public content read failed:", error);
     res.setHeader("Cache-Control", "no-store");

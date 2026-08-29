@@ -10,6 +10,7 @@
     "postbuild": "node scripts/generate-static-pages.js",
     "sitemap:preview": "node scripts/generate-sitemap.js",
     "content:publish": "node scripts/publish-public-content.js",
+    "content:hide-rembrandt": "node scripts/publish-public-content.js --project-hidden",
     "r2:cors": "node scripts/configure-r2-cors.js",
     "lint": "eslint .",
     "test": "node --test tests/*.test.js",

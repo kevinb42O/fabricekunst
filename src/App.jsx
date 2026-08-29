@@ -40,6 +40,7 @@ const MobileItemDetailPage = lazy(
   () => import("./mobile/MobileItemDetailPage"),
 );
 const InquiryModal = lazy(() => import("./components/InquiryModal"));
+const REMBRANDT_PREVIEW_SESSION_KEY = 'atelier_rembrandt_private_preview_token';
 
 import {
   getCatalog,
@@ -63,6 +64,7 @@ import {
   fetchFaqItemsAsync,
   saveFaqItemsAsync,
   fetchRembrandtProjectDataAsync,
+  fetchRembrandtProjectPreviewAsync,
 } from "./utils/storage";
 
 export default function App() {
@@ -77,6 +79,8 @@ export default function App() {
   const [faqItems, setFaqItems] = useState(getFaqItems());
   const [rembrandtProjectData, setRembrandtProjectData] = useState(null);
   const [rembrandtProjectLoading, setRembrandtProjectLoading] = useState(true);
+  const [rembrandtProjectPreview, setRembrandtProjectPreview] = useState(false);
+  const [rembrandtProjectPreviewError, setRembrandtProjectPreviewError] = useState('');
 
   const [currentPage, setCurrentPage] = useState("home"); // 'home' | 'catalogus' | 'herkomst' | 'item-detail'
   const [selectedDetailItemId, setSelectedDetailItemId] = useState(null);
@@ -136,11 +140,36 @@ export default function App() {
       if (faqs) setFaqItems(faqs);
     });
 
-    fetchRembrandtProjectDataAsync()
-      .then((project) => {
-        if (project) setRembrandtProjectData(project);
-      })
-      .finally(() => setRembrandtProjectLoading(false));
+    const initialPath = stripLanguagePrefix(window.location.pathname).toLowerCase();
+    if (initialPath === '/rembrandt-project/preview') {
+      const fragmentToken = window.location.hash.replace(/^#/, '');
+      let storedToken = '';
+      try {
+        storedToken = sessionStorage.getItem(REMBRANDT_PREVIEW_SESSION_KEY) || '';
+      } catch {
+        storedToken = '';
+      }
+      const token = fragmentToken || storedToken;
+      if (fragmentToken) {
+        try {
+          sessionStorage.setItem(REMBRANDT_PREVIEW_SESSION_KEY, fragmentToken);
+          window.history.replaceState({ page: 'rembrandt-project-preview' }, '', window.location.pathname);
+        } catch {
+          // The fragment remains available when session storage is blocked.
+        }
+      }
+      setRembrandtProjectPreview(true);
+      fetchRembrandtProjectPreviewAsync(token)
+        .then(({ project }) => setRembrandtProjectData(project))
+        .catch((error) => setRembrandtProjectPreviewError(error.message))
+        .finally(() => setRembrandtProjectLoading(false));
+    } else {
+      fetchRembrandtProjectDataAsync()
+        .then((project) => {
+          if (project) setRembrandtProjectData(project);
+        })
+        .finally(() => setRembrandtProjectLoading(false));
+    }
 
     const checkRoutes = () => {
       const path = stripLanguagePrefix(window.location.pathname).toLowerCase();
@@ -158,6 +187,10 @@ export default function App() {
           setCurrentPage("catalogus");
           setActiveTab("catalogus");
         }
+      } else if (path === '/rembrandt-project/preview') {
+        setCurrentPage('rembrandt-project');
+        setActiveTab('rembrandt-project');
+        setSelectedDetailItemId(null);
       } else if (
         path === "/collectie" ||
         path === "/catalogus" ||
@@ -612,7 +645,7 @@ export default function App() {
         <MobileNavbar
           onNavigate={handleNavigate}
           activeTab={activeTab}
-          showRembrandtProject={rembrandtProjectData?.isEnabled === true}
+          showRembrandtProject={rembrandtProjectData?.isEnabled === true && !rembrandtProjectPreview}
           onRequestConsultation={() =>
             handleOpenConsultation(null, "general_query", "mobile_navigation")
           }
@@ -621,7 +654,7 @@ export default function App() {
         <Navbar
           onNavigate={handleNavigate}
           activeTab={currentPage}
-          showRembrandtProject={rembrandtProjectData?.isEnabled === true}
+          showRembrandtProject={rembrandtProjectData?.isEnabled === true && !rembrandtProjectPreview}
           onRequestConsultation={() =>
             handleOpenConsultation(null, "general_query", "navigation")
           }
@@ -691,6 +724,8 @@ export default function App() {
             <RembrandtProjectPage
               projectData={rembrandtProjectData}
               loading={rembrandtProjectLoading}
+              privatePreview={rembrandtProjectPreview}
+              previewError={rembrandtProjectPreviewError}
               onNavigate={handleNavigate}
             />
           ) : currentPage === "privacy" ? (
@@ -795,12 +830,12 @@ export default function App() {
       {isMobile ? (
         <MobileFooter
           onNavigate={handleNavigate}
-          showRembrandtProject={rembrandtProjectData?.isEnabled === true}
+          showRembrandtProject={rembrandtProjectData?.isEnabled === true && !rembrandtProjectPreview}
         />
       ) : (
         <Footer
           onNavigate={handleNavigate}
-          showRembrandtProject={rembrandtProjectData?.isEnabled === true}
+          showRembrandtProject={rembrandtProjectData?.isEnabled === true && !rembrandtProjectPreview}
           onRequestConsultation={() =>
             handleOpenConsultation(null, "general_query", "footer")
           }
@@ -820,7 +855,7 @@ export default function App() {
         </Suspense>
       )}
 
-      <AnalyticsConsentBanner />
+      {!rembrandtProjectPreview && <AnalyticsConsentBanner />}
     </div>
   );
 }

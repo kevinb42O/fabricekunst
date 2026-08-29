@@ -9,6 +9,10 @@ import {
   containsForbiddenImageSource,
   publishPublicContentSnapshot,
 } from "./publicContent.js";
+import {
+  readRembrandtProjectAccess,
+  writeRembrandtProjectAccess,
+} from "./rembrandtProjectAccess.js";
 import { DEFAULT_REMBRANDT_PROJECT } from "../../src/data/defaultRembrandtProject.js";
 
 const SETTING_KEY = "rembrandt_project_data";
@@ -320,13 +324,14 @@ export default async function handler(req, res) {
           throw new RequestError("Deze revisie bestaat niet meer.", 404);
         return sendJson(res, 200, { ok: true, revision: data });
       }
-      const [{ project, row }, revisions] = await Promise.all([
+      const [{ project, row }, revisions, access] = await Promise.all([
         readProject(supabase),
         listRevisions(supabase),
+        readRembrandtProjectAccess(),
       ]);
       return sendJson(res, 200, {
         ok: true,
-        project,
+        project: { ...project, isEnabled: access.enabled === true && project.isEnabled === true },
         version: row?.updated_at || null,
         revisions,
       });
@@ -380,7 +385,13 @@ export default async function handler(req, res) {
     }
 
     try {
+      if (nextProject.isEnabled !== true) {
+        await writeRembrandtProjectAccess(false, updatedAt);
+      }
       const publication = await publishPublicContentSnapshot(supabase);
+      if (nextProject.isEnabled === true) {
+        await writeRembrandtProjectAccess(true, updatedAt);
+      }
       if (previousContentForRevision) {
         await storeRevision(
           supabase,
@@ -409,6 +420,8 @@ export default async function handler(req, res) {
           .eq("updated_at", updatedAt);
       }
       await publishPublicContentSnapshot(supabase).catch(() => {});
+      const previousProject = previous?.value ? parseSetting(previous.value) : null;
+      await writeRembrandtProjectAccess(previousProject?.isEnabled === true).catch(() => {});
       throw publishError;
     }
   } catch (error) {

@@ -1161,7 +1161,21 @@ export const getRembrandtProjectData = () => {
 
 export const fetchRembrandtProjectDataAsync = async () => {
   try {
-    const snapshot = await fetchPublicContentSnapshot();
+    const [accessResponse, snapshot] = await Promise.all([
+      fetch('/api/rembrandt-project-access', {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      }),
+      fetchPublicContentSnapshot(),
+    ]);
+    const access = await accessResponse.json().catch(() => null);
+    if (!accessResponse.ok || access?.enabled !== true) {
+      const unavailable = { ...cloneDefaultRembrandtProject(), isEnabled: false };
+      localStorage.setItem(REMBRANDT_PROJECT_PUBLIC_KEY, JSON.stringify(unavailable));
+      return unavailable;
+    }
     if (
       snapshot.rembrandtProject &&
       typeof snapshot.rembrandtProject === "object"
@@ -1188,7 +1202,22 @@ export const fetchRembrandtProjectDataAsync = async () => {
       error,
     );
   }
-  return getRembrandtProjectData();
+  return { ...cloneDefaultRembrandtProject(), isEnabled: false };
+};
+
+export const fetchRembrandtProjectPreviewAsync = async (token) => {
+  const response = await fetch('/api/rembrandt-project-preview', {
+    method: 'POST',
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok || !result.project) {
+    throw new Error(result.error || 'Deze privélink is ongeldig of niet meer actief.');
+  }
+  return { project: normalizeRembrandtProject(result.project), expiresAt: result.expiresAt || null };
 };
 
 export const fetchRembrandtProjectAdminAsync = async () => {
@@ -1253,6 +1282,41 @@ export const fetchRembrandtProjectRevisionAsync = async (revisionId) => {
     ...result.revision,
     content: normalizeRembrandtProject(result.revision.content),
   };
+};
+
+export const fetchRembrandtPreviewLinkAsync = async () => {
+  const response = await authenticatedAdminFetch('/api/rembrandt-project-preview-links', {
+    method: 'GET',
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) throw new Error(result.error || 'De privélink kon niet worden geladen.');
+  return result.link || null;
+};
+
+export const createRembrandtPreviewLinkAsync = async ({ days = 30, label = '' } = {}) => {
+  const response = await authenticatedAdminFetch('/api/rembrandt-project-preview-links', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ days, label }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok || !result.url) throw new Error(result.error || 'De privélink kon niet worden aangemaakt.');
+  return result;
+};
+
+export const revokeRembrandtPreviewLinkAsync = async (id) => {
+  const response = await authenticatedAdminFetch('/api/rembrandt-project-preview-links', {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) throw new Error(result.error || 'De privélink kon niet worden ingetrokken.');
+  return true;
 };
 
 export const saveRembrandtProjectDataAsync = async (

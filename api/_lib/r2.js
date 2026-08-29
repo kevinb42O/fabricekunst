@@ -1,6 +1,7 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
 export const PUBLIC_CONTENT_POINTER_KEY = 'site-data/current.json';
+export const REMBRANDT_PROJECT_ACCESS_KEY = 'site-data/rembrandt-project-access.json';
 
 export const getR2ConfigurationError = () => {
   const required = [

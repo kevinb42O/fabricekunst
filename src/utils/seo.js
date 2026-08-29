@@ -201,7 +201,7 @@ function availabilityFor(status) {
 export function getPageKind(pathname, currentPage = "home") {
   const path = stripLanguagePrefix(normalizePath(pathname)).toLowerCase();
   if (path === "/topstukken") return "topstukken";
-  if (path === "/rembrandt-project") return "rembrandtProject";
+  if (path === "/rembrandt-project" || path === "/rembrandt-project/preview") return "rembrandtProject";
   if (currentPage === "item-detail") return "item";
   if (currentPage === "not-found") return "notFound";
   return currentPage;
@@ -233,6 +233,8 @@ export function buildPageSeo({
   const routePath =
     pageKind === "item" && item
       ? `/collectie/${getItemSlug(item)}`
+      : pageKind === "rembrandtProject" && stripLanguagePrefix(normalizePath(pathname)).toLowerCase() === '/rembrandt-project/preview'
+        ? '/rembrandt-project'
       : stripLanguagePrefix(normalizePath(pathname));
   const canonicalPath = localizePath(routePath, lang);
   const canonical = `${SITE_URL}${canonicalPath === "/" ? "/" : canonicalPath}`;
@@ -294,6 +296,7 @@ export function buildPageSeo({
     alternates,
     robots:
       pageKind === "notFound" ||
+      stripLanguagePrefix(normalizePath(pathname)).toLowerCase() === '/rembrandt-project/preview' ||
       (pageKind === "rembrandtProject" && project?.isEnabled !== true)
         ? "noindex, nofollow"
         : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",

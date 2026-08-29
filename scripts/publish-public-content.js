@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
 import { publishPublicContentSnapshot } from "../api/_lib/publicContent.js";
+import { writeRembrandtProjectAccess } from "../api/_lib/rembrandtProjectAccess.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -78,6 +79,20 @@ const { data: settingsRows, error: settingsReadError } = await supabase
 if (settingsReadError) throw settingsReadError;
 
 const settings = new Map((settingsRows || []).map((row) => [row.key, row]));
+const forceProjectHidden = process.argv.includes('--project-hidden');
+if (forceProjectHidden) {
+  const project = parseSetting(settings.get('rembrandt_project_data'));
+  if (project && typeof project === 'object') {
+    const value = JSON.stringify({ ...project, isEnabled: false });
+    const { error } = await supabase.from('admin_settings').upsert({
+      key: 'rembrandt_project_data',
+      value,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    settings.set('rembrandt_project_data', { key: 'rembrandt_project_data', value });
+  }
+}
 const provenance = parseSetting(settings.get("herkomst_page_data"));
 let migratedImages = 0;
 if (provenance?.hero?.bgImage?.startsWith("data:image/")) {
@@ -106,6 +121,7 @@ if (migratedImages) {
 }
 
 const publication = await publishPublicContentSnapshot(supabase);
+await writeRembrandtProjectAccess(publication.snapshot.rembrandtProject?.isEnabled === true);
 
 console.log(
   JSON.stringify({

@@ -48,6 +48,9 @@ export const buildPublicContentSnapshot = async (supabase) => {
       isEnabled: false,
     },
   );
+  const publicRembrandtProject = rembrandtProject.isEnabled === true
+    ? rembrandtProject
+    : { isEnabled: false };
   const catalog = (items || []).map((item) => {
     const extension = parseSetting(byKey.get(`item_ext_${item.id}`));
     return extension && typeof extension === "object"
@@ -62,7 +65,7 @@ export const buildPublicContentSnapshot = async (supabase) => {
     mobileHeroImage: parseSetting(byKey.get("mobile_hero_image")),
     provenanceData: parseSetting(byKey.get("herkomst_page_data")),
     faqItems: parseSetting(byKey.get("faq_items")),
-    rembrandtProject,
+    rembrandtProject: publicRembrandtProject,
   };
   if (containsForbiddenImageSource(snapshot)) {
     throw new Error("Public content contains a forbidden image source");

@@ -33,6 +33,11 @@ export async function loadCatalogForBuild() {
   if (r2PublicUrl) {
     try {
       const baseUrl = r2PublicUrl.replace(/\/$/, "");
+      const accessResponse = await fetch(`${baseUrl}/site-data/rembrandt-project-access.json`, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      const access = accessResponse.ok ? await accessResponse.json() : { enabled: false };
       const pointerResponse = await fetch(`${baseUrl}/site-data/current.json`, {
         headers: { Accept: "application/json" },
       });
@@ -60,7 +65,9 @@ export async function loadCatalogForBuild() {
       ) {
         return {
           items: snapshot.catalog,
-          project: snapshot.rembrandtProject || null,
+          project: access?.schemaVersion === 1 && access?.enabled === true
+            ? snapshot.rembrandtProject || null
+            : { isEnabled: false },
           snapshot,
           source: "R2 public snapshot",
         };

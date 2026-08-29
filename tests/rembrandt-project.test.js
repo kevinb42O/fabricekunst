@@ -8,6 +8,17 @@ import {
   publishedRembrandtProject,
 } from "../src/utils/rembrandtProject.js";
 import { buildSitemapXml } from "../src/utils/sitemap.js";
+import {
+  hiddenProjectAccess,
+  normalizeProjectAccess,
+  redactHiddenRembrandtProject,
+} from "../api/_lib/rembrandtProjectAccess.js";
+import {
+  createPreviewToken,
+  hashPreviewToken,
+  isValidPreviewToken,
+} from "../api/_lib/rembrandtPreviewToken.js";
+import { activePreviewLink } from "../api/_lib/rembrandtPreviewStore.js";
 
 test("public project projection excludes drafts, archives and hidden phases", () => {
   const project = cloneDefaultRembrandtProject();
@@ -68,4 +79,40 @@ test("future publications stay private and empty translations fall back to Dutch
     localizedProjectValue({ nl: "Nederlands", en: "  ", fr: "" }, "en"),
     "Nederlands",
   );
+});
+
+test("project access is fail-closed and redacts hidden public content", () => {
+  const project = cloneDefaultRembrandtProject();
+  const snapshot = { schemaVersion: 2, catalog: [], rembrandtProject: project };
+  assert.equal(hiddenProjectAccess().enabled, false);
+  assert.equal(normalizeProjectAccess({ schemaVersion: 99, enabled: true }).enabled, false);
+  assert.deepEqual(
+    redactHiddenRembrandtProject(snapshot, hiddenProjectAccess()).rembrandtProject,
+    { isEnabled: false },
+  );
+  assert.equal(
+    redactHiddenRembrandtProject(snapshot, { schemaVersion: 1, enabled: true }).rembrandtProject.updates.length,
+    project.updates.length,
+  );
+});
+
+test("private preview tokens are unguessable and stored as one-way hashes", () => {
+  const first = createPreviewToken();
+  const second = createPreviewToken();
+  assert.equal(isValidPreviewToken(first.token), true);
+  assert.equal(first.token.length, 43);
+  assert.equal(first.tokenHash.length, 64);
+  assert.equal(first.tokenHash, hashPreviewToken(first.token));
+  assert.notEqual(first.token, second.token);
+  assert.notEqual(first.tokenHash, second.tokenHash);
+  assert.equal(isValidPreviewToken('kort'), false);
+});
+
+test("only an unrevoked and unexpired private preview link is active", () => {
+  const now = Date.now();
+  const active = { id: 'active', expiresAt: new Date(now + 60_000).toISOString(), revokedAt: null };
+  const expired = { id: 'expired', expiresAt: new Date(now - 1).toISOString(), revokedAt: null };
+  const revoked = { id: 'revoked', expiresAt: new Date(now + 60_000).toISOString(), revokedAt: new Date(now).toISOString() };
+  assert.equal(activePreviewLink([expired, revoked, active], now)?.id, 'active');
+  assert.equal(activePreviewLink([expired, revoked], now), null);
 });

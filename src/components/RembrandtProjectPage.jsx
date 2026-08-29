@@ -60,6 +60,7 @@ const UI = {
     unavailable: "Deze onderzoekspagina is momenteel niet beschikbaar.",
     backHome: "Terug naar de startpagina",
     loading: "Project laden…",
+    privatePreview: "Privévoorbeeld — deze pagina is nog niet openbaar.",
   },
   en: {
     latest: "Latest update",
@@ -102,6 +103,7 @@ const UI = {
     unavailable: "This research page is currently unavailable.",
     backHome: "Back to the homepage",
     loading: "Loading project…",
+    privatePreview: "Private preview — this page is not public yet.",
   },
   fr: {
     latest: "Dernière mise à jour",
@@ -145,6 +147,7 @@ const UI = {
     unavailable: "Cette page de recherche est actuellement indisponible.",
     backHome: "Retour à l’accueil",
     loading: "Chargement du projet…",
+    privatePreview: "Aperçu privé — cette page n’est pas encore publique.",
   },
 };
 
@@ -280,6 +283,8 @@ function ProjectUpdate({ update, index, language, labels }) {
 export default function RembrandtProjectPage({
   projectData,
   loading = false,
+  privatePreview = false,
+  previewError = '',
   onNavigate = () => {},
 }) {
   const { language } = useLanguage();
@@ -327,10 +332,10 @@ export default function RembrandtProjectPage({
         <p>{labels.loading}</p>
       </div>
     );
-  if (!projectData || !project.isEnabled)
+  if (previewError || !projectData || !project.isEnabled)
     return (
       <div className="rembrandt-project rembrandt-project__state">
-        <p>{labels.unavailable}</p>
+        <p>{previewError || labels.unavailable}</p>
         <button type="button" onClick={() => onNavigate("home")}>
           {labels.backHome}
         </button>
@@ -347,6 +352,12 @@ export default function RembrandtProjectPage({
 
   return (
     <div className="rembrandt-project">
+      {privatePreview && (
+        <div className="rembrandt-project__private-preview" role="status">
+          <ShieldCheck aria-hidden="true" />
+          <span>{labels.privatePreview}</span>
+        </div>
+      )}
       <header
         className={`rembrandt-project__hero ${settings.heroImage ? "has-image" : ""}`}
       >
@@ -372,12 +383,14 @@ export default function RembrandtProjectPage({
             <div className="rembrandt-project__hero-actions">
               <a
                 href="#project-timeline"
-                onClick={() =>
-                  trackEvent("cta_clicked", {
-                    placement: "rembrandt_project_hero",
-                    target: "project_timeline",
-                  })
-                }
+                onClick={() => {
+                  if (!privatePreview) {
+                    trackEvent("cta_clicked", {
+                      placement: "rembrandt_project_hero",
+                      target: "project_timeline",
+                    });
+                  }
+                }}
               >
                 {labels.follow}
                 <ArrowDown aria-hidden="true" />

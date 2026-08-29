@@ -2,6 +2,7 @@ import { INITIAL_CATALOG } from "../src/data/initialCatalog.js";
 import { getItemSlug } from "../src/utils/itemSlug.js";
 import { getR2ConfigurationError } from "./_lib/r2.js";
 import { readPublicContentSnapshot } from "./_lib/publicContentReader.js";
+import { readRembrandtProjectAccess } from "./_lib/rembrandtProjectAccess.js";
 
 export default async function handler(req, res) {
   if (!["GET", "HEAD"].includes(req.method)) {
@@ -13,9 +14,12 @@ export default async function handler(req, res) {
 
   if (!getR2ConfigurationError()) {
     try {
-      const { snapshot } = await readPublicContentSnapshot();
+      const [{ snapshot }, access] = await Promise.all([
+        readPublicContentSnapshot(),
+        readRembrandtProjectAccess(),
+      ]);
       catalogItems = snapshot.catalog;
-      rembrandtProject = snapshot.rembrandtProject || null;
+      rembrandtProject = access.enabled === true ? snapshot.rembrandtProject || null : null;
     } catch (err) {
       console.error("LLMs R2 snapshot read error:", err);
     }

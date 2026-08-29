@@ -293,7 +293,9 @@ function isAdminLocation() {
   // such as `/#admin?utm_source=…` is still an admin route and must never
   // create public-site telemetry.
   const hash = window.location.hash.toLowerCase().split('?')[0];
-  return /(^|\/)admin(?:\/|$)/.test(path) || hash === '#admin';
+  return /(^|\/)admin(?:\/|$)/.test(path) ||
+    /(^|\/)rembrandt-project\/preview(?:\/|$)/.test(path) ||
+    hash === '#admin';
 }
 
 function canonicalPathname(pathname = '') {
