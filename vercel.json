@@ -87,7 +87,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "destination": "/api/public-content?resource=sitemap"
     },
     {
       "source": "/llms.txt",
