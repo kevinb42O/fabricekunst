@@ -1,9 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
-import { getServerSupabase, sendJson } from './_lib/adminAuth.js';
-import { hashPreviewToken, isValidPreviewToken } from './_lib/rembrandtPreviewToken.js';
-import { publishedRembrandtProject } from '../src/utils/rembrandtProject.js';
-import { cloneDefaultRembrandtProject } from '../src/data/defaultRembrandtProject.js';
-import { readPreviewLinks } from './_lib/rembrandtPreviewStore.js';
+import { getServerSupabase, sendJson } from './adminAuth.js';
+import { hashPreviewToken, isValidPreviewToken } from './rembrandtPreviewToken.js';
+import { publishedRembrandtProject } from '../../src/utils/rembrandtProject.js';
+import { cloneDefaultRembrandtProject } from '../../src/data/defaultRembrandtProject.js';
+import { readPreviewLinks } from './rembrandtPreviewStore.js';
 
 const attempts = new Map();
 const ATTEMPT_WINDOW_MS = 60_000;

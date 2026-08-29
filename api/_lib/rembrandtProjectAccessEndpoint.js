@@ -1,5 +1,5 @@
-import { getR2ConfigurationError } from './_lib/r2.js';
-import { hiddenProjectAccess, readRembrandtProjectAccess } from './_lib/rembrandtProjectAccess.js';
+import { getR2ConfigurationError } from './r2.js';
+import { hiddenProjectAccess, readRembrandtProjectAccess } from './rembrandtProjectAccess.js';
 
 export default async function handler(req, res) {
   if (!['GET', 'HEAD'].includes(req.method)) {

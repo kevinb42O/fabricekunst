@@ -1162,7 +1162,7 @@ export const getRembrandtProjectData = () => {
 export const fetchRembrandtProjectDataAsync = async () => {
   try {
     const [accessResponse, snapshot] = await Promise.all([
-      fetch('/api/rembrandt-project-access', {
+      fetch('/api/public-content?resource=rembrandt-project-access', {
         method: 'GET',
         credentials: 'same-origin',
         cache: 'no-store',
@@ -1206,7 +1206,7 @@ export const fetchRembrandtProjectDataAsync = async () => {
 };
 
 export const fetchRembrandtProjectPreviewAsync = async (token) => {
-  const response = await fetch('/api/rembrandt-project-preview', {
+  const response = await fetch('/api/public-content?resource=rembrandt-project-preview', {
     method: 'POST',
     credentials: 'same-origin',
     cache: 'no-store',
@@ -1285,7 +1285,7 @@ export const fetchRembrandtProjectRevisionAsync = async (revisionId) => {
 };
 
 export const fetchRembrandtPreviewLinkAsync = async () => {
-  const response = await authenticatedAdminFetch('/api/rembrandt-project-preview-links', {
+  const response = await authenticatedAdminFetch('/api/publish-public-content?resource=rembrandt-project-preview-links', {
     method: 'GET',
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
@@ -1296,7 +1296,7 @@ export const fetchRembrandtPreviewLinkAsync = async () => {
 };
 
 export const createRembrandtPreviewLinkAsync = async ({ days = 30, label = '' } = {}) => {
-  const response = await authenticatedAdminFetch('/api/rembrandt-project-preview-links', {
+  const response = await authenticatedAdminFetch('/api/publish-public-content?resource=rembrandt-project-preview-links', {
     method: 'POST',
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -1308,7 +1308,7 @@ export const createRembrandtPreviewLinkAsync = async ({ days = 30, label = '' } 
 };
 
 export const revokeRembrandtPreviewLinkAsync = async (id) => {
-  const response = await authenticatedAdminFetch('/api/rembrandt-project-preview-links', {
+  const response = await authenticatedAdminFetch('/api/publish-public-content?resource=rembrandt-project-preview-links', {
     method: 'DELETE',
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },

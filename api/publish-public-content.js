@@ -2,8 +2,12 @@ import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAut
 import { getR2ConfigurationError } from './_lib/r2.js';
 import { publishPublicContentSnapshot } from './_lib/publicContent.js';
 import rembrandtProjectHandler from './_lib/rembrandtProjectEndpoint.js';
+import rembrandtProjectPreviewLinksHandler from './_lib/rembrandtProjectPreviewLinksEndpoint.js';
 
 export default async function handler(req, res) {
+  if (req.query?.resource === 'rembrandt-project-preview-links') {
+    return rembrandtProjectPreviewLinksHandler(req, res);
+  }
   if (req.query?.resource === 'rembrandt-project') {
     return rembrandtProjectHandler(req, res);
   }

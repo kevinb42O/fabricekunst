@@ -4,8 +4,16 @@ import {
   readRembrandtProjectAccess,
   redactHiddenRembrandtProject,
 } from "./_lib/rembrandtProjectAccess.js";
+import rembrandtProjectAccessHandler from './_lib/rembrandtProjectAccessEndpoint.js';
+import rembrandtProjectPreviewHandler from './_lib/rembrandtProjectPreviewEndpoint.js';
 
 export default async function handler(req, res) {
+  if (req.query?.resource === 'rembrandt-project-access') {
+    return rembrandtProjectAccessHandler(req, res);
+  }
+  if (req.query?.resource === 'rembrandt-project-preview') {
+    return rembrandtProjectPreviewHandler(req, res);
+  }
   if (req.method !== "GET")
     return res.status(405).json({ error: "Method Not Allowed" });
 

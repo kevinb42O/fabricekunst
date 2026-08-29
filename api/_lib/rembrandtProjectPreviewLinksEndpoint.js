@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { createPreviewToken } from './_lib/rembrandtPreviewToken.js';
-import { activePreviewLink, readPreviewLinks, writePreviewLinks } from './_lib/rembrandtPreviewStore.js';
-import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
+import { createPreviewToken } from './rembrandtPreviewToken.js';
+import { activePreviewLink, readPreviewLinks, writePreviewLinks } from './rembrandtPreviewStore.js';
+import { getServerSupabase, requireActiveAdmin, sendJson } from './adminAuth.js';
 
 const publicLink = (req, token) => {
   const forwardedHost = String(req.headers['x-forwarded-host'] || req.headers.host || 'www.atelierrembrandt.com').split(',')[0].trim();
