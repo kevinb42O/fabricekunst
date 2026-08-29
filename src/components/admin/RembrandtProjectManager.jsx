@@ -20,21 +20,23 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  cloneDefaultRembrandtProject,
   REMBRANDT_EVIDENCE_TYPES,
   REMBRANDT_PROJECT_STATUSES,
-} from "../../data/defaultRembrandtProject";
+} from "../../data/rembrandtProjectOptions";
 import {
+  createEmptyRembrandtProject,
   createProjectUpdate,
   normalizeRembrandtProject,
 } from "../../utils/rembrandtProject";
 import {
   fetchRembrandtProjectAdminAsync,
   fetchRembrandtProjectRevisionAsync,
+  fetchRembrandtProjectTemplateAsync,
   fetchRembrandtPreviewLinkAsync,
   createRembrandtPreviewLinkAsync,
   revokeRembrandtPreviewLinkAsync,
   saveRembrandtProjectDataAsync,
+  setRembrandtProjectAccessAsync,
   uploadCatalogImage,
 } from "../../utils/storage";
 import "../../styles/rembrandt-project-admin.css";
@@ -144,7 +146,7 @@ export default function RembrandtProjectManager({
   onPublished = () => {},
   onShowToast = () => {},
 }) {
-  const [project, setProject] = useState(() => cloneDefaultRembrandtProject());
+  const [project, setProject] = useState(() => createEmptyRembrandtProject());
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [panel, setPanel] = useState("updates");
   const [language, setLanguage] = useState("nl");
@@ -382,7 +384,9 @@ export default function RembrandtProjectManager({
       setSavedSnapshot(JSON.stringify(result.project));
       onPublished(result.project);
       onShowToast(
-        "The Rembrandt Project is veilig opgeslagen en op de website gepubliceerd.",
+        result.project.isEnabled
+          ? "The Rembrandt Project is veilig opgeslagen en bijgewerkt op de website."
+          : "The Rembrandt Project is veilig opgeslagen en blijft verborgen voor bezoekers.",
       );
     } catch (error) {
       onShowToast(error.message, "error");
@@ -393,7 +397,7 @@ export default function RembrandtProjectManager({
 
   const changePublicAccess = async (enabled) => {
     if (accessSaving || saving) return;
-    if (dirty) {
+    if (enabled && dirty) {
       onShowToast("Sla uw inhoudswijzigingen eerst op voordat u de publieke toegang verandert.", "error");
       return;
     }
@@ -403,11 +407,10 @@ export default function RembrandtProjectManager({
     }
     setAccessSaving(true);
     try {
-      const result = await saveRembrandtProjectDataAsync(
-        { ...project, isEnabled: enabled },
-        savedVersion,
-      );
-      setProject(result.project);
+      const result = await setRembrandtProjectAccessAsync(enabled, savedVersion);
+      setProject((current) => !enabled && dirty
+        ? { ...current, isEnabled: false }
+        : result.project);
       setSavedVersion(result.version);
       setSavedSnapshot(JSON.stringify(result.project));
       onPublished(result.project);
@@ -500,8 +503,9 @@ export default function RembrandtProjectManager({
     }
     try {
       const revision = await fetchRembrandtProjectRevisionAsync(revisionId);
-      setProject(revision.content);
-      setSelectedId(revision.content.updates?.[0]?.id || null);
+      const restored = { ...revision.content, isEnabled: savedPublicEnabled };
+      setProject(restored);
+      setSelectedId(restored.updates?.[0]?.id || null);
       setDeleteConfirmId(null);
       onShowToast(
         "De revisie staat klaar. Controleer ze en publiceer om definitief te herstellen.",
@@ -703,7 +707,11 @@ export default function RembrandtProjectManager({
             ) : (
               <Save aria-hidden="true" />
             )}
-            {saving ? "Publiceren…" : "Opslaan & publiceren"}
+            {saving
+              ? "Opslaan…"
+              : savedPublicEnabled
+                ? "Opslaan & publiceren"
+                : "Wijzigingen opslaan"}
           </button>
         </div>
       </header>
@@ -1652,7 +1660,7 @@ export default function RembrandtProjectManager({
                   )}
                   {confirmRevoke ? (
                     <div className="rp-admin-inline-confirm" role="alert">
-                      <p>Deze link stopt onmiddellijk met werken.</p>
+                      <p>Nieuwe bezoeken worden meteen geblokkeerd. Een reeds geopende preview sluit uiterlijk binnen 20 seconden.</p>
                       <div>
                         <button type="button" className="admin-button admin-button--secondary" onClick={() => setConfirmRevoke(false)}>Behouden</button>
                         <button type="button" className="admin-button admin-button--danger" disabled={previewBusy} onClick={revokePreviewLink}>Link intrekken</button>
@@ -1706,7 +1714,9 @@ export default function RembrandtProjectManager({
                       (entry) => entry.status === "published",
                     ).length
                   }{" "}
-                  updates
+                  {project.updates.filter((entry) => entry.status === "published").length === 1
+                    ? "update"
+                    : "updates"}
                 </dd>
               </div>
               <div>
@@ -1727,8 +1737,9 @@ export default function RembrandtProjectManager({
             <div className="rp-admin-publish-note">
               <Eye aria-hidden="true" />
               <p>
-                Bezoekers zien uitsluitend de laatst gepubliceerde websiteversie.
-                Wijzigingen blijven een concept totdat u ze hier publiceert.
+                {savedPublicEnabled
+                  ? "Bezoekers zien uitsluitend de laatst gepubliceerde websiteversie. Wijzigingen blijven een concept totdat u ze hier publiceert."
+                  : "Het project blijft verborgen. Opslaan werkt alleen de beveiligde beheer- en privévoorbeeldversie bij."}
               </p>
             </div>
             <div
@@ -1737,7 +1748,9 @@ export default function RembrandtProjectManager({
               <strong>
                 {publicationIssues.length
                   ? `${publicationIssues.length} aandachtspunt${publicationIssues.length === 1 ? "" : "en"}`
-                  : "Klaar voor publicatie"}
+                  : savedPublicEnabled
+                    ? "Klaar voor publicatie"
+                    : "Klaar om veilig op te slaan"}
               </strong>
               {publicationIssues.length > 0 && (
                 <ul>
@@ -1758,7 +1771,11 @@ export default function RembrandtProjectManager({
               ) : (
                 <Save aria-hidden="true" />
               )}
-              {saving ? "Veilig publiceren…" : "Opslaan & websiteversie publiceren"}
+              {saving
+                ? "Veilig opslaan…"
+                : savedPublicEnabled
+                  ? "Opslaan & websiteversie publiceren"
+                  : "Wijzigingen veilig opslaan"}
             </button>
           </section>
           {revisions.length > 0 && (
@@ -1788,6 +1805,12 @@ export default function RembrandtProjectManager({
                       className="admin-button admin-button--secondary"
                       onClick={() => restoreRevision(revision.id)}
                     >
+                      <span className="sr-only">
+                        Versie van {new Intl.DateTimeFormat("nl-BE", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }).format(new Date(revision.created_at))}:{" "}
+                      </span>
                       {deleteConfirmId === `revision-${revision.id}`
                         ? "Bevestig herstellen"
                         : "Klaarzetten"}
@@ -1809,12 +1832,17 @@ export default function RembrandtProjectManager({
             <button
               type="button"
               className="admin-button admin-button--secondary"
-              onClick={() => {
+              onClick={async () => {
                 if (deleteConfirmId === "reset") {
-                  const reset = cloneDefaultRembrandtProject();
-                  setProject(reset);
-                  setSelectedId(reset.updates[0]?.id || null);
-                  setDeleteConfirmId(null);
+                  try {
+                    const template = await fetchRembrandtProjectTemplateAsync();
+                    const reset = { ...template, isEnabled: savedPublicEnabled };
+                    setProject(reset);
+                    setSelectedId(reset.updates[0]?.id || null);
+                    setDeleteConfirmId(null);
+                  } catch (error) {
+                    onShowToast(error.message, "error");
+                  }
                 } else setDeleteConfirmId("reset");
               }}
             >

@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import { LUXURY_EASE } from "../utils/motion";
 import { localizePath } from "../utils/locales";
+import { buildDesktopPrimaryNavigation } from "../utils/navigation";
 
 export default function Navbar({
   onNavigate,
@@ -37,29 +38,11 @@ export default function Navbar({
     };
   }, [mobileMenuOpen]);
 
-  const navLinks = [
-    {
-      id: "topstukken",
-      label: t("nav.topstukken"),
-      href: localizePath("/topstukken", language),
-    },
-    {
-      id: "catalogus",
-      label: t("nav.collectie"),
-      href: localizePath("/collectie", language),
-    },
-    {
-      id: "herkomst",
-      label: t("nav.herkomst"),
-      href: localizePath("/herkomst", language),
-    },
-    {
-      id: "rembrandt-project",
-      label: t("nav.rembrandtProject"),
-      href: localizePath("/rembrandt-project", language),
-    },
-    { id: "contact", label: t("nav.contact") || "Contact" },
-  ].filter((link) => link.id !== "rembrandt-project" || showRembrandtProject);
+  const navLinks = buildDesktopPrimaryNavigation({
+    translate: t,
+    language,
+    showRembrandtProject,
+  });
 
   const languages = [
     { code: "nl", label: "NL" },
@@ -104,7 +87,7 @@ export default function Navbar({
         <div className="flex xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between gap-4 xl:gap-12 min-h-[76px] sm:min-h-[88px] py-3">
           {/* LEFT ZONE: Navigation Links */}
           <div className="hidden xl:flex items-center gap-8 2xl:gap-10 min-w-0">
-            {navLinks.slice(0, 4).map((link) => (
+            {navLinks.map((link) => (
               <a
                 key={link.id}
                 href={link.href}

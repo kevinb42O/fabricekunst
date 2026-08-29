@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   if (req.query?.resource === 'rembrandt-project-preview-links') {
     return rembrandtProjectPreviewLinksHandler(req, res);
   }
-  if (req.query?.resource === 'rembrandt-project') {
+  if (['rembrandt-project', 'rembrandt-project-access-admin'].includes(req.query?.resource)) {
     return rembrandtProjectHandler(req, res);
   }
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method Not Allowed' });

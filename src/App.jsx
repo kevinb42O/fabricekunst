@@ -65,6 +65,7 @@ import {
   saveFaqItemsAsync,
   fetchRembrandtProjectDataAsync,
   fetchRembrandtProjectPreviewAsync,
+  validateRembrandtProjectPreviewAsync,
 } from "./utils/storage";
 
 export default function App() {
@@ -119,6 +120,8 @@ export default function App() {
   });
 
   useEffect(() => {
+    let previewValidationTimer = null;
+    let handlePreviewVisibility = null;
     // Initial fetch from Supabase (with fallback to local storage)
     fetchCatalogAsync().then((items) => {
       if (items && items.length > 0) setCatalog(items);
@@ -159,10 +162,27 @@ export default function App() {
         }
       }
       setRembrandtProjectPreview(true);
+      const invalidatePreview = (message) => {
+        setRembrandtProjectData(null);
+        setRembrandtProjectPreviewError(message);
+        if (previewValidationTimer) window.clearInterval(previewValidationTimer);
+        try {
+          sessionStorage.removeItem(REMBRANDT_PREVIEW_SESSION_KEY);
+        } catch {
+          /* storage is optional */
+        }
+      };
+      const validatePreview = () => validateRembrandtProjectPreviewAsync(token)
+        .catch((error) => invalidatePreview(error.message));
       fetchRembrandtProjectPreviewAsync(token)
         .then(({ project }) => setRembrandtProjectData(project))
-        .catch((error) => setRembrandtProjectPreviewError(error.message))
+        .catch((error) => invalidatePreview(error.message))
         .finally(() => setRembrandtProjectLoading(false));
+      previewValidationTimer = window.setInterval(validatePreview, 20_000);
+      handlePreviewVisibility = () => {
+        if (document.visibilityState === 'visible') validatePreview();
+      };
+      document.addEventListener('visibilitychange', handlePreviewVisibility);
     } else {
       fetchRembrandtProjectDataAsync()
         .then((project) => {
@@ -280,6 +300,9 @@ export default function App() {
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       sessionCheckActive = false;
+      if (previewValidationTimer) window.clearInterval(previewValidationTimer);
+      if (handlePreviewVisibility)
+        document.removeEventListener('visibilitychange', handlePreviewVisibility);
       window.removeEventListener("popstate", checkRoutes);
       window.removeEventListener("hashchange", checkRoutes);
       window.removeEventListener("keydown", handleKeyDown);

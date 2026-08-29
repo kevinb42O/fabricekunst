@@ -1,6 +1,38 @@
-import { cloneDefaultRembrandtProject } from "../data/defaultRembrandtProject.js";
-
 export const REMBRANDT_PROJECT_ROUTE = "/rembrandt-project";
+
+const emptyLocalizedText = () => ({ nl: "", en: "", fr: "" });
+
+// This fallback is intentionally content-free. The carefully prepared project
+// seed is server-only: putting it in a browser fallback would expose every
+// private draft in the publicly downloadable JavaScript bundle.
+export function createEmptyRembrandtProject() {
+  return {
+    schemaVersion: 1,
+    isEnabled: false,
+    settings: {
+      title: emptyLocalizedText(),
+      eyebrow: emptyLocalizedText(),
+      intro: emptyLocalizedText(),
+      summary: emptyLocalizedText(),
+      disclaimer: emptyLocalizedText(),
+      currentStatus: emptyLocalizedText(),
+      nextStep: emptyLocalizedText(),
+      methodologyTitle: emptyLocalizedText(),
+      methodologyText: emptyLocalizedText(),
+      closingTitle: emptyLocalizedText(),
+      closingText: emptyLocalizedText(),
+      heroImage: "",
+      heroAlt: emptyLocalizedText(),
+      socialImage: "",
+      projectStatus: "discovery",
+      currentPhaseId: "",
+      seoTitle: emptyLocalizedText(),
+      seoDescription: emptyLocalizedText(),
+    },
+    phases: [],
+    updates: [],
+  };
+}
 
 export function localizedProjectValue(value, language = "nl", fallback = "") {
   if (value == null) return fallback;
@@ -16,7 +48,7 @@ export function localizedProjectValue(value, language = "nl", fallback = "") {
 }
 
 export function normalizeRembrandtProject(input) {
-  const fallback = cloneDefaultRembrandtProject();
+  const fallback = createEmptyRembrandtProject();
   if (!input || typeof input !== "object") return fallback;
   const phases = Array.isArray(input.phases)
     ? input.phases

@@ -255,6 +255,44 @@ async function readProject(supabase) {
   return { project: parseSetting(data?.value), row: data || null };
 }
 
+async function writeProjectVisibility(supabase, enabled, expectedVersion = undefined) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { project, row } = await readProject(supabase);
+    const currentVersion = row?.updated_at || null;
+    if (expectedVersion !== undefined && expectedVersion !== currentVersion) {
+      throw new RequestError(
+        "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
+        409,
+      );
+    }
+    const updatedAt = new Date().toISOString();
+    const nextProject = { ...project, isEnabled: enabled, updatedAt };
+    if (enabled) await validateProject(nextProject);
+
+    if (!row) {
+      const { error } = await supabase.from("admin_settings").insert({
+        key: SETTING_KEY,
+        value: JSON.stringify(nextProject),
+        updated_at: updatedAt,
+      });
+      if (error?.code === "23505") continue;
+      if (error) throw error;
+      return { project: nextProject, version: updatedAt };
+    }
+
+    const { data, error } = await supabase
+      .from("admin_settings")
+      .update({ value: JSON.stringify(nextProject), updated_at: updatedAt })
+      .eq("key", SETTING_KEY)
+      .eq("updated_at", currentVersion)
+      .select("key")
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return { project: nextProject, version: updatedAt };
+  }
+  throw new RequestError("De zichtbaarheid kon door een gelijktijdige wijziging niet worden opgeslagen. Probeer opnieuw.", 409);
+}
+
 async function listRevisions(supabase) {
   const { data, error } = await supabase
     .from("rembrandt_project_revisions")
@@ -308,6 +346,12 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
+      if (req.query?.template === "1") {
+        return sendJson(res, 200, {
+          ok: true,
+          template: { ...DEFAULT_REMBRANDT_PROJECT, isEnabled: false },
+        });
+      }
       const revisionId = Array.isArray(req.query?.revisionId)
         ? req.query.revisionId[0]
         : req.query?.revisionId;
@@ -337,7 +381,53 @@ export default async function handler(req, res) {
       });
     }
 
-    const project = req.body?.project;
+    if (req.query?.resource === "rembrandt-project-access-admin") {
+      if (typeof req.body?.enabled !== "boolean")
+        throw new RequestError("Kies of het project openbaar of verborgen moet zijn.", 400);
+      const enabled = req.body.enabled;
+
+      if (!enabled) {
+        // The emergency-off path is deliberately independent from content and
+        // media validation. Fail closed first; synchronise content afterwards.
+        await writeRembrandtProjectAccess(false);
+        const saved = await writeProjectVisibility(supabase, false);
+        let warning = "";
+        try {
+          await publishPublicContentSnapshot(supabase, { includeRembrandtProject: false });
+        } catch (publicationError) {
+          console.error("Hidden project snapshot refresh failed:", publicationError);
+          warning = "Het project is verborgen. De websitegegevens worden bij een volgende publicatie opgeschoond.";
+        }
+        return sendJson(res, 200, { ok: true, ...saved, warning });
+      }
+
+      // Enabling remains strict: the latest content must still be the version
+      // the administrator reviewed, every image must validate, and the public
+      // snapshot is written before the access marker is opened.
+      const expectedVersion = req.body?.expectedVersion ?? null;
+      let saved = null;
+      try {
+        saved = await writeProjectVisibility(supabase, true, expectedVersion);
+        await publishPublicContentSnapshot(supabase, { includeRembrandtProject: true });
+        await writeRembrandtProjectAccess(true, saved.version);
+        return sendJson(res, 200, { ok: true, ...saved });
+      } catch (enableError) {
+        if (saved) {
+          await writeRembrandtProjectAccess(false).catch(() => {});
+          await writeProjectVisibility(supabase, false).catch(() => {});
+          await publishPublicContentSnapshot(supabase, { includeRembrandtProject: false }).catch(() => {});
+        }
+        throw enableError;
+      }
+    }
+
+    const access = await readRembrandtProjectAccess();
+    const project = {
+      ...(req.body?.project || {}),
+      // Content saves, restored revisions and templates can never alter the
+      // public gate. Only the dedicated, confirmed access endpoint can.
+      isEnabled: access.enabled === true,
+    };
     await validateProject(project);
     const { row: previous } = await readProject(supabase);
     const expectedVersion = req.body?.expectedVersion ?? null;
@@ -388,7 +478,9 @@ export default async function handler(req, res) {
       if (nextProject.isEnabled !== true) {
         await writeRembrandtProjectAccess(false, updatedAt);
       }
-      const publication = await publishPublicContentSnapshot(supabase);
+      const publication = await publishPublicContentSnapshot(supabase, {
+        includeRembrandtProject: access.enabled === true,
+      });
       if (nextProject.isEnabled === true) {
         await writeRembrandtProjectAccess(true, updatedAt);
       }
@@ -420,8 +512,7 @@ export default async function handler(req, res) {
           .eq("updated_at", updatedAt);
       }
       await publishPublicContentSnapshot(supabase).catch(() => {});
-      const previousProject = previous?.value ? parseSetting(previous.value) : null;
-      await writeRembrandtProjectAccess(previousProject?.isEnabled === true).catch(() => {});
+      await writeRembrandtProjectAccess(access.enabled === true).catch(() => {});
       throw publishError;
     }
   } catch (error) {

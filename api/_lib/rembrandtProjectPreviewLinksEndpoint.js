@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createPreviewToken } from './rembrandtPreviewToken.js';
-import { activePreviewLink, readPreviewLinks, writePreviewLinks } from './rembrandtPreviewStore.js';
+import { activePreviewLink, mutatePreviewLinks, readPreviewLinks } from './rembrandtPreviewStore.js';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './adminAuth.js';
 
 const publicLink = (req, token) => {
@@ -39,9 +39,8 @@ export default async function handler(req, res) {
     const id = req.body?.id;
     if (typeof id !== 'string') return sendJson(res, 400, { error: 'Ongeldige privélink.' });
     try {
-      const { links } = await readPreviewLinks(supabase);
       const revokedAt = new Date().toISOString();
-      await writePreviewLinks(supabase, links.map((entry) =>
+      await mutatePreviewLinks(supabase, (links) => links.map((entry) =>
         entry.id === id && !entry.revokedAt ? { ...entry, revokedAt } : entry,
       ));
       return sendJson(res, 200, { ok: true });
@@ -58,17 +57,16 @@ export default async function handler(req, res) {
   const { token, tokenHash } = createPreviewToken();
 
   try {
-    const { links } = await readPreviewLinks(supabase);
     const revokedAt = now.toISOString();
     const nextLink = {
       id: randomUUID(), tokenHash, label, createdAt: revokedAt,
       createdBy: authorization.user.id, expiresAt, revokedAt: null,
       lastUsedAt: null, accessCount: 0,
     };
-    await writePreviewLinks(supabase, [
-      nextLink,
-      ...links.map((entry) => !entry.revokedAt ? { ...entry, revokedAt } : entry),
-    ]);
+    await mutatePreviewLinks(supabase, (links) => [
+        nextLink,
+        ...links.map((entry) => !entry.revokedAt ? { ...entry, revokedAt } : entry),
+      ]);
     return sendJson(res, 201, { ok: true, link: serializeLink(nextLink), url: publicLink(req, token) });
   } catch {
     return sendJson(res, 500, { error: 'De privélink kon niet worden aangemaakt.' });

@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { cloneDefaultRembrandtProject } from "../src/data/defaultRembrandtProject.js";
 import {
+  createEmptyRembrandtProject,
   latestProjectUpdate,
   localizedProjectValue,
   projectProgress,
   publishedRembrandtProject,
 } from "../src/utils/rembrandtProject.js";
 import { buildSitemapXml } from "../src/utils/sitemap.js";
+import { buildDesktopPrimaryNavigation } from "../src/utils/navigation.js";
 import {
   hiddenProjectAccess,
   normalizeProjectAccess,
@@ -94,6 +96,24 @@ test("project access is fail-closed and redacts hidden public content", () => {
     redactHiddenRembrandtProject(snapshot, { schemaVersion: 1, enabled: true }).rembrandtProject.updates.length,
     project.updates.length,
   );
+});
+
+test("the browser fallback contains no private project seed", () => {
+  const fallback = createEmptyRembrandtProject();
+  assert.equal(fallback.isEnabled, false);
+  assert.deepEqual(fallback.phases, []);
+  assert.deepEqual(fallback.updates, []);
+  assert.doesNotMatch(JSON.stringify(fallback), /Rembrandt f\. 1637|Drouot|onbekend portret/i);
+});
+
+test("hiding the project never inserts a duplicate contact navigation item", () => {
+  const links = buildDesktopPrimaryNavigation({
+    translate: (key) => key,
+    language: "nl",
+    showRembrandtProject: false,
+  });
+  assert.deepEqual(links.map(({ id }) => id), ["topstukken", "catalogus", "herkomst"]);
+  assert.equal(links.some(({ id }) => id === "contact"), false);
 });
 
 test("private preview tokens are unguessable and stored as one-way hashes", () => {

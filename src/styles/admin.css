@@ -1941,6 +1941,16 @@
   }
 }
 
+.admin-loading-state {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  color: #6b6258;
+  font: 600 0.75rem/1.4 Arial, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 @media (hover: none), (pointer: coarse) {
   .admin-tooltip-layer {
     display: none;

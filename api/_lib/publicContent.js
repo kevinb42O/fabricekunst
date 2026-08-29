@@ -1,8 +1,14 @@
-import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectsCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
 import { getR2Client, PUBLIC_CONTENT_POINTER_KEY } from "./r2.js";
 import { publishedRembrandtProject } from "../../src/utils/rembrandtProject.js";
 import { cloneDefaultRembrandtProject } from "../../src/data/defaultRembrandtProject.js";
+import { readRembrandtProjectAccess } from "./rembrandtProjectAccess.js";
 
 const parseSetting = (row, fallback = null) => {
   if (!row?.value) return fallback;
@@ -73,7 +79,38 @@ export const buildPublicContentSnapshot = async (supabase) => {
   return snapshot;
 };
 
-export const publishPublicContentSnapshot = async (supabase) => {
+const prunePublicContentVersions = async (r2, currentKey, keepHistory) => {
+  let continuationToken;
+  const versions = [];
+  do {
+    const page = await r2.send(new ListObjectsV2Command({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Prefix: "site-data/public-content-",
+      ContinuationToken: continuationToken,
+    }));
+    versions.push(...(page.Contents || []));
+    continuationToken = page.NextContinuationToken;
+  } while (continuationToken);
+
+  const previous = versions
+    .filter((entry) => entry.Key && entry.Key !== currentKey)
+    .sort((a, b) => new Date(b.LastModified || 0) - new Date(a.LastModified || 0));
+  const stale = keepHistory ? previous.slice(4) : previous;
+  for (let index = 0; index < stale.length; index += 1000) {
+    await r2.send(new DeleteObjectsCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Delete: {
+        Objects: stale.slice(index, index + 1000).map(({ Key }) => ({ Key })),
+        Quiet: true,
+      },
+    }));
+  }
+};
+
+export const publishPublicContentSnapshot = async (
+  supabase,
+  { includeRembrandtProject } = {},
+) => {
   const r2 = getR2Client();
   for (let attempt = 0; attempt < 3; attempt += 1) {
     let currentEtag = null;
@@ -93,7 +130,13 @@ export const publishPublicContentSnapshot = async (supabase) => {
         throw error;
     }
 
-    const snapshot = await buildPublicContentSnapshot(supabase);
+    const builtSnapshot = await buildPublicContentSnapshot(supabase);
+    const includeProject = typeof includeRembrandtProject === "boolean"
+      ? includeRembrandtProject
+      : (await readRembrandtProjectAccess()).enabled === true;
+    const snapshot = includeProject
+      ? builtSnapshot
+      : { ...builtSnapshot, rembrandtProject: { isEnabled: false } };
     const serialized = JSON.stringify(snapshot);
     const versionKey = `site-data/public-content-${Date.now()}-${randomUUID()}.json`;
     const pointer = JSON.stringify({
@@ -124,6 +167,9 @@ export const publishPublicContentSnapshot = async (supabase) => {
           ...(currentEtag ? { IfMatch: currentEtag } : { IfNoneMatch: "*" }),
         }),
       );
+      await prunePublicContentVersions(r2, versionKey, includeProject).catch((error) => {
+        console.warn("Old public content versions could not be pruned:", error.message);
+      });
       return { snapshot, bytes: Buffer.byteLength(serialized), versionKey };
     } catch (error) {
       if (

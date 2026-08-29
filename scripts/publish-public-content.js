@@ -80,6 +80,10 @@ if (settingsReadError) throw settingsReadError;
 
 const settings = new Map((settingsRows || []).map((row) => [row.key, row]));
 const forceProjectHidden = process.argv.includes('--project-hidden');
+const forceProjectPublic = process.argv.includes('--project-public');
+if (forceProjectHidden && forceProjectPublic) {
+  throw new Error('Choose either --project-hidden or --project-public, never both.');
+}
 if (forceProjectHidden) {
   const project = parseSetting(settings.get('rembrandt_project_data'));
   if (project && typeof project === 'object') {
@@ -93,6 +97,7 @@ if (forceProjectHidden) {
     settings.set('rembrandt_project_data', { key: 'rembrandt_project_data', value });
   }
 }
+if (forceProjectHidden) await writeRembrandtProjectAccess(false);
 const provenance = parseSetting(settings.get("herkomst_page_data"));
 let migratedImages = 0;
 if (provenance?.hero?.bgImage?.startsWith("data:image/")) {
@@ -120,8 +125,19 @@ if (migratedImages) {
   settings.set("herkomst_page_data", { key: "herkomst_page_data", value });
 }
 
-const publication = await publishPublicContentSnapshot(supabase);
-await writeRembrandtProjectAccess(publication.snapshot.rembrandtProject?.isEnabled === true);
+const publication = await publishPublicContentSnapshot(supabase, {
+  includeRembrandtProject: forceProjectPublic
+    ? true
+    : forceProjectHidden
+      ? false
+      : undefined,
+});
+if (forceProjectPublic) {
+  if (publication.snapshot.rembrandtProject?.isEnabled !== true) {
+    throw new Error('The stored project is not enabled; use the admin confirmation flow first.');
+  }
+  await writeRembrandtProjectAccess(true);
+}
 
 console.log(
   JSON.stringify({

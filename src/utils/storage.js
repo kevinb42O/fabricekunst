@@ -5,8 +5,8 @@ import {
   normalizeCatalogItemTaxonomy,
 } from "../data/catalogTaxonomy";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
-import { cloneDefaultRembrandtProject } from "../data/defaultRembrandtProject";
 import {
+  createEmptyRembrandtProject,
   normalizeRembrandtProject,
   publishedRembrandtProject,
 } from "./rembrandtProject";
@@ -1152,45 +1152,31 @@ export const getRembrandtProjectData = () => {
     const cached = localStorage.getItem(REMBRANDT_PROJECT_PUBLIC_KEY);
     return cached
       ? normalizeRembrandtProject(JSON.parse(cached))
-      : { ...cloneDefaultRembrandtProject(), isEnabled: false };
+      : createEmptyRembrandtProject();
   } catch (error) {
     console.warn("Rembrandt Project-cache kon niet worden gelezen:", error);
-    return { ...cloneDefaultRembrandtProject(), isEnabled: false };
+    return createEmptyRembrandtProject();
   }
 };
 
 export const fetchRembrandtProjectDataAsync = async () => {
   try {
-    const [accessResponse, snapshot] = await Promise.all([
-      fetch('/api/public-content?resource=rembrandt-project-access', {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers: { Accept: 'application/json' },
-      }),
-      fetchPublicContentSnapshot(),
-    ]);
-    const access = await accessResponse.json().catch(() => null);
-    if (!accessResponse.ok || access?.enabled !== true) {
-      const unavailable = { ...cloneDefaultRembrandtProject(), isEnabled: false };
-      localStorage.setItem(REMBRANDT_PROJECT_PUBLIC_KEY, JSON.stringify(unavailable));
-      return unavailable;
-    }
-    if (
-      snapshot.rembrandtProject &&
-      typeof snapshot.rembrandtProject === "object"
-    ) {
-      const project = normalizeRembrandtProject(snapshot.rembrandtProject);
+    const response = await fetch('/api/public-content?resource=rembrandt-project', {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+    const result = await response.json().catch(() => null);
+    if (response.ok && result?.ok && result.project && typeof result.project === 'object') {
+      const project = normalizeRembrandtProject(result.project);
       localStorage.setItem(
         REMBRANDT_PROJECT_PUBLIC_KEY,
         JSON.stringify(project),
       );
       return project;
     }
-    const unavailable = {
-      ...cloneDefaultRembrandtProject(),
-      isEnabled: false,
-    };
+    const unavailable = createEmptyRembrandtProject();
     localStorage.setItem(
       REMBRANDT_PROJECT_PUBLIC_KEY,
       JSON.stringify(unavailable),
@@ -1202,7 +1188,7 @@ export const fetchRembrandtProjectDataAsync = async () => {
       error,
     );
   }
-  return { ...cloneDefaultRembrandtProject(), isEnabled: false };
+  return createEmptyRembrandtProject();
 };
 
 export const fetchRembrandtProjectPreviewAsync = async (token) => {
@@ -1218,6 +1204,21 @@ export const fetchRembrandtProjectPreviewAsync = async (token) => {
     throw new Error(result.error || 'Deze privélink is ongeldig of niet meer actief.');
   }
   return { project: normalizeRembrandtProject(result.project), expiresAt: result.expiresAt || null };
+};
+
+export const validateRembrandtProjectPreviewAsync = async (token) => {
+  const response = await fetch('/api/public-content?resource=rembrandt-project-preview', {
+    method: 'POST',
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ token, validateOnly: true }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) {
+    throw new Error(result.error || 'Deze privélink is ongeldig of niet meer actief.');
+  }
+  return { expiresAt: result.expiresAt || null };
 };
 
 export const fetchRembrandtProjectAdminAsync = async () => {
@@ -1253,13 +1254,13 @@ export const fetchRembrandtProjectAdminAsync = async () => {
     return {
       project: cached
         ? normalizeRembrandtProject(JSON.parse(cached))
-        : cloneDefaultRembrandtProject(),
+        : createEmptyRembrandtProject(),
       version: null,
       revisions: [],
     };
   } catch {
     return {
-      project: cloneDefaultRembrandtProject(),
+      project: createEmptyRembrandtProject(),
       version: null,
       revisions: [],
     };
@@ -1281,6 +1282,44 @@ export const fetchRembrandtProjectRevisionAsync = async (revisionId) => {
   return {
     ...result.revision,
     content: normalizeRembrandtProject(result.revision.content),
+  };
+};
+
+export const fetchRembrandtProjectTemplateAsync = async () => {
+  const response = await authenticatedAdminFetch(
+    "/api/publish-public-content?resource=rembrandt-project&template=1",
+    {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    },
+  );
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok || !result.template)
+    throw new Error(result.error || "De basisversie kon niet worden geladen.");
+  return normalizeRembrandtProject(result.template);
+};
+
+export const setRembrandtProjectAccessAsync = async (
+  enabled,
+  expectedVersion = null,
+) => {
+  const response = await authenticatedAdminFetch(
+    "/api/publish-public-content?resource=rembrandt-project-access-admin",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ enabled, expectedVersion }),
+    },
+  );
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok || !result.project)
+    throw new Error(result.error || "De publieke toegang kon niet worden gewijzigd.");
+  return {
+    project: normalizeRembrandtProject(result.project),
+    version: result.version || result.project.updatedAt || null,
+    warning: result.warning || "",
   };
 };
 

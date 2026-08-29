@@ -99,6 +99,20 @@ test("a disabled Rembrandt Project publishes no research structured data", () =>
   );
 });
 
+test("a disabled Rembrandt route exposes only generic not-found metadata", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.isEnabled = false;
+  const seo = buildPageSeo({
+    page: "rembrandtProject",
+    pathname: "/rembrandt-project",
+    projectData: project,
+  });
+  assert.equal(seo.title, "Pagina niet gevonden — Atelier Rembrandt");
+  assert.equal(seo.canonical, "https://www.atelierrembrandt.com/");
+  assert.equal(seo.robots, "noindex, nofollow");
+  assert.doesNotMatch(`${seo.title} ${seo.description}`, /Rembrandt Project|signatuur|schilderij/i);
+});
+
 test("a private Rembrandt preview is always noindex", () => {
   const project = cloneDefaultRembrandtProject();
   const seo = buildPageSeo({

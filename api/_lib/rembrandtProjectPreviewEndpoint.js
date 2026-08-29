@@ -3,7 +3,7 @@ import { getServerSupabase, sendJson } from './adminAuth.js';
 import { hashPreviewToken, isValidPreviewToken } from './rembrandtPreviewToken.js';
 import { publishedRembrandtProject } from '../../src/utils/rembrandtProject.js';
 import { cloneDefaultRembrandtProject } from '../../src/data/defaultRembrandtProject.js';
-import { readPreviewLinks } from './rembrandtPreviewStore.js';
+import { mutatePreviewLinks, readPreviewLinks } from './rembrandtPreviewStore.js';
 
 const attempts = new Map();
 const ATTEMPT_WINDOW_MS = 60_000;
@@ -17,18 +17,18 @@ const requestAddress = (req) => String(req.headers['x-forwarded-for'] || req.soc
 const isRateLimited = (req) => {
   const now = Date.now();
   const key = requestAddress(req);
-  const current = attempts.get(key);
-  if (!current || now - current.startedAt >= ATTEMPT_WINDOW_MS) {
-    attempts.set(key, { startedAt: now, count: 1 });
-    return false;
-  }
-  current.count += 1;
   if (attempts.size > 500) {
     for (const [address, entry] of attempts) {
       if (now - entry.startedAt >= ATTEMPT_WINDOW_MS) attempts.delete(address);
     }
-    while (attempts.size > 1000) attempts.delete(attempts.keys().next().value);
   }
+  const current = attempts.get(key);
+  if (!current || now - current.startedAt >= ATTEMPT_WINDOW_MS) {
+    while (attempts.size >= 1000) attempts.delete(attempts.keys().next().value);
+    attempts.set(key, { startedAt: now, count: 1 });
+    return false;
+  }
+  current.count += 1;
   return current.count > MAX_ATTEMPTS_PER_WINDOW;
 };
 
@@ -66,6 +66,9 @@ export default async function handler(req, res) {
     new Date(entry.expiresAt).getTime() > Date.now(),
   );
   if (!link) return sendJson(res, 404, { error: 'Deze privélink is ongeldig of niet meer actief.' });
+  if (req.body?.validateOnly === true) {
+    return sendJson(res, 200, { ok: true, expiresAt: link.expiresAt });
+  }
 
   const { data: setting, error: projectError } = await supabase
     .from('admin_settings')
@@ -75,5 +78,14 @@ export default async function handler(req, res) {
   if (projectError || !setting) return sendJson(res, 503, { error: 'De privépreview is tijdelijk niet beschikbaar.' });
 
   const project = parseProject(setting.value);
+  await mutatePreviewLinks(supabase, (links) => links.map((entry) =>
+    entry.id === link.id
+      ? {
+          ...entry,
+          lastUsedAt: new Date().toISOString(),
+          accessCount: Number(entry.accessCount || 0) + 1,
+        }
+      : entry,
+  )).catch(() => {});
   return sendJson(res, 200, { ok: true, project: { ...project, isEnabled: true }, expiresAt: link.expiresAt });
 }

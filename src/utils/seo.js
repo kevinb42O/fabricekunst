@@ -249,9 +249,24 @@ export function buildPageSeo({
     pageKind === "rembrandtProject" && projectData
       ? publishedRembrandtProject(projectData)
       : null;
+  const hiddenProject =
+    pageKind === "rembrandtProject" && project?.isEnabled !== true;
+  const effectiveCanonical = hiddenProject
+    ? `${SITE_URL}${localizePath("/", lang)}`
+    : canonical;
+  const effectiveAlternates = hiddenProject
+    ? Object.fromEntries(
+        Object.entries(getLanguageAlternates("/")).map(([hreflang, path]) => [
+          hreflang,
+          `${SITE_URL}${path === "/" ? "/" : path}`,
+        ]),
+      )
+    : alternates;
   const title =
     pageKind === "item" && itemTitle
       ? truncate(`${itemTitle} — ${SITE_NAME}`, 72)
+      : hiddenProject
+        ? copy.notFound.title
       : pageKind === "rembrandtProject"
         ? truncate(
             localizedProjectValue(
@@ -268,6 +283,8 @@ export function buildPageSeo({
           itemDescription || `${itemTitle} uit de collectie van ${SITE_NAME}.`,
           158,
         )
+      : hiddenProject
+        ? copy.notFound.description
       : pageKind === "rembrandtProject"
         ? truncate(
             localizedProjectValue(
@@ -282,7 +299,7 @@ export function buildPageSeo({
   return {
     title,
     description,
-    canonical,
+    canonical: effectiveCanonical,
     image:
       itemImage ||
       absoluteUrl(
@@ -293,18 +310,19 @@ export function buildPageSeo({
     type: pageKind === "item" ? "product" : "website",
     language: lang,
     locale: LANGUAGE_TAGS[lang],
-    alternates,
+    alternates: effectiveAlternates,
     robots:
       pageKind === "notFound" ||
+      hiddenProject ||
       stripLanguagePrefix(normalizePath(pathname)).toLowerCase() === '/rembrandt-project/preview' ||
       (pageKind === "rembrandtProject" && project?.isEnabled !== true)
         ? "noindex, nofollow"
         : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
     structuredData: buildStructuredData({
-      page: pageKind,
+      page: hiddenProject ? "notFound" : pageKind,
       item,
       language: lang,
-      canonical,
+      canonical: effectiveCanonical,
       items,
       projectData: project,
     }),

@@ -22,24 +22,25 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
-import ItemManager from './ItemManager';
-import InquiriesManager from './InquiriesManager';
-import SecuritySettings from './SecuritySettings';
 import ToastNotification from './ToastNotification';
-import DashboardOverview from './DashboardOverview';
-import CustomersManager from './CustomersManager';
-import HeroSlidesManager from './HeroSlidesManager';
-import ProvenanceManager from './ProvenanceManager';
-import FaqManager from './FaqManager';
-import CertificateManager from './CertificateManager';
 import AdminTooltip from './AdminTooltip';
-import AnalyticsManager from './AnalyticsManager';
-import TokensManager from './TokensManager';
-import CollectorListManager from './CollectorListManager';
-import RembrandtProjectManager from './RembrandtProjectManager';
 import { authenticatedAdminFetch } from '../../utils/adminApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/admin.css';
+
+const ItemManager = React.lazy(() => import('./ItemManager'));
+const InquiriesManager = React.lazy(() => import('./InquiriesManager'));
+const SecuritySettings = React.lazy(() => import('./SecuritySettings'));
+const DashboardOverview = React.lazy(() => import('./DashboardOverview'));
+const CustomersManager = React.lazy(() => import('./CustomersManager'));
+const HeroSlidesManager = React.lazy(() => import('./HeroSlidesManager'));
+const ProvenanceManager = React.lazy(() => import('./ProvenanceManager'));
+const FaqManager = React.lazy(() => import('./FaqManager'));
+const CertificateManager = React.lazy(() => import('./CertificateManager'));
+const AnalyticsManager = React.lazy(() => import('./AnalyticsManager'));
+const TokensManager = React.lazy(() => import('./TokensManager'));
+const CollectorListManager = React.lazy(() => import('./CollectorListManager'));
+const RembrandtProjectManager = React.lazy(() => import('./RembrandtProjectManager'));
 
 const VALID_TABS = new Set([
   'dashboard', 'analytics-overview', 'analytics-acquisition', 'analytics-behavior', 'items', 'certificates', 'hero', 'provenance', 'faq',
@@ -332,6 +333,7 @@ export default function AdminDashboard({
         </header>
 
         <main className="admin-content" id="admin-main">
+          <React.Suspense fallback={<div className="admin-loading-state" role="status">Onderdeel laden…</div>}>
           {projectManagerOpened && (
             <div hidden={activeTab !== 'rembrandt-project'}>
               <RembrandtProjectManager onPublished={onRembrandtProjectPublished} onShowToast={showToast} />
@@ -407,6 +409,7 @@ export default function AdminDashboard({
               {activeTab === 'settings' && <SecuritySettings currentUser={currentUser} onShowToast={showToast} />}
             </motion.div>
           </AnimatePresence>}
+          </React.Suspense>
         </main>
       </div>
 
