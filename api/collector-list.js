@@ -95,7 +95,7 @@ const confirmationEmail = ({ locale, confirmUrl }) => {
   const labels = copy[locale] || copy.en;
   return {
     subject: labels.subject,
-    html: `<!doctype html><html><body style="margin:0;background:#f7f3ec;color:#1c1a17;font-family:Georgia,serif"><div style="max-width:620px;margin:0 auto;padding:48px 24px"><p style="font:700 11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#8e7035">Atelier Rembrandt</p><h1 style="font-size:36px;line-height:1.1">${labels.title}</h1><p style="font-size:17px;line-height:1.7;color:#554b41">${labels.body}</p><p style="margin:32px 0"><a href="${confirmUrl}" style="display:inline-block;background:#1c1a17;color:#fff;padding:16px 22px;font:700 11px Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none">${labels.action}</a></p><p style="font:12px/1.6 Arial,sans-serif;color:#786e64">Atelier Rembrandt · contact@atelierrembrandt.com</p></div></body></html>`
+    html: `<!doctype html><html><body style="margin:0;background:#f7f3ec;color:#1c1a17;font-family:Georgia,serif"><div style="max-width:620px;margin:0 auto;padding:48px 24px"><p style="font:700 11px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#8e7035">Atelier Rembrandt</p><h1 style="font-size:36px;line-height:1.1">${labels.title}</h1><p style="font-size:17px;line-height:1.7;color:#554b41">${labels.body}</p><p style="margin:32px 0"><a href="${confirmUrl}" style="display:inline-block;background:#1c1a17;color:#fff;padding:16px 22px;font:700 11px Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none">${labels.action}</a></p><p style="font:12px/1.6 Arial,sans-serif;color:#786e64">Atelier Rembrandt · info@atelierrembrandt.com</p></div></body></html>`
   };
 };
 

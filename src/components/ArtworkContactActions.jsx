@@ -5,7 +5,7 @@ import { getItemField } from '../utils/translationService';
 import { trackEvent } from '../hooks/useAnalytics';
 
 const WHATSAPP_NUMBER = '32484384530';
-const CONTACT_EMAIL = 'contact@atelierrembrandt.com';
+const CONTACT_EMAIL = 'info@atelierrembrandt.com';
 
 const MESSAGE_COPY = {
   nl: (title, ref, url) => `Beste, ik ontvang graag meer informatie over “${title}”${ref ? ` (ref. ${ref})` : ''}. ${url}`,

@@ -189,12 +189,12 @@ export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultat
 
                   <div className="mt-5 grid gap-1 min-[600px]:grid-cols-2 min-[600px]:gap-3">
                     <a
-                      href="mailto:contact@atelierrembrandt.com"
+                      href="mailto:info@atelierrembrandt.com"
                       onClick={() => trackContactClick('email_clicked')}
                       className="flex min-h-12 min-w-0 items-center gap-3 border-y border-[#D8CEB8]/70 font-serif text-[13px] text-[#332D27] transition-colors active:text-[#8E7035] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8E7035] min-[600px]:border"
                     >
                       <Mail className="h-4 w-4 shrink-0 text-[#8E7035]" strokeWidth={1.7} aria-hidden="true" />
-                      <span className="truncate">contact@atelierrembrandt.com</span>
+                      <span className="truncate">info@atelierrembrandt.com</span>
                     </a>
                     <a
                       href="tel:+32484384530"

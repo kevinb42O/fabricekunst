@@ -25,12 +25,12 @@ export default function MobileFooter({ onNavigate, showRembrandtProject = true }
 
         <div className="mt-7 grid gap-2">
           <a
-            href="mailto:contact@atelierrembrandt.com"
+            href="mailto:info@atelierrembrandt.com"
             onClick={() => trackContactClick('email_clicked', { placement: 'mobile_footer' })}
             className="flex min-h-11 items-center gap-3 font-serif text-sm"
           >
             <Mail className="h-4 w-4 text-[#8E7035]" aria-hidden="true" />
-            contact@atelierrembrandt.com
+            info@atelierrembrandt.com
           </a>
           <a
             href="tel:+32484384530"

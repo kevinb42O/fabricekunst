@@ -10,7 +10,7 @@ export const BUSINESS = {
   address: 'Kemmelbergstraat 8, 8400 Oostende, België',
   enterpriseNumber: '0749.548.593',
   vatNumber: 'BE 0749.548.593',
-  email: 'contact@atelierrembrandt.com',
+  email: 'info@atelierrembrandt.com',
   phoneDisplay: '+32 (0)484 38 45 30',
   phoneHref: '+32484384530',
   website: 'www.atelierrembrandt.com',

@@ -87,11 +87,11 @@ export default function Footer({ onNavigate, showRembrandtProject = true }) {
               <li className="flex items-center space-x-2 text-[#333333]">
                 <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
                 <a
-                  href="mailto:contact@atelierrembrandt.com"
+                  href="mailto:info@atelierrembrandt.com"
                   onClick={() => trackContactClick('email_clicked', { placement: 'footer' })}
                   className="hover:text-[#B8860B] transition-colors font-medium"
                 >
-                  contact@atelierrembrandt.com
+                  info@atelierrembrandt.com
                 </a>
               </li>
               <li className="flex items-center space-x-2 text-[#333333]">
