@@ -62,7 +62,7 @@ export default function Navbar({
     }
   };
 
-  const showNavbarBackground = scrolled || isNavInteractive || mobileMenuOpen;
+  const showNavbarBackground = activeTab === "rembrandt-project" || scrolled || isNavInteractive || mobileMenuOpen;
 
   return (
     <motion.nav

@@ -1,7 +1,10 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowDown,
+  ArrowLeft,
+  Expand,
+  X,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
@@ -19,6 +22,8 @@ import {
   localizedProjectValue,
   publishedRembrandtProject,
 } from "../utils/rembrandtProject";
+import { localizePath } from "../utils/locales";
+import { REMBRANDT_PROJECT_ROUTE } from "../utils/rembrandtProject";
 import { trackEvent } from "../hooks/useAnalytics";
 import PaintingSubmissionForm from "./PaintingSubmissionForm";
 import "../styles/rembrandt-project.css";
@@ -164,6 +169,7 @@ function ProjectUpdate({ update, index, language, labels }) {
           <p className="rembrandt-update__summary">{localizedProjectValue(update.summary, language)}</p>
         </header>
         {update.coverImage && <ProjectImage language={language} image={{ url: update.coverImage, alt: update.coverAlt, caption: update.coverCaption }} />}
+        {update.gallery?.length > 0 && <div className="dossier-update-gallery">{update.gallery.filter((image) => image.url).map((image) => <DetailImage key={image.id || image.url} image={image} language={language} copy={DOSSIER_UI[language] || DOSSIER_UI.nl} />)}</div>}
         <div className="rembrandt-update__body">{paragraphs(update.body, language).map((text) => <p key={text}>{text}</p>)}</div>
         {Array.isArray(findings) && findings.length > 0 && (
           <section className="rembrandt-findings" aria-labelledby={`${update.id}-findings`}>
@@ -179,41 +185,84 @@ function ProjectUpdate({ update, index, language, labels }) {
   );
 }
 
-function Investigation({ investigation, updates, language, labels }) {
-  const gallery = [
-    ...(investigation.coverImage ? [{ id: `${investigation.id}-cover`, url: investigation.coverImage, alt: investigation.coverAlt }] : []),
-    ...(investigation.gallery || []),
-  ];
+const DOSSIER_UI = {
+  nl: { back: "Alle onderzoeken", story: "Het dossier", images: "Het werk van dichtbij", chronology: "Het onderzoek, stap voor stap", contents: "In dit dossier", status: "Stand van het onderzoek", other: "Verder ontdekken", enlarge: "Bekijk op groot formaat", close: "Afbeelding sluiten", imageNote: "Beeldmateriaal uit het onderzoeksdossier", pending: "Het dossier is geopend. Nieuwe bevindingen verschijnen hier zodra ze zijn gecontroleerd en vrijgegeven.", updates: "publieke updates", view: "Ontdek het dossier" },
+  en: { back: "All investigations", story: "The case", images: "A closer look", chronology: "The research, step by step", contents: "In this case", status: "Research status", other: "Continue exploring", enlarge: "View full size", close: "Close image", imageNote: "Images from the research case", pending: "The case is open. New findings will appear here once reviewed and approved for publication.", updates: "public updates", view: "Explore the case" },
+  fr: { back: "Toutes les recherches", story: "Le dossier", images: "L’œuvre de près", chronology: "La recherche, étape par étape", contents: "Dans ce dossier", status: "État de la recherche", other: "Poursuivre la découverte", enlarge: "Voir en grand", close: "Fermer l’image", imageNote: "Images du dossier de recherche", pending: "Le dossier est ouvert. Les nouvelles observations seront publiées ici après vérification et validation.", updates: "mises à jour publiques", view: "Découvrir le dossier" },
+};
+
+const casePath = (investigation, language, privatePreview) => localizePath(`${REMBRANDT_PROJECT_ROUTE}${privatePreview ? "/preview" : ""}/${investigation.slug}`, language);
+
+function Investigation({ investigation, language, labels, privatePreview }) {
+  const copy = DOSSIER_UI[language] || DOSSIER_UI.nl;
   return (
-    <article id={`investigation-${investigation.slug}`} className={`lost-investigation ${investigation.featured ? "is-featured" : ""}`}>
+    <a href={casePath(investigation, language, privatePreview)} id={`investigation-${investigation.slug}`} className={`lost-investigation ${investigation.featured ? "is-featured" : ""}`}>
       <div className="lost-investigation__image">
         {investigation.coverImage && <img src={investigation.coverImage} alt={localizedProjectValue(investigation.coverAlt, language)} loading="lazy" decoding="async" />}
-        <span>{labels.privateSubmission}</span>
+        <span>{labels.caseNumber} {investigation.reference}</span>
       </div>
       <div className="lost-investigation__copy">
-        <div className="lost-investigation__meta"><span>{labels.caseNumber} {investigation.reference}</span><b>{localizedProjectValue(investigation.statusLabel, language, labels.status[investigation.status])}</b></div>
-        <h3>{localizedProjectValue(investigation.title, language)}</h3>
-        <h4>{localizedProjectValue(investigation.subtitle, language)}</h4>
+        <div className="lost-investigation__meta"><span>{localizedProjectValue(investigation.title, language)}</span><b>{labels.status[investigation.status]}</b></div>
+        <h3>{localizedProjectValue(investigation.subtitle, language) || localizedProjectValue(investigation.title, language)}</h3>
         <p>{localizedProjectValue(investigation.summary, language)}</p>
-        <details className="lost-investigation__details">
-          <summary><span className="when-closed">{labels.viewCase}</span><span className="when-open">{labels.closeCase}</span><ChevronDown aria-hidden="true" /></summary>
-          <div className="lost-investigation__detail-body">
-            {paragraphs(investigation.description, language).map((text) => <p key={text}>{text}</p>)}
-            {gallery.length > 0 && <div className="lost-investigation__gallery">{gallery.map((image) => <ProjectImage key={image.id || image.url} image={image} language={language} />)}</div>}
-            <section className="lost-investigation__timeline" aria-labelledby={`${investigation.id}-timeline`}>
-              <div className="rembrandt-project__section-heading is-compact">
-                <p>{labels.latest}</p><h3 id={`${investigation.id}-timeline`}>{labels.timeline}</h3><span>{labels.timelineIntro}</span>
-              </div>
-              {updates.length ? updates.map((update, index) => <ProjectUpdate key={update.id} update={update} index={index} language={language} labels={labels} />) : <p className="rembrandt-phase__empty">{labels.empty}</p>}
-            </section>
-          </div>
-        </details>
+        <div className="lost-investigation__link">{copy.view}<ArrowRight aria-hidden="true" /></div>
       </div>
-    </article>
+    </a>
   );
 }
 
-export default function RembrandtProjectPage({ projectData, loading = false, privatePreview = false, previewError = "", onNavigate = () => {} }) {
+function DetailImage({ image, language, copy }) {
+  const dialog = useRef(null);
+  return <figure className="dossier-image">
+    <button type="button" onClick={() => dialog.current?.showModal()} aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, "")}`}>
+      <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} loading="lazy" />
+      <span><Expand aria-hidden="true" />{copy.enlarge}</span>
+    </button>
+    <figcaption>{localizedProjectValue(image.caption, language, copy.imageNote)}</figcaption>
+    <dialog ref={dialog} className="dossier-lightbox" onClick={(event) => { if (event.target === event.currentTarget) dialog.current.close(); }}>
+      <button type="button" autoFocus onClick={() => dialog.current.close()} aria-label={copy.close}><X /></button>
+      <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} />
+      <p>{localizedProjectValue(image.caption, language, "")}</p>
+    </dialog>
+  </figure>;
+}
+
+function InvestigationPage({ investigation, project, language, labels, privatePreview }) {
+  const copy = DOSSIER_UI[language] || DOSSIER_UI.nl;
+  const updates = project.updates.filter((update) => update.investigationId === investigation.id);
+  const gallery = (investigation.gallery || []).filter((image) => image.url);
+  const overview = localizePath(`${REMBRANDT_PROJECT_ROUTE}${privatePreview ? "/preview" : ""}`, language);
+  const related = project.investigations.filter((entry) => entry.id !== investigation.id);
+  return <main className={`rembrandt-project dossier-page dossier-page--${investigation.sortOrder}`}>
+    {privatePreview && <div className="rembrandt-project__private-preview"><ShieldCheck aria-hidden="true" />{labels.privatePreview}</div>}
+    <header className="dossier-hero">
+      <div className="dossier-hero__top rembrandt-project__shell"><a href={`${overview}#current-investigations`}><ArrowLeft aria-hidden="true" />{copy.back}</a><span>Lost Rembrandt / {investigation.reference}</span></div>
+      <div className="dossier-hero__layout rembrandt-project__shell">
+        <div className="dossier-hero__copy">
+          <p className="dossier-eyebrow">{localizedProjectValue(investigation.title, language)}<span />{investigation.reference}</p>
+          <h1>{localizedProjectValue(investigation.subtitle, language) || localizedProjectValue(investigation.title, language)}</h1>
+          <p className="dossier-hero__summary">{localizedProjectValue(investigation.summary, language)}</p>
+          <a className="dossier-hero__start" href="#dossier-story">{copy.view}<ArrowDown aria-hidden="true" /></a>
+          <div className="dossier-hero__status"><span>{copy.status}</span><strong><i />{localizedProjectValue(investigation.statusLabel, language, labels.status[investigation.status])}</strong></div>
+        </div>
+        <figure className="dossier-hero__art">{investigation.coverImage && <img src={investigation.coverImage} alt={localizedProjectValue(investigation.coverAlt, language)} fetchPriority="high" />}<figcaption><span>{labels.privateSubmission}</span><span>{investigation.reference}</span></figcaption></figure>
+      </div>
+    </header>
+    <nav className="dossier-nav" aria-label={copy.contents}><div className="rembrandt-project__shell"><a href="#dossier-story"><span>01</span>{copy.story}</a>{gallery.length > 0 && <a href="#dossier-images"><span>02</span>{copy.images}</a>}<a href="#dossier-timeline"><span>{gallery.length ? "03" : "02"}</span>{labels.nav.investigations}</a><span className="dossier-nav__ref">{investigation.reference}</span></div></nav>
+    <section id="dossier-story" className="dossier-story rembrandt-project__shell">
+      <div><p className="dossier-eyebrow">01 / {copy.story}</p><h2>{localizedProjectValue(investigation.subtitle, language)}</h2></div>
+      <div className="dossier-story__body">{paragraphs(investigation.description, language).map((text) => <p key={text}>{text}</p>)}<aside><ShieldCheck aria-hidden="true" /><p>{localizedProjectValue(project.settings.disclaimer, language)}</p></aside></div>
+    </section>
+    {gallery.length > 0 && <section id="dossier-images" className="dossier-gallery"><div className="rembrandt-project__shell"><div className="dossier-section-heading"><p className="dossier-eyebrow">02 / {copy.imageNote}</p><h2>{copy.images}</h2></div><div className={`dossier-gallery__grid ${gallery.length === 1 ? "is-single" : ""}`}>{gallery.map((image) => <DetailImage key={image.id || image.url} image={image} language={language} copy={copy} />)}</div></div></section>}
+    <section id="dossier-timeline" className="dossier-research rembrandt-project__shell">
+      <div className="dossier-section-heading"><p className="dossier-eyebrow">{gallery.length ? "03" : "02"} / {labels.timeline}</p><h2>{copy.chronology}</h2><p>{labels.timelineIntro}</p></div>
+      {updates.length > 0 ? <div className="dossier-research__layout"><aside className="dossier-index"><span>{copy.contents}</span>{updates.map((update, index) => <a key={update.id} href={`#update-${update.slug}`}><span>{String(index + 1).padStart(2, "0")}</span>{localizedProjectValue(update.title, language)}</a>)}</aside><div>{updates.map((update, index) => <ProjectUpdate key={update.id} update={update} index={index} language={language} labels={labels} />)}</div></div> : <div className="dossier-pending"><Microscope aria-hidden="true" /><div><h3>{localizedProjectValue(investigation.statusLabel, language, labels.status[investigation.status])}</h3><p>{copy.pending}</p></div></div>}
+    </section>
+    {related.length > 0 && <section className="dossier-related"><div className="rembrandt-project__shell"><p className="dossier-eyebrow">Lost Rembrandt</p><h2>{copy.other}</h2><div>{related.map((entry) => <Investigation key={entry.id} investigation={entry} language={language} labels={labels} privatePreview={privatePreview} />)}</div></div></section>}
+  </main>;
+}
+
+export default function RembrandtProjectPage({ projectData, loading = false, privatePreview = false, previewError = "", investigationSlug = "", onNavigate = () => {} }) {
   const { language } = useLanguage();
   const labels = UI[language] || UI.nl;
   const reduceMotion = useReducedMotion();
@@ -222,8 +271,23 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
   const latest = latestProjectUpdate(project);
   const reveal = reduceMotion ? {} : { initial: { opacity: 0, y: 14 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-70px" }, transition: { duration: 0.5 } };
 
+  useEffect(() => {
+    if (loading || !projectData) return;
+    const frame = window.requestAnimationFrame(() => {
+      const anchor = window.location.hash.slice(1);
+      if (anchor) document.getElementById(anchor)?.scrollIntoView({ behavior: "instant", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, projectData, investigationSlug]);
+
   if (loading) return <div className="rembrandt-project rembrandt-project__state" aria-live="polite"><span className="rembrandt-project__state-loader" /><p>{labels.loading}</p></div>;
   if (previewError || !projectData || !project.isEnabled) return <div className="rembrandt-project rembrandt-project__state"><p>{previewError || labels.unavailable}</p><button type="button" onClick={() => onNavigate("home")}>{labels.backHome}</button></div>;
+
+  if (investigationSlug) {
+    const investigation = project.investigations.find((entry) => entry.slug === investigationSlug);
+    if (!investigation) return <main className="rembrandt-project rembrandt-project__state"><p>{labels.unavailable}</p><a href={localizePath(`${REMBRANDT_PROJECT_ROUTE}${privatePreview ? "/preview" : ""}`, language)}>{(DOSSIER_UI[language] || DOSSIER_UI.nl).back}</a></main>;
+    return <InvestigationPage investigation={investigation} project={project} language={language} labels={labels} privatePreview={privatePreview} />;
+  }
 
   return (
     <main className="rembrandt-project">
@@ -246,7 +310,7 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
             <span>{labels.current}</span>
             <strong>{labels.status[settings.projectStatus] || labels.status["technical-research"]}</strong>
             <p>{localizedProjectValue(settings.currentStatus, language)}</p>
-            {latest && <a href={`#update-${latest.slug}`}>{labels.latest}<ArrowRight aria-hidden="true" /></a>}
+            {latest && <a href={`${casePath(project.investigations.find((entry) => entry.id === latest.investigationId) || project.investigations[0], language, privatePreview)}#update-${latest.slug}`}>{labels.latest}<ArrowRight aria-hidden="true" /></a>}
           </motion.aside>
         </div>
       </header>
@@ -284,7 +348,7 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
             </motion.div>
             <div className="lost-investigation__list">
               {project.investigations.map((investigation) => (
-                <Investigation key={investigation.id} investigation={investigation} updates={project.updates.filter((update) => update.investigationId === investigation.id)} language={language} labels={labels} />
+                <Investigation key={investigation.id} investigation={investigation} language={language} labels={labels} privatePreview={privatePreview} />
               ))}
             </div>
           </div>

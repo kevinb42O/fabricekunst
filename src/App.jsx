@@ -19,6 +19,7 @@ import { applySeoToDocument, buildPageSeo, getPageKind } from "./utils/seo";
 import { localizePath, stripLanguagePrefix } from "./utils/locales";
 import {
   LEGACY_REMBRANDT_PROJECT_ROUTE,
+  getRembrandtRoute,
   REMBRANDT_PROJECT_ROUTE,
 } from "./utils/rembrandtProject";
 import {
@@ -82,6 +83,7 @@ export default function App() {
   const [mobileHeroImage, setMobileHeroImage] = useState(getMobileHeroImage());
   const [provenanceData, setProvenanceData] = useState(getProvenanceData());
   const [faqItems, setFaqItems] = useState(getFaqItems());
+  const [investigationSlug, setInvestigationSlug] = useState("");
   const [rembrandtProjectData, setRembrandtProjectData] = useState(null);
   const [rembrandtProjectLoading, setRembrandtProjectLoading] = useState(true);
   const [rembrandtProjectPreview, setRembrandtProjectPreview] = useState(false);
@@ -148,8 +150,9 @@ export default function App() {
     });
 
     const initialPath = stripLanguagePrefix(window.location.pathname).toLowerCase();
-    if ([`${REMBRANDT_PROJECT_ROUTE}/preview`, `${LEGACY_REMBRANDT_PROJECT_ROUTE}/preview`].includes(initialPath)) {
-      const fragmentToken = window.location.hash.replace(/^#/, '');
+    if (getRembrandtRoute(initialPath)?.privatePreview) {
+      const fragment = window.location.hash.replace(/^#/, '');
+      const fragmentToken = /^[A-Za-z0-9_-]{43}$/.test(fragment) ? fragment : "";
       let storedToken = '';
       try {
         storedToken = sessionStorage.getItem(REMBRANDT_PREVIEW_SESSION_KEY) || '';
@@ -198,6 +201,7 @@ export default function App() {
     const checkRoutes = () => {
       const path = stripLanguagePrefix(window.location.pathname).toLowerCase();
       const hash = window.location.hash.toLowerCase().split("?")[0];
+      setInvestigationSlug(getRembrandtRoute(path)?.investigationSlug || "");
 
       if (path === "/admin" || hash === "#admin") {
         setAdminLoginOpen(true);
@@ -229,6 +233,8 @@ export default function App() {
         setActiveTab("herkomst");
         setSelectedDetailItemId(null);
       } else if (
+        path.startsWith(`${REMBRANDT_PROJECT_ROUTE}/`) ||
+        path.startsWith(`${LEGACY_REMBRANDT_PROJECT_ROUTE}/`) ||
         path === REMBRANDT_PROJECT_ROUTE ||
         path === LEGACY_REMBRANDT_PROJECT_ROUTE ||
         hash === "#rembrandt-project"
@@ -433,6 +439,7 @@ export default function App() {
     }
 
     if (targetId === "rembrandt-project") {
+      setInvestigationSlug("");
       transitionPageChange(() => {
         setCurrentPage("rembrandt-project");
       });
@@ -594,6 +601,7 @@ export default function App() {
     language,
     selectedDetailItemId,
     rembrandtProjectData,
+    investigationSlug,
   ]);
 
   const refreshInquiries = async () => {
@@ -750,6 +758,7 @@ export default function App() {
             />
           ) : currentPage === "rembrandt-project" ? (
             <RembrandtProjectPage
+              investigationSlug={investigationSlug}
               projectData={rembrandtProjectData}
               loading={rembrandtProjectLoading}
               privatePreview={rembrandtProjectPreview}

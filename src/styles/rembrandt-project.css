@@ -1165,3 +1165,125 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Editorial research pages. Artwork keeps its own proportions. */
+.lost-investigation { text-decoration: none; transition: border-color .2s, background .2s; }
+.lost-investigation:hover { border-color: #c2a575; background: #302920; }
+.lost-investigation:focus-visible { outline: 3px solid #e7c68c; outline-offset: 6px; }
+.lost-investigation__image { height: 30rem; min-height: 0; }
+.lost-investigation__copy { display: flex; flex-direction: column; justify-content: center; }
+.lost-investigation__copy > h3 { font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.02; margin: 1.5rem 0; }
+.lost-investigation__link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; padding-top: 1.4rem; border-top: 1px solid #625440; color: #ead5b0; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+.lost-investigation__link svg { width: 22px; transition: transform .2s; }
+.lost-investigation:hover .lost-investigation__link svg { transform: translateX(5px); }
+.dossier-page { --rp-paper: #fbf8f2; --rp-ivory: #f0e9dd; font-family: 'Plus Jakarta Sans', sans-serif; }
+.dossier-page .rembrandt-project__shell { width: min(100% - 5rem, 80rem); }
+.dossier-page :is(a, button):focus-visible { outline: 3px solid #a7864c; outline-offset: 5px; }
+.dossier-page :is(section[id], article[id]) { scroll-margin-top: 10rem; }
+.dossier-hero { padding: 8rem 0 0; background: #211e19; color: #f5eddf; }
+.dossier-hero__top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.6rem 0; border-bottom: 1px solid #51483b; color: #d1c1a9; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+.dossier-hero__top a { display: inline-flex; align-items: center; gap: .7rem; min-height: 44px; }
+.dossier-hero__top svg { width: 16px; }
+.dossier-hero__layout { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(3rem, 7vw, 7rem); align-items: center; padding-top: 3.5rem; padding-bottom: 3rem; }
+.dossier-eyebrow { display: flex; align-items: center; gap: .9rem; margin: 0 0 1.6rem; color: #79603b; font: 600 .66rem/1.6 'Plus Jakarta Sans', sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+.dossier-eyebrow > span { width: 2rem; height: 1px; background: currentColor; }
+.dossier-hero .dossier-eyebrow { color: #d1ad72; }
+.dossier-hero h1 { margin: 0; max-width: 12ch; color: #fff5e6; font: 400 clamp(3.5rem, 6.5vw, 6.5rem)/.98 'Cormorant Garamond', Georgia, serif; letter-spacing: -.035em; text-wrap: balance; }
+.dossier-hero__summary { max-width: 43ch; margin: 2rem 0; color: #d2c7b7; font-size: .95rem; line-height: 1.9; }
+.dossier-hero__start { display: inline-flex; align-items: center; justify-content: space-between; gap: 3rem; min-height: 52px; border-bottom: 1px solid #bb9862; color: #ebcfa2; font-size: .74rem; }
+.dossier-hero__start svg { width: 18px; }
+.dossier-hero__status { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #51483b; display: grid; gap: .65rem; }
+.dossier-hero__status > span { color: #b9ab98; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; }
+.dossier-hero__status strong { display: flex; gap: .6rem; align-items: center; color: #eee2cf; font-size: .8rem; font-weight: 400; }
+.dossier-hero__status i { flex: 0 0 6px; height: 6px; border-radius: 50%; background: #cba56b; }
+.dossier-hero__art { margin: 0; min-width: 0; }
+.dossier-hero__art img { display: block; width: 100%; height: min(62vh, 42rem); min-height: 24rem; object-fit: contain; background: #191611; }
+.dossier-hero__art figcaption { display: flex; justify-content: space-between; margin-top: 1rem; color: #b9ab98; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+.dossier-page--2 .dossier-hero__art { order: -1; }
+.dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr 1.25fr; }
+.dossier-nav { position: sticky; top: 5rem; z-index: 20; border-bottom: 1px solid #d8cdbb; background: #fbf8f2f5; backdrop-filter: blur(12px); }
+.dossier-nav > div { display: flex; align-items: center; gap: 2.5rem; }
+.dossier-nav a { display: inline-flex; align-items: center; gap: .65rem; min-height: 68px; font-size: .75rem; color: #493e30; white-space: nowrap; }
+.dossier-nav a > span { color: #927951; font-size: .6rem; }
+.dossier-nav a:hover { color: #8a5621; }
+.dossier-nav__ref { margin-left: auto; color: #8c7a61; font-size: .65rem; }
+.dossier-story { display: grid; grid-template-columns: 1fr 1.4fr; gap: 6rem; padding-block: 7rem; }
+.dossier-page h2 { margin: 0; color: #30271f; font: 500 clamp(2.5rem, 4vw, 4rem)/1.06 'Cormorant Garamond', Georgia, serif; letter-spacing: -.025em; }
+.dossier-story__body > p { margin: 0 0 1.5rem; font-size: 1.05rem; line-height: 1.95; color: #4e463b; }
+.dossier-story__body aside { display: flex; gap: 1rem; margin-top: 2rem; padding: 1.5rem 0 0; border-top: 1px solid #d8cdbb; }
+.dossier-story__body aside svg { flex: 0 0 20px; color: #8c734c; }
+.dossier-story__body aside p { margin: 0; color: #736653; font-size: .78rem; line-height: 1.8; }
+.dossier-gallery { padding: 5rem 0; background: #ece5d9; }
+.dossier-section-heading { margin-bottom: 3rem; }
+.dossier-section-heading > p:last-child:not(.dossier-eyebrow) { margin-top: 1.2rem; color: #756853; font-size: .85rem; line-height: 1.7; }
+.dossier-gallery__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; align-items: start; }
+.dossier-gallery__grid > :first-child:nth-last-child(3) { grid-column: 1 / -1; }
+.dossier-gallery__grid.is-single { grid-template-columns: minmax(0, 1fr); max-width: 58rem; margin-inline: auto; }
+.dossier-image { margin: 0; min-width: 0; }
+.dossier-image > button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: #211d18; cursor: zoom-in; }
+.dossier-image > button > img { width: 100%; max-height: 38rem; object-fit: contain; }
+.dossier-image > button > span { position: absolute; right: 1rem; bottom: 1rem; display: flex; gap: .5rem; align-items: center; background: #211d18ed; color: #fff6e7; padding: .65rem .8rem; font-size: .65rem; }
+.dossier-image svg { width: 15px; height: 15px; }
+.dossier-image figcaption { padding: 1rem 0; color: #6c5e4a; font-size: .75rem; border-bottom: 1px solid #cfc1ab; }
+.dossier-lightbox { width: min(94vw, 90rem); max-width: 94vw; max-height: 94dvh; padding: 3.5rem 1.5rem 1rem; border: 1px solid #625440; background: #191611; color: #f7eddd; }
+.dossier-lightbox::backdrop { background: #100e0bf2; }
+.dossier-lightbox > img { display: block; width: 100%; height: 75dvh; object-fit: contain; }
+.dossier-lightbox > button { position: absolute; top: .5rem; right: .5rem; width: 44px; height: 44px; display: grid; place-items: center; }
+.dossier-lightbox > p { text-align: center; font-size: .8rem; }
+.dossier-research { padding-block: 6rem; }
+.dossier-research__layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 4rem; align-items: start; }
+.dossier-index { position: sticky; top: 11rem; display: grid; border-top: 1px solid #cdbb9f; }
+.dossier-index > span { padding: 1.25rem 0; color: #8a714d; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; }
+.dossier-index a { display: flex; gap: .8rem; padding: .9rem 0; border-bottom: 1px solid #e0d6c7; font-size: .76rem; line-height: 1.5; color: #514738; }
+.dossier-index a span { color: #8e744d; font-size: .65rem; padding-top: .12rem; }
+.dossier-page .rembrandt-update { gap: 1.5rem; }
+.dossier-page .rembrandt-update__content { padding-bottom: 1rem; }
+.dossier-page .rembrandt-update h4 { font-size: clamp(2rem, 3.3vw, 3rem); }
+.dossier-page .rembrandt-findings h5 { color: #59472e; }
+.dossier-page .rembrandt-next-step strong { color: #725831; }
+.dossier-update-gallery { display: grid; gap: 1rem; margin-top: 2rem; }
+.dossier-pending { padding: 2.5rem; border: 1px solid #d7c9b3; display: flex; align-items: start; gap: 1.5rem; background: #f4eee4; }
+.dossier-pending > svg { flex: 0 0 30px; color: #8a714d; }
+.dossier-pending h3 { margin: 0 0 .8rem; color: #463728; font: 500 2rem/1.2 'Cormorant Garamond', Georgia, serif; }
+.dossier-pending p { margin: 0; max-width: 65ch; color: #6b5d4a; font-size: .9rem; line-height: 1.8; }
+.dossier-related { padding: 5rem 0; background: #211e19; }
+.dossier-related .dossier-eyebrow { color: #c8a771; }
+.dossier-related h2 { color: #fff3df; margin-bottom: 2.5rem; }
+.dossier-related > div > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+.dossier-related .lost-investigation { display: block; }
+.dossier-related .lost-investigation__image { height: 23rem; }
+.dossier-related .lost-investigation__copy { padding: 2rem; }
+.dossier-related .lost-investigation__copy > h3 { font-size: 2.75rem; }
+@media (max-width: 1000px) {
+  .dossier-story { gap: 3rem; }
+  .dossier-research__layout { grid-template-columns: 1fr; }
+  .dossier-index { position: static; grid-template-columns: repeat(2, 1fr); gap: 0 2rem; margin-bottom: 1rem; }
+  .dossier-index > span { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .dossier-page .rembrandt-project__shell { width: calc(100% - 2.5rem); }
+  .dossier-hero { padding-top: 6rem; }
+  .dossier-hero__top { font-size: .6rem; }
+  .dossier-hero__top > span { display: none; }
+  .dossier-hero__layout, .dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr; gap: 2.5rem; padding-top: 2.5rem; }
+  .dossier-page--2 .dossier-hero__art { order: initial; }
+  .dossier-hero h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
+  .dossier-hero__art img { height: 28rem; min-height: 0; }
+  .dossier-hero__status { margin-top: 2rem; }
+  .dossier-nav { top: 4rem; overflow-x: auto; }
+  .dossier-nav > div { gap: 1.3rem; width: max-content !important; padding-inline: 1.25rem; }
+  .dossier-nav a { min-height: 58px; font-size: .65rem; }
+  .dossier-nav__ref { display: none; }
+  .dossier-story { grid-template-columns: 1fr; gap: 2rem; padding-block: 4rem; }
+  .dossier-gallery, .dossier-research, .dossier-related { padding-block: 3.5rem; }
+  .dossier-gallery__grid, .dossier-related > div > div, .dossier-index { grid-template-columns: 1fr; }
+  .dossier-page .rembrandt-update { grid-template-columns: 1.7rem minmax(0, 1fr); gap: .8rem; }
+  .dossier-pending { padding: 1.5rem; gap: 1rem; }
+  .lost-investigation__image { height: 24rem; }
+  .lost-investigation__meta { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .dossier-page *, .lost-investigation, .lost-investigation * { scroll-behavior: auto !important; transition: none !important; } }
+@media (min-width: 701px) { .dossier-nav { top: 88px; } }
+/* Reserve image space so direct links into the timeline stay in place. */
+.dossier-image > button > img { display: block; height: clamp(18rem, 40vw, 38rem); }
+.dossier-page .rembrandt-update .rembrandt-project__figure > img { aspect-ratio: 4 / 3; }

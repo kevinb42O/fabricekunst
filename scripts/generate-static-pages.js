@@ -120,6 +120,13 @@ for (const language of SUPPORTED_LANGUAGES) {
     writePage(route, getPageKind(route, page), null, language);
 }
 
+if (project?.isEnabled === true) {
+  for (const investigation of project.investigations || []) {
+    if (investigation.visible === false || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(investigation.slug)) continue;
+    for (const language of SUPPORTED_LANGUAGES) writePage(`/lost-rembrandt-project/${investigation.slug}`, "rembrandtProject", null, language);
+  }
+}
+
 const seenSlugs = new Set();
 for (const item of items) {
   const slug = getItemSlug(item);

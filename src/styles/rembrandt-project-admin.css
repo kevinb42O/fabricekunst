@@ -1424,3 +1424,167 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* One workspace, with a persistent navigation and focused editing surfaces. */
+.rp-workspace { --admin-text: #292822; --admin-muted: #706e64; --admin-muted-strong: #514f45; --admin-border: #deddd4; --admin-border-strong: #c7c7ba; --admin-surface: #fffefa; --admin-subtle: #f4f3ed; grid-template-columns: 210px minmax(0, 1fr); gap: 0 2rem; padding: 0; font-family: Geist, Inter, sans-serif; }
+.rp-workspace [hidden] { display: none !important; }
+.rp-workspace > .rp-admin-header { grid-column: 1 / -1; padding: 1.5rem 0 1.75rem; margin-bottom: 2rem; border: 0; border-bottom: 1px solid #d8d6cc; border-radius: 0; background: transparent; align-items: center; }
+.rp-workspace .rp-admin-header h1 { font-size: 30px; letter-spacing: -.035em; }
+.rp-workspace .rp-admin-header > div:first-child > p { color: #77715e; font-size: 10px; }
+.rp-workspace .rp-admin-header > div:first-child > span { color: #777469; font-size: 13px; }
+.rp-workspace .rp-admin-header__actions { gap: 1rem; }
+.rp-workspace > .rp-admin-data-alert { grid-column: 1 / -1; margin-bottom: 1rem; }
+.rp-workspace > .rp-admin-tabs { position: sticky; top: 6rem; align-self: start; display: flex; flex-direction: column; gap: .45rem; padding: 0; border: 0; background: transparent; border-radius: 0; overflow: visible; }
+.rp-workspace > .rp-admin-tabs button { display: flex; align-items: center; width: 100%; gap: .75rem; padding: .9rem .85rem; border: 1px solid transparent; min-height: 68px; border-radius: 8px; color: #646257; text-align: left; white-space: normal; }
+.rp-workspace > .rp-admin-tabs button > svg { width: 18px; height: 18px; flex: 0 0 18px; }
+.rp-workspace > .rp-admin-tabs button > div { flex: 1; min-width: 0; }
+.rp-workspace > .rp-admin-tabs strong { display: block; font-size: 13px; font-weight: 600; }
+.rp-workspace > .rp-admin-tabs small { display: block; margin-top: .25rem; font-size: 10px; font-weight: 400; color: #78766c; line-height: 1.4; }
+.rp-workspace > .rp-admin-tabs button > span { display: none; }
+.rp-workspace > .rp-admin-tabs button.is-active { color: #3f4937; border-color: #d5dacb; background: #e8ecdf; box-shadow: none; }
+.rp-workspace > .rp-admin-tabs button:hover { background: #eeeee6; }
+.rp-work-main { min-width: 0; display: grid; gap: 1.5rem; align-content: start; }
+.rp-work-context { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
+.rp-work-context > div:first-child > span { font-size: 9px; letter-spacing: .13em; color: #817b69; }
+.rp-work-context h2 { margin: .5rem 0 0; font: 600 25px/1.2 Geist, Inter, sans-serif; color: #302f28; letter-spacing: -.03em; }
+.rp-work-language-label { display: block; font-size: 10px; color: #817b69; margin-bottom: .45rem; text-align: right; }
+.rp-workspace .rp-admin-language { padding: 3px; background: #eaeae2; border: 0; border-radius: 7px; gap: 2px; }
+.rp-workspace .rp-admin-language button { min-height: 36px; padding: 0 .7rem; border: 0; background: transparent; border-radius: 5px; }
+.rp-workspace .rp-admin-language button span { display: none; }
+.rp-workspace .rp-admin-language button.is-active { background: #fffefa; box-shadow: 0 1px 3px #26251c15; }
+.rp-workspace .rp-admin-overview-strip { gap: 0; border: 1px solid #deddd4; border-radius: 9px; overflow: hidden; background: #fffefa; }
+.rp-workspace .rp-admin-overview-strip > div { border: 0; border-right: 1px solid #e6e4da; border-radius: 0; padding: 1rem 1.25rem; background: transparent; }
+.rp-workspace .rp-admin-overview-strip > div:last-child { border-right: 0; }
+.rp-workspace .rp-admin-overview-strip strong { font-size: 24px; }
+.rp-workspace .rp-admin-overview-strip span, .rp-workspace .rp-admin-overview-strip small { font-size: 11px; }
+.rp-work-intro { display: flex; align-items: center; gap: 2rem; justify-content: space-between; margin-bottom: 1.5rem; }
+.rp-work-intro p { margin: 0; max-width: 56ch; font-size: 13px; color: #777366; line-height: 1.7; }
+.rp-work-intro .admin-button { flex-shrink: 0; }
+.rp-project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
+.rp-project-card { min-width: 0; display: block; padding: 0; overflow: hidden; border: 1px solid #d7d5ca; border-radius: 10px; background: #fffefa; text-align: left; transition: box-shadow .2s, border-color .2s; }
+.rp-project-card:hover { border-color: #7c8966; box-shadow: 0 8px 24px #28231b12; }
+.rp-project-card__art { position: relative; height: 230px; background: #2a2820; overflow: hidden; }
+.rp-project-card__art > img { width: 100%; height: 100%; object-fit: cover; }
+.rp-project-card__art > svg { position: absolute; top: 40%; left: 40%; color: #b7ad97; width: 40px; height: 40px; }
+.rp-project-card__art > span { position: absolute; top: 1rem; left: 1rem; padding: .35rem .55rem; color: #f4eddf; background: #29271dd9; font-size: 10px; letter-spacing: .1em; border-radius: 4px; }
+.rp-project-card__body { padding: 1.2rem; }
+.rp-project-card__body > span { display: block; color: #837b68; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; }
+.rp-project-card__body h3 { min-height: 2.8em; margin: .6rem 0 .8rem; color: #35372b; font: 600 17px/1.4 Geist, Inter, sans-serif; letter-spacing: -.02em; }
+.rp-project-card__body p { color: #5d6b4b; font-size: 11px; margin: 0 0 1rem; }
+.rp-project-card__body > div { display: flex; justify-content: space-between; align-items: center; gap: .5rem; border-top: 1px solid #e6e3d8; padding-top: .9rem; font-size: 10px; color: #797362; }
+.rp-project-card__body svg { width: 17px; height: 17px; color: #596c43; }
+.rp-overview-caption { margin-top: 2.5rem; margin-bottom: 1.5rem; padding-top: 2rem; border-top: 1px solid #dedbd0; display: flex; gap: .8rem; }
+.rp-overview-caption > svg { color: #85806e; width: 20px; }
+.rp-overview-caption strong { font-size: 13px; }
+.rp-overview-caption p { margin: .25rem 0 0; font-size: 12px; color: #7b7567; }
+.rp-work-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; padding: .55rem; border: 1px solid #deddd4; border-radius: 8px; background: #f0f0e8; }
+.rp-work-tabs button { min-height: 40px; padding: .6rem 1rem; border-radius: 5px; color: #777164; background: transparent; font-size: 12px; font-weight: 500; }
+.rp-work-tabs button.is-active { background: #fffefa; color: #424e35; box-shadow: 0 1px 4px #34332712; }
+.rp-workspace .rp-admin-editor > .rp-work-tabs { border-width: 0 0 1px; border-radius: 0; padding: .7rem 1.4rem; background: #fafaf5; }
+.rp-workspace .rp-admin-page-grid, .rp-workspace .rp-admin-publish-grid { display: block; }
+.rp-workspace .rp-admin-card { padding: 1.75rem; background: #fffefa; border-radius: 10px; }
+.rp-workspace .rp-admin-card__heading h2 { font-size: 18px; letter-spacing: -.025em; }
+.rp-workspace .rp-admin-card__heading p { font-size: 10px; color: #86806b; }
+.rp-workspace .rp-admin-form-grid { gap: 1.4rem; }
+.rp-workspace .rp-admin-field { font-size: 12px; gap: .5rem; }
+.rp-workspace .rp-admin-field > small { font-size: 11px; line-height: 1.6; }
+.rp-workspace .rp-admin-field :is(input, textarea, select) { padding: .8rem .9rem; font-size: 14px; line-height: 1.7; border-color: #d5d4c8; background: #fff; border-radius: 6px; }
+.rp-workspace .rp-admin-field textarea { min-height: 110px; }
+.rp-workspace .rp-admin-field :is(input, textarea, select):focus { border-color: #82916c; box-shadow: 0 0 0 3px #d9e2cc80; }
+.rp-workspace .rp-admin-collection-layout { grid-template-columns: 210px minmax(0, 1fr); gap: 1rem; }
+.rp-workspace .rp-admin-collection-list { padding: .75rem; background: #f1f0e8; border-color: #deddd4; position: sticky; top: 6rem; }
+.rp-workspace .rp-admin-collection-list .rp-admin-card__heading { display: block; margin-bottom: .75rem; }
+.rp-workspace .rp-admin-collection-list h2 { font-size: 12px; margin: .9rem .3rem; }
+.rp-workspace .rp-admin-collection-list .admin-button { width: 100%; min-height: 38px; }
+.rp-workspace .rp-admin-collection-list > button:not(.admin-button) { grid-template-columns: 40px minmax(0, 1fr); padding: .65rem; gap: .6rem; border: 1px solid transparent; background: transparent; border-radius: 7px; }
+.rp-workspace .rp-admin-collection-list > button:not(.admin-button).is-active { background: #fffefa; border-color: #c9d1ba; box-shadow: 0 2px 5px #35362208; }
+.rp-workspace .rp-admin-collection-list > button > svg { display: none; }
+.rp-workspace .rp-admin-collection-list > button strong { font-size: 12px; }
+.rp-workspace .rp-admin-collection-list > button small { font-size: 10px; line-height: 1.4; }
+.rp-workspace .rp-admin-collection-list > button em { display: none; }
+.rp-case-thumb { width: 40px; height: 55px; object-fit: cover; border-radius: 3px; }
+.rp-back-link { display: inline-flex; align-items: center; gap: .5rem; min-height: 40px; color: #63714e; font-size: 12px; background: transparent; }
+.rp-back-link svg { width: 15px; height: 15px; }
+.rp-update-back { margin: .5rem 1.75rem; }
+.rp-workspace .rp-admin-editor { background: #fffefa; border-radius: 10px; border-color: #deddd4; overflow: hidden; }
+.rp-workspace .rp-admin-editor__header { padding: 1.6rem 1.75rem; background: #fffefa; }
+.rp-workspace .rp-admin-editor__header h2 { font-size: 22px; line-height: 1.35; color: #34392a; letter-spacing: -.03em; }
+.rp-workspace .rp-admin-editor__header > div:last-child { gap: .25rem; }
+.rp-workspace .rp-admin-editor__header > div:last-child button { width: 36px; height: 36px; min-height: 36px; background: #f7f6f0; }
+.rp-workspace .rp-admin-editor__body, .rp-workspace .rp-admin-editor__content, .rp-workspace .rp-admin-editor__media, .rp-workspace .rp-admin-editor__publication { padding: 1.75rem; background: #fffefa; }
+.rp-workspace .rp-admin-editor__body .rp-admin-form-grid--two > .rp-admin-field:nth-child(n+3) { grid-column: 1 / -1; }
+.rp-workspace .rp-admin-editor__publication-fields { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.25rem; }
+.rp-workspace .rp-admin-toggle__copy strong { font-size: 12px; }
+.rp-workspace .rp-admin-toggle__copy small { font-size: 11px; line-height: 1.5; }
+.rp-workspace .rp-admin-toggle.is-checked { border-color: #bfcaa9; background: #f4f6ee; }
+.rp-workspace .rp-admin-toggle.is-checked .rp-admin-toggle__track { background: #536641; }
+.rp-workspace .admin-button--primary { background: #46583a; border-color: #46583a; color: #fff; font-size: 12px; }
+.rp-workspace .admin-button--primary:hover { background: #34462a; }
+.rp-workspace .admin-button--secondary { font-size: 12px; border-color: #d4d4c8; background: #fffefa; }
+.rp-workspace .admin-text-button { font-size: 12px; }
+.rp-workspace .rp-admin-content-list { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 1.5rem; align-items: start; padding-top: 1.5rem; border-top: 1px solid #e2dfd3; }
+.rp-content-picker { display: grid; gap: .3rem; }
+.rp-content-picker button { display: flex; align-items: baseline; gap: .6rem; padding: .8rem; min-height: 44px; text-align: left; color: #78705f; font-size: 12px; line-height: 1.55; border-radius: 6px; }
+.rp-content-picker button > span { font-size: 10px; color: #8b7e64; }
+.rp-content-picker button.is-active { color: #3f5131; background: #e9eee0; }
+.rp-workspace .rp-admin-content-list > article { background: #f9f8f2; padding: 1.25rem; }
+.rp-workspace .rp-admin-updates-layout { grid-template-columns: 260px minmax(0, 1fr); }
+.rp-workspace .rp-admin-update-list { top: 6rem; background: #fffefa; border-color: #deddd4; }
+.rp-workspace .rp-admin-update-list > div:last-child > button { padding: 1rem; }
+.rp-workspace .rp-admin-update-list > div:last-child > button.is-active { background: #edf1e6; box-shadow: inset 3px 0 #73845d; }
+.rp-workspace .rp-admin-update-list strong { font-size: 12px; line-height: 1.5; }
+.rp-workspace .rp-admin-update-list small { font-size: 10px; line-height: 1.5; }
+.rp-workspace .rp-admin-list-tools input { font-size: 12px; }
+.rp-workspace .rp-admin-list-tools__top > button { background: #46583a; }
+.rp-workspace .rp-admin-status { font-size: 10px; }
+@media (max-width: 1250px) {
+  .rp-workspace { grid-template-columns: 180px minmax(0,1fr); gap: 0 1.25rem; }
+  .rp-workspace .rp-admin-collection-layout { grid-template-columns: 1fr; }
+  .rp-workspace .rp-admin-collection-list { position: static; grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .rp-workspace .rp-admin-collection-list .rp-admin-card__heading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+  .rp-workspace .rp-admin-collection-list .admin-button { width: auto; }
+  .rp-workspace .rp-admin-collection-list h2 { display: none; }
+  .rp-workspace .rp-admin-content-list { grid-template-columns: 180px minmax(0,1fr); }
+  .rp-workspace .rp-admin-updates-layout { grid-template-columns: 220px minmax(0,1fr); }
+}
+@media (max-width: 1000px) {
+  .rp-workspace { grid-template-columns: 1fr; }
+  .rp-workspace > .rp-admin-tabs { position: static; flex-direction: row; overflow-x: auto; margin-bottom: 1.5rem; padding-bottom: .25rem; }
+  .rp-workspace > .rp-admin-tabs button { min-height: 48px; width: auto; flex: 0 0 auto; }
+  .rp-workspace > .rp-admin-tabs button small { display: none; }
+  .rp-project-card__art { height: 190px; }
+}
+@media (max-width: 700px) {
+  .rp-workspace .rp-admin-header { margin-bottom: 1.25rem; padding-top: .5rem; }
+  .rp-workspace .rp-admin-header__actions { flex-wrap: wrap; }
+  .rp-work-context { align-items: start; gap: .5rem; }
+  .rp-work-context h2 { font-size: 22px; }
+  .rp-work-context > div:first-child > span { font-size: 8px; }
+  .rp-work-language-label { font-size: 9px; }
+  .rp-project-grid { grid-template-columns: 1fr; }
+  .rp-project-card { display: grid; grid-template-columns: 115px minmax(0,1fr); }
+  .rp-project-card__art { height: 100%; min-height: 200px; }
+  .rp-project-card__body h3 { font-size: 16px; min-height: 0; }
+  .rp-work-intro { align-items: start; flex-direction: column; gap: 1rem; }
+  .rp-workspace .rp-admin-overview-strip { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .rp-workspace .rp-admin-overview-strip > div { border-bottom: 1px solid #e6e4da; }
+  .rp-workspace .rp-admin-collection-list { grid-template-columns: 1fr; }
+  .rp-workspace .rp-admin-collection-list > button:not(.admin-button) { grid-template-columns: 32px minmax(0,1fr); }
+  .rp-case-thumb { height: 38px; width: 32px; }
+  .rp-workspace .rp-admin-content-list, .rp-workspace .rp-admin-updates-layout { grid-template-columns: 1fr; }
+  .rp-workspace .rp-admin-update-list { position: static; max-height: 22rem; }
+  .rp-workspace .rp-admin-form-grid--two, .rp-workspace .rp-admin-editor__publication-fields, .rp-workspace .rp-admin-editor__publication-toggles { grid-template-columns: 1fr; }
+  .rp-workspace .rp-admin-editor__body, .rp-workspace .rp-admin-editor__content, .rp-workspace .rp-admin-editor__media, .rp-workspace .rp-admin-editor__publication, .rp-workspace .rp-admin-card { padding: 1.2rem; }
+  .rp-workspace .rp-admin-editor > .rp-work-tabs { padding: .5rem; }
+  .rp-work-tabs button { font-size: 11px; padding: .5rem .7rem; }
+  .rp-content-picker { max-height: 220px; overflow-y: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .rp-project-card { transition: none; } }
+.rp-workspace .rp-admin-field { align-content: start; }
+.rp-workspace :is(h1,h2,h3,h4) { font-family: Geist, Inter, sans-serif; }
+.rp-live-link { display: inline-flex; align-items: center; gap: .4rem; min-height: 32px; color: #63714e; font-size: 11px; }
+.rp-live-link svg { width: 14px; height: 14px; }
+.rp-scoped-update-header { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; align-items: center; padding: .75rem 1rem; border: 1px solid #d8ddcf; background: #edf1e6; border-radius: 8px; }
+.rp-scoped-update-header strong { font-size: 13px; color: #48563a; }
+.rp-scoped-update-header > span { margin-left: auto; font-size: 11px; color: #758264; }
+@media (max-width: 700px) { .rp-workspace .rp-admin-field :is(input, textarea, select) { font-size: 16px; } }

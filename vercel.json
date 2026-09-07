@@ -92,6 +92,54 @@
     {
       "source": "/llms.txt",
       "destination": "/api/llms"
+    },
+    {
+      "source": "/lost-rembrandt-project/preview/:slug",
+      "destination": "/lost-rembrandt-project/preview"
+    },
+    {
+      "source": "/lost-rembrandt-project/:slug",
+      "destination": "/lost-rembrandt-project"
+    },
+    {
+      "source": "/rembrandt-project/preview/:slug",
+      "destination": "/lost-rembrandt-project/preview"
+    },
+    {
+      "source": "/rembrandt-project/:slug",
+      "destination": "/lost-rembrandt-project"
+    },
+    {
+      "source": "/en/lost-rembrandt-project/preview/:slug",
+      "destination": "/en/lost-rembrandt-project/preview"
+    },
+    {
+      "source": "/en/lost-rembrandt-project/:slug",
+      "destination": "/en/lost-rembrandt-project"
+    },
+    {
+      "source": "/en/rembrandt-project/preview/:slug",
+      "destination": "/en/lost-rembrandt-project/preview"
+    },
+    {
+      "source": "/en/rembrandt-project/:slug",
+      "destination": "/en/lost-rembrandt-project"
+    },
+    {
+      "source": "/fr/lost-rembrandt-project/preview/:slug",
+      "destination": "/fr/lost-rembrandt-project/preview"
+    },
+    {
+      "source": "/fr/lost-rembrandt-project/:slug",
+      "destination": "/fr/lost-rembrandt-project"
+    },
+    {
+      "source": "/fr/rembrandt-project/preview/:slug",
+      "destination": "/fr/lost-rembrandt-project/preview"
+    },
+    {
+      "source": "/fr/rembrandt-project/:slug",
+      "destination": "/fr/lost-rembrandt-project"
     }
   ]
 }

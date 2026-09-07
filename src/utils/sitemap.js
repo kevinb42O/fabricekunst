@@ -78,7 +78,7 @@ export function buildSitemapXml(
 
   const routes =
     rembrandtProject?.isEnabled === true
-      ? [...STATIC_ROUTES, REMBRANDT_PROJECT_ROUTE]
+      ? [...STATIC_ROUTES, REMBRANDT_PROJECT_ROUTE, ...(rembrandtProject.investigations || []).filter((entry) => entry.visible !== false && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.slug)).map((entry) => `${REMBRANDT_PROJECT_ROUTE}/${entry.slug}`)]
       : STATIC_ROUTES;
   const staticEntries = routes.flatMap((route) =>
     SUPPORTED_LANGUAGES.map((language) => {

@@ -205,7 +205,7 @@ export const validateProject = async (project) => {
   for (const investigation of project.investigations) {
     if (!ID_PATTERN.test(investigation?.id || "") || investigationIds.has(investigation.id))
       throw new RequestError("Elk onderzoeksdossier heeft een unieke, geldige sleutel nodig.");
-    if (!ID_PATTERN.test(investigation?.slug || "") || investigationSlugs.has(investigation.slug))
+    if (!ID_PATTERN.test(investigation?.slug || "") || investigation.slug === "preview" || investigationSlugs.has(investigation.slug))
       throw new RequestError("Elk onderzoeksdossier heeft een unieke URL-slug nodig.");
     const order = Number(investigation.sortOrder);
     if (!Number.isInteger(order) || order < 1 || investigationOrders.has(order))

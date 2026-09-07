@@ -238,3 +238,26 @@ test("only an unrevoked and unexpired private preview link is active", () => {
   assert.equal(activePreviewLink([expired, revoked, active], now)?.id, 'active');
   assert.equal(activePreviewLink([expired, revoked], now), null);
 });
+
+test("dossier routes distinguish localized, preview and unrelated paths", async () => {
+  const { getRembrandtRoute } = await import("../src/utils/rembrandtProject.js");
+  assert.deepEqual(getRembrandtRoute('/fr/lost-rembrandt-project/project-02/'), { privatePreview: false, investigationSlug: 'project-02' });
+  assert.deepEqual(getRembrandtRoute('/en/lost-rembrandt-project/preview/project-03'), { privatePreview: true, investigationSlug: 'project-03' });
+  assert.deepEqual(getRembrandtRoute('/rembrandt-project/preview'), { privatePreview: true, investigationSlug: '' });
+  assert.equal(getRembrandtRoute('/lost-rembrandt-project-other/project-01'), null);
+});
+
+test("sitemap includes visible dossier pages and excludes hidden dossiers", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.isEnabled = true;
+  project.investigations[1].visible = false;
+  const sitemap = buildSitemapXml([], { rembrandtProject: project });
+  assert.match(sitemap, /<loc>https:\/\/www.atelierrembrandt.com\/fr\/lost-rembrandt-project\/project-01<\/loc>/);
+  assert.doesNotMatch(sitemap, /lost-rembrandt-project\/project-02/);
+});
+
+test("a dossier cannot use the reserved preview route", async () => {
+  const project = cloneDefaultRembrandtProject();
+  project.investigations[0].slug = 'preview';
+  await assert.rejects(() => validateProject(project), /URL-slug/);
+});

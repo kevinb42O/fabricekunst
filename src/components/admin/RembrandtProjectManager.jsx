@@ -1,6 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useId } from "react";
 import {
   Archive,
+  ArrowLeft,
+  ArrowRight,
+  LayoutGrid,
+  BookOpen,
   AlertTriangle,
   ArrowDown,
   ArrowUp,
@@ -44,6 +48,8 @@ import {
   setRembrandtProjectAccessAsync,
   uploadCatalogImage,
 } from "../../utils/storage";
+import { localizePath } from "../../utils/locales";
+import { REMBRANDT_PROJECT_ROUTE } from "../../utils/rembrandtProject";
 import "../../styles/rembrandt-project-admin.css";
 
 const LANGUAGES = [
@@ -52,12 +58,17 @@ const LANGUAGES = [
   { id: "fr", label: "Français" },
 ];
 const PANELS = [
-  { id: "page", label: "Pagina" },
-  { id: "investigations", label: "Dossiers" },
-  { id: "process", label: "Inhoud & proces" },
-  { id: "updates", label: "Updates" },
-  { id: "publish", label: "Publicatie" },
+  { id: "investigations", label: "Projecten", description: "Dossiers, beelden & updates", icon: LayoutGrid },
+  { id: "page", label: "Overzichtspagina", description: "Opening, status & afsluiting", icon: Globe2 },
+  { id: "process", label: "Verhaal & werkwijze", description: "Achtergrond, proces & inzenden", icon: BookOpen },
+  { id: "updates", label: "Alle updates", description: "Doorzoek alle onderzoeken", icon: FileText },
+  { id: "publish", label: "Publicatie", description: "Toegang, controle & versies", icon: ShieldCheck },
 ];
+
+function EditorNav({ items, value, onChange, label }) {
+  return <nav className="rp-work-tabs" aria-label={label}>{items.map((item) => <button key={item.id} type="button" aria-current={value === item.id ? "page" : undefined} className={value === item.id ? "is-active" : ""} onClick={() => onChange(item.id)}>{item.label}</button>)}</nav>;
+}
+
 
 const slugify = (value) =>
   String(value || "")
@@ -77,18 +88,22 @@ const toLocalDateTime = (value) => {
 };
 
 function Field({ label, hint, children }) {
+  const id = useId();
   return (
     <label className="rp-admin-field">
-      <span>{label}</span>
-      {hint && <small>{hint}</small>}
-      {children}
+      <span id={`${id}-label`}>{label}</span>
+      {hint && <small id={`${id}-hint`}>{hint}</small>}
+      {React.isValidElement(children) ? React.cloneElement(children, {
+        "aria-labelledby": `${id}-label`,
+        "aria-describedby": hint ? `${id}-hint` : undefined,
+      }) : children}
     </label>
   );
 }
 
 function LanguageTabs({ language, onChange }) {
   const handleKeys = (event) => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
     const current = LANGUAGES.findIndex((entry) => entry.id === language);
     const next =
@@ -97,7 +112,7 @@ function LanguageTabs({ language, onChange }) {
         : event.key === "End"
           ? LANGUAGES.length - 1
           : (current +
-              (event.key === "ArrowRight" ? 1 : -1) +
+              (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) +
               LANGUAGES.length) %
             LANGUAGES.length;
     onChange(LANGUAGES[next].id);
@@ -177,6 +192,13 @@ export default function RembrandtProjectManager({
   const [project, setProject] = useState(() => createEmptyRembrandtProject());
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [panel, setPanel] = useState("investigations");
+  const [workspaceMode, setWorkspaceMode] = useState("overview");
+  const [dossierTab, setDossierTab] = useState("text");
+  const [updateTab, setUpdateTab] = useState("text");
+  const [pageTab, setPageTab] = useState("0");
+  const [processTab, setProcessTab] = useState("0");
+  const [publishTab, setPublishTab] = useState("1");
+  const [contentSelection, setContentSelection] = useState({ about: 0, steps: 0 });
   const [language, setLanguage] = useState("nl");
   const [selectedId, setSelectedId] = useState(null);
   const [selectedInvestigationId, setSelectedInvestigationId] = useState(null);
@@ -322,6 +344,13 @@ export default function RembrandtProjectManager({
       )
     )
       issues.push("De huidige onderzoeksfase moet zichtbaar zijn.");
+    const dossierSlugs = new Set();
+    for (const investigation of project.investigations) {
+      if (!investigation.slug || investigation.slug === "preview" || dossierSlugs.has(investigation.slug)) {
+        issues.push(`${investigation.title?.nl || "Dit dossier"} heeft een unieke URL-slug nodig; ‘preview’ is gereserveerd.`);
+      }
+      dossierSlugs.add(investigation.slug);
+    }
     const slugs = new Set();
     for (const update of project.updates) {
       if (update.status === "published" && !update.title?.nl?.trim())
@@ -412,7 +441,7 @@ export default function RembrandtProjectManager({
     },
   ];
   const changePanelByKeyboard = (event) => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
     const current = PANELS.findIndex((entry) => entry.id === panel);
     const next =
@@ -420,7 +449,7 @@ export default function RembrandtProjectManager({
         ? 0
         : event.key === "End"
           ? PANELS.length - 1
-          : (current + (event.key === "ArrowRight" ? 1 : -1) + PANELS.length) %
+          : (current + (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) + PANELS.length) %
             PANELS.length;
     setPanel(PANELS[next].id);
     event.currentTarget.querySelectorAll('[role="tab"]')[next]?.focus();
@@ -577,6 +606,7 @@ export default function RembrandtProjectManager({
       updates: [...current.updates, update],
     }));
     setSelectedId(update.id);
+    setUpdateTab("text");
     setDeleteConfirmId(null);
     setPanel("updates");
     setLanguage("nl");
@@ -621,6 +651,8 @@ export default function RembrandtProjectManager({
     const target = index + direction;
     if (index < 0 || target < 0 || target >= ordered.length) return;
     const other = ordered[target];
+    const contentKey = collection === "aboutSections" ? "about" : collection === "researchSteps" ? "steps" : null;
+    if (contentKey) setContentSelection((current) => ({ ...current, [contentKey]: target }));
     setProject((current) => ({
       ...current,
       phases: current.phases.map((phase) =>
@@ -817,6 +849,8 @@ export default function RembrandtProjectManager({
       investigations: [...current.investigations, investigation],
     }));
     setSelectedInvestigationId(investigation.id);
+    setWorkspaceMode("edit");
+    setDossierTab("text");
     setPanel("investigations");
     setLanguage("nl");
   };
@@ -829,6 +863,8 @@ export default function RembrandtProjectManager({
     const target = index + direction;
     if (index < 0 || target < 0 || target >= ordered.length) return;
     const other = ordered[target];
+    const contentKey = collection === "aboutSections" ? "about" : collection === "researchSteps" ? "steps" : null;
+    if (contentKey) setContentSelection((current) => ({ ...current, [contentKey]: target }));
     setProject((current) => ({
       ...current,
       [collection]: current[collection].map((entry) =>
@@ -924,17 +960,16 @@ export default function RembrandtProjectManager({
     );
 
   return (
-    <div className="rp-admin">
+    <div className="rp-admin rp-workspace">
       <header className="rp-admin-header">
         <div>
           <p>
             <Search aria-hidden="true" />
             Lost Rembrandt · beheer
           </p>
-          <h1>Projectbeheer</h1>
+          <h1>Lost Rembrandt</h1>
           <span>
-            Beheer dossiers, onderzoeksstappen en publieke updates vanuit één
-            overzichtelijke werkruimte.
+            De werkruimte voor uw onderzoeken.
           </span>
         </div>
         <div className="rp-admin-header__actions">
@@ -985,6 +1020,7 @@ export default function RembrandtProjectManager({
         className="rp-admin-tabs"
         role="tablist"
         aria-label="Projectonderdelen"
+        aria-orientation="vertical"
         onKeyDown={changePanelByKeyboard}
       >
         {PANELS.map((entry) => (
@@ -997,17 +1033,18 @@ export default function RembrandtProjectManager({
             tabIndex={panel === entry.id ? 0 : -1}
             className={panel === entry.id ? "is-active" : ""}
             key={entry.id}
-            onClick={() => setPanel(entry.id)}
+            onClick={() => { setPanel(entry.id); if (entry.id === "investigations") setWorkspaceMode("overview"); if (entry.id === "updates") changeUpdateInvestigationFilter("all"); }}
           >
-            {entry.label}
+            <entry.icon aria-hidden="true" /><div><strong>{entry.label}</strong><small>{entry.description}</small></div>
             {entry.id === "updates" && <span>{project.updates.length}</span>}
             {entry.id === "investigations" && <span>{project.investigations.length}</span>}
             {entry.id === "process" && <span>{project.researchSteps.length}</span>}
           </button>
         ))}
       </div>
-      <LanguageTabs language={language} onChange={setLanguage} />
-      <div className="rp-admin-overview-strip" aria-label="Projectoverzicht">
+      <div className="rp-work-main">
+      <div className="rp-work-context"><div><span>WERKRUIMTE / {PANELS.find((entry) => entry.id === panel)?.label.toUpperCase()}</span><h2>{panel === "investigations" && workspaceMode === "overview" ? "Uw onderzoeken" : PANELS.find((entry) => entry.id === panel)?.label}</h2></div><div><span className="rp-work-language-label">Inhoud bewerken in</span><LanguageTabs language={language} onChange={setLanguage} /></div></div>
+      {panel === "investigations" && workspaceMode === "overview" && <div className="rp-admin-overview-strip" aria-label="Projectoverzicht">
         {overviewStats.map((stat) => (
           <div key={stat.label} className={stat.tone ? `is-${stat.tone}` : ""}>
             <span>{stat.label}</span>
@@ -1015,8 +1052,20 @@ export default function RembrandtProjectManager({
             <small>{stat.detail}</small>
           </div>
         ))}
-      </div>
+      </div>}
 
+      {panel === "investigations" && workspaceMode === "overview" && <section className="rp-project-overview" id="rp-panel-investigations" role="tabpanel" aria-labelledby="rp-tab-investigations">
+        <div className="rp-work-intro"><p>Elk onderzoek heeft een eigen pagina. Kies een project om de inhoud, beelden en onderzoekstijdlijn te beheren.</p><button type="button" className="admin-button admin-button--primary" onClick={addInvestigation}><Plus />Nieuw project</button></div>
+        <div className="rp-project-grid">{[...project.investigations].sort((a,b) => a.sortOrder - b.sortOrder).map((entry) => <button type="button" className="rp-project-card" key={entry.id} onClick={() => { setSelectedInvestigationId(entry.id); setWorkspaceMode("edit"); setDossierTab("text"); }}>
+          <div className="rp-project-card__art">{entry.coverImage ? <img src={entry.coverImage} alt="" /> : <ImageIcon />}<span>{entry.reference}</span></div>
+          <div className="rp-project-card__body"><span>{entry.title?.nl || "Nieuw project"}</span><h3>{entry.subtitle?.nl || "Naam van het werk toevoegen"}</h3><p>{entry.visible === false ? "Verborgen" : savedPublicEnabled ? "Publiek zichtbaar" : "Klaargezet · website verborgen"}</p><div><span>{project.updates.filter((update) => update.investigationId === entry.id).length} updates · {(entry.gallery || []).length} {(entry.gallery || []).length === 1 ? "beeld" : "beelden"}</span><ArrowRight /></div></div>
+        </button>)}</div>
+        <div className="rp-overview-caption"><Globe2 /><div><strong>De introductie boven de projectkaarten</strong><p>Deze tekst verschijnt op de overzichtspagina van Lost Rembrandt.</p></div></div>
+        <div className="rp-admin-form-grid rp-admin-form-grid--two"><Field label="Sectietitel"><input value={valueFor(project.settings, "investigationsTitle", language)} onChange={(event) => updateSettings("investigationsTitle", event.target.value)} /></Field><Field label="Inleiding"><textarea rows="3" value={valueFor(project.settings, "investigationsIntro", language)} onChange={(event) => updateSettings("investigationsIntro", event.target.value)} /></Field></div>
+      </section>}
+      {panel === "page" && <EditorNav label="Onderdelen overzichtspagina" value={pageTab} onChange={setPageTab} items={[{id:"0",label:"Introductie"},{id:"1",label:"Status"},{id:"2",label:"Hoofdbeeld"},{id:"3",label:"Onderzoeksfases"},{id:"4",label:"Afsluiting"}]} />}
+      {panel === "process" && <EditorNav label="Verhaal en werkwijze" value={processTab} onChange={setProcessTab} items={[{id:"0",label:"Over het initiatief"},{id:"1",label:"Onderzoeksproces"},{id:"2",label:"Een werk inzenden"}]} />}
+      {panel === "publish" && <EditorNav label="Publicatieonderdelen" value={publishTab} onChange={setPublishTab} items={[{id:"1",label:"Toegang & controle"},{id:"0",label:"Zoekmachines & delen"},{id:"2",label:"Versiegeschiedenis"},{id:"3",label:"Herstellen"}]} />}
       {panel === "page" && (
         <div
           className="rp-admin-page-grid"
@@ -1024,7 +1073,7 @@ export default function RembrandtProjectManager({
           role="tabpanel"
           aria-labelledby="rp-tab-page"
         >
-          <section className="rp-admin-card">
+          <section hidden={pageTab !== "0"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>01</p>
@@ -1081,7 +1130,7 @@ export default function RembrandtProjectManager({
             </div>
           </section>
 
-          <section className="rp-admin-card">
+          <section hidden={pageTab !== "1"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>02</p>
@@ -1138,7 +1187,7 @@ export default function RembrandtProjectManager({
             </div>
           </section>
 
-          <section className="rp-admin-card">
+          <section hidden={pageTab !== "2"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>03</p>
@@ -1194,7 +1243,7 @@ export default function RembrandtProjectManager({
             </Field>
           </section>
 
-          <section className="rp-admin-card">
+          <section hidden={pageTab !== "3"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>04</p>
@@ -1298,7 +1347,7 @@ export default function RembrandtProjectManager({
             </div>
           </section>
 
-          <section className="rp-admin-card">
+          <section hidden={pageTab !== "4"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>05</p>
@@ -1353,7 +1402,7 @@ export default function RembrandtProjectManager({
         </div>
       )}
 
-      {panel === "investigations" && (
+      {panel === "investigations" && workspaceMode === "edit" && (
         <div
           className="rp-admin-collection-layout"
           id="rp-panel-investigations"
@@ -1362,14 +1411,10 @@ export default function RembrandtProjectManager({
         >
           <aside className="rp-admin-collection-list">
             <div className="rp-admin-card__heading">
-              <div><p>Dossiers · {project.investigations.length}</p><h2>Huidige onderzoeken</h2></div>
+              <div><button className="rp-back-link" type="button" onClick={() => setWorkspaceMode("overview")}><ArrowLeft />Alle projecten</button><h2>Kies een onderzoek</h2></div>
               <button type="button" className="admin-button admin-button--secondary" onClick={addInvestigation}>
                 <Plus aria-hidden="true" />Nieuw dossier
               </button>
-            </div>
-            <div className="rp-admin-form-grid rp-admin-collection-intro">
-              <Field label="Sectietitel"><input value={valueFor(project.settings, "investigationsTitle", language)} onChange={(event) => updateSettings("investigationsTitle", event.target.value)} /></Field>
-              <Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "investigationsIntro", language)} onChange={(event) => updateSettings("investigationsIntro", event.target.value)} /></Field>
             </div>
             {[...project.investigations]
               .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))
@@ -1382,11 +1427,11 @@ export default function RembrandtProjectManager({
                   aria-label={`${investigation.title?.nl || investigation.id} bewerken`}
                   onClick={() => setSelectedInvestigationId(investigation.id)}
                 >
-                  <span>{String(investigation.sortOrder).padStart(2, "0")}</span>
+                  {investigation.coverImage ? <img className="rp-case-thumb" src={investigation.coverImage} alt="" /> : <span>{String(investigation.sortOrder).padStart(2, "0")}</span>}
                   <div>
                     <strong>{investigation.title?.nl || investigation.id}</strong>
-                    <small>{investigation.reference || "Zonder referentie"}</small>
-                    <em>{investigation.visible === false ? "Niet zichtbaar" : "Publiek zichtbaar"}</em>
+                    <small>{investigation.subtitle?.nl || investigation.reference || "Zonder referentie"}</small>
+                    <em>{investigation.visible === false ? "Verborgen" : savedPublicEnabled ? "Publiek zichtbaar" : "Klaargezet"}</em>
                   </div>
                   {investigation.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
                 </button>
@@ -1401,6 +1446,7 @@ export default function RembrandtProjectManager({
                     Werk {String(selectedInvestigation.sortOrder).padStart(2, "0")}
                   </span>
                   <h2>{selectedInvestigation.title?.nl || "Nieuw dossier"}</h2>
+                  {savedPublicEnabled && selectedInvestigation.visible !== false && <a className="rp-live-link" href={localizePath(`${REMBRANDT_PROJECT_ROUTE}/${selectedInvestigation.slug}`, language)} target="_blank" rel="noopener noreferrer" title="Bekijk de laatst opgeslagen pagina"><Eye />Bekijk pagina</a>}
                   <p className="rp-admin-editor__context">
                     {selectedInvestigation.reference || "Zonder referentie"} · {selectedInvestigation.slug || "zonder URL-slug"}
                   </p>
@@ -1411,7 +1457,8 @@ export default function RembrandtProjectManager({
                   <button type="button" aria-label="Dossier verwijderen" onClick={() => removeOrderedEntry("investigations", selectedInvestigation.id)}><Trash2 aria-hidden="true" /></button>
                 </div>
               </header>
-              <div className="rp-admin-editor__publication">
+              <EditorNav label="Dossieronderdelen" value={dossierTab} onChange={(tab) => { if (tab === "updates") { changeUpdateInvestigationFilter(selectedInvestigation.id); setPanel("updates"); } else setDossierTab(tab); }} items={[{id:"text",label:"Tekst & verhaal"},{id:"media",label:"Beelden"},{id:"updates",label:`Updates (${project.updates.filter((entry) => entry.investigationId === selectedInvestigation.id).length})`},{id:"settings",label:"Instellingen"}]} />
+              <div hidden={dossierTab !== "settings"} className="rp-admin-editor__publication">
                 <div className="rp-admin-editor__publication-fields">
                   <Field label="Referentie"><input value={selectedInvestigation.reference || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "reference", event.target.value)} /></Field>
                   <Field label="URL-slug"><input value={selectedInvestigation.slug || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "slug", slugify(event.target.value))} /></Field>
@@ -1436,14 +1483,16 @@ export default function RembrandtProjectManager({
                   />
                 </div>
               </div>
-              <div className="rp-admin-editor__body">
-                <div className="rp-admin-form-grid rp-admin-form-grid--two">
+              <div hidden={dossierTab === "settings"} className="rp-admin-editor__body">
+                <div hidden={dossierTab !== "text"} className="rp-admin-form-grid rp-admin-form-grid--two">
                   <Field label="Projecttitel"><input value={valueFor(selectedInvestigation, "title", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "title", event.target.value, true)} /></Field>
                   <Field label="Naam van het werk"><input value={valueFor(selectedInvestigation, "subtitle", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "subtitle", event.target.value, true)} /></Field>
                   <Field label="Publieke statusregel"><input value={valueFor(selectedInvestigation, "statusLabel", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "statusLabel", event.target.value, true)} /></Field>
                   <Field label="Korte samenvatting"><textarea rows="4" value={valueFor(selectedInvestigation, "summary", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "summary", event.target.value, true)} /></Field>
                   <Field label="Dossierbeschrijving"><textarea rows="7" value={valueFor(selectedInvestigation, "description", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "description", event.target.value, true)} /></Field>
                 </div>
+                <div hidden={dossierTab !== "media"}>
+                <div className="rp-admin-card__heading"><div><p>Beelden van het onderzoek</p><h2>Hoofdbeeld</h2></div></div>
                 <div className="rp-admin-media-row">
                   <div className="rp-admin-media-preview">{selectedInvestigation.coverImage ? <img src={selectedInvestigation.coverImage} alt="Dossier preview" /> : <ImageIcon aria-hidden="true" />}</div>
                   <div>
@@ -1470,6 +1519,7 @@ export default function RembrandtProjectManager({
                     </div>
                   ))}
                 </div>
+                </div>
               </div>
             </section>
           ) : <section className="rp-admin-empty"><Search aria-hidden="true" /><h2>Nog geen dossiers</h2><button type="button" className="admin-button admin-button--primary" onClick={addInvestigation}><Plus aria-hidden="true" />Eerste dossier</button></section>}
@@ -1478,19 +1528,20 @@ export default function RembrandtProjectManager({
 
       {panel === "process" && (
         <div className="rp-admin-page-grid" id="rp-panel-process" role="tabpanel" aria-labelledby="rp-tab-process">
-          <section className="rp-admin-card">
-            <div className="rp-admin-card__heading"><div><p>Verhaal</p><h2>Over het project</h2></div><button type="button" className="admin-button admin-button--secondary" onClick={() => { const sortOrder = Math.max(0, ...project.aboutSections.map((entry) => Number(entry.sortOrder) || 0)) + 1; setProject((current) => ({ ...current, aboutSections: [...current.aboutSections, { id: `about-${sortOrder}`, sortOrder, visible: true, title: { nl: "Nieuwe sectie", en: "", fr: "" }, body: { nl: "", en: "", fr: "" } }] })); }}><Plus aria-hidden="true" />Sectie</button></div>
+          <section hidden={processTab !== "0"} className="rp-admin-card">
+            <div className="rp-admin-card__heading"><div><p>Verhaal</p><h2>Over het project</h2></div><button type="button" className="admin-button admin-button--secondary" onClick={() => { setContentSelection((current) => ({...current, about: project.aboutSections.length})); const sortOrder = Math.max(0, ...project.aboutSections.map((entry) => Number(entry.sortOrder) || 0)) + 1; setProject((current) => ({ ...current, aboutSections: [...current.aboutSections, { id: `about-${sortOrder}`, sortOrder, visible: true, title: { nl: "Nieuwe sectie", en: "", fr: "" }, body: { nl: "", en: "", fr: "" } }] })); }}><Plus aria-hidden="true" />Sectie</button></div>
             <div className="rp-admin-form-grid"><Field label="Sectietitel"><input value={valueFor(project.settings, "aboutTitle", language)} onChange={(event) => updateSettings("aboutTitle", event.target.value)} /></Field><Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "aboutIntro", language)} onChange={(event) => updateSettings("aboutIntro", event.target.value)} /></Field></div>
             <div className="rp-admin-content-list">
-              {[...project.aboutSections].sort((a,b) => a.sortOrder - b.sortOrder).map((section) => <article key={section.id}>
+              <div className="rp-content-picker" aria-label="Kies een onderdeel">{[...project.aboutSections].sort((a,b) => a.sortOrder - b.sortOrder).map((entry, index) => <button type="button" key={entry.id} className={Math.min(contentSelection.about, project.aboutSections.length - 1) === index ? "is-active" : ""} onClick={() => setContentSelection((current) => ({...current, about: index}))}><span>{String(index + 1).padStart(2,"0")}</span>{entry.title?.[language] || entry.title?.nl || "Nieuw onderdeel"}</button>)}</div>
+              {[...project.aboutSections].sort((a,b) => a.sortOrder - b.sortOrder).filter((_, index) => index === Math.min(contentSelection.about, project.aboutSections.length - 1)).map((section) => <article key={section.id}>
                 <div className="rp-admin-content-list__actions"><button type="button" aria-label="Sectie omhoog" onClick={() => moveOrderedEntry("aboutSections", section.id, -1)}><ArrowUp aria-hidden="true" /></button><button type="button" aria-label="Sectie omlaag" onClick={() => moveOrderedEntry("aboutSections", section.id, 1)}><ArrowDown aria-hidden="true" /></button><button type="button" aria-label="Sectie tonen of verbergen" onClick={() => updateAboutSection(section.id, "visible", section.visible === false)}>{section.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button><button type="button" aria-label="Sectie verwijderen" onClick={() => removeOrderedEntry("aboutSections", section.id)}><Trash2 aria-hidden="true" /></button></div>
                 <Field label={`Titel ${section.sortOrder}`}><input value={valueFor(section, "title", language)} onChange={(event) => updateAboutSection(section.id, "title", event.target.value, true)} /></Field><Field label="Tekst"><textarea rows="6" value={valueFor(section, "body", language)} onChange={(event) => updateAboutSection(section.id, "body", event.target.value, true)} /></Field>
               </article>)}
             </div>
           </section>
 
-          <section className="rp-admin-card">
-            <div className="rp-admin-card__heading"><div><p>Proces</p><h2>Onderzoeksstappen</h2></div><button type="button" className="admin-button admin-button--secondary" onClick={() => setProject((current) => ({ ...current, researchSteps: [...current.researchSteps, createResearchStep(current)] }))}><Plus aria-hidden="true" />Stap</button></div>
+          <section hidden={processTab !== "1"} className="rp-admin-card">
+            <div className="rp-admin-card__heading"><div><p>Proces</p><h2>Onderzoeksstappen</h2></div><button type="button" className="admin-button admin-button--secondary" onClick={() => { setContentSelection((current) => ({...current, steps: project.researchSteps.length})); setProject((current) => ({ ...current, researchSteps: [...current.researchSteps, createResearchStep(current)] })); }}><Plus aria-hidden="true" />Stap</button></div>
             <div className="rp-admin-form-grid"><Field label="Sectietitel"><input value={valueFor(project.settings, "processTitle", language)} onChange={(event) => updateSettings("processTitle", event.target.value)} /></Field><Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "processIntro", language)} onChange={(event) => updateSettings("processIntro", event.target.value)} /></Field></div>
             <div className="rp-admin-media-row">
               <div className="rp-admin-media-preview">
@@ -1532,14 +1583,15 @@ export default function RembrandtProjectManager({
               </div>
             </div>
             <div className="rp-admin-content-list">
-              {[...project.researchSteps].sort((a,b) => a.sortOrder - b.sortOrder).map((step) => <article key={step.id}>
+              <div className="rp-content-picker" aria-label="Kies een onderdeel">{[...project.researchSteps].sort((a,b) => a.sortOrder - b.sortOrder).map((entry, index) => <button type="button" key={entry.id} className={Math.min(contentSelection.steps, project.researchSteps.length - 1) === index ? "is-active" : ""} onClick={() => setContentSelection((current) => ({...current, steps: index}))}><span>{String(index + 1).padStart(2,"0")}</span>{entry.title?.[language] || entry.title?.nl || "Nieuw onderdeel"}</button>)}</div>
+              {[...project.researchSteps].sort((a,b) => a.sortOrder - b.sortOrder).filter((_, index) => index === Math.min(contentSelection.steps, project.researchSteps.length - 1)).map((step) => <article key={step.id}>
                 <div className="rp-admin-content-list__actions"><button type="button" aria-label="Stap omhoog" onClick={() => moveOrderedEntry("researchSteps", step.id, -1)}><ArrowUp aria-hidden="true" /></button><button type="button" aria-label="Stap omlaag" onClick={() => moveOrderedEntry("researchSteps", step.id, 1)}><ArrowDown aria-hidden="true" /></button><button type="button" aria-label="Stap tonen of verbergen" onClick={() => updateResearchStep(step.id, "visible", step.visible === false)}>{step.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button><button type="button" aria-label="Stap verwijderen" onClick={() => removeOrderedEntry("researchSteps", step.id)}><Trash2 aria-hidden="true" /></button></div>
                 <Field label={`Stap ${step.sortOrder}`}><input value={valueFor(step, "title", language)} onChange={(event) => updateResearchStep(step.id, "title", event.target.value, true)} /></Field><Field label="Beschrijving"><textarea rows="4" value={valueFor(step, "body", language)} onChange={(event) => updateResearchStep(step.id, "body", event.target.value, true)} /></Field>
               </article>)}
             </div>
           </section>
 
-          <section className="rp-admin-card">
+          <section hidden={processTab !== "2"} className="rp-admin-card">
             <div className="rp-admin-card__heading"><div><p>Oproep</p><h2>Submit a Painting</h2></div></div>
             <div className="rp-admin-form-grid rp-admin-form-grid--two">
               <Field label="Sectietitel"><input value={valueFor(project.settings, "submissionTitle", language)} onChange={(event) => updateSettings("submissionTitle", event.target.value)} /></Field>
@@ -1553,6 +1605,7 @@ export default function RembrandtProjectManager({
         </div>
       )}
 
+      {panel === "updates" && updateInvestigationFilter !== "all" && <div className="rp-scoped-update-header"><button type="button" className="rp-back-link" onClick={() => { setSelectedInvestigationId(updateInvestigationFilter); setPanel("investigations"); setWorkspaceMode("edit"); }}><ArrowLeft />Terug naar het project</button><strong>{project.investigations.find((entry) => entry.id === updateInvestigationFilter)?.subtitle?.nl}</strong><span>Onderzoekstijdlijn</span></div>}
       {panel === "updates" && (
         <div
           className="rp-admin-updates-layout"
@@ -1702,7 +1755,9 @@ export default function RembrandtProjectManager({
                 </div>
               </header>
 
-              <div className="rp-admin-editor__publication">
+
+              <EditorNav label="Update bewerken" value={updateTab} onChange={setUpdateTab} items={[{id:"text",label:"Verhaal & bevindingen"},{id:"media",label:"Beelden"},{id:"settings",label:"Status & datum"}]} />
+              <div hidden={updateTab !== "settings"} className="rp-admin-editor__publication">
                 <div className="rp-admin-editor__publication-fields">
                   <Field label="Onderzoeksdossier">
                     <select value={selectedUpdate.investigationId || ""} onChange={(event) => updateSelected("investigationId", event.target.value)}>
@@ -1782,7 +1837,7 @@ export default function RembrandtProjectManager({
                 </div>
               </div>
 
-              <div className="rp-admin-editor__content">
+              <div hidden={updateTab !== "text"} className="rp-admin-editor__content">
                 <Field label="Titel">
                   <input
                     value={valueFor(selectedUpdate, "title", language)}
@@ -1855,7 +1910,7 @@ export default function RembrandtProjectManager({
                 </Field>
               </div>
 
-              <div className="rp-admin-editor__media">
+              <div hidden={updateTab !== "media"} className="rp-admin-editor__media">
                 <div className="rp-admin-card__heading">
                   <div>
                     <p>Beeld</p>
@@ -2036,7 +2091,7 @@ export default function RembrandtProjectManager({
           role="tabpanel"
           aria-labelledby="rp-tab-publish"
         >
-          <section className="rp-admin-card">
+          <section hidden={publishTab !== "0"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>SEO</p>
@@ -2105,7 +2160,7 @@ export default function RembrandtProjectManager({
               </div>
             </div>
           </section>
-          <section className="rp-admin-card">
+          <section hidden={publishTab !== "1"} className="rp-admin-card">
             <div className="rp-admin-card__heading">
               <div>
                 <p>Controle</p>
@@ -2305,8 +2360,9 @@ export default function RembrandtProjectManager({
                   : "Opslaan & live zetten"}
             </button>
           </section>
+          {revisions.length === 0 && publishTab === "2" && <section className="rp-admin-card"><h2>Nog geen vorige versies</h2><p>Na het opslaan verschijnen eerdere versies van de inhoud hier.</p></section>}
           {revisions.length > 0 && (
-            <section className="rp-admin-card">
+            <section hidden={publishTab !== "2"} className="rp-admin-card">
               <div className="rp-admin-card__heading">
                 <div>
                   <p>Historiek</p>
@@ -2347,7 +2403,7 @@ export default function RembrandtProjectManager({
               </div>
             </section>
           )}
-          <section className="rp-admin-card rp-admin-card--reset">
+          <section hidden={publishTab !== "3"} className="rp-admin-card rp-admin-card--reset">
             <div>
               <RotateCcw aria-hidden="true" />
               <h2>Startinhoud herstellen</h2>
@@ -2381,6 +2437,7 @@ export default function RembrandtProjectManager({
           </section>
         </div>
       )}
+      </div>
     </div>
   );
 }

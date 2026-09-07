@@ -1,11 +1,11 @@
 import { next } from "@vercel/functions";
+import { getRembrandtRoute } from "./src/utils/rembrandtProject.js";
 
 export const config = {
   runtime: "nodejs",
   matcher: [
-    "/rembrandt-project",
-    "/en/rembrandt-project",
-    "/fr/rembrandt-project",
+    "/rembrandt-project/:path*", "/en/rembrandt-project/:path*", "/fr/rembrandt-project/:path*",
+    "/lost-rembrandt-project/:path*", "/en/lost-rembrandt-project/:path*", "/fr/lost-rembrandt-project/:path*",
   ],
 };
 
@@ -37,6 +37,8 @@ const notFoundResponse = (request) => {
 };
 
 export default async function rembrandtProjectGate(request) {
+  // Preview content is protected by its own token endpoint. Its shell must be reachable.
+  if (getRembrandtRoute(new URL(request.url).pathname)?.privatePreview) return next();
   try {
     const accessUrl = new URL(
       "/api/public-content?resource=rembrandt-project-access",

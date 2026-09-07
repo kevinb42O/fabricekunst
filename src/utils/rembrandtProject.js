@@ -1,5 +1,15 @@
+import { stripLanguagePrefix } from "./locales.js";
 export const REMBRANDT_PROJECT_ROUTE = "/lost-rembrandt-project";
 export const LEGACY_REMBRANDT_PROJECT_ROUTE = "/rembrandt-project";
+
+export function getRembrandtRoute(pathname) {
+  const path = stripLanguagePrefix(String(pathname || "")).replace(/\/+$/, "").toLowerCase();
+  const base = [REMBRANDT_PROJECT_ROUTE, LEGACY_REMBRANDT_PROJECT_ROUTE].find((entry) => path === entry || path.startsWith(`${entry}/`));
+  if (!base) return null;
+  const suffix = path.slice(base.length).replace(/^\//, "");
+  const privatePreview = suffix === "preview" || suffix.startsWith("preview/");
+  return { privatePreview, investigationSlug: privatePreview ? suffix.replace(/^preview\/?/, "") : suffix };
+}
 
 const emptyLocalizedText = () => ({ nl: "", en: "", fr: "" });
 const REMBRANDT_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

@@ -123,3 +123,30 @@ test("a private Rembrandt preview is always noindex", () => {
   assert.equal(seo.robots, "noindex, nofollow");
   assert.equal(seo.canonical, "https://www.atelierrembrandt.com/lost-rembrandt-project");
 });
+
+test("each dossier has its own canonical, translated metadata and scoped timeline", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.isEnabled = true;
+  for (const investigation of project.investigations) {
+    const seo = buildPageSeo({ page: 'rembrandtProject', projectData: project, language: 'en', pathname: `/en/lost-rembrandt-project/${investigation.slug}` });
+    assert.equal(seo.canonical, `https://www.atelierrembrandt.com/en/lost-rembrandt-project/${investigation.slug}`);
+    assert.ok(seo.title.includes(investigation.subtitle.en));
+    assert.ok(seo.image.endsWith(investigation.coverImage));
+    const timeline = seo.structuredData['@graph'].find((entry) => entry['@type'] === 'ItemList');
+    assert.ok(timeline.itemListElement.every((entry) => entry.item['@id'].includes(`/${investigation.slug}#update-`)));
+  }
+});
+
+test("hidden and unknown dossiers expose no research metadata; nested previews remain noindex", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.isEnabled = true;
+  project.investigations[1].visible = false;
+  for (const slug of ['project-02', 'does-not-exist']) {
+    const seo = buildPageSeo({ page: 'rembrandtProject', projectData: project, pathname: `/lost-rembrandt-project/${slug}` });
+    assert.equal(seo.robots, 'noindex, nofollow');
+    assert.equal(seo.structuredData['@graph'].some((entry) => entry['@type'] === 'ItemList'), false);
+    assert.ok(!seo.title.includes(project.investigations[1].subtitle.nl));
+  }
+  const preview = buildPageSeo({ page: 'rembrandtProject', projectData: project, pathname: '/lost-rembrandt-project/preview/project-01' });
+  assert.equal(preview.robots, 'noindex, nofollow');
+});

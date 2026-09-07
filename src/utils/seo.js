@@ -6,7 +6,7 @@ import {
   stripLanguagePrefix,
 } from "./locales.js";
 import {
-  LEGACY_REMBRANDT_PROJECT_ROUTE,
+  getRembrandtRoute,
   REMBRANDT_PROJECT_ROUTE,
   localizedProjectValue,
   publishedRembrandtProject,
@@ -203,7 +203,7 @@ function availabilityFor(status) {
 export function getPageKind(pathname, currentPage = "home") {
   const path = stripLanguagePrefix(normalizePath(pathname)).toLowerCase();
   if (path === "/topstukken") return "topstukken";
-  if ([REMBRANDT_PROJECT_ROUTE, LEGACY_REMBRANDT_PROJECT_ROUTE, `${REMBRANDT_PROJECT_ROUTE}/preview`, `${LEGACY_REMBRANDT_PROJECT_ROUTE}/preview`].includes(path)) return "rembrandtProject";
+  if (getRembrandtRoute(path)) return "rembrandtProject";
   if (currentPage === "item-detail") return "item";
   if (currentPage === "not-found") return "notFound";
   return currentPage;
@@ -232,11 +232,12 @@ export function buildPageSeo({
     localizedField(item, "description", lang) ||
     localizedField(item, "subtitle", lang);
   const itemImage = absoluteUrl(item?.images?.find((image) => image?.url)?.url);
+  const projectRoute = pageKind === "rembrandtProject" ? getRembrandtRoute(pathname) : null;
   const routePath =
     pageKind === "item" && item
       ? `/collectie/${getItemSlug(item)}`
       : pageKind === "rembrandtProject"
-        ? REMBRANDT_PROJECT_ROUTE
+        ? `${REMBRANDT_PROJECT_ROUTE}${projectRoute?.investigationSlug ? `/${projectRoute.investigationSlug}` : ""}`
       : stripLanguagePrefix(normalizePath(pathname));
   const canonicalPath = localizePath(routePath, lang);
   const canonical = `${SITE_URL}${canonicalPath === "/" ? "/" : canonicalPath}`;
@@ -251,8 +252,8 @@ export function buildPageSeo({
     pageKind === "rembrandtProject" && projectData
       ? publishedRembrandtProject(projectData)
       : null;
-  const hiddenProject =
-    pageKind === "rembrandtProject" && project?.isEnabled !== true;
+  const investigation = projectRoute?.investigationSlug ? project?.investigations.find((entry) => entry.slug === projectRoute.investigationSlug) : null;
+  const hiddenProject = pageKind === "rembrandtProject" && (project?.isEnabled !== true || (projectRoute?.investigationSlug && !investigation));
   const effectiveCanonical = hiddenProject
     ? `${SITE_URL}${localizePath("/", lang)}`
     : canonical;
@@ -269,6 +270,8 @@ export function buildPageSeo({
       ? truncate(`${itemTitle} — ${SITE_NAME}`, 72)
       : hiddenProject
         ? copy.notFound.title
+      : investigation
+        ? truncate(`${localizedProjectValue(investigation.subtitle, lang, localizedProjectValue(investigation.title, lang))} — Lost Rembrandt`, 72)
       : pageKind === "rembrandtProject"
         ? truncate(
             localizedProjectValue(
@@ -287,6 +290,8 @@ export function buildPageSeo({
         )
       : hiddenProject
         ? copy.notFound.description
+      : investigation
+        ? truncate(localizedProjectValue(investigation.summary, lang, ""), 158)
       : pageKind === "rembrandtProject"
         ? truncate(
             localizedProjectValue(
@@ -305,7 +310,7 @@ export function buildPageSeo({
     image:
       itemImage ||
       absoluteUrl(
-        project?.settings?.socialImage || project?.settings?.heroImage,
+        investigation?.coverImage || project?.settings?.socialImage || project?.settings?.heroImage,
       ) ||
       DEFAULT_SHARE_IMAGE,
     imageAlt: pageKind === "item" ? itemTitle : title,
@@ -316,7 +321,7 @@ export function buildPageSeo({
     robots:
       pageKind === "notFound" ||
       hiddenProject ||
-      (pageKind === "rembrandtProject" && stripLanguagePrefix(normalizePath(pathname)).toLowerCase().endsWith("/preview")) ||
+      projectRoute?.privatePreview ||
       (pageKind === "rembrandtProject" && project?.isEnabled !== true)
         ? "noindex, nofollow"
         : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
@@ -418,14 +423,17 @@ export function buildStructuredData({
   }
 
   if (page === "rembrandtProject" && publicProject?.isEnabled === true) {
+    const route = getRembrandtRoute(new URL(canonical).pathname);
+    const investigation = publicProject.investigations.find((entry) => entry.slug === route?.investigationSlug);
+    const visibleUpdates = investigation ? publicProject.updates.filter((entry) => entry.investigationId === investigation.id) : publicProject.updates;
     graph[0]["@type"] = "AboutPage";
     graph[0].name = localizedProjectValue(
-      publicProject.settings?.title,
+      investigation?.subtitle || publicProject.settings?.title,
       language,
       "The Lost Rembrandt Project",
     );
     graph[0].description = localizedProjectValue(
-      publicProject.settings?.intro,
+      investigation?.summary || publicProject.settings?.intro,
       language,
       "",
     );
@@ -437,13 +445,13 @@ export function buildStructuredData({
         language,
         "The Lost Rembrandt Project",
       ),
-      numberOfItems: publicProject.updates.length,
-      itemListElement: publicProject.updates.map((update, index) => ({
+      numberOfItems: visibleUpdates.length,
+      itemListElement: visibleUpdates.map((update, index) => ({
         "@type": "ListItem",
         position: index + 1,
         item: {
           "@type": "Article",
-          "@id": `${canonical}#update-${update.slug}`,
+          "@id": `${SITE_URL}${localizePath(`${REMBRANDT_PROJECT_ROUTE}/${publicProject.investigations.find((entry) => entry.id === update.investigationId)?.slug}`, language)}#update-${update.slug}`,
           headline: localizedProjectValue(update.title, language, ""),
           description: localizedProjectValue(update.summary, language, ""),
           datePublished: update.publishedAt || update.eventDate,
