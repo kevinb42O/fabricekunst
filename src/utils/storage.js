@@ -7,6 +7,7 @@ import {
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import {
   createEmptyRembrandtProject,
+  getRembrandtProjectIntegrityIssues,
   normalizeRembrandtProject,
   publishedRembrandtProject,
 } from "./rembrandtProject";
@@ -1236,6 +1237,7 @@ export const fetchRembrandtProjectAdminAsync = async () => {
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok)
       throw new Error(result.error || "Het project kon niet worden geladen.");
+    const integrityIssues = getRembrandtProjectIntegrityIssues(result.project);
     const project = normalizeRembrandtProject(result.project);
     try {
       localStorage.setItem(
@@ -1249,22 +1251,26 @@ export const fetchRembrandtProjectAdminAsync = async () => {
       project,
       version: result.version ?? null,
       revisions: result.revisions || [],
+      integrityIssues,
     };
   }
   try {
     const cached = localStorage.getItem(REMBRANDT_PROJECT_ADMIN_KEY);
+    const rawProject = cached ? JSON.parse(cached) : null;
     return {
-      project: cached
-        ? normalizeRembrandtProject(JSON.parse(cached))
+      project: rawProject
+        ? normalizeRembrandtProject(rawProject)
         : createEmptyRembrandtProject(),
       version: null,
       revisions: [],
+      integrityIssues: getRembrandtProjectIntegrityIssues(rawProject),
     };
   } catch {
     return {
       project: createEmptyRembrandtProject(),
       version: null,
       revisions: [],
+      integrityIssues: [],
     };
   }
 };

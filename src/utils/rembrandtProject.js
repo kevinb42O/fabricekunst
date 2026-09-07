@@ -2,6 +2,37 @@ export const REMBRANDT_PROJECT_ROUTE = "/lost-rembrandt-project";
 export const LEGACY_REMBRANDT_PROJECT_ROUTE = "/rembrandt-project";
 
 const emptyLocalizedText = () => ({ nl: "", en: "", fr: "" });
+const REMBRANDT_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const createUniqueInvestigationId = (usedIds, index) => {
+  const base = `project-${String(index + 1).padStart(2, "0")}`;
+  let candidate = base;
+  let suffix = 2;
+  while (usedIds.has(candidate)) {
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+};
+
+export function getRembrandtProjectIntegrityIssues(input) {
+  if (!input || typeof input !== "object") return [];
+  const issues = [];
+  const seenInvestigationIds = new Set();
+  const investigations = Array.isArray(input.investigations)
+    ? input.investigations
+    : [];
+  for (const [index, investigation] of investigations.entries()) {
+    const id = typeof investigation?.id === "string" ? investigation.id : "";
+    if (!REMBRANDT_ID_PATTERN.test(id)) {
+      issues.push(`Dossier ${index + 1} heeft geen geldige unieke sleutel.`);
+    } else if (seenInvestigationIds.has(id)) {
+      issues.push(`Dossier ${index + 1} gebruikt een dubbele sleutel (${id}).`);
+    }
+    seenInvestigationIds.add(id);
+  }
+  return issues;
+}
 
 // This fallback is intentionally content-free. The carefully prepared project
 // seed is server-only: putting it in a browser fallback would expose every
@@ -84,25 +115,8 @@ export function normalizeRembrandtProject(input) {
               : { nl: String(phase.label || ""), en: "", fr: "" },
         }))
     : fallback.phases;
-  const updates = Array.isArray(input.updates)
-    ? input.updates
-        .filter((update) => update && typeof update === "object")
-        .map((update, index) => ({
-          ...update,
-          investigationId:
-            typeof update.investigationId === "string"
-              ? update.investigationId
-              : "project-01",
-          sequence: Number.isFinite(Number(update.sequence))
-            ? Number(update.sequence)
-            : index + 1,
-          gallery: Array.isArray(update.gallery)
-            ? update.gallery.filter(
-                (image) => image && typeof image === "object",
-              )
-            : [],
-        }))
-    : fallback.updates;
+  const investigationIdMap = new Map();
+  const usedInvestigationIds = new Set();
   const aboutSections = Array.isArray(input.aboutSections)
     ? input.aboutSections
         .filter((section) => section && typeof section === "object")
@@ -118,24 +132,55 @@ export function normalizeRembrandtProject(input) {
   const investigations = Array.isArray(input.investigations)
     ? input.investigations
         .filter((investigation) => investigation && typeof investigation === "object")
-        .map((investigation, index) => ({
-          ...investigation,
-          id:
-            typeof investigation.id === "string"
-              ? investigation.id
-              : `project-${String(index + 1).padStart(2, "0")}`,
-          sortOrder: Number.isFinite(Number(investigation.sortOrder))
-            ? Number(investigation.sortOrder)
+        .map((investigation, index) => {
+          const originalId =
+            typeof investigation.id === "string" ? investigation.id : "";
+          const id =
+            REMBRANDT_ID_PATTERN.test(originalId) &&
+            !usedInvestigationIds.has(originalId)
+              ? originalId
+              : createUniqueInvestigationId(usedInvestigationIds, index);
+          usedInvestigationIds.add(id);
+          if (originalId && !investigationIdMap.has(originalId)) {
+            investigationIdMap.set(originalId, id);
+          }
+          return {
+            ...investigation,
+            id,
+            sortOrder: Number.isFinite(Number(investigation.sortOrder))
+              ? Number(investigation.sortOrder)
+              : index + 1,
+            visible: investigation.visible !== false,
+            featured: investigation.featured === true,
+            gallery: Array.isArray(investigation.gallery)
+              ? investigation.gallery.filter(
+                  (image) => image && typeof image === "object",
+                )
+              : [],
+          };
+        })
+    : fallback.investigations;
+  const defaultInvestigationId = investigations[0]?.id || "project-01";
+  const updates = Array.isArray(input.updates)
+    ? input.updates
+        .filter((update) => update && typeof update === "object")
+        .map((update, index) => ({
+          ...update,
+          investigationId:
+            typeof update.investigationId === "string"
+              ? investigationIdMap.get(update.investigationId) ||
+                update.investigationId
+              : defaultInvestigationId,
+          sequence: Number.isFinite(Number(update.sequence))
+            ? Number(update.sequence)
             : index + 1,
-          visible: investigation.visible !== false,
-          featured: investigation.featured === true,
-          gallery: Array.isArray(investigation.gallery)
-            ? investigation.gallery.filter(
+          gallery: Array.isArray(update.gallery)
+            ? update.gallery.filter(
                 (image) => image && typeof image === "object",
               )
             : [],
         }))
-    : fallback.investigations;
+    : fallback.updates;
   const researchSteps = Array.isArray(input.researchSteps)
     ? input.researchSteps
         .filter((step) => step && typeof step === "object")

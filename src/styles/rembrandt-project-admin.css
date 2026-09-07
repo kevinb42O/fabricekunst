@@ -1085,6 +1085,197 @@
   }
 }
 
+/* Shared editorial treatment for the Rembrandt workspace. Keep the project
+   distinctive without creating a second, unrelated admin design system. */
+.rp-admin {
+  --rp-accent: #6b5a45;
+  --rp-accent-strong: #4b3d2f;
+  --rp-accent-soft: #f7f4ef;
+  --rp-focus: rgb(107 90 69 / 24%);
+}
+.rp-admin-header > div:first-child > p,
+.rp-admin-card__heading p,
+.rp-admin-collection-list > button > span,
+.rp-admin-update-list button > span,
+.rp-admin-access__eyebrow,
+.rp-admin-publish-note svg,
+.rp-admin-empty > svg {
+  color: var(--rp-accent);
+}
+.rp-admin-header > div:first-child > p {
+  letter-spacing: 0.11em;
+}
+.rp-admin-header h1 {
+  letter-spacing: -0.025em;
+}
+.rp-admin-tabs,
+.rp-admin-language,
+.rp-admin-header,
+.rp-admin-card,
+.rp-admin-editor,
+.rp-admin-collection-list,
+.rp-admin-update-list {
+  box-shadow: 0 1px 2px rgb(23 23 23 / 3%);
+}
+.rp-admin-tabs {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.rp-admin-tabs button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.rp-admin-tabs button.is-active {
+  background: var(--rp-accent-soft);
+  color: var(--rp-accent-strong);
+}
+.rp-admin-tabs button span {
+  flex: 0 0 auto;
+}
+.rp-admin-language button.is-active {
+  border-color: color-mix(in srgb, var(--rp-accent) 55%, var(--admin-border));
+  background: var(--rp-accent-soft);
+}
+.rp-admin-overview-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.rp-admin-overview-strip > div {
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: var(--admin-surface);
+}
+.rp-admin-overview-strip > div.is-warning {
+  border-color: #e8c993;
+  background: #fff9ed;
+}
+.rp-admin-overview-strip > div.is-success {
+  border-color: #b9d7c8;
+  background: #f7fbf9;
+}
+.rp-admin-overview-strip span,
+.rp-admin-overview-strip small {
+  display: block;
+  color: var(--admin-muted);
+  font-size: 9px;
+}
+.rp-admin-overview-strip strong {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--admin-text);
+  font-size: 18px;
+  line-height: 1.1;
+}
+.rp-admin-overview-strip small {
+  margin-top: 0.25rem;
+}
+.rp-admin-overview-strip .is-warning strong {
+  color: #8a6116;
+}
+.rp-admin-overview-strip .is-success strong {
+  color: var(--admin-success);
+}
+.rp-admin-collection-list > button:not(.admin-button) {
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.rp-admin-collection-list > button:not(.admin-button):hover {
+  border-color: color-mix(in srgb, var(--rp-accent) 38%, var(--admin-border));
+  background: #fcfbf9;
+}
+.rp-admin-collection-list > button:not(.admin-button).is-active {
+  border-color: color-mix(in srgb, var(--rp-accent) 58%, var(--admin-border));
+  background: var(--rp-accent-soft);
+  box-shadow: inset 3px 0 var(--rp-accent);
+}
+.rp-admin-collection-list > button > div {
+  min-width: 0;
+}
+.rp-admin-collection-list > button em {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--admin-muted);
+  font-size: 9px;
+  font-style: normal;
+}
+.rp-admin-data-alert {
+  padding: 0.9rem 1rem;
+  border: 1px solid #e8c993;
+  border-radius: 9px;
+  background: #fff9ed;
+  color: #684d1c;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.rp-admin-data-alert > svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 0.1rem;
+}
+.rp-admin-data-alert strong {
+  display: block;
+  font-size: 12px;
+}
+.rp-admin-data-alert p {
+  max-width: 65rem;
+  margin: 0.25rem 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.rp-admin-data-alert ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 10px;
+}
+.rp-admin-editor__header h2 {
+  letter-spacing: -0.015em;
+}
+.rp-admin-editor__context {
+  margin: 0.25rem 0 0;
+  color: var(--admin-muted);
+  font-size: 10px;
+}
+.rp-admin-editor__body {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.25rem;
+}
+.rp-admin-editor__publication-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.rp-admin-editor__publication-fields > .rp-admin-field {
+  min-width: 0;
+}
+.rp-admin .admin-button--primary,
+.rp-admin-list-tools > button {
+  border-color: var(--rp-accent-strong);
+  background: var(--rp-accent-strong);
+}
+.rp-admin .admin-button--primary:hover,
+.rp-admin-list-tools > button:hover {
+  background: #5e4b3b;
+}
+.rp-admin button:focus-visible,
+.rp-admin .admin-button:focus-visible,
+.rp-admin .admin-text-button:focus-visible,
+.rp-admin input:focus-visible,
+.rp-admin textarea:focus-visible,
+.rp-admin select:focus-visible {
+  outline-color: var(--rp-accent) !important;
+  box-shadow: 0 0 0 3px var(--rp-focus);
+}
+.rp-admin-content-list__actions button,
+.rp-admin-phases button {
+  width: 40px;
+  height: 40px;
+}
+
 @media (max-width: 70rem) {
   .rp-admin-updates-layout {
     grid-template-columns: 16rem minmax(0, 1fr);
@@ -1116,6 +1307,9 @@
   .rp-admin-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .rp-admin-overview-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .rp-admin-access__main {
     grid-template-columns: auto minmax(0, 1fr);
   }
@@ -1127,8 +1321,10 @@
 @media (max-width: 36rem) {
   .rp-admin-header,
   .rp-admin-card,
+  .rp-admin-editor__body,
   .rp-admin-editor__content,
-  .rp-admin-editor__media {
+  .rp-admin-editor__media,
+  .rp-admin-editor__publication {
     padding: 1rem;
   }
   .rp-admin-header__actions {
@@ -1147,7 +1343,8 @@
   }
   .rp-admin-editor__publication-fields,
   .rp-admin-editor__publication-toggles,
-  .rp-admin-summary {
+  .rp-admin-summary,
+  .rp-admin-overview-strip {
     grid-template-columns: 1fr;
   }
   .rp-admin-card--reset {

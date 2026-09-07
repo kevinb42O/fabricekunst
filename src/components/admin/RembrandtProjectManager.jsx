@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Archive,
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   Check,
@@ -29,6 +30,7 @@ import {
   createProjectInvestigation,
   createResearchStep,
   createProjectUpdate,
+  getRembrandtProjectIntegrityIssues,
   normalizeRembrandtProject,
 } from "../../utils/rembrandtProject";
 import {
@@ -181,6 +183,8 @@ export default function RembrandtProjectManager({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [savedVersion, setSavedVersion] = useState(null);
+  const [integrityIssues, setIntegrityIssues] = useState([]);
+  const [needsRepair, setNeedsRepair] = useState(false);
   const [saving, setSaving] = useState(false);
   const [accessSaving, setAccessSaving] = useState(false);
   const [uploading, setUploading] = useState(() => new Set());
@@ -199,12 +203,17 @@ export default function RembrandtProjectManager({
     setLoading(true);
     setLoadError("");
     fetchRembrandtProjectAdminAsync()
-      .then(({ project: loaded, version, revisions: loadedRevisions }) => {
+      .then(({ project: loaded, version, revisions: loadedRevisions, integrityIssues: loadedIssues = [] }) => {
         if (!active) return;
         const normalized = normalizeRembrandtProject(loaded);
+        const detectedIssues = loadedIssues.length
+          ? loadedIssues
+          : getRembrandtProjectIntegrityIssues(loaded);
         setProject(normalized);
         setSavedVersion(version ?? null);
         setSavedSnapshot(JSON.stringify(normalized));
+        setIntegrityIssues(detectedIssues);
+        setNeedsRepair(detectedIssues.length > 0);
         setSelectedId(normalized.updates?.[0]?.id || null);
         setSelectedInvestigationId(normalized.investigations?.[0]?.id || null);
         setRevisions(loadedRevisions || []);
@@ -227,8 +236,12 @@ export default function RembrandtProjectManager({
   }, []);
 
   const dirty = useMemo(
-    () => savedSnapshot && JSON.stringify(project) !== savedSnapshot,
-    [project, savedSnapshot],
+    () =>
+      Boolean(
+        needsRepair ||
+          (savedSnapshot && JSON.stringify(project) !== savedSnapshot),
+      ),
+    [needsRepair, project, savedSnapshot],
   );
   const savedPublicEnabled = useMemo(() => {
     try {
@@ -372,6 +385,29 @@ export default function RembrandtProjectManager({
       ).size,
     [project],
   );
+  const overviewStats = [
+    {
+      label: "Dossiers",
+      value: project.investigations.length,
+      detail: `${project.investigations.filter((entry) => entry.visible !== false).length} zichtbaar`,
+    },
+    {
+      label: "Onderzoeksstappen",
+      value: project.researchSteps.length,
+      detail: `${project.researchSteps.filter((entry) => entry.visible !== false).length} zichtbaar`,
+    },
+    {
+      label: "Updates",
+      value: project.updates.length,
+      detail: `${project.updates.filter((entry) => entry.status === "published").length} gepubliceerd`,
+    },
+    {
+      label: "Publicatie",
+      value: publicationIssues.length ? publicationIssues.length : "OK",
+      detail: publicationIssues.length ? "aandachtspunten" : "klaar voor controle",
+      tone: publicationIssues.length ? "warning" : "success",
+    },
+  ];
   const changePanelByKeyboard = (event) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
@@ -480,6 +516,8 @@ export default function RembrandtProjectManager({
       setProject(result.project);
       setSavedVersion(result.version);
       setSavedSnapshot(JSON.stringify(result.project));
+      setIntegrityIssues([]);
+      setNeedsRepair(false);
       onPublished(result.project);
       onShowToast(
         result.project.isEnabled
@@ -790,6 +828,12 @@ export default function RembrandtProjectManager({
       onShowToast("Verplaats of verwijder eerst de gekoppelde updates.", "error");
       return;
     }
+    const nextSelection =
+      collection === "investigations"
+        ? project.investigations
+            .filter((entry) => entry.id !== id)
+            .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))[0]?.id || null
+        : null;
     setProject((current) => ({
       ...current,
       [collection]: current[collection]
@@ -798,9 +842,7 @@ export default function RembrandtProjectManager({
         .map((entry, index) => ({ ...entry, sortOrder: index + 1 })),
     }));
     if (collection === "investigations") {
-      setSelectedInvestigationId(
-        project.investigations.find((entry) => entry.id !== id)?.id || null,
-      );
+      setSelectedInvestigationId(nextSelection);
     }
   };
 
@@ -866,12 +908,12 @@ export default function RembrandtProjectManager({
         <div>
           <p>
             <Search aria-hidden="true" />
-            Onderzoeksjournaal
+            Lost Rembrandt · beheer
           </p>
-          <h1>The Lost Rembrandt Project</h1>
+          <h1>Projectbeheer</h1>
           <span>
-            Beheer de oproep, dossiers, onderzoeksstappen en publieke updates
-            vanuit één werkruimte.
+            Beheer dossiers, onderzoeksstappen en publieke updates vanuit één
+            overzichtelijke werkruimte.
           </span>
         </div>
         <div className="rp-admin-header__actions">
@@ -902,6 +944,22 @@ export default function RembrandtProjectManager({
         </div>
       </header>
 
+      {needsRepair && (
+        <aside className="rp-admin-data-alert" role="alert">
+          <AlertTriangle aria-hidden="true" />
+          <div>
+            <strong>Projectdata hersteld in deze editor</strong>
+            <p>
+              Er waren ongeldige of dubbele dossier-sleutels. De werken zijn tijdelijk
+              opnieuw uniek gemaakt; sla de wijzigingen op om dit ook definitief te bewaren.
+            </p>
+            <ul>
+              {integrityIssues.map((issue) => <li key={issue}>{issue}</li>)}
+            </ul>
+          </div>
+        </aside>
+      )}
+
       <div
         className="rp-admin-tabs"
         role="tablist"
@@ -928,6 +986,15 @@ export default function RembrandtProjectManager({
         ))}
       </div>
       <LanguageTabs language={language} onChange={setLanguage} />
+      <div className="rp-admin-overview-strip" aria-label="Projectoverzicht">
+        {overviewStats.map((stat) => (
+          <div key={stat.label} className={stat.tone ? `is-${stat.tone}` : ""}>
+            <span>{stat.label}</span>
+            <strong>{stat.value}</strong>
+            <small>{stat.detail}</small>
+          </div>
+        ))}
+      </div>
 
       {panel === "page" && (
         <div
@@ -1274,9 +1341,9 @@ export default function RembrandtProjectManager({
         >
           <aside className="rp-admin-collection-list">
             <div className="rp-admin-card__heading">
-              <div><p>Dossiers</p><h2>Huidige onderzoeken</h2></div>
+              <div><p>Dossiers · {project.investigations.length}</p><h2>Huidige onderzoeken</h2></div>
               <button type="button" className="admin-button admin-button--secondary" onClick={addInvestigation}>
-                <Plus aria-hidden="true" />Dossier
+                <Plus aria-hidden="true" />Nieuw dossier
               </button>
             </div>
             <div className="rp-admin-form-grid rp-admin-collection-intro">
@@ -1290,10 +1357,16 @@ export default function RembrandtProjectManager({
                   type="button"
                   key={investigation.id}
                   className={investigation.id === selectedInvestigationId ? "is-active" : ""}
+                  aria-current={investigation.id === selectedInvestigationId ? "true" : undefined}
+                  aria-label={`${investigation.title?.nl || investigation.id} bewerken`}
                   onClick={() => setSelectedInvestigationId(investigation.id)}
                 >
                   <span>{String(investigation.sortOrder).padStart(2, "0")}</span>
-                  <div><strong>{investigation.title?.nl || investigation.id}</strong><small>{investigation.reference}</small></div>
+                  <div>
+                    <strong>{investigation.title?.nl || investigation.id}</strong>
+                    <small>{investigation.reference || "Zonder referentie"}</small>
+                    <em>{investigation.visible === false ? "Niet zichtbaar" : "Publiek zichtbaar"}</em>
+                  </div>
                   {investigation.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
                 </button>
               ))}
@@ -1302,7 +1375,15 @@ export default function RembrandtProjectManager({
           {selectedInvestigation ? (
             <section className="rp-admin-editor">
               <header className="rp-admin-editor__header">
-                <div><span className="rp-admin-status rp-admin-status--draft">Dossier</span><h2>{selectedInvestigation.title?.nl || "Nieuw dossier"}</h2></div>
+                <div>
+                  <span className="rp-admin-status rp-admin-status--draft">
+                    Werk {String(selectedInvestigation.sortOrder).padStart(2, "0")}
+                  </span>
+                  <h2>{selectedInvestigation.title?.nl || "Nieuw dossier"}</h2>
+                  <p className="rp-admin-editor__context">
+                    {selectedInvestigation.reference || "Zonder referentie"} · {selectedInvestigation.slug || "zonder URL-slug"}
+                  </p>
+                </div>
                 <div>
                   <button type="button" aria-label="Dossier omhoog" onClick={() => moveOrderedEntry("investigations", selectedInvestigation.id, -1)}><ArrowUp aria-hidden="true" /></button>
                   <button type="button" aria-label="Dossier omlaag" onClick={() => moveOrderedEntry("investigations", selectedInvestigation.id, 1)}><ArrowDown aria-hidden="true" /></button>
@@ -1561,81 +1642,83 @@ export default function RembrandtProjectManager({
               </header>
 
               <div className="rp-admin-editor__publication">
-                <Field label="Onderzoeksdossier">
-                  <select value={selectedUpdate.investigationId || ""} onChange={(event) => updateSelected("investigationId", event.target.value)}>
-                    {project.investigations.map((investigation) => <option key={investigation.id} value={investigation.id}>{investigation.reference} — {investigation.title?.nl}</option>)}
-                  </select>
-                </Field>
-                <Field label="Status">
-                  <select
-                    value={selectedUpdate.status}
-                    onChange={(event) => {
-                      const status = event.target.value;
-                      updateSelected("status", status);
-                      if (status === "published" && !selectedUpdate.publishedAt)
-                        updateSelected("publishedAt", new Date().toISOString());
-                    }}
+                <div className="rp-admin-editor__publication-fields">
+                  <Field label="Onderzoeksdossier">
+                    <select value={selectedUpdate.investigationId || ""} onChange={(event) => updateSelected("investigationId", event.target.value)}>
+                      {project.investigations.map((investigation) => <option key={investigation.id} value={investigation.id}>{investigation.reference} — {investigation.title?.nl}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Status">
+                    <select
+                      value={selectedUpdate.status}
+                      onChange={(event) => {
+                        const status = event.target.value;
+                        updateSelected("status", status);
+                        if (status === "published" && !selectedUpdate.publishedAt)
+                          updateSelected("publishedAt", new Date().toISOString());
+                      }}
+                    >
+                      <option value="draft">Concept</option>
+                      <option value="published">Gepubliceerd</option>
+                      <option value="archived">Gearchiveerd</option>
+                    </select>
+                  </Field>
+                  <Field label="Onderzoeksfase">
+                    <select
+                      value={selectedUpdate.phaseId}
+                      onChange={(event) =>
+                        updateSelected("phaseId", event.target.value)
+                      }
+                    >
+                      {project.phases.map((phase) => (
+                        <option key={phase.id} value={phase.id}>
+                          {phase.label.nl}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Bewijsstatus">
+                    <select
+                      value={selectedUpdate.evidenceType}
+                      onChange={(event) =>
+                        updateSelected("evidenceType", event.target.value)
+                      }
+                    >
+                      {REMBRANDT_EVIDENCE_TYPES.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Datum van de stap">
+                    <input
+                      type="date"
+                      value={selectedUpdate.eventDate || ""}
+                      onChange={(event) =>
+                        updateSelected("eventDate", event.target.value)
+                      }
+                    />
+                  </Field>
+                  <Field
+                    label="Publicatiemoment"
+                    hint="Wordt automatisch ingevuld bij publiceren; toekomstige planning is bewust geblokkeerd."
                   >
-                    <option value="draft">Concept</option>
-                    <option value="published">Gepubliceerd</option>
-                    <option value="archived">Gearchiveerd</option>
-                  </select>
-                </Field>
-                <Field label="Onderzoeksfase">
-                  <select
-                    value={selectedUpdate.phaseId}
-                    onChange={(event) =>
-                      updateSelected("phaseId", event.target.value)
-                    }
-                  >
-                    {project.phases.map((phase) => (
-                      <option key={phase.id} value={phase.id}>
-                        {phase.label.nl}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Bewijsstatus">
-                  <select
-                    value={selectedUpdate.evidenceType}
-                    onChange={(event) =>
-                      updateSelected("evidenceType", event.target.value)
-                    }
-                  >
-                    {REMBRANDT_EVIDENCE_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Datum van de stap">
-                  <input
-                    type="date"
-                    value={selectedUpdate.eventDate || ""}
-                    onChange={(event) =>
-                      updateSelected("eventDate", event.target.value)
-                    }
-                  />
-                </Field>
-                <Field
-                  label="Publicatiemoment"
-                  hint="Wordt automatisch ingevuld bij publiceren; toekomstige planning is bewust geblokkeerd."
-                >
-                  <input
-                    type="datetime-local"
-                    max={toLocalDateTime(new Date())}
-                    value={toLocalDateTime(selectedUpdate.publishedAt)}
-                    onChange={(event) =>
-                      updateSelected(
-                        "publishedAt",
-                        event.target.value
-                          ? new Date(event.target.value).toISOString()
-                          : "",
-                      )
-                    }
-                  />
-                </Field>
+                    <input
+                      type="datetime-local"
+                      max={toLocalDateTime(new Date())}
+                      value={toLocalDateTime(selectedUpdate.publishedAt)}
+                      onChange={(event) =>
+                        updateSelected(
+                          "publishedAt",
+                          event.target.value
+                            ? new Date(event.target.value).toISOString()
+                            : "",
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
               </div>
 
               <div className="rp-admin-editor__content">

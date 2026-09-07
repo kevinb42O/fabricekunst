@@ -4,8 +4,10 @@ import { cloneDefaultRembrandtProject } from "../src/data/defaultRembrandtProjec
 import {
   createEmptyRembrandtProject,
   createProjectInvestigation,
+  getRembrandtProjectIntegrityIssues,
   latestProjectUpdate,
   localizedProjectValue,
+  normalizeRembrandtProject,
   projectProgress,
   publishedRembrandtProject,
 } from "../src/utils/rembrandtProject.js";
@@ -145,6 +147,29 @@ test("the browser fallback contains no private project seed", () => {
   assert.deepEqual(fallback.investigations, []);
   assert.deepEqual(fallback.researchSteps, []);
   assert.doesNotMatch(JSON.stringify(fallback), /Rembrandt f\. 1637|Drouot|onbekend portret/i);
+});
+
+test("normalization repairs duplicate investigation IDs used by the admin editor", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.investigations = project.investigations.map((investigation, index) => ({
+    ...investigation,
+    id: "duplicate-project",
+    title: { ...investigation.title, nl: `Werk ${index + 1}` },
+  }));
+  project.updates[0].investigationId = "duplicate-project";
+
+  const issues = getRembrandtProjectIntegrityIssues(project);
+  const normalized = normalizeRembrandtProject(project);
+  const ids = normalized.investigations.map((investigation) => investigation.id);
+
+  assert.equal(issues.length, 2);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(normalized.investigations[1].title.nl, "Werk 2");
+  assert.equal(
+    normalized.investigations.find((investigation) => investigation.id === ids[1])?.title.nl,
+    "Werk 2",
+  );
+  assert.equal(normalized.updates[0].investigationId, ids[0]);
 });
 
 test("legacy project snapshots fail closed after the schema upgrade", () => {
