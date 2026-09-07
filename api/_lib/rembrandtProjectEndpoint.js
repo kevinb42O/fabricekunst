@@ -48,6 +48,9 @@ const INVESTIGATION_STATUSES = new Set([
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const UPDATE_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 
+export const resolveSavedProjectVisibility = ({ publish, accessEnabled }) =>
+  publish === true || accessEnabled === true;
+
 const isStrictDate = (value) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return false;
   const parsed = new Date(`${value}T00:00:00.000Z`);
@@ -518,11 +521,16 @@ export default async function handler(req, res) {
     }
 
     const access = await readRembrandtProjectAccess();
+    const publishRequested = req.body?.publish === true;
+    const shouldBePublic = resolveSavedProjectVisibility({
+      publish: publishRequested,
+      accessEnabled: access.enabled,
+    });
     const project = {
       ...(req.body?.project || {}),
       // Content saves, restored revisions and templates can never alter the
-      // public gate. Only the dedicated, confirmed access endpoint can.
-      isEnabled: access.enabled === true,
+      // public gate unless this authenticated save explicitly publishes.
+      isEnabled: shouldBePublic,
     };
     await validateProject(project);
     const { row: previous } = await readProject(supabase);
@@ -571,13 +579,13 @@ export default async function handler(req, res) {
     }
 
     try {
-      if (nextProject.isEnabled !== true) {
+      if (!shouldBePublic) {
         await writeRembrandtProjectAccess(false, updatedAt);
       }
       const publication = await publishPublicContentSnapshot(supabase, {
-        includeRembrandtProject: access.enabled === true,
+        includeRembrandtProject: shouldBePublic,
       });
-      if (nextProject.isEnabled === true) {
+      if (shouldBePublic) {
         await writeRembrandtProjectAccess(true, updatedAt);
       }
       if (previousContentForRevision) {

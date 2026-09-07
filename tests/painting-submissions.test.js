@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   createReceipt,
   hasAllowedOrigin,
+  matchesAttachmentSignature,
+  paintingSubmissionObjectKey,
   readReceipt,
   validateAttachments,
 } from "../api/_lib/paintingSubmissionsEndpoint.js";
@@ -11,6 +13,15 @@ const originalSalt = process.env.INQUIRY_RATE_LIMIT_SALT;
 
 test.beforeEach(() => {
   process.env.INQUIRY_RATE_LIMIT_SALT = "quality-audit-secret-that-is-longer-than-thirty-two-bytes";
+});
+
+test("painting attachments must match their declared file signature", () => {
+  assert.equal(matchesAttachmentSignature('image/jpeg', Buffer.from([0xff, 0xd8, 0xff, 0xdb])), true);
+  assert.equal(matchesAttachmentSignature('image/png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), true);
+  assert.equal(matchesAttachmentSignature('image/webp', Buffer.from('RIFF0000WEBP')), true);
+  assert.equal(matchesAttachmentSignature('application/pdf', Buffer.from('%PDF-1.7')), true);
+  assert.equal(matchesAttachmentSignature('image/jpeg', Buffer.from('<html>')), false);
+  assert.equal(matchesAttachmentSignature('application/pdf', Buffer.from('not a pdf')), false);
 });
 
 test.after(() => {
@@ -36,10 +47,19 @@ const attachment = (overrides = {}) => {
 test("painting upload receipts reject tampering, expiry and duplicate paths", () => {
   const valid = attachment();
   assert.equal(readReceipt(valid.receipt)?.path, valid.path);
-  assert.equal(validateAttachments([valid])?.length, 1);
+  assert.equal(validateAttachments([valid])?.[0]?.storage, 'r2');
   assert.equal(validateAttachments([valid, valid]), null);
   assert.equal(readReceipt(`${valid.receipt}x`), null);
   assert.equal(readReceipt(attachment({ expiresAt: Date.now() - 1 }).receipt), null);
+});
+
+test("painting attachments resolve only inside the private R2 prefix", () => {
+  assert.equal(
+    paintingSubmissionObjectKey("pending/2026-09-07/11111111-1111-4111-8111-111111111111/photo.jpg"),
+    "painting-submissions/pending/2026-09-07/11111111-1111-4111-8111-111111111111/photo.jpg",
+  );
+  assert.equal(paintingSubmissionObjectKey("../catalog/public.jpg"), null);
+  assert.equal(paintingSubmissionObjectKey("catalog/public.jpg"), null);
 });
 
 test("painting attachment receipts enforce type and combined size limits", () => {

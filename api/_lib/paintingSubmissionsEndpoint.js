@@ -1,7 +1,20 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './adminAuth.js';
+import {
+  getR2Client,
+  getR2SubmissionsBucketName,
+  getR2SubmissionsConfigurationError,
+} from './r2.js';
 
-const BUCKET = 'painting-submissions';
+const OBJECT_PREFIX = 'painting-submissions/';
+const PRIVATE_CACHE_CONTROL = 'private, no-store, max-age=0';
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
@@ -109,6 +122,46 @@ const safeFilename = (filename) => {
   return cleaned || 'attachment';
 };
 
+export const paintingSubmissionObjectKey = (path) =>
+  typeof path === 'string' &&
+  /^pending\/\d{4}-\d{2}-\d{2}\/[0-9a-f-]{36}\/[a-zA-Z0-9._-]+$/i.test(path)
+    ? `${OBJECT_PREFIX}${path}`
+    : null;
+
+const privateBucket = () => getR2SubmissionsBucketName();
+
+const ensurePrivateR2 = () => {
+  const error = getR2SubmissionsConfigurationError();
+  if (error) throw new Error(error);
+};
+
+const bodyToBuffer = async (body) => {
+  if (!body) return Buffer.alloc(0);
+  if (typeof body.transformToByteArray === 'function') {
+    return Buffer.from(await body.transformToByteArray());
+  }
+  const chunks = [];
+  for await (const chunk of body) chunks.push(Buffer.from(chunk));
+  return Buffer.concat(chunks);
+};
+
+export const matchesAttachmentSignature = (contentType, bytes) => {
+  const buffer = Buffer.from(bytes || []);
+  if (contentType === 'image/jpeg') {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (contentType === 'image/png') {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (contentType === 'image/webp') {
+    return buffer.length >= 12 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+  }
+  if (contentType === 'application/pdf') {
+    return buffer.length >= 5 && buffer.subarray(0, 5).toString('ascii') === '%PDF-';
+  }
+  return false;
+};
+
 export const createReceipt = (payload) => {
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = createHmac('sha256', receiptSecret()).update(encoded).digest('base64url');
@@ -151,13 +204,32 @@ const prepareUpload = async (req, res, supabase, body) => {
 
   const claimId = randomUUID();
   const path = `pending/${new Date().toISOString().slice(0, 10)}/${claimId}/${safeFilename(filename)}`;
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path);
-  if (error || !data?.token) {
-    console.error('[painting-submissions] Signed upload creation failed:', error?.message || 'No token returned.');
+  ensurePrivateR2();
+  const objectKey = paintingSubmissionObjectKey(path);
+  let uploadUrl;
+  try {
+    uploadUrl = await getSignedUrl(
+      getR2Client(),
+      new PutObjectCommand({
+        Bucket: privateBucket(),
+        Key: objectKey,
+        ContentType: contentType,
+        CacheControl: PRIVATE_CACHE_CONTROL,
+        ContentLength: size,
+      }),
+      { expiresIn: 5 * 60 },
+    );
+  } catch (error) {
+    console.error('[painting-submissions] Private R2 upload signing failed:', error?.message || 'Unknown R2 error.');
     return sendJson(res, 503, { error: 'De beveiligde upload kon niet worden voorbereid.' });
   }
   const receipt = createReceipt({ path, filename, contentType, size, expiresAt: Date.now() + 30 * 60 * 1000 });
-  return sendJson(res, 200, { path, token: data.token, receipt });
+  return sendJson(res, 200, {
+    path,
+    uploadUrl,
+    receipt,
+    cacheControl: PRIVATE_CACHE_CONTROL,
+  });
 };
 
 export const validateAttachments = (attachments) => {
@@ -186,35 +258,62 @@ export const validateAttachments = (attachments) => {
       name: payload.filename,
       contentType: payload.contentType,
       size: payload.size,
+      storage: 'r2',
     });
   }
   return verified;
 };
 
-const verifyStoredAttachments = async (supabase, attachments) => {
+const verifyStoredAttachments = async (attachments) => {
+  ensurePrivateR2();
   for (const attachment of attachments) {
-    const { data, error } = await supabase.storage.from(BUCKET).info(attachment.path);
-    if (error || !data) return false;
-    const storedSize = Number(data.size ?? data.metadata?.size);
-    const storedType = data.contentType || data.metadata?.mimetype;
+    const objectKey = paintingSubmissionObjectKey(attachment.path);
+    if (!objectKey) return false;
+    let object;
+    try {
+      object = await getR2Client().send(new HeadObjectCommand({
+        Bucket: privateBucket(),
+        Key: objectKey,
+      }));
+    } catch {
+      return false;
+    }
     if (
-      !Number.isSafeInteger(storedSize) ||
-      storedSize !== attachment.size ||
-      (storedType && storedType !== attachment.contentType)
-    ) {
+      Number(object.ContentLength) !== attachment.size ||
+      object.ContentType !== attachment.contentType ||
+      object.CacheControl !== PRIVATE_CACHE_CONTROL
+    ) return false;
+    try {
+      const signature = await getR2Client().send(new GetObjectCommand({
+        Bucket: privateBucket(),
+        Key: objectKey,
+        Range: 'bytes=0-15',
+      }));
+      if (!matchesAttachmentSignature(attachment.contentType, await bodyToBuffer(signature.Body))) return false;
+    } catch {
       return false;
     }
   }
   return true;
 };
 
+const deleteStoredAttachments = async (attachments) => {
+  const keys = attachments
+    .map((attachment) => paintingSubmissionObjectKey(attachment.path))
+    .filter(Boolean);
+  if (!keys.length) return;
+  ensurePrivateR2();
+  const result = await getR2Client().send(new DeleteObjectsCommand({
+    Bucket: privateBucket(),
+    Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true },
+  }));
+  if (result.Errors?.length) throw new Error('Private R2 attachment deletion was incomplete');
+};
+
 const cleanupUploads = async (res, supabase, body) => {
   const attachments = validateAttachments(body.attachments || []);
   if (!attachments) return sendJson(res, 400, { error: 'Ongeldige uploadbewijzen.' });
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .remove(attachments.map((attachment) => attachment.path));
-  if (error) throw error;
+  await deleteStoredAttachments(attachments);
   return sendJson(res, 200, { ok: true });
 };
 
@@ -241,7 +340,7 @@ const submitPainting = async (req, res, supabase, body) => {
   if (Object.values(data).some((value) => value === null) || !attachments || body.consent !== true) {
     return sendJson(res, 400, { error: 'Controleer de verplichte velden en de toestemming.' });
   }
-  if (!(await verifyStoredAttachments(supabase, attachments))) {
+  if (!(await verifyStoredAttachments(attachments))) {
     return sendJson(res, 400, { error: 'Een of meer bijlagen ontbreken of komen niet overeen met de upload.' });
   }
 
@@ -288,7 +387,7 @@ const submitPainting = async (req, res, supabase, body) => {
     .single();
   if (error || !inserted) {
     console.error('[painting-submissions] Insert failed:', error?.message || 'No row returned.');
-    await supabase.storage.from(BUCKET).remove(attachments.map((attachment) => attachment.path)).catch(() => {});
+    await deleteStoredAttachments(attachments).catch(() => {});
     return sendJson(res, 503, { error: 'Uw inzending kon tijdelijk niet worden opgeslagen.' });
   }
   return sendJson(res, 201, {
@@ -310,11 +409,29 @@ const attachmentUrl = async (req, res, supabase) => {
     .eq('id', inquiryId)
     .maybeSingle();
   if (error || !inquiry) return sendJson(res, 404, { error: 'De inzending bestaat niet meer.' });
-  const allowed = Array.isArray(inquiry.attachments) && inquiry.attachments.some((entry) => entry?.path === path);
-  if (!allowed) return sendJson(res, 404, { error: 'De bijlage hoort niet bij deze inzending.' });
-  const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(path, 10 * 60);
-  if (signedError || !data?.signedUrl) return sendJson(res, 503, { error: 'De bijlage kan tijdelijk niet worden geopend.' });
-  return sendJson(res, 200, { url: data.signedUrl });
+  const attachment = Array.isArray(inquiry.attachments)
+    ? inquiry.attachments.find((entry) => entry?.path === path)
+    : null;
+  const objectKey = paintingSubmissionObjectKey(path);
+  if (!attachment || !objectKey) return sendJson(res, 404, { error: 'De bijlage hoort niet bij deze inzending.' });
+  try {
+    ensurePrivateR2();
+    const filename = safeFilename(attachment.name || objectKey.split('/').pop());
+    const url = await getSignedUrl(
+      getR2Client(),
+      new GetObjectCommand({
+        Bucket: privateBucket(),
+        Key: objectKey,
+        ResponseContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        ResponseContentType: attachment.contentType || 'application/octet-stream',
+      }),
+      { expiresIn: 10 * 60 },
+    );
+    return sendJson(res, 200, { url });
+  } catch (signedError) {
+    console.error('[painting-submissions] Private R2 download signing failed:', signedError?.message || 'Unknown R2 error.');
+    return sendJson(res, 503, { error: 'De bijlage kan tijdelijk niet worden geopend.' });
+  }
 };
 
 const deleteInquiry = async (req, res, supabase) => {
@@ -335,8 +452,7 @@ const deleteInquiry = async (req, res, supabase) => {
     ? inquiry.attachments.map((entry) => entry?.path).filter(Boolean)
     : [];
   if (paths.length) {
-    const { error: storageError } = await supabase.storage.from(BUCKET).remove(paths);
-    if (storageError) throw storageError;
+    await deleteStoredAttachments(paths.map((path) => ({ path })));
   }
   const { error: deleteError } = await supabase.from('inquiries').delete().eq('id', inquiryId);
   if (deleteError) throw deleteError;

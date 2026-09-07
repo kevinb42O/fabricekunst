@@ -22,7 +22,10 @@ import {
   isValidPreviewToken,
 } from "../api/_lib/rembrandtPreviewToken.js";
 import { activePreviewLink } from "../api/_lib/rembrandtPreviewStore.js";
-import { validateProject } from "../api/_lib/rembrandtProjectEndpoint.js";
+import {
+  resolveSavedProjectVisibility,
+  validateProject,
+} from "../api/_lib/rembrandtProjectEndpoint.js";
 
 test("public project projection excludes drafts, archives and hidden phases", () => {
   const project = cloneDefaultRembrandtProject();
@@ -105,6 +108,21 @@ test("project access is fail-closed and redacts hidden public content", () => {
   assert.equal(
     redactHiddenRembrandtProject(snapshot, { schemaVersion: 1, enabled: true }).rembrandtProject.updates.length,
     project.updates.length,
+  );
+});
+
+test("an explicit authenticated publication can make a hidden save live", () => {
+  assert.equal(
+    resolveSavedProjectVisibility({ publish: true, accessEnabled: false }),
+    true,
+  );
+  assert.equal(
+    resolveSavedProjectVisibility({ publish: false, accessEnabled: false }),
+    false,
+  );
+  assert.equal(
+    resolveSavedProjectVisibility({ publish: false, accessEnabled: true }),
+    true,
   );
 });
 

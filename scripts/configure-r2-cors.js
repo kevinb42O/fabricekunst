@@ -4,6 +4,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
+import { getR2SubmissionsBucketName } from "../api/_lib/r2.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -26,6 +27,7 @@ export const R2_CORS_RULES = [
       // explicit avoids opening the bucket to arbitrary third-party origins.
       "https://rareartbooks.vercel.app",
       "https://rareartbooks-lanternnetworks-projects.vercel.app",
+      "http://localhost:3000",
       "http://localhost:5173",
     ],
     AllowedMethods: ["GET", "HEAD", "PUT"],
@@ -45,15 +47,6 @@ const r2 = new S3Client({
   },
 });
 
-await r2.send(
-  new PutBucketCorsCommand({
-    Bucket: process.env.R2_BUCKET_NAME,
-    CORSConfiguration: { CORSRules: R2_CORS_RULES },
-  }),
-);
-const configured = await r2.send(
-  new GetBucketCorsCommand({ Bucket: process.env.R2_BUCKET_NAME }),
-);
 const normalizeRules = (rules = []) =>
   rules.map((rule) => ({
     AllowedOrigins: [...(rule.AllowedOrigins || [])].sort(),
@@ -66,10 +59,19 @@ const normalizeRules = (rules = []) =>
       .sort(),
     MaxAgeSeconds: rule.MaxAgeSeconds,
   }));
-if (
-  JSON.stringify(normalizeRules(configured.CORSRules)) !==
-  JSON.stringify(normalizeRules(R2_CORS_RULES))
-) {
-  throw new Error("R2 returned a different CORS policy after configuration");
+for (const bucket of [process.env.R2_BUCKET_NAME, getR2SubmissionsBucketName()]) {
+  await r2.send(
+    new PutBucketCorsCommand({
+      Bucket: bucket,
+      CORSConfiguration: { CORSRules: R2_CORS_RULES },
+    }),
+  );
+  const configured = await r2.send(new GetBucketCorsCommand({ Bucket: bucket }));
+  if (
+    JSON.stringify(normalizeRules(configured.CORSRules)) !==
+    JSON.stringify(normalizeRules(R2_CORS_RULES))
+  ) {
+    throw new Error("R2 returned a different CORS policy after configuration");
+  }
 }
-console.log("R2 browser upload CORS policy is configured and verified.");
+console.log("R2 browser upload CORS policies are configured and verified.");

@@ -1363,6 +1363,7 @@ export const revokeRembrandtPreviewLinkAsync = async (id) => {
 export const saveRembrandtProjectDataAsync = async (
   project,
   expectedVersion = null,
+  { publish = false } = {},
 ) => {
   let savedProject = normalizeRembrandtProject(project);
   let savedVersion = expectedVersion;
@@ -1376,7 +1377,7 @@ export const saveRembrandtProjectDataAsync = async (
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ project: savedProject, expectedVersion }),
+        body: JSON.stringify({ project: savedProject, expectedVersion, publish }),
       },
     );
     const result = await response.json().catch(() => ({}));
@@ -1547,19 +1548,21 @@ export const savePaintingSubmissionAsync = async (
         }),
       });
       const prepared = await prepareResponse.json().catch(() => ({}));
-      if (!prepareResponse.ok || !prepared?.path || !prepared?.token || !prepared?.receipt) {
+      if (!prepareResponse.ok || !prepared?.path || !prepared?.uploadUrl || !prepared?.receipt || !prepared?.cacheControl) {
         throw new Error(
           prepared?.error || `De bijlage “${file.name}” kon niet worden voorbereid.`,
         );
       }
       attachments.push({ path: prepared.path, receipt: prepared.receipt });
-      const { error: uploadError } = await supabase.storage
-        .from("painting-submissions")
-        .uploadToSignedUrl(prepared.path, prepared.token, file, {
-          contentType: file.type,
-          upsert: false,
-        });
-      if (uploadError) {
+      const uploadResponse = await fetch(prepared.uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+          "Cache-Control": prepared.cacheControl,
+        },
+      });
+      if (!uploadResponse.ok) {
         throw new Error(`De bijlage “${file.name}” kon niet veilig worden geüpload.`);
       }
     }

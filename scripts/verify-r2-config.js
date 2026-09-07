@@ -8,7 +8,8 @@ const requiredVariables = [
   'R2_ACCESS_KEY_ID',
   'R2_SECRET_ACCESS_KEY',
   'R2_BUCKET_NAME',
-  'R2_PUBLIC_URL'
+  'R2_PUBLIC_URL',
+  'R2_SUBMISSIONS_BUCKET_NAME'
 ];
 
 const missingVariables = requiredVariables.filter((key) => !process.env[key]);
@@ -24,6 +25,9 @@ if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.r2.cloudflar
 }
 if (publicUrl.protocol !== 'https:' || publicUrl.hostname.includes('supabase.co')) {
   throw new Error('R2 deployment blocked: public media URL must point to R2.');
+}
+if (process.env.R2_SUBMISSIONS_BUCKET_NAME === process.env.R2_BUCKET_NAME) {
+  throw new Error('R2 deployment blocked: confidential submissions require a separate private bucket.');
 }
 
 // A build worker is not a reliable place for a live S3 request: network-level

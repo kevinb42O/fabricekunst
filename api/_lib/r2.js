@@ -2,6 +2,9 @@ import { S3Client } from '@aws-sdk/client-s3';
 
 export const PUBLIC_CONTENT_POINTER_KEY = 'site-data/current.json';
 export const REMBRANDT_PROJECT_ACCESS_KEY = 'site-data/rembrandt-project-access.json';
+export const DEFAULT_R2_SUBMISSIONS_BUCKET_NAME = 'atelier-rembrandt-private-submissions';
+export const getR2SubmissionsBucketName = () =>
+  process.env.R2_SUBMISSIONS_BUCKET_NAME || DEFAULT_R2_SUBMISSIONS_BUCKET_NAME;
 
 export const getR2ConfigurationError = () => {
   const required = [
@@ -24,6 +27,28 @@ export const getR2ConfigurationError = () => {
     }
   } catch {
     return 'R2 URLs are invalid';
+  }
+  return null;
+};
+
+export const getR2SubmissionsConfigurationError = () => {
+  const required = [
+    'R2_ENDPOINT',
+    'R2_ACCESS_KEY_ID',
+    'R2_SECRET_ACCESS_KEY',
+    'R2_BUCKET_NAME',
+  ];
+  if (required.some((key) => !process.env[key])) return 'Private R2 submissions configuration is incomplete';
+  if (getR2SubmissionsBucketName() === process.env.R2_BUCKET_NAME) {
+    return 'Private R2 submissions bucket must be separate from the public media bucket';
+  }
+  try {
+    const endpoint = new URL(process.env.R2_ENDPOINT);
+    if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.r2.cloudflarestorage.com')) {
+      return 'R2 endpoint is invalid';
+    }
+  } catch {
+    return 'R2 endpoint is invalid';
   }
   return null;
 };

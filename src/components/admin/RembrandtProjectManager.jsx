@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Globe2,
   Image as ImageIcon,
   Link2,
   Loader2,
@@ -146,6 +147,27 @@ function StatusPill({ status }) {
   );
 }
 
+function SwitchControl({ checked, disabled = false, label, description, onChange }) {
+  return (
+    <label className={`rp-admin-toggle${checked ? " is-checked" : ""}`}>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        disabled={disabled}
+        onChange={onChange}
+      />
+      <span className="rp-admin-toggle__track" aria-hidden="true">
+        <span />
+      </span>
+      <span className="rp-admin-toggle__copy">
+        <strong>{label}</strong>
+        {description && <small>{description}</small>}
+      </span>
+    </label>
+  );
+}
+
 export default function RembrandtProjectManager({
   onPublished = () => {},
   onShowToast = () => {},
@@ -169,7 +191,7 @@ export default function RembrandtProjectManager({
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewDays, setPreviewDays] = useState(30);
   const [previewBusy, setPreviewBusy] = useState(false);
-  const [confirmPublicEnable, setConfirmPublicEnable] = useState(false);
+  const [confirmPublicDisable, setConfirmPublicDisable] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
 
   const loadProject = () => {
@@ -272,9 +294,9 @@ export default function RembrandtProjectManager({
     .sort((a, b) => Number(a.sequence) - Number(b.sequence));
   const publicationIssues = useMemo(() => {
     const issues = [];
-    if (project.isEnabled && !project.settings.title?.nl?.trim())
+    if (!project.settings.title?.nl?.trim())
       issues.push("De zichtbare pagina heeft een Nederlandse titel nodig.");
-    if (project.isEnabled && !project.settings.disclaimer?.nl?.trim())
+    if (!project.settings.disclaimer?.nl?.trim())
       issues.push("Het permanente voorbehoud mag niet leeg zijn.");
     if (
       !project.phases.some(
@@ -444,15 +466,17 @@ export default function RembrandtProjectManager({
       ),
     }));
 
-  const save = async () => {
+  const save = async ({ publish = false } = {}) => {
     if (saving || uploading.size || loadError) return;
-    if (publicationIssues.length) {
+    if ((publish || savedPublicEnabled) && publicationIssues.length) {
       onShowToast(publicationIssues[0], "error");
       return;
     }
     setSaving(true);
     try {
-      const result = await saveRembrandtProjectDataAsync(project, savedVersion);
+      const result = await saveRembrandtProjectDataAsync(project, savedVersion, {
+        publish,
+      });
       setProject(result.project);
       setSavedVersion(result.version);
       setSavedSnapshot(JSON.stringify(result.project));
@@ -1286,15 +1310,29 @@ export default function RembrandtProjectManager({
                 </div>
               </header>
               <div className="rp-admin-editor__publication">
-                <Field label="Referentie"><input value={selectedInvestigation.reference || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "reference", event.target.value)} /></Field>
-                <Field label="URL-slug"><input value={selectedInvestigation.slug || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "slug", slugify(event.target.value))} /></Field>
-                <Field label="Onderzoeksstatus">
-                  <select value={selectedInvestigation.status} onChange={(event) => updateInvestigation(selectedInvestigation.id, "status", event.target.value)}>
-                    <option value="discovery">Ontdekking</option><option value="initial-assessment">Eerste beoordeling</option><option value="technical-research">Technisch onderzoek</option><option value="expert-review">Expertbeoordeling</option><option value="paused">Gepauzeerd</option><option value="completed">Afgerond</option>
-                  </select>
-                </Field>
-                <label className="rp-admin-switch"><input type="checkbox" checked={selectedInvestigation.visible !== false} onChange={(event) => updateInvestigation(selectedInvestigation.id, "visible", event.target.checked)} /><span>Publiek zichtbaar</span></label>
-                <label className="rp-admin-switch"><input type="checkbox" checked={selectedInvestigation.featured === true} onChange={(event) => updateInvestigation(selectedInvestigation.id, "featured", event.target.checked)} /><span>Uitgelicht dossier</span></label>
+                <div className="rp-admin-editor__publication-fields">
+                  <Field label="Referentie"><input value={selectedInvestigation.reference || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "reference", event.target.value)} /></Field>
+                  <Field label="URL-slug"><input value={selectedInvestigation.slug || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "slug", slugify(event.target.value))} /></Field>
+                  <Field label="Onderzoeksstatus">
+                    <select value={selectedInvestigation.status} onChange={(event) => updateInvestigation(selectedInvestigation.id, "status", event.target.value)}>
+                      <option value="discovery">Ontdekking</option><option value="initial-assessment">Eerste beoordeling</option><option value="technical-research">Technisch onderzoek</option><option value="expert-review">Expertbeoordeling</option><option value="paused">Gepauzeerd</option><option value="completed">Afgerond</option>
+                    </select>
+                  </Field>
+                </div>
+                <div className="rp-admin-editor__publication-toggles" role="group" aria-label="Dossierweergave">
+                  <SwitchControl
+                    checked={selectedInvestigation.visible !== false}
+                    label="Publiek zichtbaar"
+                    description="Toon dit dossier op de publieke projectpagina."
+                    onChange={(event) => updateInvestigation(selectedInvestigation.id, "visible", event.target.checked)}
+                  />
+                  <SwitchControl
+                    checked={selectedInvestigation.featured === true}
+                    label="Uitgelicht dossier"
+                    description="Plaats dit dossier prominent in het overzicht."
+                    onChange={(event) => updateInvestigation(selectedInvestigation.id, "featured", event.target.checked)}
+                  />
+                </div>
               </div>
               <div className="rp-admin-editor__body">
                 <div className="rp-admin-form-grid rp-admin-form-grid--two">
@@ -1944,34 +1982,40 @@ export default function RembrandtProjectManager({
                       : "Het project blijft volledig beheerbaar, maar is niet toegankelijk voor gewone bezoekers."}
                   </p>
                 </div>
-                <label className="rp-admin-switch rp-admin-switch--access">
-                  <input
-                    type="checkbox"
-                    checked={project.isEnabled === true}
-                    disabled={accessSaving || saving}
-                    aria-label="Project publiek zichtbaar"
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        if (dirty) {
-                          onShowToast("Sla uw inhoudswijzigingen eerst op voordat u de publieke toegang verandert.", "error");
-                        } else {
-                          setConfirmPublicEnable(true);
-                        }
-                      } else {
-                        setConfirmPublicEnable(false);
-                        changePublicAccess(false);
-                      }
-                    }}
-                  />
-                  <span>{accessSaving ? "Toegang bijwerken…" : "Project publiek zichtbaar"}</span>
-                </label>
+                <div className="rp-admin-access__actions">
+                  <span className={`rp-admin-live-state ${project.isEnabled ? "is-live" : "is-offline"}`}>
+                    <span aria-hidden="true" />
+                    {project.isEnabled ? "Live" : "Offline"}
+                  </span>
+                  {project.isEnabled ? (
+                    <button
+                      type="button"
+                      className="admin-button admin-button--secondary"
+                      disabled={accessSaving || saving}
+                      onClick={() => setConfirmPublicDisable(true)}
+                    >
+                      <EyeOff aria-hidden="true" />
+                      Offline halen
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="admin-button admin-button--primary"
+                      disabled={saving || accessSaving || uploading.size > 0 || publicationIssues.length > 0}
+                      onClick={() => save({ publish: true })}
+                    >
+                      {saving ? <Loader2 className="is-spinning" aria-hidden="true" /> : <Globe2 aria-hidden="true" />}
+                      {dirty ? "Opslaan & live zetten" : "Nu live zetten"}
+                    </button>
+                  )}
+                </div>
               </div>
-              {confirmPublicEnable && !project.isEnabled && (
+              {confirmPublicDisable && project.isEnabled && (
                 <div className="rp-admin-inline-confirm" role="alert">
-                  <p>Het volledige project wordt publiek zichtbaar en verschijnt opnieuw in de navigatie.</p>
+                  <p>De projectpagina en navigatielink verdwijnen meteen voor bezoekers. Uw inhoud blijft bewaard.</p>
                   <div>
-                    <button type="button" className="admin-button admin-button--secondary" onClick={() => setConfirmPublicEnable(false)}>Annuleren</button>
-                    <button type="button" className="admin-button admin-button--primary" onClick={() => { setConfirmPublicEnable(false); changePublicAccess(true); }}>Project openbaar maken</button>
+                    <button type="button" className="admin-button admin-button--secondary" onClick={() => setConfirmPublicDisable(false)}>Annuleren</button>
+                    <button type="button" className="admin-button admin-button--danger" onClick={() => { setConfirmPublicDisable(false); changePublicAccess(false); }}>Project offline halen</button>
                   </div>
                 </div>
               )}
@@ -2080,7 +2124,7 @@ export default function RembrandtProjectManager({
               <p>
                 {savedPublicEnabled
                   ? "Bezoekers zien uitsluitend de laatst gepubliceerde websiteversie. Wijzigingen blijven een concept totdat u ze hier publiceert."
-                  : "Het project blijft verborgen. Opslaan werkt alleen de beveiligde beheer- en privévoorbeeldversie bij."}
+                  : "Het project staat offline. Met ‘Opslaan & live zetten’ bewaart u de wijzigingen en publiceert u de website in één gecontroleerde stap."}
               </p>
             </div>
             <div
@@ -2089,9 +2133,7 @@ export default function RembrandtProjectManager({
               <strong>
                 {publicationIssues.length
                   ? `${publicationIssues.length} aandachtspunt${publicationIssues.length === 1 ? "" : "en"}`
-                  : savedPublicEnabled
-                    ? "Klaar voor publicatie"
-                    : "Klaar om veilig op te slaan"}
+                  : "Klaar voor publicatie"}
               </strong>
               {publicationIssues.length > 0 && (
                 <ul>
@@ -2104,8 +2146,8 @@ export default function RembrandtProjectManager({
             <button
               type="button"
               className="admin-button admin-button--primary rp-admin-publish-button"
-              onClick={save}
-              disabled={saving || uploading.size > 0}
+              onClick={() => save({ publish: !savedPublicEnabled })}
+              disabled={saving || accessSaving || uploading.size > 0 || publicationIssues.length > 0}
             >
               {saving ? (
                 <Loader2 className="is-spinning" aria-hidden="true" />
@@ -2115,8 +2157,8 @@ export default function RembrandtProjectManager({
               {saving
                 ? "Veilig opslaan…"
                 : savedPublicEnabled
-                  ? "Opslaan & websiteversie publiceren"
-                  : "Wijzigingen veilig opslaan"}
+                  ? "Wijzigingen publiceren"
+                  : "Opslaan & live zetten"}
             </button>
           </section>
           {revisions.length > 0 && (
