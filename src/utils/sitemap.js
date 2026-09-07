@@ -1,4 +1,5 @@
 import { getItemSlug } from "./itemSlug.js";
+import { REMBRANDT_PROJECT_ROUTE } from "./rembrandtProject.js";
 import { DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_URL } from "./seo.js";
 import {
   SUPPORTED_LANGUAGES,
@@ -77,7 +78,7 @@ export function buildSitemapXml(
 
   const routes =
     rembrandtProject?.isEnabled === true
-      ? [...STATIC_ROUTES, "/rembrandt-project"]
+      ? [...STATIC_ROUTES, REMBRANDT_PROJECT_ROUTE]
       : STATIC_ROUTES;
   const staticEntries = routes.flatMap((route) =>
     SUPPORTED_LANGUAGES.map((language) => {
@@ -87,7 +88,7 @@ export function buildSitemapXml(
           ? `\n    <image:image>\n      <image:loc>${escapeXml(DEFAULT_SHARE_IMAGE)}</image:loc>\n      <image:title>${escapeXml(`${SITE_NAME} — Antiquariaat & Boekenkunst`)}</image:title>\n    </image:image>`
           : "";
       const lastmod =
-        route === "/rembrandt-project" ? validLastmod(rembrandtProject) : "";
+        route === REMBRANDT_PROJECT_ROUTE ? validLastmod(rembrandtProject) : "";
       return `  <url>\n    <loc>${SITE_URL}${localizedRoute}</loc>${alternateLinks(route)}${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ""}${image}\n  </url>`;
     }),
   );

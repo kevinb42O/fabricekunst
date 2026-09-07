@@ -24,7 +24,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
           <li><strong>Aanvraag- en correspondentiegegevens:</strong> uw bericht, het betrokken object, aankoopaanvragen, afspraken en verdere correspondentie.</li>
           <li><strong>Collector’s List:</strong> uw e-mailadres, taal, inschrijfbron, toestemmingsversie en de tijdstippen van inschrijving, bevestiging of uitschrijving.</li>
           <li><strong>Transactiegegevens:</strong> bestel-, betaal-, factuur-, leverings-, retour- en verzekeringsgegevens. Wij ontvangen geen volledige betaalkaartgegevens wanneer een betalingsdienstverlener de betaling verwerkt.</li>
-          <li><strong>Object- en certificatiedossier:</strong> gegevens die nodig zijn voor herkomstonderzoek, facturatie, levering en een eventueel certificaat, waaronder de naam van de eigenaar wanneer dat noodzakelijk is.</li>
+          <li><strong>Object-, onderzoeks- en certificatiedossier:</strong> gegevens die nodig zijn voor herkomst- of materiaalonderzoek en een eventueel certificaat, waaronder foto’s van het object, afmetingen, drager, bekende provenance, signaturen, onderzoeksdocumenten en de naam van de eigenaar wanneer dat noodzakelijk is.</li>
           <li><strong>Technische en analytische gegevens (alleen na uw toestemming):</strong> tijdstip, de pagina zonder zoektermen, een tijdelijke sessiecode, UTM-brongegevens, een brede apparaat- en browsercategorie en een beperkte set gebruiksgebeurtenissen, zoals een bekeken object, het aantal actieve filters, de lengte van een zoekopdracht, een contactactie of een scroll-drempel. Wij slaan in ons analysesysteem <strong>geen</strong> IP-adres, permanente bezoekerscode, volledige user-agent, volledige referrer-URL, zoektekst, formulierinhoud, klikcoördinaten, CSS-selectors of precieze locatie op.</li>
           <li><strong>Voorkeuren:</strong> de gekozen taal en functionele instellingen die lokaal in uw browser worden bewaard.</li>
         </BulletList>
@@ -40,6 +40,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
             <thead><tr><th>Doel</th><th>Rechtsgrond</th></tr></thead>
             <tbody>
               <tr><td>Uw aanvraag beantwoorden, een bezichtiging organiseren, een offerte opstellen en precontractuele stappen zetten.</td><td>Uitvoering van uw verzoek vóór een overeenkomst; uitvoering van de overeenkomst.</td></tr>
+              <tr><td>Een vertrouwelijke schilderij-inzending beoordelen, aanvullende documentatie opvragen en op uw verzoek mogelijk vervolgonderzoek met deskundigen voorbereiden.</td><td>Uitvoering van uw verzoek vóór een mogelijke onderzoeksopdracht; ons gerechtvaardigd belang om aanvragen zorgvuldig, discreet en onderbouwd te beoordelen.</td></tr>
               <tr><td>Verkoop, betaling, facturatie, levering, retour, verzekering en certificatie afhandelen.</td><td>Uitvoering van de overeenkomst; wettelijke verplichtingen.</td></tr>
               <tr><td>Boekhouding, fiscale administratie en medewerking aan bevoegde overheden.</td><td>Wettelijke verplichting.</td></tr>
               <tr><td>Fraude, misbruik en beveiligingsincidenten voorkomen en juridische aanspraken vaststellen.</td><td>Ons gerechtvaardigd belang in een veilige dienstverlening en rechtsbescherming.</td></tr>
@@ -86,7 +87,7 @@ export default function PrivacyPage({ onNavigateHome, onRequestConsultation }) {
       content: <>
         <p>Wij bewaren gegevens niet langer dan noodzakelijk en hanteren in beginsel deze termijnen:</p>
         <BulletList>
-          <li><strong>Onbeantwoorde of afgesloten aanvragen:</strong> maximaal 24 maanden na het laatste inhoudelijke contact.</li>
+          <li><strong>Onbeantwoorde of afgesloten aanvragen en niet-voortgezette schilderij-inzendingen:</strong> maximaal 24 maanden na het laatste inhoudelijke contact.</li>
           <li><strong>Contract-, factuur-, betaal- en leveringsgegevens:</strong> 10 jaar vanaf 1 januari van het jaar dat volgt op het relevante document, of langer wanneer een wettelijke procedure dit vereist.</li>
           <li><strong>Certificaat- en herkomstdossiers:</strong> zolang dit redelijkerwijs nodig is om authenticiteit, eigendomsgeschiedenis en afgegeven documentatie te kunnen verifiëren. Wij beperken het dossier tot wat daarvoor noodzakelijk is.</li>
           <li><strong>Technische beveiligingslogs:</strong> in beginsel maximaal 12 maanden, tenzij een incident langer onderzoek vereist.</li>

@@ -108,6 +108,8 @@ const staticRoutes = [
   // Always emit the route shell. Before the first admin publication it is
   // fail-closed with noindex; after publication the client can load R2 even
   // before the next deployment refreshes the static SEO metadata.
+  { route: "/lost-rembrandt-project", page: "rembrandtProject" },
+  { route: "/lost-rembrandt-project/preview", page: "rembrandtProject" },
   { route: "/rembrandt-project", page: "rembrandtProject" },
   { route: "/rembrandt-project/preview", page: "rembrandtProject" },
   { route: "/voorwaarden", page: "voorwaarden" },

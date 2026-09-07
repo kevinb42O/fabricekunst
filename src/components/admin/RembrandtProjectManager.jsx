@@ -25,6 +25,8 @@ import {
 } from "../../data/rembrandtProjectOptions";
 import {
   createEmptyRembrandtProject,
+  createProjectInvestigation,
+  createResearchStep,
   createProjectUpdate,
   normalizeRembrandtProject,
 } from "../../utils/rembrandtProject";
@@ -48,6 +50,8 @@ const LANGUAGES = [
 ];
 const PANELS = [
   { id: "page", label: "Pagina" },
+  { id: "investigations", label: "Dossiers" },
+  { id: "process", label: "Inhoud & proces" },
   { id: "updates", label: "Updates" },
   { id: "publish", label: "Publicatie" },
 ];
@@ -148,9 +152,10 @@ export default function RembrandtProjectManager({
 }) {
   const [project, setProject] = useState(() => createEmptyRembrandtProject());
   const [savedSnapshot, setSavedSnapshot] = useState("");
-  const [panel, setPanel] = useState("updates");
+  const [panel, setPanel] = useState("investigations");
   const [language, setLanguage] = useState("nl");
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedInvestigationId, setSelectedInvestigationId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [savedVersion, setSavedVersion] = useState(null);
@@ -179,6 +184,7 @@ export default function RembrandtProjectManager({
         setSavedVersion(version ?? null);
         setSavedSnapshot(JSON.stringify(normalized));
         setSelectedId(normalized.updates?.[0]?.id || null);
+        setSelectedInvestigationId(normalized.investigations?.[0]?.id || null);
         setRevisions(loadedRevisions || []);
       })
       .catch((error) => {
@@ -251,6 +257,8 @@ export default function RembrandtProjectManager({
   };
   const selectedUpdate =
     project.updates.find((update) => update.id === selectedId) || null;
+  const selectedInvestigation =
+    project.investigations.find((entry) => entry.id === selectedInvestigationId) || null;
   const filteredUpdates = project.updates
     .filter((update) => {
       const query = searchQuery.trim().toLowerCase();
@@ -302,8 +310,25 @@ export default function RembrandtProjectManager({
           );
       }
     }
+    for (const investigation of project.investigations) {
+      if (investigation.visible !== false && !investigation.title?.nl?.trim())
+        issues.push(`${investigation.reference || investigation.id} mist een Nederlandse titel.`);
+      if (investigation.coverImage && !investigation.coverAlt?.nl?.trim())
+        issues.push(`${investigation.reference || investigation.id} mist Nederlandse alternatieve tekst bij de hoofdafbeelding.`);
+      for (const [imageIndex, image] of (investigation.gallery || []).entries()) {
+        if (image.url && !image.alt?.nl?.trim())
+          issues.push(`Dossierbeeld ${imageIndex + 1} van ${investigation.reference || investigation.id} mist Nederlandse alternatieve tekst.`);
+      }
+    }
     if (project.settings.heroImage && !project.settings.heroAlt?.nl?.trim())
       issues.push("De hero-afbeelding mist Nederlandse alternatieve tekst.");
+    if (
+      project.settings.researchImage &&
+      !project.settings.researchImageAlt?.nl?.trim()
+    )
+      issues.push(
+        "De onderzoeksafbeelding mist Nederlandse alternatieve tekst.",
+      );
     return [...new Set(issues)];
   }, [project]);
   const uniqueR2ImageCount = useMemo(
@@ -311,8 +336,13 @@ export default function RembrandtProjectManager({
       new Set(
         [
           project.settings.heroImage,
+          project.settings.researchImage,
           project.settings.socialImage,
           ...project.updates.flatMap((entry) => [
+            entry.coverImage,
+            ...(entry.gallery || []).map((image) => image.url),
+          ]),
+          ...project.investigations.flatMap((entry) => [
             entry.coverImage,
             ...(entry.gallery || []).map((image) => image.url),
           ]),
@@ -369,6 +399,50 @@ export default function RembrandtProjectManager({
           : entry,
       ),
     }));
+  const updateInvestigation = (investigationId, field, value, localized = false) =>
+    setProject((current) => ({
+      ...current,
+      investigations: current.investigations.map((entry) =>
+        entry.id === investigationId
+          ? {
+              ...entry,
+              [field]: localized
+                ? { ...(entry[field] || {}), [language]: value }
+                : value,
+            }
+          : entry,
+      ),
+    }));
+
+  const updateAboutSection = (sectionId, field, value, localized = false) =>
+    setProject((current) => ({
+      ...current,
+      aboutSections: current.aboutSections.map((entry) =>
+        entry.id === sectionId
+          ? {
+              ...entry,
+              [field]: localized
+                ? { ...(entry[field] || {}), [language]: value }
+                : value,
+            }
+          : entry,
+      ),
+    }));
+
+  const updateResearchStep = (stepId, field, value, localized = false) =>
+    setProject((current) => ({
+      ...current,
+      researchSteps: current.researchSteps.map((entry) =>
+        entry.id === stepId
+          ? {
+              ...entry,
+              [field]: localized
+                ? { ...(entry[field] || {}), [language]: value }
+                : value,
+            }
+          : entry,
+      ),
+    }));
 
   const save = async () => {
     if (saving || uploading.size || loadError) return;
@@ -385,8 +459,8 @@ export default function RembrandtProjectManager({
       onPublished(result.project);
       onShowToast(
         result.project.isEnabled
-          ? "The Rembrandt Project is veilig opgeslagen en bijgewerkt op de website."
-          : "The Rembrandt Project is veilig opgeslagen en blijft verborgen voor bezoekers.",
+          ? "The Lost Rembrandt Project is veilig opgeslagen en bijgewerkt op de website."
+          : "The Lost Rembrandt Project is veilig opgeslagen en blijft verborgen voor bezoekers.",
       );
     } catch (error) {
       onShowToast(error.message, "error");
@@ -416,8 +490,8 @@ export default function RembrandtProjectManager({
       onPublished(result.project);
       onShowToast(
         enabled
-          ? "The Rembrandt Project is nu openbaar."
-          : "The Rembrandt Project is niet meer openbaar.",
+          ? "The Lost Rembrandt Project is nu openbaar."
+          : "The Lost Rembrandt Project is niet meer openbaar.",
       );
     } catch (error) {
       onShowToast(error.message, "error");
@@ -503,7 +577,7 @@ export default function RembrandtProjectManager({
     }
     try {
       const revision = await fetchRembrandtProjectRevisionAsync(revisionId);
-      const restored = { ...revision.content, isEnabled: savedPublicEnabled };
+      const restored = normalizeRembrandtProject({ ...revision.content, isEnabled: savedPublicEnabled });
       setProject(restored);
       setSelectedId(restored.updates?.[0]?.id || null);
       setDeleteConfirmId(null);
@@ -585,11 +659,13 @@ export default function RembrandtProjectManager({
     setUploading((current) => new Set(current).add(uploadKey));
     try {
       const url = await uploadCatalogImage(file, {
-        purpose: ["heroImage", "socialImage"].includes(target)
+        purpose: ["heroImage", "researchImage", "socialImage"].includes(target)
           ? "rembrandt-project-hero"
           : "rembrandt-project-update",
       });
       if (target === "heroImage") updateSettings("heroImage", url, false);
+      else if (target === "researchImage")
+        updateSettings("researchImage", url, false);
       else if (target === "socialImage")
         updateSettings("socialImage", url, false);
       else if (target === "coverImage") updateSelected("coverImage", url);
@@ -651,6 +727,92 @@ export default function RembrandtProjectManager({
       },
     ]);
 
+  const addInvestigation = () => {
+    const investigation = createProjectInvestigation(project);
+    setProject((current) => ({
+      ...current,
+      investigations: [...current.investigations, investigation],
+    }));
+    setSelectedInvestigationId(investigation.id);
+    setPanel("investigations");
+    setLanguage("nl");
+  };
+
+  const moveOrderedEntry = (collection, id, direction) => {
+    const ordered = [...project[collection]].sort(
+      (a, b) => Number(a.sortOrder) - Number(b.sortOrder),
+    );
+    const index = ordered.findIndex((entry) => entry.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= ordered.length) return;
+    const other = ordered[target];
+    setProject((current) => ({
+      ...current,
+      [collection]: current[collection].map((entry) =>
+        entry.id === id
+          ? { ...entry, sortOrder: other.sortOrder }
+          : entry.id === other.id
+            ? { ...entry, sortOrder: ordered[index].sortOrder }
+            : entry,
+      ),
+    }));
+  };
+
+  const removeOrderedEntry = (collection, id) => {
+    if (
+      collection === "investigations" &&
+      project.updates.some((update) => update.investigationId === id)
+    ) {
+      onShowToast("Verplaats of verwijder eerst de gekoppelde updates.", "error");
+      return;
+    }
+    setProject((current) => ({
+      ...current,
+      [collection]: current[collection]
+        .filter((entry) => entry.id !== id)
+        .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))
+        .map((entry, index) => ({ ...entry, sortOrder: index + 1 })),
+    }));
+    if (collection === "investigations") {
+      setSelectedInvestigationId(
+        project.investigations.find((entry) => entry.id !== id)?.id || null,
+      );
+    }
+  };
+
+  const uploadInvestigationImage = async (file, investigationId, galleryId = null) => {
+    if (!file) return;
+    const uploadKey = galleryId ? `investigation-gallery-${galleryId}` : `investigation-cover-${investigationId}`;
+    setUploading((current) => new Set(current).add(uploadKey));
+    try {
+      const url = await uploadCatalogImage(file, { purpose: "rembrandt-project-update" });
+      setProject((current) => ({
+        ...current,
+        investigations: current.investigations.map((entry) =>
+          entry.id !== investigationId
+            ? entry
+            : galleryId
+              ? {
+                  ...entry,
+                  gallery: entry.gallery.map((image) =>
+                    image.id === galleryId ? { ...image, url } : image,
+                  ),
+                }
+              : { ...entry, coverImage: url },
+        ),
+      }));
+      onShowToast("Dossierbeeld veilig geüpload.", "info");
+    } catch (error) {
+      onShowToast(error.message, "error");
+    } finally {
+      setUploading((current) => {
+        const next = new Set(current);
+        next.delete(uploadKey);
+        return next;
+      });
+    }
+  };
+
   if (loading)
     return (
       <div className="rp-admin-loading">
@@ -682,10 +844,10 @@ export default function RembrandtProjectManager({
             <Search aria-hidden="true" />
             Onderzoeksjournaal
           </p>
-          <h1>The Rembrandt Project</h1>
+          <h1>The Lost Rembrandt Project</h1>
           <span>
-            Beheer de pagina, onderzoeksfases en wekelijkse updates vanuit één
-            werkruimte.
+            Beheer de oproep, dossiers, onderzoeksstappen en publieke updates
+            vanuit één werkruimte.
           </span>
         </div>
         <div className="rp-admin-header__actions">
@@ -736,6 +898,8 @@ export default function RembrandtProjectManager({
           >
             {entry.label}
             {entry.id === "updates" && <span>{project.updates.length}</span>}
+            {entry.id === "investigations" && <span>{project.investigations.length}</span>}
+            {entry.id === "process" && <span>{project.researchSteps.length}</span>}
           </button>
         ))}
       </div>
@@ -1077,6 +1241,178 @@ export default function RembrandtProjectManager({
         </div>
       )}
 
+      {panel === "investigations" && (
+        <div
+          className="rp-admin-collection-layout"
+          id="rp-panel-investigations"
+          role="tabpanel"
+          aria-labelledby="rp-tab-investigations"
+        >
+          <aside className="rp-admin-collection-list">
+            <div className="rp-admin-card__heading">
+              <div><p>Dossiers</p><h2>Huidige onderzoeken</h2></div>
+              <button type="button" className="admin-button admin-button--secondary" onClick={addInvestigation}>
+                <Plus aria-hidden="true" />Dossier
+              </button>
+            </div>
+            <div className="rp-admin-form-grid rp-admin-collection-intro">
+              <Field label="Sectietitel"><input value={valueFor(project.settings, "investigationsTitle", language)} onChange={(event) => updateSettings("investigationsTitle", event.target.value)} /></Field>
+              <Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "investigationsIntro", language)} onChange={(event) => updateSettings("investigationsIntro", event.target.value)} /></Field>
+            </div>
+            {[...project.investigations]
+              .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))
+              .map((investigation) => (
+                <button
+                  type="button"
+                  key={investigation.id}
+                  className={investigation.id === selectedInvestigationId ? "is-active" : ""}
+                  onClick={() => setSelectedInvestigationId(investigation.id)}
+                >
+                  <span>{String(investigation.sortOrder).padStart(2, "0")}</span>
+                  <div><strong>{investigation.title?.nl || investigation.id}</strong><small>{investigation.reference}</small></div>
+                  {investigation.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                </button>
+              ))}
+          </aside>
+
+          {selectedInvestigation ? (
+            <section className="rp-admin-editor">
+              <header className="rp-admin-editor__header">
+                <div><span className="rp-admin-status rp-admin-status--draft">Dossier</span><h2>{selectedInvestigation.title?.nl || "Nieuw dossier"}</h2></div>
+                <div>
+                  <button type="button" aria-label="Dossier omhoog" onClick={() => moveOrderedEntry("investigations", selectedInvestigation.id, -1)}><ArrowUp aria-hidden="true" /></button>
+                  <button type="button" aria-label="Dossier omlaag" onClick={() => moveOrderedEntry("investigations", selectedInvestigation.id, 1)}><ArrowDown aria-hidden="true" /></button>
+                  <button type="button" aria-label="Dossier verwijderen" onClick={() => removeOrderedEntry("investigations", selectedInvestigation.id)}><Trash2 aria-hidden="true" /></button>
+                </div>
+              </header>
+              <div className="rp-admin-editor__publication">
+                <Field label="Referentie"><input value={selectedInvestigation.reference || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "reference", event.target.value)} /></Field>
+                <Field label="URL-slug"><input value={selectedInvestigation.slug || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "slug", slugify(event.target.value))} /></Field>
+                <Field label="Onderzoeksstatus">
+                  <select value={selectedInvestigation.status} onChange={(event) => updateInvestigation(selectedInvestigation.id, "status", event.target.value)}>
+                    <option value="discovery">Ontdekking</option><option value="initial-assessment">Eerste beoordeling</option><option value="technical-research">Technisch onderzoek</option><option value="expert-review">Expertbeoordeling</option><option value="paused">Gepauzeerd</option><option value="completed">Afgerond</option>
+                  </select>
+                </Field>
+                <label className="rp-admin-switch"><input type="checkbox" checked={selectedInvestigation.visible !== false} onChange={(event) => updateInvestigation(selectedInvestigation.id, "visible", event.target.checked)} /><span>Publiek zichtbaar</span></label>
+                <label className="rp-admin-switch"><input type="checkbox" checked={selectedInvestigation.featured === true} onChange={(event) => updateInvestigation(selectedInvestigation.id, "featured", event.target.checked)} /><span>Uitgelicht dossier</span></label>
+              </div>
+              <div className="rp-admin-editor__body">
+                <div className="rp-admin-form-grid rp-admin-form-grid--two">
+                  <Field label="Projecttitel"><input value={valueFor(selectedInvestigation, "title", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "title", event.target.value, true)} /></Field>
+                  <Field label="Naam van het werk"><input value={valueFor(selectedInvestigation, "subtitle", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "subtitle", event.target.value, true)} /></Field>
+                  <Field label="Publieke statusregel"><input value={valueFor(selectedInvestigation, "statusLabel", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "statusLabel", event.target.value, true)} /></Field>
+                  <Field label="Korte samenvatting"><textarea rows="4" value={valueFor(selectedInvestigation, "summary", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "summary", event.target.value, true)} /></Field>
+                  <Field label="Dossierbeschrijving"><textarea rows="7" value={valueFor(selectedInvestigation, "description", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "description", event.target.value, true)} /></Field>
+                </div>
+                <div className="rp-admin-media-row">
+                  <div className="rp-admin-media-preview">{selectedInvestigation.coverImage ? <img src={selectedInvestigation.coverImage} alt="Dossier preview" /> : <ImageIcon aria-hidden="true" />}</div>
+                  <div>
+                    <label className="admin-button admin-button--secondary"><Upload aria-hidden="true" />Hoofdbeeld kiezen<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={(event) => { uploadInvestigationImage(event.target.files?.[0], selectedInvestigation.id); event.target.value = ""; }} /></label>
+                    {selectedInvestigation.coverImage && <button type="button" className="admin-text-button" onClick={() => updateInvestigation(selectedInvestigation.id, "coverImage", "")}>Hoofdbeeld verwijderen</button>}
+                  </div>
+                </div>
+                <Field label="Alternatieve tekst hoofdbeeld"><input value={valueFor(selectedInvestigation, "coverAlt", language)} onChange={(event) => updateInvestigation(selectedInvestigation.id, "coverAlt", event.target.value, true)} /></Field>
+                <div className="rp-admin-card__heading rp-admin-subheading">
+                  <div><p>Media</p><h2>Dossiergalerij</h2></div>
+                  <button type="button" className="admin-button admin-button--secondary" onClick={() => updateInvestigation(selectedInvestigation.id, "gallery", [...(selectedInvestigation.gallery || []), { id: crypto.randomUUID(), url: "", alt: { nl: "", en: "", fr: "" }, caption: { nl: "", en: "", fr: "" } }])}><Plus aria-hidden="true" />Beeld</button>
+                </div>
+                <div className="rp-admin-gallery">
+                  {(selectedInvestigation.gallery || []).map((image, index) => (
+                    <div key={image.id} className="rp-admin-gallery-item">
+                      <div className="rp-admin-media-preview">{image.url ? <img src={image.url} alt="Galerij preview" /> : <ImageIcon aria-hidden="true" />}</div>
+                      <div className="rp-admin-gallery-item__fields">
+                        <strong>Beeld {index + 1}</strong>
+                        <label className="admin-button admin-button--secondary"><Upload aria-hidden="true" />Uploaden<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={(event) => { uploadInvestigationImage(event.target.files?.[0], selectedInvestigation.id, image.id); event.target.value = ""; }} /></label>
+                        <Field label="Alternatieve tekst"><input value={image.alt?.[language] || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "gallery", selectedInvestigation.gallery.map((entry) => entry.id === image.id ? { ...entry, alt: { ...entry.alt, [language]: event.target.value } } : entry))} /></Field>
+                        <Field label="Bijschrift"><textarea rows="2" value={image.caption?.[language] || ""} onChange={(event) => updateInvestigation(selectedInvestigation.id, "gallery", selectedInvestigation.gallery.map((entry) => entry.id === image.id ? { ...entry, caption: { ...entry.caption, [language]: event.target.value } } : entry))} /></Field>
+                        <button type="button" className="admin-text-button admin-text-button--danger" onClick={() => updateInvestigation(selectedInvestigation.id, "gallery", selectedInvestigation.gallery.filter((entry) => entry.id !== image.id))}><Trash2 aria-hidden="true" />Beeld verwijderen</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : <section className="rp-admin-empty"><Search aria-hidden="true" /><h2>Nog geen dossiers</h2><button type="button" className="admin-button admin-button--primary" onClick={addInvestigation}><Plus aria-hidden="true" />Eerste dossier</button></section>}
+        </div>
+      )}
+
+      {panel === "process" && (
+        <div className="rp-admin-page-grid" id="rp-panel-process" role="tabpanel" aria-labelledby="rp-tab-process">
+          <section className="rp-admin-card">
+            <div className="rp-admin-card__heading"><div><p>Verhaal</p><h2>Over het project</h2></div><button type="button" className="admin-button admin-button--secondary" onClick={() => { const sortOrder = Math.max(0, ...project.aboutSections.map((entry) => Number(entry.sortOrder) || 0)) + 1; setProject((current) => ({ ...current, aboutSections: [...current.aboutSections, { id: `about-${sortOrder}`, sortOrder, visible: true, title: { nl: "Nieuwe sectie", en: "", fr: "" }, body: { nl: "", en: "", fr: "" } }] })); }}><Plus aria-hidden="true" />Sectie</button></div>
+            <div className="rp-admin-form-grid"><Field label="Sectietitel"><input value={valueFor(project.settings, "aboutTitle", language)} onChange={(event) => updateSettings("aboutTitle", event.target.value)} /></Field><Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "aboutIntro", language)} onChange={(event) => updateSettings("aboutIntro", event.target.value)} /></Field></div>
+            <div className="rp-admin-content-list">
+              {[...project.aboutSections].sort((a,b) => a.sortOrder - b.sortOrder).map((section) => <article key={section.id}>
+                <div className="rp-admin-content-list__actions"><button type="button" aria-label="Sectie omhoog" onClick={() => moveOrderedEntry("aboutSections", section.id, -1)}><ArrowUp aria-hidden="true" /></button><button type="button" aria-label="Sectie omlaag" onClick={() => moveOrderedEntry("aboutSections", section.id, 1)}><ArrowDown aria-hidden="true" /></button><button type="button" aria-label="Sectie tonen of verbergen" onClick={() => updateAboutSection(section.id, "visible", section.visible === false)}>{section.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button><button type="button" aria-label="Sectie verwijderen" onClick={() => removeOrderedEntry("aboutSections", section.id)}><Trash2 aria-hidden="true" /></button></div>
+                <Field label={`Titel ${section.sortOrder}`}><input value={valueFor(section, "title", language)} onChange={(event) => updateAboutSection(section.id, "title", event.target.value, true)} /></Field><Field label="Tekst"><textarea rows="6" value={valueFor(section, "body", language)} onChange={(event) => updateAboutSection(section.id, "body", event.target.value, true)} /></Field>
+              </article>)}
+            </div>
+          </section>
+
+          <section className="rp-admin-card">
+            <div className="rp-admin-card__heading"><div><p>Proces</p><h2>Onderzoeksstappen</h2></div><button type="button" className="admin-button admin-button--secondary" onClick={() => setProject((current) => ({ ...current, researchSteps: [...current.researchSteps, createResearchStep(current)] }))}><Plus aria-hidden="true" />Stap</button></div>
+            <div className="rp-admin-form-grid"><Field label="Sectietitel"><input value={valueFor(project.settings, "processTitle", language)} onChange={(event) => updateSettings("processTitle", event.target.value)} /></Field><Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "processIntro", language)} onChange={(event) => updateSettings("processIntro", event.target.value)} /></Field></div>
+            <div className="rp-admin-media-row">
+              <div className="rp-admin-media-preview">
+                {project.settings.researchImage ? (
+                  <img src={project.settings.researchImage} alt="Preview onderzoeksproces" />
+                ) : (
+                  <ImageIcon aria-hidden="true" />
+                )}
+              </div>
+              <div>
+                <Field label="Alternatieve tekst">
+                  <input
+                    value={valueFor(project.settings, "researchImageAlt", language)}
+                    onChange={(event) => updateSettings("researchImageAlt", event.target.value)}
+                  />
+                </Field>
+                <label className="admin-button admin-button--secondary">
+                  <Upload aria-hidden="true" />
+                  {uploading.has("researchImage") ? "Uploaden…" : "Onderzoeksafbeelding kiezen"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    disabled={uploading.has("researchImage")}
+                    onChange={(event) => {
+                      uploadImage(event.target.files?.[0], "researchImage");
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                {project.settings.researchImage && (
+                  <button
+                    type="button"
+                    className="admin-text-button"
+                    onClick={() => updateSettings("researchImage", "", false)}
+                  >
+                    Afbeelding verwijderen
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="rp-admin-content-list">
+              {[...project.researchSteps].sort((a,b) => a.sortOrder - b.sortOrder).map((step) => <article key={step.id}>
+                <div className="rp-admin-content-list__actions"><button type="button" aria-label="Stap omhoog" onClick={() => moveOrderedEntry("researchSteps", step.id, -1)}><ArrowUp aria-hidden="true" /></button><button type="button" aria-label="Stap omlaag" onClick={() => moveOrderedEntry("researchSteps", step.id, 1)}><ArrowDown aria-hidden="true" /></button><button type="button" aria-label="Stap tonen of verbergen" onClick={() => updateResearchStep(step.id, "visible", step.visible === false)}>{step.visible === false ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button><button type="button" aria-label="Stap verwijderen" onClick={() => removeOrderedEntry("researchSteps", step.id)}><Trash2 aria-hidden="true" /></button></div>
+                <Field label={`Stap ${step.sortOrder}`}><input value={valueFor(step, "title", language)} onChange={(event) => updateResearchStep(step.id, "title", event.target.value, true)} /></Field><Field label="Beschrijving"><textarea rows="4" value={valueFor(step, "body", language)} onChange={(event) => updateResearchStep(step.id, "body", event.target.value, true)} /></Field>
+              </article>)}
+            </div>
+          </section>
+
+          <section className="rp-admin-card">
+            <div className="rp-admin-card__heading"><div><p>Oproep</p><h2>Submit a Painting</h2></div></div>
+            <div className="rp-admin-form-grid rp-admin-form-grid--two">
+              <Field label="Sectietitel"><input value={valueFor(project.settings, "submissionTitle", language)} onChange={(event) => updateSettings("submissionTitle", event.target.value)} /></Field>
+              <Field label="Inleiding"><textarea rows="4" value={valueFor(project.settings, "submissionIntro", language)} onChange={(event) => updateSettings("submissionIntro", event.target.value)} /></Field>
+              <Field label="Checklist (één punt per regel)"><textarea rows="7" value={(project.settings.submissionChecklist?.[language] || []).join("\n")} onChange={(event) => updateSettings("submissionChecklist", { ...(project.settings.submissionChecklist || {}), [language]: event.target.value.split("\n") }, false)} /></Field>
+              <Field label="Melding bij upload"><textarea rows="4" value={valueFor(project.settings, "submissionNotice", language)} onChange={(event) => updateSettings("submissionNotice", event.target.value)} /></Field>
+              <Field label="Titel vertrouwelijkheid"><input value={valueFor(project.settings, "confidentialityTitle", language)} onChange={(event) => updateSettings("confidentialityTitle", event.target.value)} /></Field>
+              <Field label="Tekst vertrouwelijkheid"><textarea rows="4" value={valueFor(project.settings, "confidentialityText", language)} onChange={(event) => updateSettings("confidentialityText", event.target.value)} /></Field>
+            </div>
+          </section>
+        </div>
+      )}
+
       {panel === "updates" && (
         <div
           className="rp-admin-updates-layout"
@@ -1187,6 +1523,11 @@ export default function RembrandtProjectManager({
               </header>
 
               <div className="rp-admin-editor__publication">
+                <Field label="Onderzoeksdossier">
+                  <select value={selectedUpdate.investigationId || ""} onChange={(event) => updateSelected("investigationId", event.target.value)}>
+                    {project.investigations.map((investigation) => <option key={investigation.id} value={investigation.id}>{investigation.reference} — {investigation.title?.nl}</option>)}
+                  </select>
+                </Field>
                 <Field label="Status">
                   <select
                     value={selectedUpdate.status}
@@ -1839,6 +2180,7 @@ export default function RembrandtProjectManager({
                     const reset = { ...template, isEnabled: savedPublicEnabled };
                     setProject(reset);
                     setSelectedId(reset.updates[0]?.id || null);
+                    setSelectedInvestigationId(reset.investigations?.[0]?.id || null);
                     setDeleteConfirmId(null);
                   } catch (error) {
                     onShowToast(error.message, "error");

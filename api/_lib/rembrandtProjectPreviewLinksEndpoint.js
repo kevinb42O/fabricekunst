@@ -8,7 +8,7 @@ const publicLink = (req, token) => {
   const origin = forwardedHost.includes('localhost')
     ? `http://${forwardedHost}`
     : 'https://www.atelierrembrandt.com';
-  return `${origin}/rembrandt-project/preview#${token}`;
+  return `${origin}/lost-rembrandt-project/preview#${token}`;
 };
 
 const serializeLink = (row) => row ? ({

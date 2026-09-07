@@ -18,6 +18,10 @@ import { useLanguage } from "./context/LanguageContext";
 import { applySeoToDocument, buildPageSeo, getPageKind } from "./utils/seo";
 import { localizePath, stripLanguagePrefix } from "./utils/locales";
 import {
+  LEGACY_REMBRANDT_PROJECT_ROUTE,
+  REMBRANDT_PROJECT_ROUTE,
+} from "./utils/rembrandtProject";
+import {
   AnalyticsConsentBanner,
   trackEvent,
   trackItemCardClicked,
@@ -144,7 +148,7 @@ export default function App() {
     });
 
     const initialPath = stripLanguagePrefix(window.location.pathname).toLowerCase();
-    if (initialPath === '/rembrandt-project/preview') {
+    if ([`${REMBRANDT_PROJECT_ROUTE}/preview`, `${LEGACY_REMBRANDT_PROJECT_ROUTE}/preview`].includes(initialPath)) {
       const fragmentToken = window.location.hash.replace(/^#/, '');
       let storedToken = '';
       try {
@@ -207,7 +211,7 @@ export default function App() {
           setCurrentPage("catalogus");
           setActiveTab("catalogus");
         }
-      } else if (path === '/rembrandt-project/preview') {
+      } else if ([`${REMBRANDT_PROJECT_ROUTE}/preview`, `${LEGACY_REMBRANDT_PROJECT_ROUTE}/preview`].includes(path)) {
         setCurrentPage('rembrandt-project');
         setActiveTab('rembrandt-project');
         setSelectedDetailItemId(null);
@@ -225,7 +229,8 @@ export default function App() {
         setActiveTab("herkomst");
         setSelectedDetailItemId(null);
       } else if (
-        path === "/rembrandt-project" ||
+        path === REMBRANDT_PROJECT_ROUTE ||
+        path === LEGACY_REMBRANDT_PROJECT_ROUTE ||
         hash === "#rembrandt-project"
       ) {
         setCurrentPage("rembrandt-project");
@@ -431,7 +436,7 @@ export default function App() {
       transitionPageChange(() => {
         setCurrentPage("rembrandt-project");
       });
-      const projectPath = localizePath("/rembrandt-project", language);
+      const projectPath = localizePath(REMBRANDT_PROJECT_ROUTE, language);
       if (window.location.pathname !== projectPath) {
         window.history.pushState(
           { page: "rembrandt-project" },

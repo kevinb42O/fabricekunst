@@ -1,4 +1,5 @@
-export const REMBRANDT_PROJECT_ROUTE = "/rembrandt-project";
+export const REMBRANDT_PROJECT_ROUTE = "/lost-rembrandt-project";
+export const LEGACY_REMBRANDT_PROJECT_ROUTE = "/rembrandt-project";
 
 const emptyLocalizedText = () => ({ nl: "", en: "", fr: "" });
 
@@ -7,7 +8,7 @@ const emptyLocalizedText = () => ({ nl: "", en: "", fr: "" });
 // private draft in the publicly downloadable JavaScript bundle.
 export function createEmptyRembrandtProject() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     isEnabled: false,
     settings: {
       title: emptyLocalizedText(),
@@ -19,16 +20,33 @@ export function createEmptyRembrandtProject() {
       nextStep: emptyLocalizedText(),
       methodologyTitle: emptyLocalizedText(),
       methodologyText: emptyLocalizedText(),
+      aboutTitle: emptyLocalizedText(),
+      aboutIntro: emptyLocalizedText(),
+      investigationsTitle: emptyLocalizedText(),
+      investigationsIntro: emptyLocalizedText(),
+      processTitle: emptyLocalizedText(),
+      processIntro: emptyLocalizedText(),
+      submissionTitle: emptyLocalizedText(),
+      submissionIntro: emptyLocalizedText(),
+      submissionChecklist: { nl: [], en: [], fr: [] },
+      submissionNotice: emptyLocalizedText(),
+      confidentialityTitle: emptyLocalizedText(),
+      confidentialityText: emptyLocalizedText(),
       closingTitle: emptyLocalizedText(),
       closingText: emptyLocalizedText(),
       heroImage: "",
       heroAlt: emptyLocalizedText(),
+      researchImage: "",
+      researchImageAlt: emptyLocalizedText(),
       socialImage: "",
       projectStatus: "discovery",
       currentPhaseId: "",
       seoTitle: emptyLocalizedText(),
       seoDescription: emptyLocalizedText(),
     },
+    aboutSections: [],
+    investigations: [],
+    researchSteps: [],
     phases: [],
     updates: [],
   };
@@ -71,6 +89,10 @@ export function normalizeRembrandtProject(input) {
         .filter((update) => update && typeof update === "object")
         .map((update, index) => ({
           ...update,
+          investigationId:
+            typeof update.investigationId === "string"
+              ? update.investigationId
+              : "project-01",
           sequence: Number.isFinite(Number(update.sequence))
             ? Number(update.sequence)
             : index + 1,
@@ -81,24 +103,90 @@ export function normalizeRembrandtProject(input) {
             : [],
         }))
     : fallback.updates;
+  const aboutSections = Array.isArray(input.aboutSections)
+    ? input.aboutSections
+        .filter((section) => section && typeof section === "object")
+        .map((section, index) => ({
+          ...section,
+          id: typeof section.id === "string" ? section.id : `about-${index + 1}`,
+          sortOrder: Number.isFinite(Number(section.sortOrder))
+            ? Number(section.sortOrder)
+            : index + 1,
+          visible: section.visible !== false,
+        }))
+    : fallback.aboutSections;
+  const investigations = Array.isArray(input.investigations)
+    ? input.investigations
+        .filter((investigation) => investigation && typeof investigation === "object")
+        .map((investigation, index) => ({
+          ...investigation,
+          id:
+            typeof investigation.id === "string"
+              ? investigation.id
+              : `project-${String(index + 1).padStart(2, "0")}`,
+          sortOrder: Number.isFinite(Number(investigation.sortOrder))
+            ? Number(investigation.sortOrder)
+            : index + 1,
+          visible: investigation.visible !== false,
+          featured: investigation.featured === true,
+          gallery: Array.isArray(investigation.gallery)
+            ? investigation.gallery.filter(
+                (image) => image && typeof image === "object",
+              )
+            : [],
+        }))
+    : fallback.investigations;
+  const researchSteps = Array.isArray(input.researchSteps)
+    ? input.researchSteps
+        .filter((step) => step && typeof step === "object")
+        .map((step, index) => ({
+          ...step,
+          id: typeof step.id === "string" ? step.id : `step-${index + 1}`,
+          sortOrder: Number.isFinite(Number(step.sortOrder))
+            ? Number(step.sortOrder)
+            : index + 1,
+          visible: step.visible !== false,
+        }))
+    : fallback.researchSteps;
   return {
     ...fallback,
     ...input,
+    schemaVersion: 2,
     settings: { ...fallback.settings, ...(input.settings || {}) },
+    aboutSections,
+    investigations,
+    researchSteps,
     phases,
     updates,
   };
 }
 
 export function publishedRembrandtProject(input) {
+  if (!input || Number(input.schemaVersion) !== 2) {
+    return createEmptyRembrandtProject();
+  }
   const project = normalizeRembrandtProject(input);
   const visiblePhaseIds = new Set(
     project.phases
       .filter((phase) => phase.visible !== false)
       .map((phase) => phase.id),
   );
+  const visibleInvestigationIds = new Set(
+    project.investigations
+      .filter((investigation) => investigation.visible !== false)
+      .map((investigation) => investigation.id),
+  );
   return {
     ...project,
+    aboutSections: project.aboutSections
+      .filter((section) => section.visible !== false)
+      .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder)),
+    investigations: project.investigations
+      .filter((investigation) => investigation.visible !== false)
+      .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder)),
+    researchSteps: project.researchSteps
+      .filter((step) => step.visible !== false)
+      .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder)),
     phases: project.phases
       .filter((phase) => phase.visible !== false)
       .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder)),
@@ -106,7 +194,9 @@ export function publishedRembrandtProject(input) {
       .filter((update) => {
         if (
           update.status !== "published" ||
-          !visiblePhaseIds.has(update.phaseId)
+          !visiblePhaseIds.has(update.phaseId) ||
+          (project.investigations.length > 0 &&
+            !visibleInvestigationIds.has(update.investigationId))
         )
           return false;
         if (!update.publishedAt) return true;
@@ -116,6 +206,51 @@ export function publishedRembrandtProject(input) {
         );
       })
       .sort((a, b) => Number(a.sequence) - Number(b.sequence)),
+  };
+}
+
+export function createProjectInvestigation(project) {
+  const sortOrder =
+    Math.max(
+      0,
+      ...(project?.investigations || []).map(
+        (entry) => Number(entry.sortOrder) || 0,
+      ),
+    ) + 1;
+  const id = `project-${String(sortOrder).padStart(2, "0")}`;
+  return {
+    id,
+    slug: id,
+    sortOrder,
+    visible: false,
+    featured: false,
+    status: "initial-assessment",
+    reference: `AR-${String(sortOrder).padStart(3, "0")}`,
+    title: { nl: `Project ${String(sortOrder).padStart(2, "0")}`, en: "", fr: "" },
+    subtitle: emptyLocalizedText(),
+    summary: emptyLocalizedText(),
+    description: emptyLocalizedText(),
+    statusLabel: emptyLocalizedText(),
+    coverImage: "",
+    coverAlt: emptyLocalizedText(),
+    gallery: [],
+  };
+}
+
+export function createResearchStep(project) {
+  const sortOrder =
+    Math.max(
+      0,
+      ...(project?.researchSteps || []).map(
+        (entry) => Number(entry.sortOrder) || 0,
+      ),
+    ) + 1;
+  return {
+    id: `step-${sortOrder}`,
+    sortOrder,
+    visible: true,
+    title: { nl: `Onderzoeksstap ${sortOrder}`, en: "", fr: "" },
+    body: emptyLocalizedText(),
   };
 }
 
@@ -157,6 +292,7 @@ export function createProjectUpdate(project) {
       project?.settings?.currentPhaseId ||
       project?.phases?.[0]?.id ||
       "discovery",
+    investigationId: project?.investigations?.[0]?.id || "project-01",
     sequence,
     status: "draft",
     evidenceType: "observation",

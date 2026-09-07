@@ -4,6 +4,85 @@
   gap: 1.25rem;
   color: var(--admin-text);
 }
+
+.rp-admin-collection-layout {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.rp-admin-collection-list {
+  padding: 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+  display: grid;
+  gap: 0.5rem;
+}
+.rp-admin-collection-intro {
+  margin-bottom: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+.rp-admin-collection-list > button:not(.admin-button) {
+  width: 100%;
+  min-height: 58px;
+  padding: 0.65rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: white;
+  color: var(--admin-text);
+  display: grid;
+  grid-template-columns: 2rem 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: left;
+}
+.rp-admin-collection-list > button:not(.admin-button).is-active {
+  border-color: #8e7035;
+  background: #faf7f2;
+  box-shadow: inset 3px 0 #8e7035;
+}
+.rp-admin-collection-list > button > span {
+  color: #8e7035;
+  font: 700 10px/1 Geist, Inter, sans-serif;
+}
+.rp-admin-collection-list > button strong,
+.rp-admin-collection-list > button small { display: block; }
+.rp-admin-collection-list > button strong { font-size: 12px; }
+.rp-admin-collection-list > button small { margin-top: 0.2rem; color: var(--admin-muted); font-size: 10px; }
+.rp-admin-collection-list > button svg { width: 14px; color: var(--admin-muted); }
+.rp-admin-subheading { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--admin-border); }
+.rp-admin-content-list { margin-top: 1.5rem; display: grid; gap: 0.75rem; }
+.rp-admin-content-list > article {
+  position: relative;
+  padding: 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: var(--admin-subtle);
+  display: grid;
+  gap: 0.9rem;
+}
+.rp-admin-content-list__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+.rp-admin-content-list__actions button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  background: white;
+  color: var(--admin-muted-strong);
+  display: grid;
+  place-items: center;
+}
+.rp-admin-content-list__actions svg { width: 14px; }
+
+@media (max-width: 64rem) {
+  .rp-admin-collection-layout { grid-template-columns: 1fr; }
+}
 .rp-admin-header {
   padding: 1.5rem;
   border: 1px solid var(--admin-border);

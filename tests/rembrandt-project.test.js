@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { cloneDefaultRembrandtProject } from "../src/data/defaultRembrandtProject.js";
 import {
   createEmptyRembrandtProject,
+  createProjectInvestigation,
   latestProjectUpdate,
   localizedProjectValue,
   projectProgress,
@@ -21,6 +22,7 @@ import {
   isValidPreviewToken,
 } from "../api/_lib/rembrandtPreviewToken.js";
 import { activePreviewLink } from "../api/_lib/rembrandtPreviewStore.js";
+import { validateProject } from "../api/_lib/rembrandtProjectEndpoint.js";
 
 test("public project projection excludes drafts, archives and hidden phases", () => {
   const project = cloneDefaultRembrandtProject();
@@ -43,20 +45,28 @@ test("latest update and progress follow publication time and visible phases", ()
   assert.equal(projectProgress(project), 60);
 });
 
-test("sitemap includes all localized Rembrandt Project routes", () => {
+test("the Lost Rembrandt seed passes strict server validation with bundled images", async () => {
+  const project = cloneDefaultRembrandtProject();
+  const serialized = await validateProject(project);
+  assert.equal(JSON.parse(serialized).schemaVersion, 2);
+  assert.equal(project.investigations.length, 3);
+  assert.equal(project.researchSteps.length, 13);
+});
+
+test("sitemap includes all localized Lost Rembrandt Project routes", () => {
   const project = cloneDefaultRembrandtProject();
   const sitemap = buildSitemapXml([], { rembrandtProject: project });
   assert.match(
     sitemap,
-    /https:\/\/www\.atelierrembrandt\.com\/rembrandt-project/,
+    /https:\/\/www\.atelierrembrandt\.com\/lost-rembrandt-project/,
   );
   assert.match(
     sitemap,
-    /https:\/\/www\.atelierrembrandt\.com\/en\/rembrandt-project/,
+    /https:\/\/www\.atelierrembrandt\.com\/en\/lost-rembrandt-project/,
   );
   assert.match(
     sitemap,
-    /https:\/\/www\.atelierrembrandt\.com\/fr\/rembrandt-project/,
+    /https:\/\/www\.atelierrembrandt\.com\/fr\/lost-rembrandt-project/,
   );
 });
 
@@ -98,12 +108,54 @@ test("project access is fail-closed and redacts hidden public content", () => {
   );
 });
 
+test("the public access gate also rejects legacy project snapshots", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.schemaVersion = 1;
+  const snapshot = { rembrandtProject: project };
+  const redacted = redactHiddenRembrandtProject(snapshot, {
+    schemaVersion: 1,
+    enabled: true,
+  });
+  assert.deepEqual(redacted.rembrandtProject, { isEnabled: false });
+});
+
 test("the browser fallback contains no private project seed", () => {
   const fallback = createEmptyRembrandtProject();
   assert.equal(fallback.isEnabled, false);
   assert.deepEqual(fallback.phases, []);
   assert.deepEqual(fallback.updates, []);
+  assert.deepEqual(fallback.investigations, []);
+  assert.deepEqual(fallback.researchSteps, []);
   assert.doesNotMatch(JSON.stringify(fallback), /Rembrandt f\. 1637|Drouot|onbekend portret/i);
+});
+
+test("legacy project snapshots fail closed after the schema upgrade", () => {
+  const legacy = cloneDefaultRembrandtProject();
+  legacy.schemaVersion = 1;
+  const published = publishedRembrandtProject(legacy);
+  assert.equal(published.isEnabled, false);
+  assert.deepEqual(published.investigations, []);
+  assert.deepEqual(published.updates, []);
+});
+
+test("new investigations use a server-valid initial status", async () => {
+  const project = cloneDefaultRembrandtProject();
+  const investigation = createProjectInvestigation(project);
+  project.investigations.push(investigation);
+  const serialized = await validateProject(project);
+  assert.equal(investigation.status, "initial-assessment");
+  assert.equal(JSON.parse(serialized).investigations.length, 4);
+});
+
+test("public project projection excludes hidden investigations and research steps", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.updates[0].investigationId = "project-02";
+  project.investigations[1].visible = false;
+  project.researchSteps[1].visible = false;
+  const published = publishedRembrandtProject(project);
+  assert.ok(published.investigations.every((entry) => entry.visible !== false));
+  assert.ok(published.researchSteps.every((entry) => entry.visible !== false));
+  assert.ok(published.updates.every((entry) => entry.investigationId !== "project-02"));
 });
 
 test("hiding the project never inserts a duplicate contact navigation item", () => {

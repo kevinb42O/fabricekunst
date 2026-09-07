@@ -6,6 +6,8 @@ import {
   stripLanguagePrefix,
 } from "./locales.js";
 import {
+  LEGACY_REMBRANDT_PROJECT_ROUTE,
+  REMBRANDT_PROJECT_ROUTE,
   localizedProjectValue,
   publishedRembrandtProject,
 } from "./rembrandtProject.js";
@@ -37,9 +39,9 @@ const PAGE_COPY = {
         "Lees hoe Atelier Rembrandt de herkomst, authenticiteit en historische context van ieder boek en kunstobject onderzoekt.",
     },
     rembrandtProject: {
-      title: "The Rembrandt Project — Atelier Rembrandt",
+      title: "The Lost Rembrandt Project — Atelier Rembrandt",
       description:
-        "Volg het technische, kunsthistorische en herkomstonderzoek naar een intrigerend schilderij met de signatuur Rembrandt f. 1637.",
+        "Ontdek het onderzoek naar onbekende, verloren of verkeerd toegeschreven werken en dien een mogelijk schilderij vertrouwelijk in.",
     },
     privacy: {
       title: "Privacyverklaring — Atelier Rembrandt",
@@ -77,9 +79,9 @@ const PAGE_COPY = {
         "Learn how Atelier Rembrandt researches the provenance, authenticity and historical context of every book and work of art.",
     },
     rembrandtProject: {
-      title: "The Rembrandt Project — Atelier Rembrandt",
+      title: "The Lost Rembrandt Project — Atelier Rembrandt",
       description:
-        "Follow the technical, art-historical and provenance investigation of an intriguing painting bearing the signature Rembrandt f. 1637.",
+        "Explore research into unknown, lost or misattributed works and submit a potentially relevant painting confidentially.",
     },
     privacy: {
       title: "Privacy notice — Atelier Rembrandt",
@@ -117,9 +119,9 @@ const PAGE_COPY = {
         "Découvrez comment Atelier Rembrandt étudie la provenance, l’authenticité et le contexte historique de chaque objet.",
     },
     rembrandtProject: {
-      title: "The Rembrandt Project — Atelier Rembrandt",
+      title: "The Lost Rembrandt Project — Atelier Rembrandt",
       description:
-        "Suivez les recherches techniques, historiques et de provenance autour d’un tableau portant la signature Rembrandt f. 1637.",
+        "Découvrez la recherche sur des œuvres inconnues, perdues ou mal attribuées et soumettez un tableau en toute confidentialité.",
     },
     privacy: {
       title: "Confidentialité — Atelier Rembrandt",
@@ -201,7 +203,7 @@ function availabilityFor(status) {
 export function getPageKind(pathname, currentPage = "home") {
   const path = stripLanguagePrefix(normalizePath(pathname)).toLowerCase();
   if (path === "/topstukken") return "topstukken";
-  if (path === "/rembrandt-project" || path === "/rembrandt-project/preview") return "rembrandtProject";
+  if ([REMBRANDT_PROJECT_ROUTE, LEGACY_REMBRANDT_PROJECT_ROUTE, `${REMBRANDT_PROJECT_ROUTE}/preview`, `${LEGACY_REMBRANDT_PROJECT_ROUTE}/preview`].includes(path)) return "rembrandtProject";
   if (currentPage === "item-detail") return "item";
   if (currentPage === "not-found") return "notFound";
   return currentPage;
@@ -233,8 +235,8 @@ export function buildPageSeo({
   const routePath =
     pageKind === "item" && item
       ? `/collectie/${getItemSlug(item)}`
-      : pageKind === "rembrandtProject" && stripLanguagePrefix(normalizePath(pathname)).toLowerCase() === '/rembrandt-project/preview'
-        ? '/rembrandt-project'
+      : pageKind === "rembrandtProject"
+        ? REMBRANDT_PROJECT_ROUTE
       : stripLanguagePrefix(normalizePath(pathname));
   const canonicalPath = localizePath(routePath, lang);
   const canonical = `${SITE_URL}${canonicalPath === "/" ? "/" : canonicalPath}`;
@@ -314,7 +316,7 @@ export function buildPageSeo({
     robots:
       pageKind === "notFound" ||
       hiddenProject ||
-      stripLanguagePrefix(normalizePath(pathname)).toLowerCase() === '/rembrandt-project/preview' ||
+      (pageKind === "rembrandtProject" && stripLanguagePrefix(normalizePath(pathname)).toLowerCase().endsWith("/preview")) ||
       (pageKind === "rembrandtProject" && project?.isEnabled !== true)
         ? "noindex, nofollow"
         : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
@@ -420,7 +422,7 @@ export function buildStructuredData({
     graph[0].name = localizedProjectValue(
       publicProject.settings?.title,
       language,
-      "The Rembrandt Project",
+      "The Lost Rembrandt Project",
     );
     graph[0].description = localizedProjectValue(
       publicProject.settings?.intro,
@@ -433,7 +435,7 @@ export function buildStructuredData({
       name: localizedProjectValue(
         publicProject.settings?.title,
         language,
-        "The Rembrandt Project",
+        "The Lost Rembrandt Project",
       ),
       numberOfItems: publicProject.updates.length,
       itemListElement: publicProject.updates.map((update, index) => ({

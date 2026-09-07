@@ -3,12 +3,13 @@ import { Mail, Phone } from 'lucide-react';
 import FacebookIcon from '../components/FacebookIcon';
 import { useLanguage } from '../context/LanguageContext';
 import { localizePath } from '../utils/locales';
+import { REMBRANDT_PROJECT_ROUTE } from '../utils/rembrandtProject';
 import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 const COPY = {
-  nl: { selected: 'Selectie', collection: 'Collecties', provenance: 'Herkomst', project: 'Rembrandt Project' },
-  en: { selected: 'Selected works', collection: 'Collections', provenance: 'Provenance', project: 'Rembrandt Project' },
-  fr: { selected: 'Œuvres', collection: 'Collections', provenance: 'Provenance', project: 'Projet Rembrandt' }
+  nl: { selected: 'Selectie', collection: 'Collecties', provenance: 'Herkomst', project: 'Lost Rembrandt' },
+  en: { selected: 'Selected works', collection: 'Collections', provenance: 'Provenance', project: 'Lost Rembrandt' },
+  fr: { selected: 'Œuvres', collection: 'Collections', provenance: 'Provenance', project: 'Lost Rembrandt' }
 };
 
 export default function MobileFooter({ onNavigate, showRembrandtProject = true }) {
@@ -56,7 +57,7 @@ export default function MobileFooter({ onNavigate, showRembrandtProject = true }
           <a href={localizePath('/topstukken', language)} onClick={(event) => { event.preventDefault(); onNavigate('topstukken'); }} className="flex min-h-11 items-center text-left font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.selected}</a>
           <a href={localizePath('/collectie', language)} onClick={(event) => { event.preventDefault(); onNavigate('catalogus'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.collection}</a>
           <a href={localizePath('/herkomst', language)} onClick={(event) => { event.preventDefault(); onNavigate('herkomst'); }} className="flex min-h-11 items-center text-left font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.provenance}</a>
-          {showRembrandtProject && <a href={localizePath('/rembrandt-project', language)} onClick={(event) => { event.preventDefault(); onNavigate('rembrandt-project'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.project}</a>}
+          {showRembrandtProject && <a href={localizePath(REMBRANDT_PROJECT_ROUTE, language)} onClick={(event) => { event.preventDefault(); onNavigate('rembrandt-project'); }} className="flex min-h-11 items-center justify-end text-right font-sans text-[10px] font-bold uppercase tracking-[0.12em]">{labels.project}</a>}
         </nav>
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-4 font-serif text-[11px] text-[#6B6258]">

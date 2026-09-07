@@ -21,6 +21,8 @@ const MAX_TEXT_LENGTH = 50_000;
 const MAX_UPDATES = 160;
 const MAX_IMAGES = 80;
 const MAX_PHASES = 24;
+const MAX_INVESTIGATIONS = 60;
+const MAX_RESEARCH_STEPS = 40;
 const PROJECT_STATUSES = new Set([
   "discovery",
   "technical-research",
@@ -34,6 +36,14 @@ const EVIDENCE_TYPES = new Set([
   "hypothesis",
   "external-review",
   "next-step",
+]);
+const INVESTIGATION_STATUSES = new Set([
+  "discovery",
+  "initial-assessment",
+  "technical-research",
+  "expert-review",
+  "paused",
+  "completed",
 ]);
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const UPDATE_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
@@ -101,8 +111,15 @@ const managedR2Image = (value) => {
   if (!value) return null;
   if (typeof value !== "string" || value.length > 2048)
     throw new RequestError("Invalid image URL");
-  const url = new URL(value);
-  const configuredHost = new URL(process.env.R2_PUBLIC_URL).hostname;
+  if (/^\/images\/lost-rembrandt\/[a-zA-Z0-9._-]+$/.test(value)) return null;
+  let url;
+  let configuredHost;
+  try {
+    url = new URL(value);
+    configuredHost = new URL(process.env.R2_PUBLIC_URL).hostname;
+  } catch {
+    throw new RequestError("Invalid image URL");
+  }
   if (
     url.protocol !== "https:" ||
     ![configuredHost, "media.atelierrembrandt.com"].includes(url.hostname)
@@ -119,29 +136,44 @@ const managedR2Image = (value) => {
 };
 
 const projectImageUrls = (project) => {
-  const urls = [project?.settings?.heroImage, project?.settings?.socialImage];
+  const urls = [
+    project?.settings?.heroImage,
+    project?.settings?.researchImage,
+    project?.settings?.socialImage,
+  ];
   for (const update of project?.updates || []) {
     urls.push(update?.coverImage);
     for (const image of update?.gallery || []) urls.push(image?.url);
   }
+  for (const investigation of project?.investigations || []) {
+    urls.push(investigation?.coverImage);
+    for (const image of investigation?.gallery || []) urls.push(image?.url);
+  }
   return [...new Set(urls.filter(Boolean))];
 };
 
-const validateProject = async (project) => {
+export const validateProject = async (project) => {
   validateRembrandtProjectShape(project);
   if (
     !project?.settings ||
+    !Array.isArray(project?.aboutSections) ||
+    !Array.isArray(project?.investigations) ||
+    !Array.isArray(project?.researchSteps) ||
     !Array.isArray(project?.phases) ||
     !Array.isArray(project?.updates)
   ) {
     throw new RequestError("Required project sections are missing");
   }
-  if (project.schemaVersion !== 1) throw new RequestError("De projectversie is ongeldig.");
+  if (project.schemaVersion !== 2) throw new RequestError("De projectversie is ongeldig.");
   if (typeof project.isEnabled !== "boolean") throw new RequestError("De zichtbaarheid van het project is ongeldig.");
   if (project.phases.length < 1 || project.phases.length > MAX_PHASES)
     throw new RequestError("Het project heeft een ongeldig aantal fases.");
   if (project.updates.length > MAX_UPDATES)
     throw new RequestError("The project contains too many updates");
+  if (project.investigations.length > MAX_INVESTIGATIONS)
+    throw new RequestError("Het project bevat te veel onderzoeksdossiers.");
+  if (project.researchSteps.length > MAX_RESEARCH_STEPS)
+    throw new RequestError("Het project bevat te veel onderzoeksstappen.");
   if (!PROJECT_STATUSES.has(project.settings.projectStatus))
     throw new RequestError("De algemene projectstatus is ongeldig.");
   const phaseIds = new Set();
@@ -164,6 +196,57 @@ const validateProject = async (project) => {
   );
   if (!currentPhase || currentPhase.visible === false)
     throw new RequestError("De huidige fase moet bestaan en zichtbaar zijn.");
+  const investigationIds = new Set();
+  const investigationSlugs = new Set();
+  const investigationOrders = new Set();
+  for (const investigation of project.investigations) {
+    if (!ID_PATTERN.test(investigation?.id || "") || investigationIds.has(investigation.id))
+      throw new RequestError("Elk onderzoeksdossier heeft een unieke, geldige sleutel nodig.");
+    if (!ID_PATTERN.test(investigation?.slug || "") || investigationSlugs.has(investigation.slug))
+      throw new RequestError("Elk onderzoeksdossier heeft een unieke URL-slug nodig.");
+    const order = Number(investigation.sortOrder);
+    if (!Number.isInteger(order) || order < 1 || investigationOrders.has(order))
+      throw new RequestError("Elk onderzoeksdossier heeft een unieke positieve volgorde nodig.");
+    if (!INVESTIGATION_STATUSES.has(investigation.status))
+      throw new RequestError("Een onderzoeksdossier bevat een ongeldige status.");
+    if (investigation.visible !== false && !String(investigation.title?.nl || "").trim())
+      throw new RequestError("Elk zichtbaar onderzoeksdossier heeft een Nederlandse titel nodig.");
+    investigationIds.add(investigation.id);
+    investigationSlugs.add(investigation.slug);
+    investigationOrders.add(order);
+    const galleryIds = new Set();
+    for (const image of investigation.gallery || []) {
+      if (!UPDATE_ID_PATTERN.test(image?.id || "") || galleryIds.has(image.id))
+        throw new RequestError("Elk dossierbeeld heeft een unieke, geldige sleutel nodig.");
+      galleryIds.add(image.id);
+    }
+  }
+  const aboutIds = new Set();
+  const aboutOrders = new Set();
+  for (const section of project.aboutSections) {
+    const order = Number(section.sortOrder);
+    if (!ID_PATTERN.test(section?.id || "") || aboutIds.has(section.id))
+      throw new RequestError("Elke inhoudssectie heeft een unieke, geldige sleutel nodig.");
+    if (!Number.isInteger(order) || order < 1 || aboutOrders.has(order))
+      throw new RequestError("Elke inhoudssectie heeft een unieke positieve volgorde nodig.");
+    if (section.visible !== false && !String(section.title?.nl || "").trim())
+      throw new RequestError("Elke zichtbare inhoudssectie heeft een Nederlandse titel nodig.");
+    aboutIds.add(section.id);
+    aboutOrders.add(order);
+  }
+  const stepIds = new Set();
+  const stepOrders = new Set();
+  for (const step of project.researchSteps) {
+    const order = Number(step.sortOrder);
+    if (!ID_PATTERN.test(step?.id || "") || stepIds.has(step.id))
+      throw new RequestError("Elke onderzoeksstap heeft een unieke, geldige sleutel nodig.");
+    if (!Number.isInteger(order) || order < 1 || stepOrders.has(order))
+      throw new RequestError("Elke onderzoeksstap heeft een unieke positieve volgorde nodig.");
+    if (step.visible !== false && !String(step.title?.nl || "").trim())
+      throw new RequestError("Elke zichtbare onderzoeksstap heeft een Nederlandse titel nodig.");
+    stepIds.add(step.id);
+    stepOrders.add(order);
+  }
   const ids = new Set();
   const slugs = new Set();
   const sequences = new Set();
@@ -182,6 +265,8 @@ const validateProject = async (project) => {
       throw new RequestError("Een update bevat een ongeldig bewijstype.");
     if (!phaseIds.has(update.phaseId))
       throw new RequestError("Every update must belong to an existing phase");
+    if (project.investigations.length && !investigationIds.has(update.investigationId))
+      throw new RequestError("Elke update moet aan een bestaand onderzoeksdossier gekoppeld zijn.");
     if (update.status === "published" && !String(update.title?.nl || "").trim())
       throw new RequestError("Every published update needs a Dutch title");
     if (!isStrictDate(update.eventDate))
@@ -219,7 +304,8 @@ const validateProject = async (project) => {
   if (Buffer.byteLength(serialized) > MAX_PAYLOAD_BYTES)
     throw new RequestError("The project payload is too large");
 
-  if (imageUrls.length) {
+  const managedImageUrls = imageUrls.filter((url) => managedR2Image(url));
+  if (managedImageUrls.length) {
     if (getR2ConfigurationError()) throw new RequestError("De online mediabibliotheek is tijdelijk niet beschikbaar.");
     const r2 = getR2Client();
     const verifyImage = async (url) => {
@@ -238,8 +324,8 @@ const validateProject = async (project) => {
         throw new RequestError("Een gekoppelde afbeelding is niet beschikbaar of ongeldig.");
       }
     };
-    for (let index = 0; index < imageUrls.length; index += 6) {
-      await Promise.all(imageUrls.slice(index, index + 6).map(verifyImage));
+    for (let index = 0; index < managedImageUrls.length; index += 6) {
+      await Promise.all(managedImageUrls.slice(index, index + 6).map(verifyImage));
     }
   }
   return serialized;
@@ -252,7 +338,11 @@ async function readProject(supabase) {
     .eq("key", SETTING_KEY)
     .maybeSingle();
   if (error) throw error;
-  return { project: parseSetting(data?.value), row: data || null };
+  const storedProject = parseSetting(data?.value);
+  const project = Number(storedProject?.schemaVersion) === 2
+    ? storedProject
+    : { ...DEFAULT_REMBRANDT_PROJECT, isEnabled: false };
+  return { project, row: data || null };
 }
 
 async function writeProjectVisibility(supabase, enabled, expectedVersion = undefined) {
@@ -366,6 +456,12 @@ export default async function handler(req, res) {
         if (error) throw error;
         if (!data)
           throw new RequestError("Deze revisie bestaat niet meer.", 404);
+        if (Number(data.content?.schemaVersion) !== 2) {
+          throw new RequestError(
+            "Deze revisie gebruikt de vorige projectstructuur en kan niet veilig worden hersteld.",
+            409,
+          );
+        }
         return sendJson(res, 200, { ok: true, revision: data });
       }
       const [{ project, row }, revisions, access] = await Promise.all([

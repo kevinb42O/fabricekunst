@@ -5,6 +5,7 @@ import FacebookIcon from './FacebookIcon';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 import { localizePath } from '../utils/locales';
+import { REMBRANDT_PROJECT_ROUTE } from '../utils/rembrandtProject';
 import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 export default function Footer({ onNavigate, showRembrandtProject = true }) {
@@ -62,7 +63,7 @@ export default function Footer({ onNavigate, showRembrandtProject = true }) {
                 </a>
               </li>
               {showRembrandtProject && <li>
-                <a href={localizePath('/rembrandt-project', language)} onClick={(event) => { event.preventDefault(); onNavigate('rembrandt-project'); }} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
+                <a href={localizePath(REMBRANDT_PROJECT_ROUTE, language)} onClick={(event) => { event.preventDefault(); onNavigate('rembrandt-project'); }} className="text-[#333333] hover:text-[#B8860B] transition-colors cursor-pointer">
                   {t('nav.rembrandtProject')}
                 </a>
               </li>}

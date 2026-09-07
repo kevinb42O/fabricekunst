@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { Mail, Phone, Calendar, MessageSquare, ExternalLink, Search, Check, Trash2, StickyNote, Send, X, Copy } from 'lucide-react';
-import { updateInquiryStatusAsync, updateInquiryNotesAsync, deleteInquiryAsync } from '../../utils/storage';
+import { updateInquiryStatusAsync, updateInquiryNotesAsync, deleteInquiryAsync, getPaintingSubmissionAttachmentUrlAsync } from '../../utils/storage';
+
+const SALES_EMAIL_TEMPLATES = [
+  { id: 'invitation', label: 'Privé-bezichtiging uitnodiging' },
+  { id: 'accept_bid', label: 'Bod geaccepteerd' },
+  { id: 'counter_offer', label: 'Tegenbod voorstellen' },
+  { id: 'general', label: 'Algemene informatie' },
+];
+
+const RESEARCH_EMAIL_TEMPLATES = [
+  { id: 'research_received', label: 'Ontvangst bevestigen' },
+  { id: 'research_information', label: 'Aanvullende informatie vragen' },
+  { id: 'research_followup', label: 'Vervolgonderzoek voorstellen' },
+  { id: 'research_close', label: 'Dossier voorlopig afsluiten' },
+];
 
 export default function InquiriesManager({ inquiries, onStatusChange, onShowToast }) {
   const [filterQuery, setFilterQuery] = useState('');
@@ -9,6 +23,20 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
   const [emailModalInquiry, setEmailModalInquiry] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('invitation');
   const [customEmailBody, setCustomEmailBody] = useState('');
+  const [openingAttachment, setOpeningAttachment] = useState('');
+
+  const openAttachment = async (inquiryId, attachment) => {
+    const key = `${inquiryId}:${attachment.path}`;
+    setOpeningAttachment(key);
+    try {
+      const url = await getPaintingSubmissionAttachmentUrlAsync(inquiryId, attachment.path);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      if (onShowToast) onShowToast(error.message || 'De bijlage kon niet worden geopend.', 'error');
+    } finally {
+      setOpeningAttachment('');
+    }
+  };
 
   const handleStatusSelect = async (id, newStatus) => {
     try {
@@ -52,6 +80,20 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
     const name = inq.name || 'Geachte heer/mevrouw';
     const title = inq.itemTitle || 'het antiquarische werk';
 
+    if (inq.type === 'painting_submission') {
+      switch (type) {
+        case 'research_information':
+          return `Beste ${name},\n\nHartelijk dank voor uw vertrouwelijke inzending van “${title}”.\n\nOm een eerste beoordeling zorgvuldig te kunnen voorbereiden, ontvangen we graag nog duidelijke opnamen van de voor- en achterzijde, de lijst, eventuele etiketten, stempels en signaturen, samen met alle beschikbare informatie over afmetingen, drager en provenance.\n\nU kunt deze informatie antwoorden op deze e-mail. Deel uitsluitend documenten en beelden die u rechtmatig mag verstrekken.\n\nDeze correspondentie en eerste beoordeling vormen geen authenticiteitsverklaring.\n\nMet vriendelijke groet,\n\nThe Lost Rembrandt Project\nAtelier Rembrandt`;
+        case 'research_followup':
+          return `Beste ${name},\n\nDank voor uw inzending van “${title}”. De beschikbare informatie bevat voldoende aanknopingspunten om een mogelijke volgende onderzoeksstap vertrouwelijk te bespreken.\n\nWe stellen graag een gesprek voor over de documentatie, provenance en eventueel technisch onderzoek door onafhankelijke specialisten of laboratoria. Voor iedere fysieke of technische onderzoeksstap worden de aanpak, voorwaarden en kosten vooraf afzonderlijk en schriftelijk afgestemd.\n\nDeze uitnodiging houdt geen toeschrijving of authenticiteitsverklaring in.\n\nMet vriendelijke groet,\n\nThe Lost Rembrandt Project\nAtelier Rembrandt`;
+        case 'research_close':
+          return `Beste ${name},\n\nHartelijk dank voor uw vertrouwelijke inzending van “${title}”. Op basis van de momenteel beschikbare informatie zien we onvoldoende aanknopingspunten om het dossier verder te onderzoeken. Daarom sluiten we de eerste beoordeling voorlopig af.\n\nDit besluit is geen authenticiteitsverklaring en sluit niet uit dat nieuwe documentatie of toekomstig onderzoek tot een andere beoordeling kan leiden.\n\nMet vriendelijke groet,\n\nThe Lost Rembrandt Project\nAtelier Rembrandt`;
+        case 'research_received':
+        default:
+          return `Beste ${name},\n\nHartelijk dank voor uw vertrouwelijke inzending van “${title}”. We bevestigen dat het dossier en de meegestuurde documenten zijn ontvangen.\n\nWe beoordelen de beschikbare informatie zorgvuldig en nemen contact met u op wanneer er voldoende aanknopingspunten zijn voor aanvullende vragen of een mogelijke volgende onderzoeksstap. Uw inzending en onze eerste beoordeling vormen geen authenticiteitsverklaring.\n\nMet vriendelijke groet,\n\nThe Lost Rembrandt Project\nAtelier Rembrandt`;
+      }
+    }
+
     switch (type) {
       case 'invitation':
         return `Beste ${name},\n\nHartelijk dank voor uw interesse in "${title}".\n\nIk nodig u van harte uit voor een privé-bezichtiging van dit exemplaar. Mocht u specifieke vragen hebben over de herkomst of staat van de band, licht ik u deze graag toe.\n\nWanneer zou een afspraak voor u schikken?\n\nMet vriendelijke groet,\n\nAtelier Rembrandt`;
@@ -65,9 +107,10 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
   };
 
   const handleOpenEmailModal = (inq) => {
+    const template = inq.type === 'painting_submission' ? 'research_received' : 'invitation';
     setEmailModalInquiry(inq);
-    setSelectedTemplate('invitation');
-    setCustomEmailBody(getEmailTemplateText('invitation', inq));
+    setSelectedTemplate(template);
+    setCustomEmailBody(getEmailTemplateText(template, inq));
   };
 
   const handleTemplateChange = (templateKey) => {
@@ -151,7 +194,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
                     {inq.status}
                   </span>
                   <span className="text-xs font-mono text-[#B8860B] font-bold">{inq.itemRef}</span>
-                  <span className="text-xs font-bold text-[#111111] font-serif">{inq.type}</span>
+                  <span className="text-xs font-bold text-[#111111] font-serif">{inq.type === 'painting_submission' ? 'Schilderij-inzending' : inq.type}</span>
                 </div>
 
                 <div className="flex items-center space-x-3 text-[#666666]">
@@ -185,7 +228,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
                   <div className="space-y-1.5 text-xs text-[#333333]">
                     <div className="flex items-center space-x-2">
                       <Mail className="w-3.5 h-3.5 text-[#B8860B] shrink-0" />
-                      <a href={`mailto:${inq.email}?subject=Re: ${inq.itemTitle} (${inq.itemRef})`} className="hover:text-[#B8860B] underline font-semibold">
+                      <a href={`mailto:${inq.email}?subject=${encodeURIComponent(`Re: ${inq.itemTitle} (${inq.itemRef})`)}`} className="hover:text-[#B8860B] underline font-semibold">
                         {inq.email}
                       </a>
                     </div>
@@ -203,6 +246,27 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
                     <span className="text-[10px] text-[#666666] uppercase font-bold block font-mono">Betreft Kunstwerk</span>
                     <span className="text-xs font-serif text-[#111111] font-bold block">{inq.itemTitle}</span>
                   </div>
+                  {inq.type === 'painting_submission' && (
+                    <div className="p-3 rounded-2xl bg-[#FAF7F2] border border-[#D8CEB8] space-y-2 text-xs">
+                      <span className="text-[10px] text-[#666666] uppercase font-bold block font-mono">Dossiergegevens</span>
+                      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                        {inq.metadata?.country && <><dt className="text-[#666666]">Land</dt><dd>{inq.metadata.country}</dd></>}
+                        {inq.metadata?.estimatedDate && <><dt className="text-[#666666]">Datering</dt><dd>{inq.metadata.estimatedDate}</dd></>}
+                        {inq.metadata?.dimensions && <><dt className="text-[#666666]">Afmetingen</dt><dd>{inq.metadata.dimensions}</dd></>}
+                        {inq.metadata?.support && <><dt className="text-[#666666]">Drager</dt><dd>{inq.metadata.support}</dd></>}
+                        {inq.metadata?.preferredLanguage && <><dt className="text-[#666666]">Taal</dt><dd>{inq.metadata.preferredLanguage.toUpperCase()}</dd></>}
+                      </dl>
+                      {(inq.attachments || []).length > 0 && (
+                        <div className="pt-2 border-t border-[#D8CEB8] space-y-1.5">
+                          <strong className="block text-[10px] uppercase tracking-wide">Vertrouwelijke bijlagen ({inq.attachments.length})</strong>
+                          {inq.attachments.map((attachment) => {
+                            const key = `${inq.id}:${attachment.path}`;
+                            return <button key={attachment.path} type="button" onClick={() => openAttachment(inq.id, attachment)} disabled={openingAttachment === key} className="w-full min-h-10 px-3 py-2 rounded-lg bg-white border border-[#D8CEB8] flex items-center gap-2 text-left hover:border-[#8E7035] disabled:opacity-60"><ExternalLink className="w-3.5 h-3.5 text-[#B8860B] shrink-0" /><span className="truncate flex-1">{attachment.name || 'Bijlage'}</span><small>{attachment.size ? `${(attachment.size / 1024 / 1024).toFixed(1)} MB` : ''}</small></button>;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Right: Message & Notes */}
@@ -277,7 +341,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
 
       {/* Pre-filled Email Assistant Modal */}
       {emailModalInquiry && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="inquiry-email-dialog-title">
           <div className="relative w-full max-w-2xl bg-white border-2 border-[#D8CEB8] rounded-3xl p-6 sm:p-8 shadow-strong space-y-6">
             
             <div className="flex items-center justify-between border-b border-[#D8CEB8] pb-4">
@@ -287,13 +351,15 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
                 </div>
                 <div>
                   <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase">Mail Assistent</span>
-                  <h3 className="text-lg font-serif font-bold text-[#111111]">
+                  <h3 id="inquiry-email-dialog-title" className="text-lg font-serif font-bold text-[#111111]">
                     Beantwoord Aanvraag ({emailModalInquiry.name})
                   </h3>
                 </div>
               </div>
 
               <button
+                type="button"
+                aria-label="E-mailassistent sluiten"
                 onClick={() => setEmailModalInquiry(null)}
                 className="p-2 rounded-full bg-[#FAF7F2] text-[#111111] border border-[#D8CEB8]"
               >
@@ -305,42 +371,18 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
             <div className="space-y-2">
               <label className="text-xs font-mono font-bold text-[#111111] block">Kies Sjabloon:</label>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleTemplateChange('invitation')}
-                  className={`p-2.5 rounded-xl border text-left font-bold transition-all ${
-                    selectedTemplate === 'invitation' ? 'bg-[#111111] text-white border-[#111111]' : 'bg-[#FAF7F2] text-[#111111] border-[#D8CEB8]'
-                  }`}
-                >
-                   Privé-Bezichtiging Uitnodiging
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTemplateChange('accept_bid')}
-                  className={`p-2.5 rounded-xl border text-left font-bold transition-all ${
-                    selectedTemplate === 'accept_bid' ? 'bg-[#111111] text-white border-[#111111]' : 'bg-[#FAF7F2] text-[#111111] border-[#D8CEB8]'
-                  }`}
-                >
-                   Bod Geaccepteerd
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTemplateChange('counter_offer')}
-                  className={`p-2.5 rounded-xl border text-left font-bold transition-all ${
-                    selectedTemplate === 'counter_offer' ? 'bg-[#111111] text-white border-[#111111]' : 'bg-[#FAF7F2] text-[#111111] border-[#D8CEB8]'
-                  }`}
-                >
-                   Tegenbod Voorstel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTemplateChange('general')}
-                  className={`p-2.5 rounded-xl border text-left font-bold transition-all ${
-                    selectedTemplate === 'general' ? 'bg-[#111111] text-white border-[#111111]' : 'bg-[#FAF7F2] text-[#111111] border-[#D8CEB8]'
-                  }`}
-                >
-                   Algemene Informatie
-                </button>
+                {(emailModalInquiry.type === 'painting_submission' ? RESEARCH_EMAIL_TEMPLATES : SALES_EMAIL_TEMPLATES).map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => handleTemplateChange(template.id)}
+                    className={`p-2.5 rounded-xl border text-left font-bold transition-all ${
+                      selectedTemplate === template.id ? 'bg-[#111111] text-white border-[#111111]' : 'bg-[#FAF7F2] text-[#111111] border-[#D8CEB8]'
+                    }`}
+                  >
+                    {template.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -370,7 +412,7 @@ export default function InquiriesManager({ inquiries, onStatusChange, onShowToas
               </button>
 
               <a
-                href={`mailto:${emailModalInquiry.email}?subject=Re: ${emailModalInquiry.itemTitle} (${emailModalInquiry.itemRef})&body=${encodeURIComponent(customEmailBody)}`}
+                href={`mailto:${emailModalInquiry.email}?subject=${encodeURIComponent(`Re: ${emailModalInquiry.itemTitle} (${emailModalInquiry.itemRef})`)}&body=${encodeURIComponent(customEmailBody)}`}
                 onClick={() => setEmailModalInquiry(null)}
                 className="px-6 py-2.5 rounded-xl bg-[#111111] text-white hover:bg-stone-800 text-xs font-bold uppercase tracking-wider transition-colors flex items-center space-x-2 shadow-md"
               >

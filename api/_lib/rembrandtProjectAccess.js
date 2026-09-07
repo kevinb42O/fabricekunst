@@ -54,7 +54,9 @@ export async function writeRembrandtProjectAccess(enabled, updatedAt = new Date(
 export const redactHiddenRembrandtProject = (snapshot, access) => ({
   ...snapshot,
   rembrandtProject:
-    access?.enabled === true && snapshot?.rembrandtProject?.isEnabled === true
+    access?.enabled === true &&
+    snapshot?.rembrandtProject?.schemaVersion === 2 &&
+    snapshot?.rembrandtProject?.isEnabled === true
       ? snapshot.rembrandtProject
       : { isEnabled: false },
 });

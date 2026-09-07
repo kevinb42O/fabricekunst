@@ -47,7 +47,7 @@ export async function generateLlmsContent() {
 - [Exclusieve Collectie](https://www.atelierrembrandt.com/collectie): Volledige live catalogus van alle zeldzame werken.
 - [Topstukken Showcase](https://www.atelierrembrandt.com/topstukken): Geselecteerde meesterwerken.
 - [Herkomst & Provenance Documentatie](https://www.atelierrembrandt.com/herkomst): Certificering, adellijke ex-libris archieven en echtheidsgaranties.
-${project?.isEnabled ? "- [The Rembrandt Project](https://www.atelierrembrandt.com/rembrandt-project): Doorlopend onderzoeksjournaal over de mogelijke ontdekking van een verloren werk, met transparante updates, bevindingen en voorbehouden.\n" : ""}\
+${project?.isEnabled ? "- [The Lost Rembrandt Project](https://www.atelierrembrandt.com/lost-rembrandt-project): Internationaal onderzoeksinitiatief voor onbekende, verloren of verkeerd toegeschreven werken, met vertrouwelijke inzendingen en gecontroleerde updates.\n" : ""}\
 - [Algemene Voorwaarden](https://www.atelierrembrandt.com/voorwaarden)
 - [Privacybeleid](https://www.atelierrembrandt.com/privacy)
 

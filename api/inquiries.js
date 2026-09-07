@@ -1,5 +1,6 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { getServerSupabase, sendJson } from './_lib/adminAuth.js';
+import paintingSubmissionsHandler from './_lib/paintingSubmissionsEndpoint.js';
 
 const MAX_BODY_BYTES = 32 * 1024;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -143,6 +144,8 @@ const validateInquiry = (body) => {
 };
 
 export default async function handler(req, res) {
+  if (req.query?.scope === 'painting-submission') return paintingSubmissionsHandler(req, res);
+
   if (req.method === 'OPTIONS') {
     res.setHeader('Allow', 'POST, OPTIONS');
     res.setHeader('Cache-Control', 'no-store, max-age=0');

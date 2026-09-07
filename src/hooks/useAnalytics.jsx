@@ -294,7 +294,7 @@ function isAdminLocation() {
   // create public-site telemetry.
   const hash = window.location.hash.toLowerCase().split('?')[0];
   return /(^|\/)admin(?:\/|$)/.test(path) ||
-    /(^|\/)rembrandt-project\/preview(?:\/|$)/.test(path) ||
+    /(^|\/)(?:lost-)?rembrandt-project\/preview(?:\/|$)/.test(path) ||
     hash === '#admin';
 }
 

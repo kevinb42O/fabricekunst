@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Mail, Menu, Phone, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { localizePath } from '../utils/locales';
+import { REMBRANDT_PROJECT_ROUTE } from '../utils/rembrandtProject';
 import { flushAnalytics, trackEvent } from '../hooks/useAnalytics';
 
 const MENU_COPY = {
@@ -30,7 +31,7 @@ export default function MobileNavbar({ onNavigate, activeTab, onRequestConsultat
     { id: 'topstukken', label: t('nav.topstukken'), href: localizePath('/topstukken', language) },
     { id: 'catalogus', label: t('nav.collectie'), href: localizePath('/collectie', language) },
     { id: 'herkomst', label: t('nav.herkomst'), href: localizePath('/herkomst', language) },
-    { id: 'rembrandt-project', label: t('nav.rembrandtProject'), href: localizePath('/rembrandt-project', language) }
+    { id: 'rembrandt-project', label: t('nav.rembrandtProject'), href: localizePath(REMBRANDT_PROJECT_ROUTE, language) }
   ].filter((link) => link.id !== 'rembrandt-project' || showRembrandtProject);
 
   useEffect(() => {

@@ -724,6 +724,8 @@ const mapDbInquiryToFrontend = (dbInq) => ({
   message: dbInq.message,
   status: dbInq.status,
   notes: dbInq.notes,
+  metadata: dbInq.metadata && typeof dbInq.metadata === "object" ? dbInq.metadata : {},
+  attachments: Array.isArray(dbInq.attachments) ? dbInq.attachments : [],
 });
 
 // --- CATALOG MANAGEMENT ---
@@ -1515,6 +1517,104 @@ export const saveInquiryAsync = async (inquiry) => {
   return saveInquiry(inquiry);
 };
 
+export const savePaintingSubmissionAsync = async (
+  submission,
+  files = [],
+  onProgress = () => {},
+) => {
+  if (!isSupabaseConfigured() || !supabase) {
+    throw new Error(
+      "De beveiligde inzendingsservice is in deze omgeving niet geconfigureerd.",
+    );
+  }
+  const selectedFiles = Array.from(files || []);
+  if (selectedFiles.length > 10)
+    throw new Error("U kunt maximaal 10 bestanden meesturen.");
+
+  const attachments = [];
+  try {
+    for (const [index, file] of selectedFiles.entries()) {
+      onProgress({ phase: "uploading", current: index + 1, total: selectedFiles.length });
+      const prepareResponse = await fetch("/api/inquiries?scope=painting-submission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          action: "prepare-upload",
+          filename: file.name,
+          contentType: file.type,
+          size: file.size,
+        }),
+      });
+      const prepared = await prepareResponse.json().catch(() => ({}));
+      if (!prepareResponse.ok || !prepared?.path || !prepared?.token || !prepared?.receipt) {
+        throw new Error(
+          prepared?.error || `De bijlage “${file.name}” kon niet worden voorbereid.`,
+        );
+      }
+      attachments.push({ path: prepared.path, receipt: prepared.receipt });
+      const { error: uploadError } = await supabase.storage
+        .from("painting-submissions")
+        .uploadToSignedUrl(prepared.path, prepared.token, file, {
+          contentType: file.type,
+          upsert: false,
+        });
+      if (uploadError) {
+        throw new Error(`De bijlage “${file.name}” kon niet veilig worden geüpload.`);
+      }
+    }
+
+    onProgress({ phase: "submitting", current: selectedFiles.length, total: selectedFiles.length });
+    const response = await fetch("/api/inquiries?scope=painting-submission", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ action: "submit", ...submission, attachments }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || !body?.inquiry?.id) {
+      throw new Error(body?.error || "Uw schilderij kon niet veilig worden ingediend.");
+    }
+
+    fetch("/api/send-push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ inquiryId: body.inquiry.id }),
+    }).catch((error) =>
+      console.error("Melding voor schilderij-inzending kon niet worden verstuurd:", error),
+    );
+
+    onProgress({ phase: "complete", current: selectedFiles.length, total: selectedFiles.length });
+    return body.inquiry;
+  } catch (error) {
+    if (attachments.length) {
+      fetch("/api/inquiries?scope=painting-submission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ action: "cleanup", attachments }),
+      }).catch(() => {});
+    }
+    throw error;
+  }
+};
+
+export const getPaintingSubmissionAttachmentUrlAsync = async (
+  inquiryId,
+  path,
+) => {
+  const response = await authenticatedAdminFetch(
+    `/api/inquiries?scope=painting-submission&inquiryId=${encodeURIComponent(inquiryId)}&path=${encodeURIComponent(path)}`,
+    { method: "GET", credentials: "same-origin" },
+  );
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body?.url) {
+    throw new Error(body?.error || "De bijlage kon niet worden geopend.");
+  }
+  return body.url;
+};
+
 export const updateInquiryStatus = (id, newStatus) => {
   try {
     const current = getInquiries();
@@ -1592,8 +1692,12 @@ export const deleteInquiry = (id) => {
 export const deleteInquiryAsync = async (id) => {
   if (isSupabaseConfigured() && supabase) {
     try {
-      const { error } = await supabase.from("inquiries").delete().eq("id", id);
-      if (error) throw error;
+      const response = await authenticatedAdminFetch(
+        `/api/inquiries?scope=painting-submission&inquiryId=${encodeURIComponent(id)}`,
+        { method: "DELETE", credentials: "same-origin" },
+      );
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body?.error || "Verwijderen mislukt.");
       return fetchInquiriesAsync();
     } catch (e) {
       console.error("Supabase inquiry delete exception", e);

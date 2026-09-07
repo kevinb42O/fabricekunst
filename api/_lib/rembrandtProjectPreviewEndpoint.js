@@ -2,7 +2,6 @@ import { timingSafeEqual } from 'node:crypto';
 import { getServerSupabase, sendJson } from './adminAuth.js';
 import { hashPreviewToken, isValidPreviewToken } from './rembrandtPreviewToken.js';
 import { publishedRembrandtProject } from '../../src/utils/rembrandtProject.js';
-import { cloneDefaultRembrandtProject } from '../../src/data/defaultRembrandtProject.js';
 import { mutatePreviewLinks, readPreviewLinks } from './rembrandtPreviewStore.js';
 
 const attempts = new Map();
@@ -34,9 +33,12 @@ const isRateLimited = (req) => {
 
 const parseProject = (value) => {
   try {
-    return publishedRembrandtProject(typeof value === 'string' ? JSON.parse(value) : value);
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return Number(parsed?.schemaVersion) === 2
+      ? publishedRembrandtProject(parsed)
+      : null;
   } catch {
-    return { ...cloneDefaultRembrandtProject(), isEnabled: false };
+    return null;
   }
 };
 
@@ -78,6 +80,11 @@ export default async function handler(req, res) {
   if (projectError || !setting) return sendJson(res, 503, { error: 'De privépreview is tijdelijk niet beschikbaar.' });
 
   const project = parseProject(setting.value);
+  if (!project) {
+    return sendJson(res, 409, {
+      error: 'Deze privépreview gebruikt de vorige projectstructuur. Laad en bewaar eerst de nieuwe basisversie in het dashboard.',
+    });
+  }
   await mutatePreviewLinks(supabase, (links) => links.map((entry) =>
     entry.id === link.id
       ? {

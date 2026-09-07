@@ -52,7 +52,7 @@ test("price-on-request catalog items do not publish incomplete Product markup", 
   );
 });
 
-test("The Rembrandt Project publishes an AboutPage with only public research updates", () => {
+test("The Lost Rembrandt Project publishes an AboutPage with only public research updates", () => {
   const project = cloneDefaultRembrandtProject();
   project.updates.push({
     ...project.updates[0],
@@ -62,7 +62,7 @@ test("The Rembrandt Project publishes an AboutPage with only public research upd
   });
   const structuredData = buildStructuredData({
     page: "rembrandtProject",
-    canonical: "https://www.atelierrembrandt.com/rembrandt-project",
+    canonical: "https://www.atelierrembrandt.com/lost-rembrandt-project",
     projectData: project,
   });
 
@@ -72,7 +72,7 @@ test("The Rembrandt Project publishes an AboutPage with only public research upd
   const updates = structuredData["@graph"].find((entry) =>
     entry["@id"]?.endsWith("#research-updates"),
   );
-  assert.equal(page?.name, "The Rembrandt Project");
+  assert.equal(page?.name, "The Lost Rembrandt Project");
   assert.equal(updates?.numberOfItems, project.updates.length - 1);
   assert.ok(
     updates?.itemListElement.every(
@@ -117,9 +117,9 @@ test("a private Rembrandt preview is always noindex", () => {
   const project = cloneDefaultRembrandtProject();
   const seo = buildPageSeo({
     page: "rembrandtProject",
-    pathname: "/rembrandt-project/preview",
+    pathname: "/lost-rembrandt-project/preview",
     projectData: project,
   });
   assert.equal(seo.robots, "noindex, nofollow");
-  assert.equal(seo.canonical, "https://www.atelierrembrandt.com/rembrandt-project");
+  assert.equal(seo.canonical, "https://www.atelierrembrandt.com/lost-rembrandt-project");
 });
