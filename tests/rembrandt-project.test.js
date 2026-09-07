@@ -4,6 +4,7 @@ import { cloneDefaultRembrandtProject } from "../src/data/defaultRembrandtProjec
 import {
   createEmptyRembrandtProject,
   createProjectInvestigation,
+  createProjectUpdate,
   getRembrandtProjectIntegrityIssues,
   latestProjectUpdate,
   localizedProjectValue,
@@ -188,6 +189,12 @@ test("new investigations use a server-valid initial status", async () => {
   const serialized = await validateProject(project);
   assert.equal(investigation.status, "initial-assessment");
   assert.equal(JSON.parse(serialized).investigations.length, 4);
+});
+
+test("new updates can be scoped to the selected investigation", () => {
+  const project = cloneDefaultRembrandtProject();
+  const update = createProjectUpdate(project, "project-03");
+  assert.equal(update.investigationId, "project-03");
 });
 
 test("public project projection excludes hidden investigations and research steps", () => {

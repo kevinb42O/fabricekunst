@@ -320,7 +320,7 @@ export function projectProgress(input) {
   return Math.round(((currentIndex + 1) / project.phases.length) * 100);
 }
 
-export function createProjectUpdate(project) {
+export function createProjectUpdate(project, investigationId = "") {
   const sequence =
     Math.max(
       0,
@@ -337,7 +337,8 @@ export function createProjectUpdate(project) {
       project?.settings?.currentPhaseId ||
       project?.phases?.[0]?.id ||
       "discovery",
-    investigationId: project?.investigations?.[0]?.id || "project-01",
+    investigationId:
+      investigationId || project?.investigations?.[0]?.id || "project-01",
     sequence,
     status: "draft",
     evidenceType: "observation",

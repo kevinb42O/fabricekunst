@@ -189,6 +189,7 @@ export default function RembrandtProjectManager({
   const [accessSaving, setAccessSaving] = useState(false);
   const [uploading, setUploading] = useState(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [updateInvestigationFilter, setUpdateInvestigationFilter] = useState("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [revisions, setRevisions] = useState([]);
   const [previewLink, setPreviewLink] = useState(null);
@@ -298,10 +299,12 @@ export default function RembrandtProjectManager({
     .filter((update) => {
       const query = searchQuery.trim().toLowerCase();
       return (
-        !query ||
-        Object.values(update.title || {}).some((title) =>
-          String(title).toLowerCase().includes(query),
-        )
+        (updateInvestigationFilter === "all" ||
+          update.investigationId === updateInvestigationFilter) &&
+        (!query ||
+          Object.values(update.title || {}).some((title) =>
+            String(title).toLowerCase().includes(query),
+          ))
       );
     })
     .sort((a, b) => Number(a.sequence) - Number(b.sequence));
@@ -563,14 +566,32 @@ export default function RembrandtProjectManager({
   };
 
   const addUpdate = () => {
-    const update = createProjectUpdate(project);
+    const selectedInvestigationForUpdate = project.investigations.some(
+      (investigation) => investigation.id === updateInvestigationFilter,
+    )
+      ? updateInvestigationFilter
+      : project.investigations[0]?.id;
+    const update = createProjectUpdate(project, selectedInvestigationForUpdate);
     setProject((current) => ({
       ...current,
       updates: [...current.updates, update],
     }));
     setSelectedId(update.id);
+    setDeleteConfirmId(null);
     setPanel("updates");
     setLanguage("nl");
+  };
+
+  const changeUpdateInvestigationFilter = (investigationId) => {
+    setUpdateInvestigationFilter(investigationId);
+    const nextUpdate = [...project.updates]
+      .filter(
+        (update) =>
+          investigationId === "all" || update.investigationId === investigationId,
+      )
+      .sort((a, b) => Number(a.sequence) - Number(b.sequence))[0];
+    setSelectedId(nextUpdate?.id || null);
+    setDeleteConfirmId(null);
   };
 
   const addPhase = () => {
@@ -1541,46 +1562,81 @@ export default function RembrandtProjectManager({
         >
           <aside className="rp-admin-update-list">
             <div className="rp-admin-list-tools">
-              <label>
-                <Search aria-hidden="true" />
-                <input
-                  aria-label="Updates zoeken"
-                  placeholder="Zoek update…"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                />
-              </label>
-              <button
-                type="button"
-                onClick={addUpdate}
-                aria-label="Nieuwe update"
-              >
-                <Plus aria-hidden="true" />
-              </button>
-            </div>
-            <div>
-              {filteredUpdates.map((update) => (
+              <div className="rp-admin-list-tools__top">
+                <label>
+                  <Search aria-hidden="true" />
+                  <input
+                    aria-label="Updates zoeken"
+                    placeholder="Zoek update…"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                  />
+                </label>
                 <button
                   type="button"
-                  key={update.id}
-                  className={update.id === selectedId ? "is-active" : ""}
-                  onClick={() => {
-                    setSelectedId(update.id);
-                    setDeleteConfirmId(null);
-                  }}
+                  onClick={addUpdate}
+                  aria-label="Nieuwe update voor het geselecteerde dossier"
+                  title="Nieuwe update"
                 >
-                  <span>{String(update.sequence).padStart(2, "0")}</span>
-                  <div>
-                    <strong>{update.title?.nl || "Naamloze update"}</strong>
-                    <small>
-                      {project.phases.find(
-                        (phase) => phase.id === update.phaseId,
-                      )?.label?.nl || "Geen fase"}
-                    </small>
-                    <StatusPill status={update.status} />
-                  </div>
+                  <Plus aria-hidden="true" />
                 </button>
-              ))}
+              </div>
+              <label className="rp-admin-list-tools__filter">
+                <span>Updates van</span>
+                <select
+                  aria-label="Updates filteren per dossier"
+                  value={updateInvestigationFilter}
+                  onChange={(event) =>
+                    changeUpdateInvestigationFilter(event.target.value)
+                  }
+                >
+                  <option value="all">Alle dossiers ({project.updates.length})</option>
+                  {[...project.investigations]
+                    .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))
+                    .map((investigation) => (
+                      <option key={investigation.id} value={investigation.id}>
+                        {investigation.title?.nl || investigation.reference || investigation.id} ({project.updates.filter((update) => update.investigationId === investigation.id).length})
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+            <div>
+              {filteredUpdates.length > 0 ? (
+                filteredUpdates.map((update) => (
+                  <button
+                    type="button"
+                    key={update.id}
+                    className={update.id === selectedId ? "is-active" : ""}
+                    onClick={() => {
+                      setSelectedId(update.id);
+                      setDeleteConfirmId(null);
+                    }}
+                  >
+                    <span>{String(update.sequence).padStart(2, "0")}</span>
+                    <div>
+                      <strong>{update.title?.nl || "Naamloze update"}</strong>
+                      <small>
+                        {project.investigations.find(
+                          (investigation) => investigation.id === update.investigationId,
+                        )?.reference || "Zonder dossier"}{" · "}
+                        {project.phases.find(
+                          (phase) => phase.id === update.phaseId,
+                        )?.label?.nl || "Geen fase"}
+                      </small>
+                      <StatusPill status={update.status} />
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="rp-admin-update-list__empty">
+                  <strong>Geen updates voor dit dossier</strong>
+                  <span>Maak hier de eerste update aan.</span>
+                  <button type="button" className="admin-button admin-button--secondary" onClick={addUpdate}>
+                    <Plus aria-hidden="true" />Nieuwe update
+                  </button>
+                </div>
+              )}
             </div>
           </aside>
 
@@ -1590,6 +1646,11 @@ export default function RembrandtProjectManager({
                 <div>
                   <StatusPill status={selectedUpdate.status} />
                   <h2>{selectedUpdate.title?.nl || "Nieuwe update"}</h2>
+                  <p className="rp-admin-editor__context">
+                    {project.investigations.find(
+                      (investigation) => investigation.id === selectedUpdate.investigationId,
+                    )?.reference || "Zonder dossier"}
+                  </p>
                 </div>
                 <div>
                   <button
