@@ -1,16 +1,842 @@
 [
-  {"id":"00000000-0000-4000-8000-000000000005","number":5,"category":"rx","approved":true,"title":{"nl":"RX-opstelling","en":"X-ray setup","fr":"Installation radiographique"},"caption":{"nl":"Overzicht van de röntgenopstelling tijdens het onderzoek.","en":"Overview of the X-ray setup during examination.","fr":"Vue d’ensemble de l’installation radiographique pendant l’examen."},"alt":{"nl":"Röntgenapparatuur boven een schilderij op een onderzoekstafel","en":"X-ray equipment above a painting on an examination table","fr":"Équipement de radiographie au-dessus d’un tableau sur une table d’examen"}},
-  {"id":"00000000-0000-4000-8000-000000000008","number":8,"category":"microscopy","approved":true,"title":{"nl":"Digitale microscopie","en":"Digital microscopy","fr":"Microscopie numérique"},"caption":{"nl":"Digitale microscoop, laptop en schilderij op de onderzoekstafel.","en":"Digital microscope, laptop and painting on the examination table.","fr":"Microscope numérique, ordinateur et tableau sur la table d’examen."},"alt":{"nl":"Digitale microscoop en laptop naast een schilderij","en":"Digital microscope and laptop beside a painting","fr":"Microscope numérique et ordinateur à côté d’un tableau"}},
-  {"id":"00000000-0000-4000-8000-000000000011","number":11,"category":"microscopy","approved":true,"title":{"nl":"Microscopie in de praktijk","en":"Microscopy in practice","fr":"La microscopie en pratique"},"caption":{"nl":"Een detail wordt met een digitale microscoop onderzocht.","en":"A detail examined with a digital microscope.","fr":"Un détail examiné au microscope numérique."},"alt":{"nl":"Onderzoeker bekijkt een schilderij met een digitale microscoop","en":"Researcher examining a painting with a digital microscope","fr":"Chercheur examinant un tableau au microscope numérique"}},
-  {"id":"00000000-0000-4000-8000-000000000013","number":13,"category":"microscopy","approved":true,"title":{"nl":"Stereomicroscopie","en":"Stereo microscopy","fr":"Stéréomicroscopie"},"caption":{"nl":"Stereomicroscoop en monitor tijdens het onderzoek.","en":"Stereo microscope and monitor during examination.","fr":"Stéréomicroscope et écran pendant l’examen."},"alt":{"nl":"Stereomicroscoop naast een monitor","en":"Stereo microscope beside a monitor","fr":"Stéréomicroscope à côté d’un écran"}},
-  {"id":"00000000-0000-4000-8000-000000000019","number":19,"category":"surface","approved":true,"title":{"nl":"Oppervlakdetail","en":"Surface detail","fr":"Détail de surface"},"caption":{"nl":"Detail van verfoppervlak en zichtbare kenmerken.","en":"Detail of the painted surface and visible features.","fr":"Détail de la surface peinte et des caractéristiques visibles."},"alt":{"nl":"Detail van een religieuze figuur en het geschilderde oppervlak","en":"Detail of a religious figure and painted surface","fr":"Détail d’une figure religieuse et de la surface peinte"}},
-  {"id":"00000000-0000-4000-8000-000000000020","number":20,"category":"context","approved":true,"title":{"nl":"Portret op de onderzoekstafel","en":"Portrait on the examination table","fr":"Portrait sur la table d’examen"},"caption":{"nl":"Het object onder onderzoekslampen op de werktafel.","en":"The object beneath examination lamps on the worktable.","fr":"L’objet sous les lampes d’examen sur la table de travail."},"alt":{"nl":"Geschilderd portret op een met doek bedekte onderzoekstafel","en":"Painted portrait on a cloth-covered examination table","fr":"Portrait peint sur une table d’examen couverte d’un tissu"}},
-  {"id":"00000000-0000-4000-8000-000000000022","number":22,"category":"support","approved":true,"title":{"nl":"De achterzijde bekijken","en":"Examining the reverse","fr":"Examiner le revers"},"caption":{"nl":"De achterzijde van een paneel wordt met een microscoop bekeken.","en":"The reverse of a panel examined with a microscope.","fr":"Le revers d’un panneau examiné au microscope."},"alt":{"nl":"Achterzijde van een paneel onder een digitale microscoop","en":"Reverse of a panel beneath a digital microscope","fr":"Revers d’un panneau sous un microscope numérique"}},
-  {"id":"00000000-0000-4000-8000-000000000026","number":26,"category":"context","approved":true,"title":{"nl":"Religieuze figuur in zichtbaar licht","en":"Religious figure in visible light","fr":"Figure religieuse en lumière visible"},"caption":{"nl":"Objectbeeld in zichtbaar licht.","en":"Object image in visible light.","fr":"Vue de l’objet en lumière visible."},"alt":{"nl":"Volledige religieuze figuur in een schilderij","en":"Full religious figure in a painting","fr":"Figure religieuse entière dans un tableau"}},
-  {"id":"00000000-0000-4000-8000-000000000027","number":27,"category":"surface","approved":true,"title":{"nl":"UV-fluorescentieopname van het portret","en":"UV fluorescence imaging of the portrait","fr":"Examen sous fluorescence UV du portrait"},"caption":{"nl":"Onderzoek onder ultraviolet licht (365 nm) brengt latere vernislagen, verfretouches en historische oppervlaktebehandelingen aan het licht.","en":"Examination under ultraviolet radiation (365 nm) reveals subsequent varnish strata, pigment retouching, and historical surface interventions.","fr":"L’examen sous rayonnement ultraviolet (365 nm) met en évidence les strates de vernis tardifs, les retouches picturales et les restaurations anciennes."},"alt":{"nl":"UV-fluorescentieopname van het olieverfportret ter inspectie van vernislagen en retouches","en":"UV fluorescence photograph of the oil portrait for inspection of varnish layers and retouching","fr":"Photographie sous fluorescence UV du portrait à l’huile pour l’examen des vernis et repeints"}},
-  {"id":"00000000-0000-4000-8000-000000000028","number":28,"category":"documents","approved":true,"title":{"nl":"Een inscriptie onder gericht licht","en":"An inscription under directed light","fr":"Une inscription sous un éclairage dirigé"},"caption":{"nl":"Een inscriptie wordt met gerichte belichting onderzocht.","en":"An inscription examined under directed light.","fr":"Une inscription examinée sous un éclairage dirigé."},"alt":{"nl":"Inscriptie op een donker geschilderd oppervlak onder een lamp","en":"Inscription on a dark painted surface beneath a lamp","fr":"Inscription sur une surface peinte sombre sous une lampe"}},
-  {"id":"00000000-0000-4000-8000-000000000031","number":31,"category":"rx","approved":false,"title":{"nl":"RX-detail","en":"X-ray detail","fr":"Détail radiographique"},"caption":{"nl":"Detail van een radiografische opname op een scherm. Publicatie vereist eerst redactie van scherminformatie.","en":"Detail of a radiographic image on a screen. Publication requires screen information to be redacted first.","fr":"Détail d’une image radiographique sur un écran. La publication nécessite d’abord la suppression des informations à l’écran."},"alt":{"nl":"Radiografisch detail met structuren en markeringen","en":"Radiographic detail with structures and marks","fr":"Détail radiographique avec structures et marques"}},
-  {"id":"00000000-0000-4000-8000-000000000032","number":32,"category":"rx","approved":false,"title":{"nl":"RX-opname van het portret","en":"X-ray image of the portrait","fr":"Image radiographique du portrait"},"caption":{"nl":"Radiografische opname van het onderzochte portret. Publicatie vereist eerst redactie van scherminformatie.","en":"Radiographic image of the examined portrait. Publication requires screen information to be redacted first.","fr":"Image radiographique du portrait examiné. La publication nécessite d’abord la suppression des informations à l’écran."},"alt":{"nl":"Radiografische opname van een portret op een monitor","en":"Radiographic image of a portrait on a monitor","fr":"Image radiographique du portrait sur un écran"}},
-  {"id":"00000000-0000-4000-8000-000000000035","number":35,"category":"rx","approved":true,"title":{"nl":"RX-tafel met portret","en":"X-ray table with portrait","fr":"Table de radiographie avec portrait"},"caption":{"nl":"Portret en röntgeninstallatie in één overzicht.","en":"Portrait and X-ray unit in one overview.","fr":"Portrait et installation de radiographie dans une même vue."},"alt":{"nl":"Portret op een tafel onder een röntgeninstallatie","en":"Portrait on a table beneath an X-ray unit","fr":"Portrait sur une table sous une installation de radiographie"}},
-  {"id":"00000000-0000-4000-8000-000000000037","number":37,"category":"rx","approved":true,"title":{"nl":"Onderzoek op de RX-tafel","en":"Examination on the X-ray table","fr":"Examen sur la table de radiographie"},"caption":{"nl":"Een schilderij wordt onder de röntgeninstallatie onderzocht.","en":"A painting examined beneath the X-ray unit.","fr":"Un tableau examiné sous l’installation de radiographie."},"alt":{"nl":"Schilderij op een onderzoekstafel onder een röntgeninstallatie","en":"Painting on an examination table beneath an X-ray unit","fr":"Tableau sur une table d’examen sous une installation de radiographie"}}
+  {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "number": 1,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Portret op de radiografietafel met gekleurd omgevingslicht",
+      "en": "Portrait on the radiography table under ambient illumination",
+      "fr": "Portrait sur la table de radiographie sous éclairage d’ambiance"
+    },
+    "caption": {
+      "nl": "Het olieverfportret gepositioneerd op de radiografietafel met rode lasergeleider en omgevingsbelichting voorafgaand aan de röntgenopname.",
+      "en": "The oil portrait positioned on the radiography table with red laser positioning guide and ambient lighting prior to X-ray exposure.",
+      "fr": "Le portrait à l’huile positionné sur la table de radiographie avec repère laser rouge et lumière d’ambiance avant la prise de cliché."
+    },
+    "alt": {
+      "nl": "Schilderijportret op een medische radiografietafel met rode positioneringslijn en bedieningspaneel",
+      "en": "Painted portrait on a medical radiography table with red laser guide line and control console",
+      "fr": "Portrait peint sur une table de radiographie médicale avec ligne laser rouge de positionnement"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000002",
+    "number": 2,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "Religieuze figuur onder technische belichting",
+      "en": "Religious figure under technical illumination",
+      "fr": "Figure religieuse sous éclairage technique"
+    },
+    "caption": {
+      "nl": "Volledige compositie van het houten paneel met een staande figuur onder technische filterbelichting, ter vergelijking met opnamen in zichtbaar daglicht.",
+      "en": "Full composition of the wooden panel depicting a standing figure under technical filter lighting, for comparison with daylight photography.",
+      "fr": "Composition complète du panneau de bois avec une figure debout sous éclairage technique à filtre, pour comparaison avec la lumière du jour."
+    },
+    "alt": {
+      "nl": "Schilderij van een staande religieuze figuur met gewaad en boek op houten paneel onder technisch strijk- of filterlicht",
+      "en": "Painting of a standing religious figure in robes with a book on a wooden panel under technical filter lighting",
+      "fr": "Peinture d’une figure religieuse debout en robe avec un livre sur panneau de bois sous éclairage technique"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000003",
+    "number": 3,
+    "category": "microscopy",
+    "approved": true,
+    "title": {
+      "nl": "Digitale microscopietest van de verflaag",
+      "en": "Digital microscopy test of the paint layer",
+      "fr": "Test de microscopie numérique de la couche picturale"
+    },
+    "caption": {
+      "nl": "Een handmicroscoop met ledring op statief geplaatst op het paneel voor lokale detailinspectie van vernis- en pigmentlagen.",
+      "en": "A handheld digital microscope with LED ring mounted on a stand over the panel for localized inspection of varnish and pigment layers.",
+      "fr": "Un microscope numérique avec anneau LED sur support placé sur le panneau pour l’inspection locale du vernis et des pigments."
+    },
+    "alt": {
+      "nl": "Digitale USB-microscoop met ledring op statief gericht op een houten schilderijpaneel naast een laptop",
+      "en": "Digital USB microscope with LED ring mounted on a stand directed at a wooden painting panel beside a laptop",
+      "fr": "Microscope numérique USB avec anneau LED sur support dirigé vers un panneau de bois peint à côté d’un ordinateur"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000004",
+    "number": 4,
+    "category": "documents",
+    "approved": true,
+    "title": {
+      "nl": "Microscopische weergave van de inscriptie op monitor",
+      "en": "Microscopic display of the inscription on monitor",
+      "fr": "Affichage microscopique de l’inscription sur moniteur"
+    },
+    "caption": {
+      "nl": "Het liggende portret op de onderzoekstafel met op de achtergrond een beeldscherm dat een sterk vergrote microscopische opname van een inscriptie toont.",
+      "en": "The portrait lying on the examination table with a background monitor displaying a high-magnification microscopic view of an inscription.",
+      "fr": "Le portrait posé sur la table d’examen avec un écran en arrière-plan affichant une vue microscopique très agrandie d’une inscription."
+    },
+    "alt": {
+      "nl": "Schilderijportret op tafel met daarboven een beeldscherm waarop een vergrote inscriptie met jaartal zichtbaar is",
+      "en": "Painted portrait on table beneath a monitor displaying a magnified inscription with date",
+      "fr": "Portrait peint sur table surmonté d’un écran affichant une inscription agrandie avec date"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000005",
+    "number": 5,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "RX-opstelling",
+      "en": "X-ray setup",
+      "fr": "Installation radiographique"
+    },
+    "caption": {
+      "nl": "Overzicht van de röntgenopstelling tijdens het onderzoek.",
+      "en": "Overview of the X-ray setup during examination.",
+      "fr": "Vue d’ensemble de l’installation radiographique pendant l’examen."
+    },
+    "alt": {
+      "nl": "Röntgenapparatuur boven een schilderij op een onderzoekstafel",
+      "en": "X-ray equipment above a painting on an examination table",
+      "fr": "Équipement de radiographie au-dessus d’un tableau sur une table d’examen"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000006",
+    "number": 6,
+    "category": "context",
+    "approved": true,
+    "title": {
+      "nl": "Onderzoeker positioneert het paneel voor detailmeting",
+      "en": "Researcher positioning the panel for detail analysis",
+      "fr": "Chercheur positionnant le panneau pour mesure détaillée"
+    },
+    "caption": {
+      "nl": "Een onderzoeker stabiliseert het houten portret terwijl de live camerabewaking op de monitor de exacte contactzone weergeeft.",
+      "en": "A researcher stabilizes the wooden portrait while live camera monitoring on the screen confirms the exact examination zone.",
+      "fr": "Un chercheur stabilise le portrait sur bois tandis que le retour caméra sur écran confirme la zone exacte d’examen."
+    },
+    "alt": {
+      "nl": "Onderzoeker houdt een schilderijpaneel vast op een werktafel onder twee monitors met meetweergave",
+      "en": "Researcher holding a painting panel on a worktable beneath two monitors with measurement display",
+      "fr": "Chercheur tenant un panneau peint sur une table de travail sous deux écrans de contrôle"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000007",
+    "number": 7,
+    "category": "documents",
+    "approved": true,
+    "title": {
+      "nl": "Portret onder rode gerichte belichting bij inscriptieonderzoek",
+      "en": "Portrait under red directed light during inscription examination",
+      "fr": "Portrait sous éclairage rouge dirigé lors de l’examen de l’inscription"
+    },
+    "caption": {
+      "nl": "Het paneel onder gerichte roodachtige werkbelichting met op het scherm de microscopische vergroting van het inscriptiegebied.",
+      "en": "The panel under directed reddish work illumination with the screen displaying microscopic enlargement of the inscription area.",
+      "fr": "Le panneau sous un éclairage de travail rougeâtre dirigé, avec l’écran montrant l’agrandissement microscopique de la zone d’inscription."
+    },
+    "alt": {
+      "nl": "Olieverfportret belicht met rood getint licht onder een monitor met vergrote historische inscriptie",
+      "en": "Oil portrait illuminated with red-tinted light beneath a monitor displaying a magnified historic inscription",
+      "fr": "Portrait à l’huile éclairé d’une lumière rougeâtre sous un moniteur affichant une inscription historique agrandie"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000008",
+    "number": 8,
+    "category": "microscopy",
+    "approved": true,
+    "title": {
+      "nl": "Digitale microscopie",
+      "en": "Digital microscopy",
+      "fr": "Microscopie numérique"
+    },
+    "caption": {
+      "nl": "Digitale microscoop, laptop en schilderij op de onderzoekstafel.",
+      "en": "Digital microscope, laptop and painting on the examination table.",
+      "fr": "Microscope numérique, ordinateur et tableau sur la table d’examen."
+    },
+    "alt": {
+      "nl": "Digitale microscoop en laptop naast een schilderij",
+      "en": "Digital microscope and laptop beside a painting",
+      "fr": "Microscope numérique et ordinateur à côté d’un tableau"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000009",
+    "number": 9,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Radiografische opname van doekstructuur op werkstation",
+      "en": "Radiographic display of canvas structure on workstation",
+      "fr": "Image radiographique de la structure de toile sur station de travail"
+    },
+    "caption": {
+      "nl": "Digitale röntgenopname op de medische monitor toont de weefselstructuur, vezeldichtheid en interne spanningsscheuren van de drager.",
+      "en": "Digital radiograph displayed on the diagnostic monitor revealing textile weave structure, fiber density, and internal structural fissures in the support.",
+      "fr": "Radiographie numérique sur écran médical révélant le tissage de la toile, la densité des fibres et les fissures structurelles internes du support."
+    },
+    "alt": {
+      "nl": "Beeldscherm van radiografische apparatuur met röntgenopname van schildersdoek en scheurstructuren",
+      "en": "Radiography system screen displaying an X-ray of painting canvas showing weave and structural cracks",
+      "fr": "Écran de système radiographique affichant une radiographie de toile de tableau avec tissage et déchirures structurelles"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000010",
+    "number": 10,
+    "category": "context",
+    "approved": true,
+    "title": {
+      "nl": "Portret van bebaarde man op de onderzoekstafel",
+      "en": "Portrait of bearded man on the examination table",
+      "fr": "Portrait d’homme barbu sur la table d’examen"
+    },
+    "caption": {
+      "nl": "Het olieverfportret van een oudere man met baard en hoed op de technische onderzoekstafel voor radiografische opname.",
+      "en": "The oil portrait of an elderly bearded man with a hat on the technical examination table prior to radiographic acquisition.",
+      "fr": "Le portrait à l’huile d’un vieillard barbu portant un chapeau sur la table d’examen technique avant acquisition radiographique."
+    },
+    "alt": {
+      "nl": "Olieverfschilderij van een oudere man met witte baard en hoed op een witte onderzoekstafel",
+      "en": "Oil painting of an elderly man with white beard and dark hat resting on a white examination table",
+      "fr": "Peinture à l’huile d’un homme âgé à barbe blanche et chapeau posée sur une table d’examen blanche"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000011",
+    "number": 11,
+    "category": "microscopy",
+    "approved": true,
+    "title": {
+      "nl": "Microscopie in de praktijk",
+      "en": "Microscopy in practice",
+      "fr": "La microscopie en pratique"
+    },
+    "caption": {
+      "nl": "Een detail wordt met een digitale microscoop onderzocht.",
+      "en": "A detail examined with a digital microscope.",
+      "fr": "Un détail examiné au microscope numérique."
+    },
+    "alt": {
+      "nl": "Onderzoeker bekijkt een schilderij met een digitale microscoop",
+      "en": "Researcher examining a painting with a digital microscope",
+      "fr": "Chercheur examinant un tableau au microscope numérique"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000012",
+    "number": 12,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Radiografische detailanalyse van spanrand en onderschildering",
+      "en": "Radiographic detail analysis of tacking edge and underlayer",
+      "fr": "Analyse radiographique détaillée du bord de tension et sous-couche"
+    },
+    "caption": {
+      "nl": "Röntgenopname op monitor toont de houten spanrand met nagelstructuren, textieldraden en vroege verflagen onder het oppervlak.",
+      "en": "X-ray display on monitor showing the wooden stretcher edge with nail attachments, canvas thread density, and radio-opaque paint layers beneath the surface.",
+      "fr": "Cliché radiographique sur écran révélant le bord du châssis avec clous de fixation, le maillage de la toile et les couches denses sous la surface."
+    },
+    "alt": {
+      "nl": "Beeldscherm met radiografische detailopname van spanrand met spijkers en vezelpatronen van een schilderij",
+      "en": "Monitor displaying radiographic detail of a painting’s tacking edge with nails and canvas weave",
+      "fr": "Écran affichant le détail radiographique d’un bord de tension avec clous et trame de toile"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000013",
+    "number": 13,
+    "category": "microscopy",
+    "approved": true,
+    "title": {
+      "nl": "Stereomicroscopie",
+      "en": "Stereo microscopy",
+      "fr": "Stéréomicroscopie"
+    },
+    "caption": {
+      "nl": "Stereomicroscoop en monitor tijdens het onderzoek.",
+      "en": "Stereo microscope and monitor during examination.",
+      "fr": "Stéréomicroscope et écran pendant l’examen."
+    },
+    "alt": {
+      "nl": "Stereomicroscoop naast een monitor",
+      "en": "Stereo microscope beside a monitor",
+      "fr": "Stéréomicroscope à côté d’un écran"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000014",
+    "number": 14,
+    "category": "methods",
+    "approved": true,
+    "title": {
+      "nl": "Elementenanalyse met draagbare XRF-spectrometer",
+      "en": "Elemental analysis using handheld XRF spectrometer",
+      "fr": "Analyse élémentaire par spectromètre XRF portable"
+    },
+    "caption": {
+      "nl": "Niet-destructieve elementanalyse van pigmenten op het schilderij met behulp van een draagbare röntgenfluorescentiespectrometer (XRF).",
+      "en": "Non-destructive elemental pigment analysis on the painting using a handheld X-ray fluorescence (XRF) spectrometer.",
+      "fr": "Analyse élémentaire non destructive des pigments sur le tableau à l’aide d’un spectromètre portable de fluorescence X (XRF)."
+    },
+    "alt": {
+      "nl": "Onderzoeker richt een draagbare XRF-spectrometer op het verfoppervlak van een geschilderd portret",
+      "en": "Researcher pointing a handheld XRF spectrometer at the paint surface of a portrait",
+      "fr": "Chercheur pointant un spectromètre XRF portable vers la surface peinte d’un portrait"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000015",
+    "number": 15,
+    "category": "microscopy",
+    "approved": true,
+    "title": {
+      "nl": "Laboratoriumopstelling met digitale microscoop op zwenkarm",
+      "en": "Laboratory workstation with boom-arm digital microscope",
+      "fr": "Poste de laboratoire avec microscope numérique sur bras articulé"
+    },
+    "caption": {
+      "nl": "Fijnmechanische afstelling van de digitale microscoop boven het paneel in het onderzoekslaboratorium.",
+      "en": "Fine mechanical adjustment of the digital microscope mounted on a boom stand above the panel in the conservation laboratory.",
+      "fr": "Réglage micrométrique du microscope numérique sur bras articulé au-dessus du panneau dans le laboratoire de conservation."
+    },
+    "alt": {
+      "nl": "Onderzoeker stelt een digitale microscoop op zwenkarm in boven een schilderij in een laboratorium",
+      "en": "Researcher adjusting a digital microscope on a boom arm over a painting in a laboratory",
+      "fr": "Chercheur ajustant un microscope numérique sur bras articulé au-dessus d’un tableau dans un laboratoire"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000016",
+    "number": 16,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Röntgenopname van gelaat en doekstructuur",
+      "en": "X-ray radiograph of face and canvas structure",
+      "fr": "Radiographie du visage et de la structure de toile"
+    },
+    "caption": {
+      "nl": "Radiografische weergave op het monitorscherm toont de gelaatspartij met loodwit-hoogsels, de kruisdraden van het doek en een horizontale scheurzone.",
+      "en": "Radiographic view on the monitor revealing facial highlights (radio-opaque lead white), canvas weave cross-threads, and a horizontal fissure.",
+      "fr": "Image radiographique sur écran révélant les rehauts du visage (blanc de plomb radio-opaque), le maillage de la toile et une zone de fissure horizontale."
+    },
+    "alt": {
+      "nl": "Radiografische monitoropname met oplichtende gelaatscontouren en een horizontale scheur in het doek",
+      "en": "Radiographic monitor image displaying glowing facial contours and a horizontal tear in the canvas",
+      "fr": "Écran radiographique montrant les contours lumineux d’un visage et une fissure horizontale dans la toile"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000017",
+    "number": 17,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Radiografische hoekanalyse met spanrand en nagels",
+      "en": "Radiographic corner analysis showing tacking margin and nails",
+      "fr": "Analyse radiographique du coin avec bord de tension et clous"
+    },
+    "caption": {
+      "nl": "Röntgenopname gericht op de hoekverbinding en de spanrand, met duidelijke weergave van historische bevestigingsspijkers en weefselspanning.",
+      "en": "Radiograph focused on the corner join and tacking edge, clearly showing historic attachment nails and canvas tension cusping.",
+      "fr": "Radiographie centrée sur l’angle et le bord de fixation, montrant nettement les clous historiques et la déformation de tension de la toile."
+    },
+    "alt": {
+      "nl": "Röntgenbeeld op monitor met hoek van een schildersdoek, spijkers langs de spanrand en weefpatronen",
+      "en": "X-ray display on screen showing corner of a canvas, nails along tacking margin, and weave patterns",
+      "fr": "Cliché radiographique sur écran montrant l’angle d’une toile, les clous le long du bord et le réseau textile"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000018",
+    "number": 18,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "Volledige UV-fluorescentieopname van het portret",
+      "en": "Full UV fluorescence overview of the portrait",
+      "fr": "Vue d’ensemble sous fluorescence UV du portrait"
+    },
+    "caption": {
+      "nl": "Overzichtsopname onder ultraviolet licht toont de verdeling van oude fluorescerende vernislagen en donkere zones van latere overschilderingen en retouches.",
+      "en": "Full-field photograph under ultraviolet radiation showing fluorescent aged varnish coatings and dark non-fluorescent areas corresponding to later retouching and overpaint.",
+      "fr": "Vue d’ensemble sous lumière ultraviolette montrant la répartition des vernis fluorescents anciens et les zones sombres de retouches et repeints ultérieurs."
+    },
+    "alt": {
+      "nl": "Technisch UV-overzichtsbeeld van het portret met oplichtende vernislagen en donkere retoucheplekken",
+      "en": "Technical UV fluorescence photograph of the portrait displaying glowing varnish and dark retouching spots",
+      "fr": "Photographie technique sous UV du portrait montrant les vernis fluorescents et les zones sombres de repeint"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000019",
+    "number": 19,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "Oppervlakdetail",
+      "en": "Surface detail",
+      "fr": "Détail de surface"
+    },
+    "caption": {
+      "nl": "Detail van verfoppervlak en zichtbare kenmerken.",
+      "en": "Detail of the painted surface and visible features.",
+      "fr": "Détail de la surface peinte et des caractéristiques visibles."
+    },
+    "alt": {
+      "nl": "Detail van een religieuze figuur en het geschilderde oppervlak",
+      "en": "Detail of a religious figure and painted surface",
+      "fr": "Détail d’une figure religieuse et de la surface peinte"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000020",
+    "number": 20,
+    "category": "context",
+    "approved": true,
+    "title": {
+      "nl": "Portret op de onderzoekstafel",
+      "en": "Portrait on the examination table",
+      "fr": "Portrait sur la table d’examen"
+    },
+    "caption": {
+      "nl": "Het object onder onderzoekslampen op de werktafel.",
+      "en": "The object beneath examination lamps on the worktable.",
+      "fr": "L’objet sous les lampes d’examen sur la table de travail."
+    },
+    "alt": {
+      "nl": "Geschilderd portret op een met doek bedekte onderzoekstafel",
+      "en": "Painted portrait on a cloth-covered examination table",
+      "fr": "Portrait peint sur une table d’examen couverte d’un tissu"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000021",
+    "number": 21,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Frontale röntgenopname van het portret op doek",
+      "en": "Frontal X-ray radiograph of the portrait on canvas",
+      "fr": "Radiographie frontale du portrait sur toile"
+    },
+    "caption": {
+      "nl": "Centrale radiografische monitorweergave met frontaal aanzicht van de onderschildering, gelaatspartij en de doekstructuur.",
+      "en": "Central radiographic monitor view presenting a frontal perspective of the underpainting, facial features, and canvas matrix.",
+      "fr": "Vue radiographique centrale sur moniteur présentant la perspective frontale de la sous-couche, des traits du visage et de la trame de toile."
+    },
+    "alt": {
+      "nl": "Beeldscherm met frontale röntgenweergave van een portret met gezichtscontouren en weefselstructuur",
+      "en": "Screen displaying frontal X-ray image of a portrait showing facial structure and canvas weave",
+      "fr": "Écran avec vue radiographique frontale d’un portrait montrant les contours du visage et le maillage"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000022",
+    "number": 22,
+    "category": "support",
+    "approved": true,
+    "title": {
+      "nl": "De achterzijde bekijken",
+      "en": "Examining the reverse",
+      "fr": "Examiner le revers"
+    },
+    "caption": {
+      "nl": "De achterzijde van een paneel wordt met een microscoop bekeken.",
+      "en": "The reverse of a panel examined with a microscope.",
+      "fr": "Le revers d’un panneau examiné au microscope."
+    },
+    "alt": {
+      "nl": "Achterzijde van een paneel onder een digitale microscoop",
+      "en": "Reverse of a panel beneath a digital microscope",
+      "fr": "Revers d’un panneau sous un microscope numérique"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000023",
+    "number": 23,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "UV-detail van gelaat en baardstructuur",
+      "en": "UV detail of face and beard structure",
+      "fr": "Détail UV du visage et de la barbe"
+    },
+    "caption": {
+      "nl": "Detailopname onder ultraviolette fluorescentie toont het craquelépatroon en plaatselijke retouches rond de ogen en baardpartij.",
+      "en": "Detail photograph under ultraviolet fluorescence highlighting the craquelure network and localized retouching around the eyes and beard.",
+      "fr": "Prise de vue détaillée sous fluorescence UV montrant le réseau de craquelures et les retouches locales autour des yeux et de la barbe."
+    },
+    "alt": {
+      "nl": "Nauwe verticale UV-fluorescentieopname van het gezicht van een bebaarde man met craquelépatronen",
+      "en": "Narrow vertical UV fluorescence photograph of a bearded man’s face revealing craquelure patterns",
+      "fr": "Cliché vertical sous fluorescence UV du visage d’un homme barbu révélant le réseau de craquelures"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000024",
+    "number": 24,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "UV-uitsnede van gelaat en schouderpartij",
+      "en": "UV crop of face and shoulder area",
+      "fr": "Cadrage UV du visage et de l’épaule"
+    },
+    "caption": {
+      "nl": "Gerichte uitsnede onder ultraviolet licht die de overgang tussen gelaat, baard en kledingpartij documenteert.",
+      "en": "Focused crop under ultraviolet light documenting the transition zone between facial flesh tones, beard, and costume drapery.",
+      "fr": "Cadrage ciblé sous lumière ultraviolette documentant la zone de transition entre carnation, barbe et draperie du vêtement."
+    },
+    "alt": {
+      "nl": "UV-uitsnede van een geschilderd portret met duidelijke contrasten tussen oplichtend vernis en donkere verfretouches",
+      "en": "UV crop of a painted portrait showing stark contrast between luminescent varnish and dark paint retouchings",
+      "fr": "Cadrage UV d’un portrait peint montrant le contraste entre le vernis fluorescent et les retouches sombres"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000025",
+    "number": 25,
+    "category": "support",
+    "approved": true,
+    "title": {
+      "nl": "Kinderportret ontlijst op de restauratietafel",
+      "en": "Double portrait of children unframed on restoration table",
+      "fr": "Double portrait d’enfants décadré sur table de restauration"
+    },
+    "caption": {
+      "nl": "Een dubbel kinderportret op doek tijdelijk ontlijst op noppenfolie, met de historische houten lijst ernaast voor conditieonderzoek van de spanranden.",
+      "en": "A double children’s portrait on canvas temporarily unframed on bubble wrap, with its historic frame alongside for examination of tacking margins.",
+      "fr": "Un double portrait d’enfants sur toile temporairement décadré sur papier bulle, avec son cadre historique à côté pour examen des bords de tension."
+    },
+    "alt": {
+      "nl": "Olieverfschilderij van twee kinderen op noppenfolie naast een losgemaakte houten lijst op een werktafel",
+      "en": "Oil painting depicting two children on bubble wrap beside an unframed wooden picture frame",
+      "fr": "Tableau à l’huile représentant deux enfants sur papier bulle à côté d’un cadre en bois séparé"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000026",
+    "number": 26,
+    "category": "context",
+    "approved": true,
+    "title": {
+      "nl": "Religieuze figuur in zichtbaar licht",
+      "en": "Religious figure in visible light",
+      "fr": "Figure religieuse en lumière visible"
+    },
+    "caption": {
+      "nl": "Objectbeeld in zichtbaar licht.",
+      "en": "Object image in visible light.",
+      "fr": "Vue de l’objet en lumière visible."
+    },
+    "alt": {
+      "nl": "Volledige religieuze figuur in een schilderij",
+      "en": "Full religious figure in a painting",
+      "fr": "Figure religieuse entière dans un tableau"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000027",
+    "number": 27,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "UV-fluorescentieopname van het portret",
+      "en": "UV fluorescence imaging of the portrait",
+      "fr": "Examen sous fluorescence UV du portrait"
+    },
+    "caption": {
+      "nl": "Onderzoek onder ultraviolet licht (365 nm) brengt latere vernislagen, verfretouches en historische oppervlaktebehandelingen aan het licht.",
+      "en": "Examination under ultraviolet radiation (365 nm) reveals subsequent varnish strata, pigment retouching, and historical surface interventions.",
+      "fr": "L’examen sous rayonnement ultraviolet (365 nm) met en évidence les strates de vernis tardifs, les retouches picturales et les restaurations anciennes."
+    },
+    "alt": {
+      "nl": "UV-fluorescentieopname van het olieverfportret ter inspectie van vernislagen en retouches",
+      "en": "UV fluorescence photograph of the oil portrait for inspection of varnish layers and retouching",
+      "fr": "Photographie sous fluorescence UV du portrait à l’huile pour l’examen des vernis et repeints"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000028",
+    "number": 28,
+    "category": "documents",
+    "approved": true,
+    "title": {
+      "nl": "Een inscriptie onder gericht licht",
+      "en": "An inscription under directed light",
+      "fr": "Une inscription sous un éclairage dirigé"
+    },
+    "caption": {
+      "nl": "Een inscriptie wordt met gerichte belichting onderzocht.",
+      "en": "An inscription examined under directed light.",
+      "fr": "Une inscription examinée sous un éclairage dirigé."
+    },
+    "alt": {
+      "nl": "Inscriptie op een donker geschilderd oppervlak onder een lamp",
+      "en": "Inscription on a dark painted surface beneath a lamp",
+      "fr": "Inscription sur une surface peinte sombre sous une lampe"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000029",
+    "number": 29,
+    "category": "documents",
+    "approved": true,
+    "title": {
+      "nl": "Onderzoek van signatuur met koude koudlicht-glasvezellamp",
+      "en": "Inspection of signature using cold-light fiber-optic illuminator",
+      "fr": "Examen de la signature à la source de lumière froide à fibres optiques"
+    },
+    "caption": {
+      "nl": "Een onderzoeker richt een flexibele glasvezel-koudlichtbron onder strijklicht op de bovenrand om de inscriptie en het verflaagreliëf te bestuderen.",
+      "en": "A researcher positions a flexible fiber-optic cold light source in raking light along the top edge to examine inscription relief and brushwork.",
+      "fr": "Un chercheur dirige une source de lumière froide à fibres optiques en lumière rasante pour analyser le relief de l’inscription et la couche picturale."
+    },
+    "alt": {
+      "nl": "Onderzoeker richt een flexibele zwanenhalslamp op de rand van een olieverfschilderij om een inscriptie te lezen",
+      "en": "Researcher directing a flexible gooseneck fiber-optic light at the edge of an oil painting to read an inscription",
+      "fr": "Chercheur dirigeant une lampe flexible à fibres optiques vers le bord d’un tableau à l’huile pour lire une inscription"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000030",
+    "number": 30,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Digitale DICOM-studieomgeving voor radiografieën",
+      "en": "Digital DICOM viewing interface for radiographs",
+      "fr": "Interface numérique d’étude DICOM pour radiographies"
+    },
+    "caption": {
+      "nl": "Beeldschermweergave van de digitale PACS-studieomgeving met radiografische detailopnamen en dichtheidsmetingen van het schildersdoek.",
+      "en": "Workstation display of the digital PACS interface presenting radiographic series and density calibrations of the painting support.",
+      "fr": "Affichage de l’interface numérique PACS montrant les séries radiographiques et les mesures de densité du support."
+    },
+    "alt": {
+      "nl": "Computerscherm met software voor het vergelijken en opmeten van radiografische röntgenbeelden van een kunstwerk",
+      "en": "Computer screen showing diagnostic software for viewing and analyzing digital X-ray scans of artwork",
+      "fr": "Écran d’ordinateur avec logiciel d’analyse et d’étalonnage des clichés radiographiques d’une œuvre d’art"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000031",
+    "number": 31,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "RX-detail",
+      "en": "X-ray detail",
+      "fr": "Détail radiographique"
+    },
+    "caption": {
+      "nl": "Detail van een radiografische opname op een scherm. Publicatie vereist eerst redactie van scherminformatie.",
+      "en": "Detail of a radiographic image on a screen. Publication requires screen information to be redacted first.",
+      "fr": "Détail d’une image radiographique sur un écran. La publication nécessite d’abord la suppression des informations à l’écran."
+    },
+    "alt": {
+      "nl": "Radiografisch detail met structuren en markeringen",
+      "en": "Radiographic detail with structures and marks",
+      "fr": "Détail radiographique avec structures et marques"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000032",
+    "number": 32,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "RX-opname van het portret",
+      "en": "X-ray image of the portrait",
+      "fr": "Image radiographique du portrait"
+    },
+    "caption": {
+      "nl": "Radiografische opname van het onderzochte portret. Publicatie vereist eerst redactie van scherminformatie.",
+      "en": "Radiographic image of the examined portrait. Publication requires screen information to be redacted first.",
+      "fr": "Image radiographique du portrait examiné. La publication nécessite d’abord la suppression des informations à l’écran."
+    },
+    "alt": {
+      "nl": "Radiografische opname van een portret op een monitor",
+      "en": "Radiographic image of a portrait on a monitor",
+      "fr": "Image radiographique du portrait sur un écran"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000033",
+    "number": 33,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Radiografisch detail van pigmentconcentraties",
+      "en": "Radiographic detail of pigment concentrations",
+      "fr": "Détail radiographique des concentrations de pigment"
+    },
+    "caption": {
+      "nl": "Detailopname op de radiografische monitor toont dichte, oplichtende verfhoogsels (loodwit) tegenover de omliggende transparante partijen.",
+      "en": "Detailed view on the radiographic screen revealing dense radio-opaque impasto highlights contrasted against lower-density surrounding strata.",
+      "fr": "Vue détaillée sur l’écran radiographique montrant des rehauts denses et radio-opaques (blanc de plomb) contrastant avec les zones environnantes."
+    },
+    "alt": {
+      "nl": "Schuin gefotografeerd beeldscherm met oplichtende radiografische verfstreken en dichtheidsverschillen",
+      "en": "Screen detail showing glowing radio-opaque paint strokes and density variations in the radiograph",
+      "fr": "Détail d’écran montrant les touches de peinture radio-opaques lumineuses et les variations de densité"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000034",
+    "number": 34,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Bedieningsruimte van de radiografie-installatie",
+      "en": "Control room of the radiography suite",
+      "fr": "Salle de commande de l’installation de radiographie"
+    },
+    "caption": {
+      "nl": "Zicht vanuit de afgeschermde bedieningsruimte door het loodglas op de röntgentafel en opstelling tijdens de voorbereiding van een opname.",
+      "en": "View from the radiation-shielded control room through leaded glass toward the examination table and X-ray tube column.",
+      "fr": "Vue depuis la salle de commande protégée à travers la vitre plombée vers la table d’examen et le tube de radiographie."
+    },
+    "alt": {
+      "nl": "Bedieningspost met monitor, console en doorkijk door loodglas naar de röntgenruimte",
+      "en": "Control station with monitor, console, and lead-glass window looking into the X-ray suite",
+      "fr": "Poste de commande avec moniteur, pupitre et vitre plombée donnant sur la salle de radiographie"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000035",
+    "number": 35,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "RX-tafel met portret",
+      "en": "X-ray table with portrait",
+      "fr": "Table de radiographie avec portrait"
+    },
+    "caption": {
+      "nl": "Portret en röntgeninstallatie in één overzicht.",
+      "en": "Portrait and X-ray unit in one overview.",
+      "fr": "Portrait et installation de radiographie dans une même vue."
+    },
+    "alt": {
+      "nl": "Portret op een tafel onder een röntgeninstallatie",
+      "en": "Portrait on a table beneath an X-ray unit",
+      "fr": "Portrait sur une table sous une installation de radiographie"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000037",
+    "number": 37,
+    "category": "rx",
+    "approved": true,
+    "title": {
+      "nl": "Onderzoek op de RX-tafel",
+      "en": "Examination on the X-ray table",
+      "fr": "Examen sur la table de radiographie"
+    },
+    "caption": {
+      "nl": "Een schilderij wordt onder de röntgeninstallatie onderzocht.",
+      "en": "A painting examined beneath the X-ray unit.",
+      "fr": "Un tableau examiné sous l’installation de radiographie."
+    },
+    "alt": {
+      "nl": "Schilderij op een onderzoekstafel onder een röntgeninstallatie",
+      "en": "Painting on an examination table beneath an X-ray unit",
+      "fr": "Tableau sur une table d’examen sous une installation de radiographie"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000038",
+    "number": 38,
+    "category": "surface",
+    "approved": true,
+    "title": {
+      "nl": "Restaurator voert een gecontroleerde reinigingstest uit",
+      "en": "Conservator performing a controlled spot-cleaning test",
+      "fr": "Restauratrice effectuant un test de nettoyage contrôlé"
+    },
+    "caption": {
+      "nl": "Een restaurator onderzoekt met gericht strijklicht en een wattenstaafje de oplosbaarheid van vergeelde oppervlaktevernis op een groot schilderij.",
+      "en": "A conservator inspects varnish solubility on a large-scale painting using directed raking light and a cotton swab during micro-testing.",
+      "fr": "Une restauratrice examine la solubilité d’un vernis oxydé sur un grand tableau à l’aide d’une lampe rasante et d’un coton-tige."
+    },
+    "alt": {
+      "nl": "Restaurator met zwarte handschoenen inspecteert met een handlamp en wattenstaafje de vernislaag van een schilderij",
+      "en": "Conservator in black gloves inspecting a painting’s varnish layer with a handheld lamp and cotton swab",
+      "fr": "Restauratrice avec gants noirs inspectant la couche de vernis d’un tableau à l’aide d’une torche et d’un coton-tige"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000039",
+    "number": 39,
+    "category": "methods",
+    "approved": true,
+    "title": {
+      "nl": "Macro-XRF scansysteem voor elementaire pigmentkartering",
+      "en": "Macro-XRF scanning apparatus for elemental pigment mapping",
+      "fr": "Système de balayage Macro-XRF pour la cartographie élémentaire des pigments"
+    },
+    "caption": {
+      "nl": "Geautomatiseerd Macro-XRF scansysteem opgesteld voor een stilleven met krab ter identificatie en ruimtelijke kartering van de gebruikte pigmenten.",
+      "en": "Automated Macro-XRF scanner positioned before a still life painting with crab for non-invasive elemental pigment mapping.",
+      "fr": "Scanner automatisé Macro-XRF positionné devant une nature morte au crabe pour la cartographie élémentaire non invasive des pigments."
+    },
+    "alt": {
+      "nl": "Macro-XRF scannersysteem op gemotoriseerde rails voor een schilderij van een krab op een schildersezel",
+      "en": "Macro-XRF scanner on motorized rails positioned in front of a crab painting on an easel",
+      "fr": "Scanner Macro-XRF sur rails motorisés face à un tableau représentant un crabe sur chevalet"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000040",
+    "number": 40,
+    "category": "context",
+    "approved": true,
+    "title": {
+      "nl": "Restauratoren tijdens materiaalonderzoek bij een monumentaal doek",
+      "en": "Conservators during material analysis of a monumental canvas",
+      "fr": "Restaurateurs lors de l’étude matérielle d’une toile monumentale"
+    },
+    "caption": {
+      "nl": "Twee restauratoren voeren conditieonderzoek en solventtesten uit aan een groot historisch schilderij met gerichte atelierverlichting.",
+      "en": "Two conservators conducting condition assessment and solvent tests on a large historical painting illuminated by studio spotlights.",
+      "fr": "Deux restaurateurs réalisant un constat d’état et des tests de solvants sur un grand tableau historique sous éclairage d’atelier."
+    },
+    "alt": {
+      "nl": "Twee restauratoren bij een groot historisch schilderij met een laboratoriumwagen vol proefflesjes en een studiolamp",
+      "en": "Two conservators beside a large historical painting with a lab trolley holding sample vials and a studio lamp",
+      "fr": "Deux restaurateurs devant une grande peinture historique avec un chariot de flacons de solvants et un projecteur"
+    }
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000041",
+    "number": 41,
+    "category": "context",
+    "approved": true,
+    "title": {
+      "nl": "Overzicht van het restauratie- en onderzoeksatelier",
+      "en": "Overview of the conservation and research studio",
+      "fr": "Vue d’ensemble de l’atelier de restauration et de recherche"
+    },
+    "caption": {
+      "nl": "Ruimtelijke opstelling van het restauratieatelier met professionele schildersezels, afzuigarmen en gespecialiseerde werkplekken voor schilderijonderzoek.",
+      "en": "Spacious layout of the conservation studio equipped with heavy-duty easels, localized fume extractors, and specialized examination stations.",
+      "fr": "Aménagement spacieux de l’atelier de conservation doté de chevalets professionnels, de bras d’aspiration et de postes spécialisés d’examen."
+    },
+    "alt": {
+      "nl": "Groot restauratieatelier met houten schildersezels, schilderijen, afzuiginstallaties en werktafels op een parketvloer",
+      "en": "Spacious conservation studio with wooden easels, paintings, fume extraction ducts, and workstations on parquet flooring",
+      "fr": "Grand atelier de restauration avec chevalets en bois, tableaux, systèmes d’aspiration et tables de travail sur parquet"
+    }
+  }
 ]

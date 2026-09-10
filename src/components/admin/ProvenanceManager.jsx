@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Check, ChevronDown, ChevronUp, Eye, ImagePlus, Plus, Save, Send, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { AlertCircle, Check, ChevronDown, ChevronUp, Eye, Filter, ImagePlus, Maximize2, Plus, Save, Search, Send, ShieldCheck, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import { defaultProvenance } from '../../data/defaultProvenance';
+import defaultAssets from '../../data/provenanceAssets.json';
 import { PROVENANCE_LANGUAGES, PROVENANCE_SECTIONS, localized, normalizeProvenance, provenanceIssues } from '../../utils/provenance';
 import { fetchProvenanceAdminAsync, restoreProvenanceRevisionAsync, saveProvenanceDraftAsync, uploadProvenanceMediaAsync } from '../../utils/storage';
 import ComparisonSlider from '../ComparisonSlider';
@@ -269,15 +270,107 @@ export default function ProvenanceManager({ provenanceData, showToast }) {
   const [message, setMessage] = useState(null);
   const [dirty, setDirty] = useState(false);
 
-  const load = async () => { setLoading(true); try { const body = await fetchProvenanceAdminAsync(); const next = normalizeProvenance(body.draft); setFormData(next); setVersion(body.version); setMedia(body.media || []); setRevisions(body.revisions || []); setDirty(false); setIssues([]); } catch (error) { setMessage({type:'error',text:error.message}); } finally { setLoading(false); } };
+  // Beeldbank filter & preview states
+  const [mediaSearch, setMediaSearch] = useState('');
+  const [mediaCategory, setMediaCategory] = useState('all');
+  const [mediaStatus, setMediaStatus] = useState('all'); // 'all', 'public', 'reference'
+  const [previewItem, setPreviewItem] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const body = await fetchProvenanceAdminAsync();
+      const next = normalizeProvenance(body.draft);
+      // Ensure all 40 assets from defaultAssets are merged if missing or empty
+      const assetMap = new Map((next.assets || []).map(a => [a.id, a]));
+      for (const def of defaultAssets) {
+        if (!assetMap.has(def.id)) {
+          assetMap.set(def.id, { ...def, credit: { nl: '', en: '', fr: '' } });
+        } else {
+          const cur = assetMap.get(def.id);
+          assetMap.set(def.id, {
+            ...def,
+            ...cur,
+            title: {
+              nl: cur.title?.nl || def.title.nl,
+              en: cur.title?.en || def.title.en,
+              fr: cur.title?.fr || def.title.fr,
+            },
+            caption: {
+              nl: cur.caption?.nl || def.caption.nl,
+              en: cur.caption?.en || def.caption.en,
+              fr: cur.caption?.fr || def.caption.fr,
+            },
+            alt: {
+              nl: cur.alt?.nl || def.alt.nl,
+              en: cur.alt?.en || def.alt.en,
+              fr: cur.alt?.fr || def.alt.fr,
+            },
+          });
+        }
+      }
+      next.assets = Array.from(assetMap.values());
+      setFormData(next);
+      setVersion(body.version);
+      setMedia(body.media || []);
+      setRevisions(body.revisions || []);
+      setDirty(false);
+      setIssues([]);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => { load(); }, []);
   const update = updater => { setFormData(current => normalizeProvenance(typeof updater === 'function' ? updater(current) : updater)); setDirty(true); setMessage(null); };
-  const updateLocalized = (section, field, value) => update(current => ({...current,[section]:{...current[section],[field]:{...(current[section]?.[field]||{}),[language]:value}}}));
-  const saveDraft = async () => { setBusy(true); try { const body=await saveProvenanceDraftAsync(formData,version); setVersion(body.version); setFormData(normalizeProvenance(body.draft)); setDirty(false); setIssues([]); setMessage({type:'success',text:'Concept opgeslagen. De live pagina is niet gewijzigd.'}); showToast?.('Herkomstconcept opgeslagen.','info'); } catch(error) { setMessage({type:'error',text:error.message}); if(error.message.includes('andere beheerder')) await load(); } finally { setBusy(false); } };
-  const publish = async () => { const nextIssues=provenanceIssues(formData,{publishing:true}); setIssues(nextIssues); if(nextIssues.length){setActiveTab('publish');setMessage({type:'error',text:'De publicatiecontrole vond aandachtspunten.'});return;} setBusy(true); try { const saved=await saveProvenanceDraftAsync(formData,version); setVersion(saved.version); const response=await fetch('/api/save-provenance',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'publish',expectedVersion:saved.version})}); const body=await response.json().catch(()=>({})); if(!response.ok||!body.ok)throw new Error(body.issues?.join('\n')||body.error||'Publiceren is mislukt.'); setFormData(normalizeProvenance(body.provenanceData)); setDirty(false); setIssues([]); setMessage({type:'success',text:'Nieuwe herkomstversie gepubliceerd.'}); showToast?.('Herkomstpagina gepubliceerd.','info'); await load(); } catch(error) { setMessage({type:'error',text:error.message}); } finally { setBusy(false); } };
-  const upload = async event => { const file=event.target.files?.[0]; event.target.value=''; if(!file)return; setBusy(true); try { const record=await uploadProvenanceMediaAsync(file); setMedia(current=>[...current,record]); setMessage({type:'success',text:'Afbeelding naar R2 geüpload en publieke varianten aangemaakt.'}); } catch(error) { setMessage({type:'error',text:error.message}); } finally { setBusy(false); } };
-  if(loading) return <div className="rounded-xl border border-[#ded4c3] bg-[#fcfaf6] p-8 text-sm text-[#62594f]">Herkomsteditor laden…</div>;
-  const tabs=[['overview','Overzicht'],['content','Pagina-inhoud'],['methods','Onderzoeksmethoden'],['examples','Praktijkvoorbeelden'],['comparisons','Voor/Na Sliders'],['media','Beeldbank'],['publish','Publiceren']];
+  const updateLocalized = (section, field, value) => update(current => ({ ...current, [section]: { ...current[section], [field]: { ...(current[section]?.[field] || {}), [language]: value } } }));
+  const saveDraft = async () => { setBusy(true); try { const body = await saveProvenanceDraftAsync(formData, version); setVersion(body.version); setFormData(normalizeProvenance(body.draft)); setDirty(false); setIssues([]); setMessage({ type: 'success', text: 'Concept opgeslagen. De live pagina is niet gewijzigd.' }); showToast?.('Herkomstconcept opgeslagen.', 'info'); } catch (error) { setMessage({ type: 'error', text: error.message }); if (error.message.includes('andere beheerder')) await load(); } finally { setBusy(false); } };
+  const publish = async () => { const nextIssues = provenanceIssues(formData, { publishing: true }); setIssues(nextIssues); if (nextIssues.length) { setActiveTab('publish'); setMessage({ type: 'error', text: 'De publicatiecontrole vond aandachtspunten.' }); return; } setBusy(true); try { const saved = await saveProvenanceDraftAsync(formData, version); setVersion(saved.version); const response = await fetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'publish', expectedVersion: saved.version }) }); const body = await response.json().catch(() => ({})); if (!response.ok || !body.ok) throw new Error(body.issues?.join('\n') || body.error || 'Publiceren is mislukt.'); setFormData(normalizeProvenance(body.provenanceData)); setDirty(false); setIssues([]); setMessage({ type: 'success', text: 'Nieuwe herkomstversie gepubliceerd.' }); showToast?.('Herkomstpagina gepubliceerd.', 'info'); await load(); } catch (error) { setMessage({ type: 'error', text: error.message }); } finally { setBusy(false); } };
+  const upload = async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; setBusy(true); try { const record = await uploadProvenanceMediaAsync(file); setMedia(current => [...current, record]); setMessage({ type: 'success', text: 'Afbeelding naar R2 geüpload en publieke varianten aangemaakt.' }); } catch (error) { setMessage({ type: 'error', text: error.message }); } finally { setBusy(false); } };
+
+  if (loading) return <div className="rounded-xl border border-[#ded4c3] bg-[#fcfaf6] p-8 text-sm text-[#62594f]">Herkomsteditor laden…</div>;
+  const tabs = [['overview', 'Overzicht'], ['content', 'Pagina-inhoud'], ['methods', 'Onderzoeksmethoden'], ['examples', 'Praktijkvoorbeelden'], ['comparisons', 'Voor/Na Sliders'], ['media', 'Beeldbank'], ['publish', 'Publiceren']];
+
+  const categoryLabels = {
+    all: 'Alle categorieën',
+    rx: 'Röntgen (RX)',
+    microscopy: 'Microscopie',
+    surface: 'Oppervlak & UV',
+    support: 'Drager & Achterzijde',
+    documents: 'Inscripties & Archief',
+    methods: 'Materiaalanalyse (XRF)',
+    context: 'Atelier & Context',
+  };
+
+  const getAsset = item => {
+    const existing = formData.assets.find(x => x.id === item.id);
+    if (existing) return existing;
+    const def = defaultAssets.find(x => x.id === item.id);
+    if (def) return def;
+    return { id: item.id, title: {}, caption: {}, alt: {}, category: 'context', approved: false };
+  };
+
+  const publicGalleryCount = media.filter(m => formData.gallery.assetIds.includes(m.id)).length;
+  const referenceCount = media.length - publicGalleryCount;
+
+  const filteredMedia = media.filter(item => {
+    const asset = getAsset(item);
+    const isSelected = formData.gallery.assetIds.includes(item.id);
+    if (mediaStatus === 'public' && !isSelected) return false;
+    if (mediaStatus === 'reference' && isSelected) return false;
+    if (mediaCategory !== 'all' && asset.category !== mediaCategory) return false;
+    if (mediaSearch.trim()) {
+      const q = mediaSearch.toLowerCase().trim();
+      const titleNL = (asset.title?.nl || '').toLowerCase();
+      const captionNL = (asset.caption?.nl || '').toLowerCase();
+      const filename = (item.filename || '').toLowerCase();
+      if (!titleNL.includes(q) && !captionNL.includes(q) && !filename.includes(q)) return false;
+    }
+    return true;
+  });
+
   return <div className="space-y-6">
     <div className="flex flex-col gap-4 rounded-xl border border-[#d8cebd] bg-[#f8f4ed] p-5 lg:flex-row lg:items-center lg:justify-between"><div><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-[#8e7035]"><ShieldCheck size={16}/> Herkomst & onderzoek</div><p className="mt-2 text-sm text-[#62594f]">Conceptversie {version} · {dirty ? 'niet opgeslagen' : 'opgeslagen'}</p></div><div className="flex flex-wrap gap-2"><button type="button" disabled={busy||!dirty} onClick={saveDraft} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#4a1521] bg-white px-4 text-xs font-semibold uppercase tracking-[.08em] text-[#4a1521] disabled:opacity-40"><Save size={16}/> Concept opslaan</button><button type="button" disabled={busy} onClick={publish} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#4a1521] px-4 text-xs font-semibold uppercase tracking-[.08em] text-white disabled:opacity-50"><Send size={16}/> Publiceren</button></div></div>
     {message && <div role="status" className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${message.type==='error'?'border-[#d39b9b] bg-[#fff4f4] text-[#7b2525]':'border-[#abcbb6] bg-[#f2faf4] text-[#215f35]'}`}><AlertCircle size={17} className="mt-0.5 shrink-0"/>{message.text}</div>}
@@ -288,7 +381,365 @@ export default function ProvenanceManager({ provenanceData, showToast }) {
     {activeTab==='methods' && <div className="space-y-8"><ListEditor title="Onderzoeksmethoden" itemLabel="Methode" items={formData.methods} setItems={items=>update(current=>({...current,methods:typeof items==='function'?items(current.methods):items}))} fields={[{key:'title',label:'Titel'},{key:'question',label:'Onderzoeksvraag'},{key:'description',label:'Uitleg',multiline:true},{key:'findings',label:'Wat kan zichtbaar worden?',multiline:true},{key:'limitations',label:'Beperkingen',multiline:true}]} language={language}/><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Bronnen</h2><div className="mt-4 space-y-4">{formData.sources.map((item,index)=><div className="grid gap-4 rounded-lg border border-[#ded4c3] bg-white p-4 md:grid-cols-2" key={item.id}><LocalizedField label="Bron" value={item.title} language={language} onChange={value=>update(current=>({...current,sources:current.sources.map((x,i)=>i===index?{...x,title:value}:x)}))}/><Field label="HTTPS-link" value={item.url} onChange={value=>update(current=>({...current,sources:current.sources.map((x,i)=>i===index?{...x,url:value}:x)}))}/></div>)}</div></section></div>}
     {activeTab==='examples' && <div className="space-y-8"><ListEditor title="Praktijkvoorbeelden" itemLabel="Voorbeeld" items={formData.examples} setItems={items=>update(current=>({...current,examples:typeof items==='function'?items(current.examples):items}))} fields={[{key:'title',label:'Titel'},{key:'question',label:'Onderzoeksvraag'},{key:'description',label:'Beschrijving',multiline:true},{key:'findings',label:'Bevindingen',multiline:true},{key:'uncertainties',label:'Onzekerheden',multiline:true}]} language={language}/><ListEditor title="Veelgestelde vragen" itemLabel="FAQ" items={formData.faq} setItems={items=>update(current=>({...current,faq:typeof items==='function'?items(current.faq):items}))} fields={[{key:'question',label:'Vraag'},{key:'answer',label:'Antwoord',multiline:true}]} language={language}/></div>}
     {activeTab==='comparisons' && <ComparisonsEditor comparisons={formData.comparisons} assets={formData.assets} media={media} language={language} update={update}/>}
-    {activeTab==='media' && <div className="space-y-6"><section className={cardClass}><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><h2 className="font-serif text-2xl text-[#211b16]">R2-beeldbank</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#62594f]">Originele bestanden worden afgeschermd opgeslagen in R2. Na controle worden publieke WebP-varianten in de publieke R2-bucket gemaakt.</p></div><label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#4a1521] px-4 text-xs font-semibold uppercase tracking-[.08em] text-white"><ImagePlus size={16}/> Afbeelding uploaden<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="sr-only" onChange={upload}/></label></div></section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Gekoppelde beelden</h2><p className="mt-2 text-sm text-[#62594f]">Vink beelden aan voor de publieke galerij. Bijschriften en alt-teksten blijven per taal beheerbaar.</p><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{media.map(item=>{const selected=formData.gallery.assetIds.includes(item.id);const asset=formData.assets.find(x=>x.id===item.id);return <article key={item.id} className={`overflow-hidden rounded-lg border bg-white ${selected?'border-[#4a1521] ring-2 ring-[#4a1521]/10':'border-[#ded4c3]'}`}><div className="aspect-[4/3] bg-[#eee8de]">{item.variants?.[0]?.url?<img src={item.variants[0].url} alt="" className="h-full w-full object-cover"/>:<div className="grid h-full place-items-center text-xs text-[#74695f]">Nog geen publieke variant</div>}</div><div className="space-y-3 p-3"><div className="flex items-center gap-2"><input type="checkbox" checked={selected} onChange={e=>update(current=>({...current,gallery:{...current.gallery,assetIds:e.target.checked?[...new Set([...current.gallery.assetIds,item.id])]:current.gallery.assetIds.filter(id=>id!==item.id)},assets:current.assets.some(x=>x.id===item.id)?current.assets: [...current.assets,{id:item.id,title:{},caption:{},alt:{},credit:{},category:'context',approved:false}]}))}/><span className="text-sm font-semibold text-[#211b16]">Publiek gebruiken</span></div>{asset&&<><LocalizedField label="Bijschrift" value={asset.caption} language={language} onChange={value=>update(current=>({...current,assets:current.assets.map(x=>x.id===item.id?{...x,caption:value,approved:true}:x)}))}/><LocalizedField label="Alt-tekst" value={asset.alt} language={language} onChange={value=>update(current=>({...current,assets:current.assets.map(x=>x.id===item.id?{...x,alt:value,approved:true}:x)}))}/></>}</div></article>})}</div></section></div>}
+    {activeTab==='media' && (
+      <div className="space-y-6">
+        {/* Beeldbank Top Bar */}
+        <section className={cardClass}>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="font-serif text-2xl text-[#211b16]">R2-beeldbank ({media.length} afbeeldingen)</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#62594f]">
+                Alle 40 geoptimaliseerde beelden zijn gereed in de Cloudflare R2-opslag. Klik op een foto voor een grote voorvertoning. Beschrijvingen en alt-teksten zijn per taal beheerbaar en worden nooit blanco getoond.
+              </p>
+            </div>
+            <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#4a1521] px-4 text-xs font-semibold uppercase tracking-[.08em] text-white transition hover:bg-[#381019]">
+              <ImagePlus size={16} /> Afbeelding uploaden
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="sr-only" onChange={upload} />
+            </label>
+          </div>
+
+          {/* Search and Filters Bar */}
+          <div className="mt-6 flex flex-col gap-3 border-t border-[#ded4c3] pt-5 lg:flex-row lg:items-center lg:justify-between">
+            {/* Status Pills */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setMediaStatus('all')}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${mediaStatus === 'all' ? 'bg-[#4a1521] text-white' : 'border border-[#d8cebd] bg-white text-[#4a1521] hover:bg-[#f5ede0]'}`}
+              >
+                Alle ({media.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaStatus('public')}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${mediaStatus === 'public' ? 'bg-[#4a1521] text-white' : 'border border-[#d8cebd] bg-white text-[#4a1521] hover:bg-[#f5ede0]'}`}
+              >
+                In publieke galerij ({publicGalleryCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaStatus('reference')}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${mediaStatus === 'reference' ? 'bg-[#4a1521] text-white' : 'border border-[#d8cebd] bg-white text-[#4a1521] hover:bg-[#f5ede0]'}`}
+              >
+                Referentie / Archief ({referenceCount})
+              </button>
+            </div>
+
+            {/* Category Dropdown & Search Input */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <select
+                value={mediaCategory}
+                onChange={e => setMediaCategory(e.target.value)}
+                className="h-10 rounded-lg border border-[#d8cebd] bg-white px-3 text-xs text-[#211b16] outline-none transition focus:border-[#4a1521]"
+              >
+                {Object.entries(categoryLabels).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+
+              <div className="relative">
+                <Search size={14} className="pointer-events-none absolute left-3 top-3 text-[#8e7035]" />
+                <input
+                  type="text"
+                  placeholder="Zoek op titel of bestandsnaam…"
+                  value={mediaSearch}
+                  onChange={e => setMediaSearch(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-[#d8cebd] bg-white pl-9 pr-8 text-xs text-[#211b16] outline-none transition focus:border-[#4a1521] sm:w-60"
+                />
+                {mediaSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setMediaSearch('')}
+                    className="absolute right-2.5 top-2.5 text-[#74695f] hover:text-[#211b16]"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Media Grid */}
+        <section className={cardClass}>
+          <div className="flex items-center justify-between border-b border-[#ded4c3] pb-3">
+            <h3 className="font-serif text-xl font-semibold text-[#211b16]">
+              Afbeeldingen ({filteredMedia.length} van {media.length})
+            </h3>
+            <span className="text-xs text-[#74695f]">
+              Klik op een foto voor een schermbrede voorvertoning
+            </span>
+          </div>
+
+          {filteredMedia.length === 0 ? (
+            <p className="py-12 text-center text-sm text-[#74695f]">
+              Geen beelden gevonden voor deze zoekopdracht of filter.
+            </p>
+          ) : (
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredMedia.map(item => {
+                const selected = formData.gallery.assetIds.includes(item.id);
+                const asset = getAsset(item);
+
+                return (
+                  <article
+                    key={item.id}
+                    className={`overflow-hidden rounded-xl border bg-white transition duration-200 ${
+                      selected ? 'border-[#4a1521] ring-2 ring-[#4a1521]/15 shadow-sm' : 'border-[#ded4c3] shadow-xs'
+                    }`}
+                  >
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between border-b border-[#f0eae1] bg-[#faf7f2] px-3.5 py-2.5">
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="inline-flex items-center rounded-full bg-[#4a1521]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#4a1521]">
+                          {categoryLabels[asset.category] || asset.category || 'Beeld'}
+                        </span>
+                        <span className="truncate text-xs font-semibold text-[#211b16]">
+                          {localized(asset.title, language) || item.filename}
+                        </span>
+                      </div>
+                      <span className="shrink-0 font-mono text-[11px] text-[#8e7035]">
+                        {item.filename}
+                      </span>
+                    </div>
+
+                    {/* Thumbnail Area with Click-to-Preview */}
+                    <div
+                      className="group relative aspect-[4/3] cursor-pointer overflow-hidden bg-[#211b16]"
+                      onClick={() => setPreviewItem(item)}
+                      title="Klik om te vergroten en alle details te bekijken"
+                    >
+                      {item.variants?.[0]?.url ? (
+                        <img
+                          src={item.variants[0].url}
+                          alt={localized(asset.alt, language) || ''}
+                          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-xs text-[#a39789]">
+                          Nog geen publieke variant
+                        </div>
+                      )}
+
+                      {/* Hover Action Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-[#211b16] shadow-md backdrop-blur-xs">
+                          <Eye size={14} className="text-[#4a1521]" /> Voorvertoning bekijken
+                        </span>
+                      </div>
+
+                      {/* Resolution Badge */}
+                      <div className="absolute bottom-2 left-2 flex gap-1">
+                        <span className="rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
+                          {item.width} × {item.height}px
+                        </span>
+                        {item.status === 'ready' && (
+                          <span className="rounded bg-[#215f35]/85 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+                            R2 gereed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Form Content */}
+                    <div className="space-y-3.5 p-4">
+                      <div className="flex items-center justify-between border-b border-[#f0eae1] pb-2.5">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-[#211b16] cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={e => {
+                              const checked = e.target.checked;
+                              update(current => {
+                                const galleryIds = checked
+                                  ? [...new Set([...current.gallery.assetIds, item.id])]
+                                  : current.gallery.assetIds.filter(id => id !== item.id);
+                                const exists = current.assets.some(x => x.id === item.id);
+                                const baseAsset = getAsset(item);
+                                const nextAssets = exists
+                                  ? current.assets.map(x => x.id === item.id ? { ...x, approved: checked ? true : x.approved } : x)
+                                  : [...current.assets, { ...baseAsset, approved: checked }];
+                                return { ...current, gallery: { ...current.gallery, assetIds: galleryIds }, assets: nextAssets };
+                              });
+                            }}
+                          />
+                          <span>In publieke galerij tonen</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewItem(item)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-[#4a1521] hover:underline"
+                        >
+                          <Maximize2 size={12} /> Details
+                        </button>
+                      </div>
+
+                      <LocalizedField
+                        label="Bijschrift / Beschrijving"
+                        value={asset.caption}
+                        language={language}
+                        multiline
+                        onChange={value => update(current => {
+                          const exists = current.assets.some(x => x.id === item.id);
+                          const base = getAsset(item);
+                          return {
+                            ...current,
+                            assets: exists
+                              ? current.assets.map(x => x.id === item.id ? { ...x, caption: value, approved: true } : x)
+                              : [...current.assets, { ...base, caption: value, approved: true }]
+                          };
+                        })}
+                      />
+
+                      <LocalizedField
+                        label="Alt-tekst (Toegankelijkheid)"
+                        value={asset.alt}
+                        language={language}
+                        onChange={value => update(current => {
+                          const exists = current.assets.some(x => x.id === item.id);
+                          const base = getAsset(item);
+                          return {
+                            ...current,
+                            assets: exists
+                              ? current.assets.map(x => x.id === item.id ? { ...x, alt: value, approved: true } : x)
+                              : [...current.assets, { ...base, alt: value, approved: true }]
+                          };
+                        })}
+                      />
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Full Image Preview Modal (Lightbox) */}
+        {previewItem && (() => {
+          const pAsset = getAsset(previewItem);
+          const pSelected = formData.gallery.assetIds.includes(previewItem.id);
+          const pVariants = previewItem.variants || [];
+          const pUrl = pVariants.at(-1)?.url || pVariants[0]?.url;
+          const currentIndex = filteredMedia.findIndex(m => m.id === previewItem.id);
+
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+              onClick={() => setPreviewItem(null)}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div
+                className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-[#fcfaf6] shadow-2xl"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-[#ded4c3] bg-[#f8f4ed] px-6 py-4">
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8e7035]">
+                      {categoryLabels[pAsset.category] || pAsset.category} · {previewItem.filename}
+                    </span>
+                    <h3 className="font-serif text-xl font-semibold text-[#211b16]">
+                      {localized(pAsset.title, language) || previewItem.filename}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewItem(null)}
+                    className="rounded-full p-2 text-[#62594f] transition hover:bg-[#ded4c3] hover:text-[#211b16]"
+                    aria-label="Sluiten"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Body: Image & Info */}
+                <div className="grid flex-1 overflow-y-auto md:grid-cols-12">
+                  {/* Large Image Preview */}
+                  <div className="flex items-center justify-center bg-[#181310] p-4 md:col-span-7">
+                    {pUrl ? (
+                      <img
+                        src={pUrl}
+                        alt={localized(pAsset.alt, language) || ''}
+                        className="max-h-[60vh] w-auto max-w-full rounded object-contain shadow-lg"
+                      />
+                    ) : (
+                      <p className="text-sm text-neutral-400">Geen voorvertoning beschikbaar.</p>
+                    )}
+                  </div>
+
+                  {/* Metadata & Details */}
+                  <div className="space-y-4 p-6 md:col-span-5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-[#74695f]">
+                        {previewItem.width} × {previewItem.height}px · {previewItem.status === 'ready' ? 'R2 gereed' : previewItem.status}
+                      </span>
+                      <label className="flex items-center gap-2 text-xs font-semibold text-[#4a1521]">
+                        <input
+                          type="checkbox"
+                          checked={pSelected}
+                          onChange={e => {
+                            const checked = e.target.checked;
+                            update(current => {
+                              const gIds = checked
+                                ? [...new Set([...current.gallery.assetIds, previewItem.id])]
+                                : current.gallery.assetIds.filter(id => id !== previewItem.id);
+                              return { ...current, gallery: { ...current.gallery, assetIds: gIds } };
+                            });
+                          }}
+                        />
+                        In publieke galerij
+                      </label>
+                    </div>
+
+                    <div className="space-y-3 rounded-lg border border-[#ded4c3] bg-white p-3.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8e7035]">
+                        Beschrijving / Bijschrift ({labels[language]})
+                      </p>
+                      <p className="text-sm leading-relaxed text-[#211b16]">
+                        {localized(pAsset.caption, language) || 'Geen bijschrift ingevuld.'}
+                      </p>
+
+                      <div className="border-t border-[#f0eae1] pt-2.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8e7035]">
+                          Alt-tekst ({labels[language]})
+                        </p>
+                        <p className="text-xs leading-relaxed text-[#5f554c]">
+                          {localized(pAsset.alt, language) || 'Geen alt-tekst ingevuld.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Navigation buttons */}
+                    <div className="flex items-center justify-between border-t border-[#ded4c3] pt-4">
+                      <button
+                        type="button"
+                        disabled={currentIndex <= 0}
+                        onClick={() => setPreviewItem(filteredMedia[currentIndex - 1])}
+                        className="rounded-lg border border-[#d8cebd] bg-white px-3 py-1.5 text-xs font-medium text-[#4a1521] disabled:opacity-30"
+                      >
+                        ← Vorige
+                      </button>
+                      <span className="text-xs text-[#74695f]">
+                        {currentIndex + 1} van {filteredMedia.length}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={currentIndex >= filteredMedia.length - 1}
+                        onClick={() => setPreviewItem(filteredMedia[currentIndex + 1])}
+                        className="rounded-lg border border-[#d8cebd] bg-white px-3 py-1.5 text-xs font-medium text-[#4a1521] disabled:opacity-30"
+                      >
+                        Volgende →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    )}
     {activeTab==='publish' && <div className="space-y-6"><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Publicatiecontrole</h2><p className="mt-2 text-sm leading-6 text-[#62594f]">Alle zichtbare onderdelen, drie talen, bronverwijzingen en R2-varianten worden gecontroleerd voordat de live versie wordt vervangen.</p>{issues.length>0?<ul className="mt-5 space-y-2 text-sm text-[#7b2525]">{issues.map((issue,index)=><li key={`${issue}-${index}`} className="flex gap-2"><AlertCircle size={16} className="mt-0.5 shrink-0"/>{issue}</li>)}</ul>:<p className="mt-5 flex items-center gap-2 text-sm text-[#215f35]"><Check size={17}/> Nog geen fouten gevonden in de laatste controle.</p>}</section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">SEO</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><LocalizedField label="SEO-titel" value={formData.seo.title} language={language} onChange={value=>update(current=>({...current,seo:{...current.seo,title:value}}))}/><LocalizedField label="SEO-beschrijving" value={formData.seo.description} language={language} multiline onChange={value=>update(current=>({...current,seo:{...current.seo,description:value}}))}/><AssetSelect label="Social share afbeelding (SEO)" value={formData.seo.assetId} assets={formData.assets} media={media} onChange={id=>update(current=>({...current,seo:{...current.seo,assetId:id}}))}/></div></section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Gepubliceerde revisies</h2><div className="mt-4 divide-y divide-[#ded4c3]">{revisions.filter(item=>item.kind==='publication').map(item=><div key={item.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"><span className="text-sm text-[#62594f]">Versie {item.version} · {new Date(item.created_at).toLocaleString('nl-BE')}</span><button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{const body=await restoreProvenanceRevisionAsync(item.id,version);setFormData(normalizeProvenance(body.draft));setVersion(body.version);setDirty(false);setIssues([]);setMessage({type:'success',text:`Revisie ${item.version} als nieuw concept hersteld.`});}catch(error){setMessage({type:'error',text:error.message});}finally{setBusy(false);}}} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#4a1521] px-3 text-xs font-semibold uppercase tracking-[.08em] text-[#4a1521] disabled:opacity-40"><Eye size={15}/> Herstellen als concept</button></div>)}{revisions.filter(item=>item.kind==='publication').length===0&&<p className="py-3 text-sm text-[#62594f]">Nog geen nieuwe revisies geregistreerd.</p>}</div></section></div>}
     {activeTab==='methods' && <MediaRelationsEditor title="Onderzoeksmethoden" items={formData.methods} media={media} relationKey="methods" language={language} update={update}/>}
     {activeTab==='examples' && <MediaRelationsEditor title="Praktijkvoorbeelden" items={formData.examples} media={media} relationKey="examples" language={language} update={update}/>}
