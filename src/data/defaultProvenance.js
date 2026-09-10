@@ -192,7 +192,7 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
         'Superpose toutes les strates en une seule image ; exige une confrontation avec la microscopie de surface.'
       ),
       [35, 5],
-      ['ng-rx']
+      []
     ),
     method(
       'microscopy',
@@ -256,7 +256,7 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
         'Une mention consigne un instant précis ; relier ce jalon à l’époque contemporaine requiert une recherche archivistique suivie.'
       ),
       [28],
-      ['getty']
+      []
     ),
     method(
       'uv',
@@ -278,7 +278,7 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
         'Des repeints très anciens sous un vernis patiné peuvent réagir subtilement ; cela exige l’œil averti d’un expert.'
       ),
       [],
-      ['ng-uv'],
+      [],
       false
     ),
     method(
@@ -301,7 +301,7 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
         'Mesure les éléments inorganiques ; les liants organiques et laques végétales nécessitent d’autres approches.'
       ),
       [],
-      ['rijks-xrf'],
+      [],
       false
     ),
     method(
@@ -324,7 +324,7 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
         'Opérant principalement lorsque le tracé préparatoire contient du carbone sur une préparation réflective.'
       ),
       [],
-      ['ng-ir'],
+      [],
       false
     ),
   ],
@@ -374,17 +374,11 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
         'La période initiale entre l’impression originale et l’apposition du premier ex-libris est rigoureusement contextualisée.'
       ),
       assetIds: ids(28),
-      sourceIds: ['getty'],
+      sourceIds: [],
       timeline: [],
     },
   ],
-  sources: [
-    source('ng-rx', l('National Gallery — Röntgenonderzoek in de kunst', 'National Gallery — X-Ray Examination in Fine Art', 'National Gallery — Radiographie appliquée aux beaux-arts'), 'https://www.nationalgallery.org.uk/paintings/glossary/x-rays'),
-    source('getty', l('Getty Provenance Index — Herkomstarchieven & Veilinghistorie', 'Getty Provenance Index — Archival & Auction Records', 'Getty Provenance Index — Archives et ventes historiques'), 'https://www.getty.edu/museum/provenance/'),
-    source('ng-uv', l('National Gallery — UV-fluorescentie & Restauratiedetectie', 'National Gallery — UV Fluorescence & Conservation Science', 'National Gallery — Fluorescence UV et détection des restaurations'), 'https://www.nationalgallery.org.uk/paintings/glossary/ultraviolet-fluorescence'),
-    source('ng-ir', l('National Gallery — Infraroodreflectografie & Ondertekeningen', 'National Gallery — Infrared Reflectography & Underdrawings', 'National Gallery — Réflectographie infrarouge et dessins sous-jacents'), 'https://www.nationalgallery.org.uk/paintings/glossary/infrared'),
-    source('rijks-xrf', l('Rijksmuseum — Element- & Pigmentanalyse', 'Rijksmuseum — Elemental Composition & Pigment Studies', 'Rijksmuseum — Analyse élémentaire et identification des pigments'), 'https://www.rijksmuseum.nl/en/whats-on/exhibitions/operation-night-watch/research-techniques/elemental-composition'),
-  ],
+  sources: [],
   assets: assets.map(({ id, title, caption, alt, category, objectLabel, approved }) => ({ id, title, caption, alt, category, objectLabel, approved, credit: l() })),
   gallery: { assetIds: ids(37, 35, 5, 11, 13, 22, 19, 28, 20, 8, 26, 27) },
   comparisons: [
