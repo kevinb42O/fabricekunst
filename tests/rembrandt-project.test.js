@@ -26,6 +26,7 @@ import {
 } from "../api/_lib/rembrandtPreviewToken.js";
 import { activePreviewLink } from "../api/_lib/rembrandtPreviewStore.js";
 import {
+  isVersionMatch,
   resolveSavedProjectVisibility,
   validateProject,
 } from "../api/_lib/rembrandtProjectEndpoint.js";
@@ -261,3 +262,30 @@ test("a dossier cannot use the reserved preview route", async () => {
   project.investigations[0].slug = 'preview';
   await assert.rejects(() => validateProject(project), /URL-slug/);
 });
+
+test("isVersionMatch correctly matches timestamps regardless of timezone format (+00:00 vs Z)", () => {
+  const isoUtc = "2026-09-10T21:32:39.409Z";
+  const postgresUtc = "2026-09-10T21:32:39.409+00:00";
+  assert.equal(isVersionMatch(isoUtc, postgresUtc), true);
+  assert.equal(isVersionMatch(postgresUtc, isoUtc), true);
+  assert.equal(isVersionMatch(isoUtc, isoUtc), true);
+
+  // Minor millisecond drift (<= 2s)
+  assert.equal(
+    isVersionMatch("2026-09-10T21:32:39.000Z", "2026-09-10T21:32:40.500+00:00"),
+    true,
+  );
+
+  // Real conflict (> 2s)
+  assert.equal(
+    isVersionMatch("2026-09-10T21:32:39.409Z", "2026-09-10T21:35:00.000Z"),
+    false,
+  );
+
+  // Null or missing values
+  assert.equal(isVersionMatch(null, postgresUtc), false);
+  assert.equal(isVersionMatch(isoUtc, null), false);
+  assert.equal(isVersionMatch(undefined, postgresUtc), false);
+  assert.equal(isVersionMatch("", postgresUtc), false);
+});
+

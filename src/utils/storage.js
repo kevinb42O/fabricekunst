@@ -1380,7 +1380,7 @@ export const saveRembrandtProjectDataAsync = async (
         result.error || "Het project kon niet veilig worden gepubliceerd.",
       );
     savedProject = normalizeRembrandtProject(result.project);
-    savedVersion = savedProject.updatedAt || result.version || null;
+    savedVersion = result.version || savedProject.updatedAt || null;
     publicContentPromise = null;
   }
   try {

@@ -51,6 +51,18 @@ const UPDATE_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 export const resolveSavedProjectVisibility = ({ publish, accessEnabled }) =>
   publish === true || accessEnabled === true;
 
+export const isVersionMatch = (expected, current) => {
+  if (expected === current) return true;
+  if (!expected || !current) return false;
+  if (typeof expected !== "string" || typeof current !== "string") return false;
+  const t1 = new Date(expected).getTime();
+  const t2 = new Date(current).getTime();
+  if (!Number.isNaN(t1) && !Number.isNaN(t2)) {
+    return Math.abs(t1 - t2) <= 2000;
+  }
+  return false;
+};
+
 const isStrictDate = (value) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return false;
   const parsed = new Date(`${value}T00:00:00.000Z`);
@@ -352,7 +364,7 @@ async function writeProjectVisibility(supabase, enabled, expectedVersion = undef
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const { project, row } = await readProject(supabase);
     const currentVersion = row?.updated_at || null;
-    if (expectedVersion !== undefined && expectedVersion !== currentVersion) {
+    if (expectedVersion !== undefined && expectedVersion !== null && !isVersionMatch(expectedVersion, currentVersion)) {
       throw new RequestError(
         "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
         409,
@@ -363,14 +375,19 @@ async function writeProjectVisibility(supabase, enabled, expectedVersion = undef
     if (enabled) await validateProject(nextProject);
 
     if (!row) {
-      const { error } = await supabase.from("admin_settings").insert({
-        key: SETTING_KEY,
-        value: JSON.stringify(nextProject),
-        updated_at: updatedAt,
-      });
+      const { data, error } = await supabase
+        .from("admin_settings")
+        .insert({
+          key: SETTING_KEY,
+          value: JSON.stringify(nextProject),
+          updated_at: updatedAt,
+        })
+        .select("key, updated_at")
+        .maybeSingle();
       if (error?.code === "23505") continue;
       if (error) throw error;
-      return { project: nextProject, version: updatedAt };
+      const finalVersion = data?.updated_at || updatedAt;
+      return { project: { ...nextProject, updatedAt: finalVersion }, version: finalVersion };
     }
 
     const { data, error } = await supabase
@@ -378,10 +395,13 @@ async function writeProjectVisibility(supabase, enabled, expectedVersion = undef
       .update({ value: JSON.stringify(nextProject), updated_at: updatedAt })
       .eq("key", SETTING_KEY)
       .eq("updated_at", currentVersion)
-      .select("key")
+      .select("key, updated_at")
       .maybeSingle();
     if (error) throw error;
-    if (data) return { project: nextProject, version: updatedAt };
+    if (data) {
+      const finalVersion = data.updated_at || updatedAt;
+      return { project: { ...nextProject, updatedAt: finalVersion }, version: finalVersion };
+    }
   }
   throw new RequestError("De zichtbaarheid kon door een gelijktijdige wijziging niet worden opgeslagen. Probeer opnieuw.", 409);
 }
@@ -536,7 +556,7 @@ export default async function handler(req, res) {
     const { row: previous } = await readProject(supabase);
     const expectedVersion = req.body?.expectedVersion ?? null;
     const currentVersion = previous?.updated_at || null;
-    if (expectedVersion !== currentVersion) {
+    if (expectedVersion !== null && !isVersionMatch(expectedVersion, currentVersion)) {
       throw new RequestError(
         "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
         409,
@@ -545,6 +565,7 @@ export default async function handler(req, res) {
     const updatedAt = new Date().toISOString();
     const nextProject = { ...project, updatedAt };
     let previousContentForRevision = null;
+    let finalVersion = updatedAt;
 
     if (previous) {
       const { data: savedRow, error: saveError } = await supabase
@@ -552,7 +573,7 @@ export default async function handler(req, res) {
         .update({ value: JSON.stringify(nextProject), updated_at: updatedAt })
         .eq("key", SETTING_KEY)
         .eq("updated_at", currentVersion)
-        .select("key")
+        .select("key, updated_at")
         .maybeSingle();
       if (saveError) throw saveError;
       if (!savedRow)
@@ -560,33 +581,37 @@ export default async function handler(req, res) {
           "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
           409,
         );
+      finalVersion = savedRow.updated_at || updatedAt;
       if (previous.value)
         previousContentForRevision = parseSetting(previous.value);
     } else {
-      const { error: saveError } = await supabase
+      const { data: savedRow, error: saveError } = await supabase
         .from("admin_settings")
         .insert({
           key: SETTING_KEY,
           value: JSON.stringify(nextProject),
           updated_at: updatedAt,
-        });
+        })
+        .select("key, updated_at")
+        .maybeSingle();
       if (saveError?.code === "23505")
         throw new RequestError(
           "Deze pagina werd intussen in een andere sessie aangemaakt. Herlaad eerst.",
           409,
         );
       if (saveError) throw saveError;
+      finalVersion = savedRow?.updated_at || updatedAt;
     }
 
     try {
       if (!shouldBePublic) {
-        await writeRembrandtProjectAccess(false, updatedAt);
+        await writeRembrandtProjectAccess(false, finalVersion);
       }
       const publication = await publishPublicContentSnapshot(supabase, {
         includeRembrandtProject: shouldBePublic,
       });
       if (shouldBePublic) {
-        await writeRembrandtProjectAccess(true, updatedAt);
+        await writeRembrandtProjectAccess(true, finalVersion);
       }
       if (previousContentForRevision) {
         await storeRevision(
@@ -595,9 +620,11 @@ export default async function handler(req, res) {
           authorization.user.id,
         );
       }
+      const savedProjectResult = { ...nextProject, updatedAt: finalVersion };
       return sendJson(res, 200, {
         ok: true,
-        project: nextProject,
+        project: savedProjectResult,
+        version: finalVersion,
         publishedAt: publication.snapshot.publishedAt,
         bytes: publication.bytes,
       });
@@ -607,13 +634,13 @@ export default async function handler(req, res) {
           .from("admin_settings")
           .update({ value: previous.value, updated_at: previous.updated_at })
           .eq("key", SETTING_KEY)
-          .eq("updated_at", updatedAt);
+          .eq("updated_at", finalVersion);
       } else {
         await supabase
           .from("admin_settings")
           .delete()
           .eq("key", SETTING_KEY)
-          .eq("updated_at", updatedAt);
+          .eq("updated_at", finalVersion);
       }
       await publishPublicContentSnapshot(supabase).catch(() => {});
       await writeRembrandtProjectAccess(access.enabled === true).catch(() => {});

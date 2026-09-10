@@ -188,6 +188,7 @@ function SwitchControl({ checked, disabled = false, label, description, onChange
 export default function RembrandtProjectManager({
   onPublished = () => {},
   onShowToast = () => {},
+  isActive = true,
 }) {
   const [project, setProject] = useState(() => createEmptyRembrandtProject());
   const [savedSnapshot, setSavedSnapshot] = useState("");
@@ -273,6 +274,24 @@ export default function RembrandtProjectManager({
       return false;
     }
   }, [savedSnapshot]);
+
+  useEffect(() => {
+    if (!isActive || dirty || loading) return;
+    let cancelled = false;
+    fetchRembrandtProjectAdminAsync()
+      .then(({ project: loaded, version, revisions: loadedRevisions }) => {
+        if (cancelled) return;
+        const normalized = normalizeRembrandtProject(loaded);
+        setSavedVersion(version ?? null);
+        setSavedSnapshot(JSON.stringify(normalized));
+        setProject(normalized);
+        if (loadedRevisions) setRevisions(loadedRevisions);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isActive, dirty]);
 
   const createPreviewLink = async () => {
     setPreviewBusy(true);
@@ -542,9 +561,29 @@ export default function RembrandtProjectManager({
     }
     setSaving(true);
     try {
-      const result = await saveRembrandtProjectDataAsync(project, savedVersion, {
-        publish,
-      });
+      let currentExpectedVersion = savedVersion;
+      let result;
+      try {
+        result = await saveRembrandtProjectDataAsync(project, currentExpectedVersion, {
+          publish,
+        });
+      } catch (firstError) {
+        const isConflict =
+          firstError?.status === 409 ||
+          (typeof firstError?.message === "string" &&
+            (firstError.message.includes("andere sessie") ||
+              firstError.message.includes("409")));
+        if (!isConflict) throw firstError;
+
+        // Auto-recovery: refresh the database version in background and retry save once
+        const fresh = await fetchRembrandtProjectAdminAsync();
+        if (!fresh?.version) throw firstError;
+        currentExpectedVersion = fresh.version;
+        result = await saveRembrandtProjectDataAsync(project, currentExpectedVersion, {
+          publish,
+        });
+      }
+
       setProject(result.project);
       setSavedVersion(result.version);
       setSavedSnapshot(JSON.stringify(result.project));
@@ -575,7 +614,25 @@ export default function RembrandtProjectManager({
     }
     setAccessSaving(true);
     try {
-      const result = await setRembrandtProjectAccessAsync(enabled, savedVersion);
+      let currentExpectedVersion = savedVersion;
+      let result;
+      try {
+        result = await setRembrandtProjectAccessAsync(enabled, currentExpectedVersion);
+      } catch (firstError) {
+        const isConflict =
+          firstError?.status === 409 ||
+          (typeof firstError?.message === "string" &&
+            (firstError.message.includes("andere sessie") ||
+              firstError.message.includes("409")));
+        if (!isConflict) throw firstError;
+
+        // Auto-recovery: refresh the database version in background and retry once
+        const fresh = await fetchRembrandtProjectAdminAsync();
+        if (!fresh?.version) throw firstError;
+        currentExpectedVersion = fresh.version;
+        result = await setRembrandtProjectAccessAsync(enabled, currentExpectedVersion);
+      }
+
       setProject((current) => !enabled && dirty
         ? { ...current, isEnabled: false }
         : result.project);

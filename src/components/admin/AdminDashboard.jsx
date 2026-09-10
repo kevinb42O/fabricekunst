@@ -336,7 +336,11 @@ export default function AdminDashboard({
           <React.Suspense fallback={<div className="admin-loading-state" role="status">Onderdeel laden…</div>}>
           {projectManagerOpened && (
             <div hidden={activeTab !== 'rembrandt-project'}>
-              <RembrandtProjectManager onPublished={onRembrandtProjectPublished} onShowToast={showToast} />
+              <RembrandtProjectManager
+                onPublished={onRembrandtProjectPublished}
+                onShowToast={showToast}
+                isActive={activeTab === 'rembrandt-project'}
+              />
             </div>
           )}
           {activeTab !== 'rembrandt-project' && <AnimatePresence mode="wait">
