@@ -109,8 +109,9 @@ export default function App() {
   };
 
   const handleSaveProvenance = async (updatedData) => {
-    await saveProvenanceDataAsync(updatedData);
-    setProvenanceData(updatedData);
+    if (updatedData) {
+      setProvenanceData(updatedData);
+    }
   };
 
   const handleSaveFaqItems = async (updatedItems) => {

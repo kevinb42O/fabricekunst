@@ -41,10 +41,14 @@ const REMBRANDT_PROJECT_ADMIN_KEY = "atelier_rembrandt_project_admin";
 const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
   if (force) publicContentPromise = null;
   if (!publicContentPromise) {
-    publicContentPromise = fetch("/api/public-content", {
+    const url = force ? `/api/public-content?t=${Date.now()}` : "/api/public-content";
+    publicContentPromise = fetch(url, {
       method: "GET",
       credentials: "same-origin",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        ...(force ? { "Cache-Control": "no-cache", Pragma: "no-cache" } : {}),
+      },
     })
       .then(async (response) => {
         const body = await response.json().catch(() => null);
@@ -2048,10 +2052,10 @@ export const getProvenanceData = () => {
   }
 };
 
-export const fetchProvenanceDataAsync = async () => {
+export const fetchProvenanceDataAsync = async ({ force = true } = {}) => {
   if (isSupabaseConfigured()) {
     try {
-      const snapshot = await fetchPublicContentSnapshot();
+      const snapshot = await fetchPublicContentSnapshot({ force });
       if (snapshot.provenanceData) {
         const merged = migrateProvenance(snapshot.provenanceData, defaultProvenance());
         localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(merged));
@@ -2116,6 +2120,15 @@ export const publishProvenanceAsync = async (expectedVersion) => {
     throw new Error(body.issues?.join('\n') || body.error || 'Publiceren is mislukt.');
   }
   publicContentPromise = null;
+
+  try {
+    if (body.provenanceData) {
+      localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(normalizeProvenance(body.provenanceData)));
+    }
+  } catch (err) {
+    console.warn("Herkomstpagina kon niet in browsercache worden bijgewerkt:", err);
+  }
+
   return body;
 };
 

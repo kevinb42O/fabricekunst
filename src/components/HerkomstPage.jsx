@@ -96,6 +96,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onRequestC
             <img
               src={currentHeroUrl}
               srcSet={heroImage?.srcSet || undefined}
+              sizes="100vw"
               alt={copy(heroImage?.alt, language) || copy(data.hero.title, language)}
               loading="eager"
               decoding="async"

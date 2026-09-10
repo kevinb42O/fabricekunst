@@ -91,9 +91,15 @@ export default async function handler(req, res) {
     // content is always stripped. The gated project has its own no-store API.
     const serialized = JSON.stringify({ ...snapshot, provenanceData, rembrandtProject: { isEnabled: false } });
 
+    const isNoCache = req.headers['cache-control']?.includes('no-cache') || req.headers['pragma']?.includes('no-cache') || Boolean(req.query?.t);
+    if (isNoCache) {
+      res.setHeader("Cache-Control", "private, no-cache, no-store, max-age=0, must-revalidate");
+      res.setHeader("CDN-Cache-Control", "no-store");
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=10, stale-while-revalidate=30");
+      res.setHeader("CDN-Cache-Control", "public, s-maxage=10, stale-while-revalidate=30");
+    }
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=300");
-    res.setHeader("CDN-Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
     return res.status(200).send(serialized);
   } catch (error) {
     console.error("Public content read failed:", error);
