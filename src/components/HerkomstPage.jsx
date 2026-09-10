@@ -3,6 +3,7 @@ import { ArrowRight, ExternalLink, Image as ImageIcon, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { defaultProvenance } from '../data/defaultProvenance';
 import { localized, migrateProvenance } from '../utils/provenance';
+import ComparisonSlider from './ComparisonSlider';
 
 const copy = (value, language) => localized(value, language) || localized(value, 'nl');
 
@@ -69,11 +70,65 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onRequestC
 
       {section('workflow') && <section id="workflow" className="scroll-mt-16 border-b border-[#ded4c3] bg-white px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('workflow')} language={language} /><ol className="mt-12 grid gap-0 border-t border-[#cfc3b0] sm:grid-cols-2 lg:grid-cols-3">{data.steps.filter(step => step.enabled).map((step, index) => <li key={step.id} className="border-b border-[#cfc3b0] py-7 pr-6 sm:min-h-48 sm:even:border-l sm:even:pl-6"><span className="font-mono text-xs font-bold tracking-[0.2em] text-[#8E7035]">{String(index + 1).padStart(2, '0')}</span><h3 className="mt-3 font-serif text-xl font-bold text-[#17130F]">{copy(step.title, language)}</h3><p className="mt-3 font-serif leading-7 text-[#5E554B]">{copy(step.description, language)}</p></li>)}</ol></div></section>}
 
-      {section('methods') && <section id="methods" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('methods')} language={language} /><div className="mt-12 grid gap-6 lg:grid-cols-2">{data.methods.filter(method => method.enabled).map(method => <article key={method.id} className="border border-[#d8ceb8] bg-white p-6 sm:p-8"><h3 className="font-serif text-2xl font-bold text-[#4A1521]">{copy(method.title, language)}</h3><p className="mt-3 font-serif text-lg italic leading-7 text-[#695a49]">{copy(method.question, language)}</p><p className="mt-5 font-serif leading-7 text-[#51483F]">{copy(method.description, language)}</p><div className="mt-6 grid gap-4 border-t border-[#e4dccf] pt-5 sm:grid-cols-2"><div><h4 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Wat zien we?' : language === 'fr' ? 'Observations' : 'Observations'}</h4><p className="mt-2 text-sm leading-6 text-[#51483F]">{copy(method.findings, language)}</p></div><div><h4 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Grenzen' : language === 'fr' ? 'Limites' : 'Limits'}</h4><p className="mt-2 text-sm leading-6 text-[#51483F]">{copy(method.limitations, language)}</p></div></div>{method.assetIds?.length > 0 && <div className="mt-6 grid grid-cols-3 gap-2">{method.assetIds.map(id => image(id)).filter(asset => asset?.url).map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="aspect-square overflow-hidden bg-[#eee8dd]" aria-label={copy(asset.alt, language)}><AssetImage asset={asset} language={language} className="h-full w-full object-cover transition hover:scale-105" sizes="180px" /></button>)}</div>}{method.sourceIds?.length > 0 && <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#e4dccf] pt-4">{method.sourceIds.map(id => data.sources.find(source => source.id === id && source.enabled)).filter(Boolean).map(source => <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#8E7035] hover:text-[#4A1521]">{copy(source.title, language)}<ExternalLink className="h-3 w-3" /></a>)}</div>}</article>)}</div></div></section>}
+      {section('methods') && <section id="methods" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('methods')} language={language} /><div className="mt-12 grid gap-6 lg:grid-cols-2">{data.methods.filter(method => method.enabled).map(method => <article key={method.id} className="border border-[#d8ceb8] bg-white p-6 sm:p-8"><h3 className="font-serif text-2xl font-bold text-[#4A1521]">{copy(method.title, language)}</h3><p className="mt-3 font-serif text-lg italic leading-7 text-[#695a49]">{copy(method.question, language)}</p><p className="mt-5 font-serif leading-7 text-[#51483F]">{copy(method.description, language)}</p><div className="mt-6 grid gap-4 border-t border-[#e4dccf] pt-5 sm:grid-cols-2"><div><h4 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Onderzoeksfocus & observaties' : language === 'fr' ? 'Diagnostic & observations' : 'Diagnostic focus & observations'}</h4><p className="mt-2 text-sm leading-6 text-[#51483F]">{copy(method.findings, language)}</p></div><div><h4 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Methodisch kader' : language === 'fr' ? 'Cadre méthodologique' : 'Methodological scope'}</h4><p className="mt-2 text-sm leading-6 text-[#51483F]">{copy(method.limitations, language)}</p></div></div>{method.assetIds?.length > 0 && <div className="mt-6 grid grid-cols-3 gap-2">{method.assetIds.map(id => image(id)).filter(asset => asset?.url).map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="aspect-square overflow-hidden bg-[#eee8dd]" aria-label={copy(asset.alt, language)}><AssetImage asset={asset} language={language} className="h-full w-full object-cover transition hover:scale-105" sizes="180px" /></button>)}</div>}{method.sourceIds?.length > 0 && <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#e4dccf] pt-4">{method.sourceIds.map(id => data.sources.find(source => source.id === id && source.enabled)).filter(Boolean).map(source => <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#8E7035] hover:text-[#4A1521]">{copy(source.title, language)}<ExternalLink className="h-3 w-3" /></a>)}</div>}</article>)}</div></div></section>}
 
-      {section('examples') && <section id="examples" className="scroll-mt-16 border-y border-[#ded4c3] bg-[#f3eee5] px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('examples')} language={language} /><div className="mt-12 grid gap-8 lg:grid-cols-2">{data.examples.filter(item => item.enabled).map(example => <article key={example.id} className="overflow-hidden border border-[#d8ceb8] bg-white">{example.assetIds?.length > 0 && <div className="grid aspect-[16/6] grid-cols-2 gap-px bg-[#d8ceb8]">{example.assetIds.slice(0, 2).map(id => image(id)).filter(asset => asset?.url).map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="overflow-hidden bg-[#eee8dd]"><AssetImage asset={asset} language={language} className="h-full w-full object-cover" sizes="(min-width: 1024px) 40vw, 50vw" /></button>)}</div>}<div className="p-6 sm:p-8"><h3 className="font-serif text-2xl font-bold text-[#4A1521]">{copy(example.title, language)}</h3><p className="mt-3 font-serif text-lg italic leading-7 text-[#695a49]">{copy(example.question, language)}</p><p className="mt-5 leading-7 text-[#51483F]">{copy(example.description, language)}</p><dl className="mt-6 grid gap-4 border-t border-[#e4dccf] pt-5 sm:grid-cols-2"><div><dt className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Bevinding' : language === 'fr' ? 'Observation' : 'Finding'}</dt><dd className="mt-2 text-sm leading-6 text-[#51483F]">{copy(example.findings, language)}</dd></div><div><dt className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Open vraag' : language === 'fr' ? 'Question ouverte' : 'Open question'}</dt><dd className="mt-2 text-sm leading-6 text-[#51483F]">{copy(example.uncertainties, language)}</dd></div></dl></div></article>)}</div></div></section>}
+      {section('examples') && <section id="examples" className="scroll-mt-16 border-y border-[#ded4c3] bg-[#f3eee5] px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('examples')} language={language} /><div className="mt-12 grid gap-8 lg:grid-cols-2">{data.examples.filter(item => item.enabled).map(example => <article key={example.id} className="overflow-hidden border border-[#d8ceb8] bg-white">{example.assetIds?.length > 0 && <div className="grid aspect-[16/6] grid-cols-2 gap-px bg-[#d8ceb8]">{example.assetIds.slice(0, 2).map(id => image(id)).filter(asset => asset?.url).map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="overflow-hidden bg-[#eee8dd]"><AssetImage asset={asset} language={language} className="h-full w-full object-cover" sizes="(min-width: 1024px) 40vw, 50vw" /></button>)}</div>}<div className="p-6 sm:p-8"><h3 className="font-serif text-2xl font-bold text-[#4A1521]">{copy(example.title, language)}</h3><p className="mt-3 font-serif text-lg italic leading-7 text-[#695a49]">{copy(example.question, language)}</p><p className="mt-5 leading-7 text-[#51483F]">{copy(example.description, language)}</p><dl className="mt-6 grid gap-4 border-t border-[#e4dccf] pt-5 sm:grid-cols-2"><div><dt className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Gedocumenteerd resultaat' : language === 'fr' ? 'Constat documenté' : 'Documented finding'}</dt><dd className="mt-2 text-sm leading-6 text-[#51483F]">{copy(example.findings, language)}</dd></div><div><dt className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Historische context & synthese' : language === 'fr' ? 'Contexte historique & synthèse' : 'Historical context & synthesis'}</dt><dd className="mt-2 text-sm leading-6 text-[#51483F]">{copy(example.uncertainties, language)}</dd></div></dl></div></article>)}</div></div></section>}
 
-      {section('gallery') && <section id="gallery" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('gallery')} language={language} /><div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{visibleGallery.map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="group text-left"><div className="aspect-[4/3] overflow-hidden bg-[#eee8dd]"><AssetImage asset={asset} language={language} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" sizes="(min-width: 1024px) 25vw, 50vw" /></div><p className="mt-2 text-sm font-serif text-[#51483F]">{copy(asset.title, language)}</p></button>)}</div></div></section>}
+      {section('gallery') && (
+        <section id="gallery" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+          <div className="mx-auto max-w-7xl">
+            <SectionHeading section={section('gallery')} language={language} />
+
+            {/* Interactive Before/After Comparisons (UV vs. Daylight) */}
+            {data.comparisons?.filter(comp => comp.enabled).map(comp => {
+              const left = image(comp.leftId);
+              const right = image(comp.rightId);
+              if (!left?.url || !right?.url) return null;
+              return (
+                <div key={comp.id} className="mt-12">
+                  <ComparisonSlider
+                    comparison={comp}
+                    leftAsset={left}
+                    rightAsset={right}
+                    language={language}
+                    onOpenLightbox={(id) => setLightboxId(id)}
+                  />
+                </div>
+              );
+            })}
+
+            {/* Media Gallery Grid */}
+            <div className="mt-16 border-t border-[#ded4c3] pt-12">
+              <div className="max-w-2xl">
+                <h3 className="font-serif text-xl font-bold text-[#4A1521]">
+                  {language === 'fr'
+                    ? 'Photothèque & Détails d’atelier'
+                    : language === 'en'
+                    ? 'Media Archive & Atelier Details'
+                    : 'Beeldarchief & Atelierdetails'}
+                </h3>
+                <p className="mt-2 text-sm font-serif text-[#695a49]">
+                  {language === 'fr'
+                    ? 'Cliquez sur une image pour l’agrandir et consulter les observations diagnostiques.'
+                    : language === 'en'
+                    ? 'Click any image to inspect full dimensions and diagnostic metadata.'
+                    : 'Klik op een opname voor een vergroting en de methodische beschrijving.'}
+                </p>
+              </div>
+              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {visibleGallery.map(asset => (
+                  <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="group text-left">
+                    <div className="aspect-[4/3] overflow-hidden bg-[#eee8dd]">
+                      <AssetImage asset={asset} language={language} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" sizes="(min-width: 1024px) 25vw, 50vw" />
+                    </div>
+                    <p className="mt-2 text-sm font-serif text-[#51483F]">{copy(asset.title, language)}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {section('dossier') && <section id="dossier" className="scroll-mt-16 border-y border-[#ded4c3] bg-white px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('dossier')} language={language} /><p className="mt-8 max-w-3xl font-serif text-lg leading-8 text-[#51483F]">{copy(data.dossier.description, language)}</p><div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{data.dossier.items.filter(item => item.enabled).map(item => <div key={item.id} className="border-l-2 border-[#B8860B] pl-5"><h3 className="font-serif text-xl font-bold text-[#4A1521]">{copy(item.title, language)}</h3><p className="mt-2 leading-7 text-[#5E554B]">{copy(item.description, language)}</p></div>)}</div></div></section>}
 

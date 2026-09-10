@@ -375,3 +375,61 @@ ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics_events FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.analytics_events FROM PUBLIC, anon, authenticated;
 GRANT ALL ON TABLE public.analytics_events TO service_role;
+
+-- ----------------------------------------------------------------------------
+-- PROVENANCE & AUTHENTICITY EDITOR TABLES (R2 BACKED)
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.provenance_pages (
+    id TEXT PRIMARY KEY DEFAULT 'main' CHECK (id = 'main'),
+    draft JSONB NOT NULL DEFAULT '{}'::jsonb,
+    version INTEGER NOT NULL DEFAULT 0 CHECK (version >= 0),
+    published_version INTEGER,
+    published_content JSONB,
+    pending_publication JSONB,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.provenance_revisions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version INTEGER NOT NULL,
+    content JSONB NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'publication' CHECK (kind IN ('publication', 'legacy-backup')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS provenance_revision_version_idx ON public.provenance_revisions(version, kind);
+
+CREATE TABLE IF NOT EXISTS public.provenance_media (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    original_key TEXT NOT NULL UNIQUE CHECK (original_key LIKE 'provenance/originals/%' AND original_key NOT LIKE '%..%'),
+    filename TEXT NOT NULL,
+    sha256 TEXT UNIQUE,
+    aliases INTEGER[] NOT NULL DEFAULT '{}',
+    content_type TEXT NOT NULL,
+    size_bytes INTEGER NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 20971520),
+    width INTEGER,
+    height INTEGER,
+    variants JSONB NOT NULL DEFAULT '[]'::jsonb,
+    crop JSONB,
+    status TEXT NOT NULL DEFAULT 'uploaded' CHECK (status IN ('uploaded', 'ready', 'archived')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+ALTER TABLE public.provenance_pages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.provenance_pages FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.provenance_revisions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.provenance_revisions FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.provenance_media ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.provenance_media FORCE ROW LEVEL SECURITY;
+
+REVOKE ALL ON public.provenance_pages, public.provenance_revisions, public.provenance_media FROM PUBLIC, anon, authenticated;
+GRANT ALL ON public.provenance_pages, public.provenance_revisions, public.provenance_media TO service_role;
+
+INSERT INTO public.provenance_pages(id, draft)
+VALUES ('main', '{}'::jsonb)
+ON CONFLICT (id) DO NOTHING;
+

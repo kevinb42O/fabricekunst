@@ -1,0 +1,73 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { defaultProvenance } from '../src/data/defaultProvenance.js';
+import { normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
+
+test('default provenance has valid comparison for UV vs daylight', () => {
+  const draft = defaultProvenance();
+  assert.ok(Array.isArray(draft.comparisons), 'comparisons should be an array');
+  assert.equal(draft.comparisons.length, 1, 'should have 1 default comparison');
+
+  const comparison = draft.comparisons[0];
+  assert.equal(comparison.id, 'portrait-daylight-uv');
+  assert.equal(comparison.enabled, true);
+  assert.equal(comparison.sameObjectConfirmed, true);
+  assert.ok(comparison.leftId, 'leftId must be present');
+  assert.ok(comparison.rightId, 'rightId must be present');
+  assert.notEqual(comparison.leftId, comparison.rightId, 'left and right must be distinct assets');
+
+  // Verify translations
+  for (const lang of ['nl', 'en', 'fr']) {
+    assert.ok(comparison.title[lang], `title in ${lang} must be present`);
+    assert.ok(comparison.leftLabel[lang], `leftLabel in ${lang} must be present`);
+    assert.ok(comparison.rightLabel[lang], `rightLabel in ${lang} must be present`);
+  }
+
+  // Verify publishing validation passes with 0 issues
+  const issues = provenanceIssues(draft, { publishing: true });
+  assert.deepEqual(issues, []);
+});
+
+test('provenance issues rejects invalid comparisons', () => {
+  const draft = defaultProvenance();
+
+  // 1. Same asset on left and right
+  draft.comparisons[0].leftId = draft.comparisons[0].rightId;
+  let issues = provenanceIssues(draft, { publishing: true });
+  assert.ok(issues.some(issue => issue.includes('kies twee verschillende beelden')));
+
+  // 2. Unconfirmed same object
+  draft.comparisons[0].leftId = '00000000-0000-4000-8000-000000000020';
+  draft.comparisons[0].rightId = '00000000-0000-4000-8000-000000000027';
+  draft.comparisons[0].sameObjectConfirmed = false;
+  issues = provenanceIssues(draft, { publishing: true });
+  assert.ok(issues.some(issue => issue.includes('bevestig hetzelfde object')));
+
+  // 3. Missing translation
+  draft.comparisons[0].sameObjectConfirmed = true;
+  draft.comparisons[0].rightLabel.fr = '';
+  issues = provenanceIssues(draft, { publishing: true });
+  assert.ok(issues.some(issue => issue.includes('Vergelijking / rightLabel: FR ontbreekt')));
+});
+
+test('publicProvenance projects comparison with ready assets', () => {
+  const draft = defaultProvenance();
+  const media = [
+    { id: '00000000-0000-4000-8000-000000000020', status: 'ready', variants: [{ url: 'https://cdn.example.com/20.webp', width: 1200, height: 1600 }] },
+    { id: '00000000-0000-4000-8000-000000000027', status: 'ready', variants: [{ url: 'https://cdn.example.com/27.webp', width: 1209, height: 1600 }] },
+    { id: '00000000-0000-4000-8000-000000000037', status: 'ready', variants: [{ url: 'https://cdn.example.com/37.webp', width: 1200, height: 1600 }] },
+  ];
+
+  const pub = publicProvenance(draft, media);
+  assert.equal(pub.comparisons.length, 1);
+  assert.equal(pub.comparisons[0].leftId, '00000000-0000-4000-8000-000000000020');
+  assert.equal(pub.comparisons[0].rightId, '00000000-0000-4000-8000-000000000027');
+
+  // Verify left and right assets are in public assets
+  const left = pub.assets.find(a => a.id === pub.comparisons[0].leftId);
+  const right = pub.assets.find(a => a.id === pub.comparisons[0].rightId);
+  assert.ok(left, 'left asset must be in public projection');
+  assert.ok(right, 'right asset must be in public projection');
+  assert.equal(left.url, 'https://cdn.example.com/20.webp');
+  assert.equal(right.url, 'https://cdn.example.com/27.webp');
+});
