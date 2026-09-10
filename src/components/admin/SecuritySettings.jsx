@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { updateAdminPasswordAsync } from '../../utils/storage';
 import { supabase } from '../../utils/supabaseClient';
+import { authenticatedAdminFetch } from '../../utils/adminApi';
 import {
   isPushSupported,
   isIOS,
@@ -113,15 +114,10 @@ export default function SecuritySettings({ currentUser, onShowToast }) {
   const handleSendTestNotification = async () => {
     setTestingPush(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (!accessToken) throw new Error('Uw beheerderssessie is verlopen. Meld u opnieuw aan.');
-
-      const response = await fetch('/api/send-push', {
+      const response = await authenticatedAdminFetch('/api/send-push', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({ test: true })
       });

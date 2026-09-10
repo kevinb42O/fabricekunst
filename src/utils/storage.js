@@ -64,19 +64,11 @@ const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
 
 const publishPublicContentSnapshot = async () => {
   if (!isSupabaseConfigured() || !supabase) return;
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
-  if (!token)
-    throw new Error(
-      "De beheerderssessie is verlopen; de websiteversie is niet bijgewerkt.",
-    );
-
-  const response = await fetch("/api/publish-public-content", {
+  const response = await authenticatedAdminFetch("/api/publish-public-content", {
     method: "POST",
     credentials: "same-origin",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
   const body = await response.json().catch(() => ({}));
@@ -1042,19 +1034,10 @@ export const uploadCatalogImage = async (
   let phase = "de beveiligde upload voorbereiden";
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
-
-    if (!token) {
-      console.warn("No active session for R2 upload");
-      throw new Error("No active session");
-    }
-
-    const res = await fetch("/api/r2-presigned-url", {
+    const res = await authenticatedAdminFetch("/api/r2-presigned-url", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         filename: file.name,
@@ -1113,12 +1096,11 @@ export const uploadCatalogImage = async (
     }
 
     phase = "de upload bevestigen";
-    const verifyRes = await fetch("/api/r2-presigned-url", {
+    const verifyRes = await authenticatedAdminFetch("/api/r2-presigned-url", {
       method: "POST",
       credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         action: "complete",
@@ -2119,6 +2101,21 @@ export const saveProvenanceDraftAsync = async (content, expectedVersion) => {
   const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save-draft', content: normalizeProvenance(content), expectedVersion }) });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.ok) throw new Error(body.error || 'Het concept kon niet worden opgeslagen.');
+  return body;
+};
+
+export const publishProvenanceAsync = async (expectedVersion) => {
+  const response = await authenticatedAdminFetch('/api/save-provenance', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'publish', expectedVersion }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok) {
+    throw new Error(body.issues?.join('\n') || body.error || 'Publiceren is mislukt.');
+  }
+  publicContentPromise = null;
   return body;
 };
 
