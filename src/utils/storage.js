@@ -12,6 +12,8 @@ import {
   publishedRembrandtProject,
 } from "./rembrandtProject";
 import { authenticatedAdminFetch } from "./adminApi";
+import { defaultProvenance } from "../data/defaultProvenance";
+import { migrateProvenance, normalizeProvenance } from "./provenance";
 
 const CATALOG_KEY = "atelier_rembrandt_catalog";
 const INQUIRIES_KEY = "atelier_rembrandt_inquiries";
@@ -2055,21 +2057,12 @@ const mergeProtocolSteps = (savedSteps = []) => {
 export const getProvenanceData = () => {
   try {
     const saved = localStorage.getItem(PROVENANCE_PAGE_KEY);
-    if (!saved) return DEFAULT_PROVENANCE_DATA;
+    if (!saved) return defaultProvenance();
     const parsed = JSON.parse(saved);
-    return {
-      hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
-      protocol: {
-        ...DEFAULT_PROVENANCE_DATA.protocol,
-        ...(parsed.protocol || {}),
-        steps: mergeProtocolSteps(parsed.protocol?.steps),
-      },
-      story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
-      cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) },
-    };
+    return migrateProvenance(parsed, defaultProvenance());
   } catch (err) {
     console.error("Fout bij ophalen herkomst pagina data:", err);
-    return DEFAULT_PROVENANCE_DATA;
+    return defaultProvenance();
   }
 };
 
@@ -2078,17 +2071,7 @@ export const fetchProvenanceDataAsync = async () => {
     try {
       const snapshot = await fetchPublicContentSnapshot();
       if (snapshot.provenanceData) {
-        const parsed = snapshot.provenanceData;
-        const merged = {
-          hero: { ...DEFAULT_PROVENANCE_DATA.hero, ...(parsed.hero || {}) },
-          protocol: {
-            ...DEFAULT_PROVENANCE_DATA.protocol,
-            ...(parsed.protocol || {}),
-            steps: mergeProtocolSteps(parsed.protocol?.steps),
-          },
-          story: { ...DEFAULT_PROVENANCE_DATA.story, ...(parsed.story || {}) },
-          cta: { ...DEFAULT_PROVENANCE_DATA.cta, ...(parsed.cta || {}) },
-        };
+        const merged = migrateProvenance(snapshot.provenanceData, defaultProvenance());
         localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(merged));
         return merged;
       }
@@ -2100,45 +2083,71 @@ export const fetchProvenanceDataAsync = async () => {
 };
 
 export const saveProvenanceDataAsync = async (data) => {
-  assertManagedImageUrl(data?.hero?.bgImage, { allowLocal: false });
-  assertManagedImageUrl(data?.story?.image, { allowLocal: false });
-  if (isSupabaseConfigured() && supabase) {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
-    if (!token)
-      throw new Error(
-        "De beheerderssessie is verlopen. Log opnieuw in om te publiceren.",
-      );
-    const response = await fetch("/api/save-provenance", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ provenanceData: data }),
-    });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result.ok) {
-      throw new Error(
-        result.error ||
-          "De herkomstpagina kon niet veilig worden gepubliceerd.",
-      );
-    }
-    publicContentPromise = null;
-  }
+  if (!isSupabaseConfigured() || !supabase) throw new Error('De online inhoudsopslag is niet geconfigureerd.');
+  const currentResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'GET', credentials: 'same-origin' });
+  const current = await currentResponse.json().catch(() => ({}));
+  if (!currentResponse.ok || !current.ok) throw new Error(current.error || 'De conceptversie kon niet worden opgehaald.');
+  const draftResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save-draft', content: normalizeProvenance(data), expectedVersion: current.version }) });
+  const draft = await draftResponse.json().catch(() => ({}));
+  if (!draftResponse.ok || !draft.ok) throw new Error(draft.error || 'De conceptversie kon niet worden opgeslagen.');
+  const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'publish', expectedVersion: draft.version }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) throw new Error(result.issues?.join('\n') || result.error || 'De herkomstpagina kon niet veilig worden gepubliceerd.');
+  publicContentPromise = null;
 
   // Browser state is updated only after the authoritative save and R2
   // publication have both succeeded.
   try {
-    localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(normalizeProvenance(result.provenanceData || data)));
   } catch (err) {
     console.warn(
       "Herkomstpagina is gepubliceerd, maar de browsercache kon niet worden bijgewerkt:",
       err,
     );
   }
-  return data;
+  return normalizeProvenance(result.provenanceData || data);
+};
+
+export const fetchProvenanceAdminAsync = async () => {
+  const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'GET', credentials: 'same-origin' });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok) throw new Error(body.error || 'De herkomsteditor kon niet worden geladen.');
+  return body;
+};
+
+export const saveProvenanceDraftAsync = async (content, expectedVersion) => {
+  const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save-draft', content: normalizeProvenance(content), expectedVersion }) });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok) throw new Error(body.error || 'Het concept kon niet worden opgeslagen.');
+  return body;
+};
+
+export const restoreProvenanceRevisionAsync = async (revisionId, expectedVersion) => {
+  const response = await authenticatedAdminFetch('/api/save-provenance', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'restore', revisionId, expectedVersion }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok) throw new Error(body.error || 'De revisie kon niet worden hersteld.');
+  return body;
+};
+
+export const uploadProvenanceMediaAsync = async (file, { crop = null } = {}) => {
+  if (!file) throw new Error('Kies eerst een afbeelding.');
+  const initResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'media-init', filename: file.name, contentType: file.type, size: file.size }) });
+  const init = await initResponse.json().catch(() => ({}));
+  if (!initResponse.ok || !init.ok) throw new Error(init.error || 'De R2-upload kon niet worden voorbereid.');
+  const uploadResponse = await fetch(init.presignedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type, 'Cache-Control': init.cacheControl } });
+  if (!uploadResponse.ok) throw new Error(`De R2-upload is geweigerd (${uploadResponse.status}).`);
+  const completeResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'media-complete', id: init.id, uploadReceipt: init.uploadReceipt }) });
+  const complete = await completeResponse.json().catch(() => ({}));
+  if (!completeResponse.ok || !complete.ok) throw new Error(complete.error || 'De R2-upload kon niet worden bevestigd.');
+  const renderResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'media-render', id: complete.media.id, crop, confirmPublic: true }) });
+  const rendered = await renderResponse.json().catch(() => ({}));
+  if (!renderResponse.ok || !rendered.ok) throw new Error(rendered.error || 'De publieke R2-variant kon niet worden gemaakt.');
+  return rendered.media;
 };
 
 // ==========================================

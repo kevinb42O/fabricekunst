@@ -1,63 +1,18 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Award, Compass, ShieldCheck, Feather, ArrowRight } from 'lucide-react';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 import { localizePath } from '../utils/locales';
+import { defaultProvenance } from '../data/defaultProvenance';
+import { localized, migrateProvenance } from '../utils/provenance';
 
-const PROVENANCE_VISUALS = [
-  {
-    id: 'white-gloves',
-    title: 'Inspectie met Witte Handschoenen',
-    subtitle: 'Museumwaardige conservering & gecureerde selectie van zeldzame meesterwerken',
-    image: '/images/white-gloves-conservator.jpg',
-    quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collecties."'
-  },
-  {
-    id: 'bookcase',
-    title: 'De Antiquariaats-Bibliotheek',
-    subtitle: 'Historische boekenkast met sfeerverlichting en zeldzame banden',
-    image: '/images/voltaire-lit-bookcase-desk.jpg',
-    quote: '"Hier koop je geen boek. Hier koop je geschiedenis."'
-  },
-  {
-    id: 'exlibris',
-    title: 'Ex-Libris & Provenance',
-    subtitle: 'Handgemaakt marmeren schutblad met authentiek heraldiek eigendomsstempel',
-    image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
-    quote: '"Niet alles wat oud is, is uitzonderlijk. Daarom selecteren wij uitsluitend het beste."'
-  }
-];
-
-export default function AboutProvenance() {
+export default function AboutProvenance({ provenanceData }) {
   const { t, language } = useLanguage();
-  const [activeVisualIndex, setActiveVisualIndex] = useState(0);
-
-  const provenanceVisuals = [
-    {
-      id: 'white-gloves',
-      title: 'Inspectie met Witte Handschoenen',
-      subtitle: 'Museumwaardige conservering & gecureerde selectie',
-      image: '/images/white-gloves-conservator.jpg',
-      quote: '"Wij kopen geen volumes. Wij selecteren meesterwerken. Slechts een fractie van wat wij bekijken, verdient een plaats in onze collecties."'
-    },
-    {
-      id: 'bookcase',
-      title: 'De Antiquariaats-Bibliotheek',
-      subtitle: 'Historische boekenkast met sfeerverlichting',
-      image: '/images/voltaire-lit-bookcase-desk.jpg',
-      quote: '"Hier koop je geen boek. Hier koop je geschiedenis."'
-    },
-    {
-      id: 'exlibris',
-      title: 'Ex-Libris & Provenance',
-      subtitle: 'Handgemaakt marmeren schutblad met eigendomsstempel',
-      image: '/images/voltaire-marbled-endpaper-exlibris.jpg',
-      quote: '"Niet alles wat oud is, is uitzonderlijk. Daarom selecteren wij uitsluitend het beste."'
-    }
-  ];
-
-  const activeVisual = provenanceVisuals[activeVisualIndex] || provenanceVisuals[0];
+  const published = migrateProvenance(provenanceData, defaultProvenance());
+  const homepageTeaser = published.homepageTeaser;
+  if (!homepageTeaser.enabled) return null;
+  const teaserAsset = published.assets.find(asset => asset.id === homepageTeaser.assetId && asset.url);
 
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -91,12 +46,12 @@ export default function AboutProvenance() {
             </span>
             
             <h2 className="display-section-wide text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.08]">
-              {t('provenance.heroTitle')}
+              {localized(homepageTeaser.title, language) || t('provenance.heroTitle')}
             </h2>
           </div>
 
           <p className="text-[#444444] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed">
-            {t('provenance.sectionDesc')}
+            {localized(homepageTeaser.description, language) || t('provenance.sectionDesc')}
           </p>
         </div>
 
@@ -106,14 +61,15 @@ export default function AboutProvenance() {
           {/* Frameless Master Photography (White Gloves Conservator) */}
           <div className="lg:col-span-7">
             <div className="relative aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-neutral-50">
-              <img
-                src="/images/white-gloves-conservator.jpg"
-                alt="Conservering met witte handschoenen"
-                loading="lazy"
-                decoding="async"
-                draggable="false"
-                className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.02]"
-              />
+              {teaserAsset?.url ? <img
+                  src={teaserAsset.url}
+                  srcSet={teaserAsset.srcSet || undefined}
+                  alt={localized(teaserAsset.alt, language)}
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                  className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.02]"
+                /> : <div aria-label="R2-afbeelding wordt geladen" className="h-full w-full bg-[#eee8dd]" />}
             </div>
           </div>
 
@@ -155,7 +111,7 @@ export default function AboutProvenance() {
                 href={localizePath('/herkomst', language)}
                 className="inline-flex min-h-12 items-center justify-center space-x-2 border-b border-[#1C1A17] text-xs sm:text-sm font-serif font-semibold uppercase tracking-[0.16em] text-[#111111] hover:text-[#4A1521] transition-colors duration-300"
               >
-                <span>{t('nav.herkomst')}</span>
+                <span>{localized(homepageTeaser.buttonLabel, language) || t('nav.herkomst')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </a>
             </div>

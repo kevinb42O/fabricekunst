@@ -9,6 +9,7 @@ import { getR2Client, PUBLIC_CONTENT_POINTER_KEY } from "./r2.js";
 import { publishedRembrandtProject } from "../../src/utils/rembrandtProject.js";
 import { cloneDefaultRembrandtProject } from "../../src/data/defaultRembrandtProject.js";
 import { readRembrandtProjectAccess } from "./rembrandtProjectAccess.js";
+import { readPublishedProvenance } from "./provenancePublication.js";
 
 const parseSetting = (row, fallback = null) => {
   if (!row?.value) return fallback;
@@ -57,6 +58,17 @@ export const buildPublicContentSnapshot = async (supabase) => {
   const publicRembrandtProject = rembrandtProject.isEnabled === true
     ? rembrandtProject
     : { isEnabled: false };
+  // Provenance has its own immutable R2 publication pointer. Keep the legacy
+  // admin setting as a compatibility fallback until the first dedicated
+  // publication has been made.
+  let dedicatedProvenance = null;
+  try {
+    dedicatedProvenance = await readPublishedProvenance();
+  } catch (error) {
+    if (error?.$metadata?.httpStatusCode !== 404 && error?.name !== "NotFound") {
+      console.warn("Dedicated provenance publication could not be read:", error.message);
+    }
+  }
   const catalog = (items || []).map((item) => {
     const extension = parseSetting(byKey.get(`item_ext_${item.id}`));
     return extension && typeof extension === "object"
@@ -69,7 +81,7 @@ export const buildPublicContentSnapshot = async (supabase) => {
     catalog,
     heroImage: parseSetting(byKey.get("hero_image")),
     mobileHeroImage: parseSetting(byKey.get("mobile_hero_image")),
-    provenanceData: parseSetting(byKey.get("herkomst_page_data")),
+    provenanceData: dedicatedProvenance?.data || parseSetting(byKey.get("herkomst_page_data")),
     faqItems: parseSetting(byKey.get("faq_items")),
     rembrandtProject: publicRembrandtProject,
   };

@@ -847,7 +847,7 @@ export default function App() {
                   <CollectorListSection source="homepage_desktop" />
 
                   {/* Museum Herkomst & Provenance Showcase */}
-                  <AboutProvenance />
+                  <AboutProvenance provenanceData={provenanceData} />
 
                   {/* Interactive Collector FAQ Section */}
                   <FaqSection

@@ -8,6 +8,7 @@ import rembrandtProjectAccessHandler from './_lib/rembrandtProjectAccessEndpoint
 import rembrandtProjectPreviewHandler from './_lib/rembrandtProjectPreviewEndpoint.js';
 import { INITIAL_CATALOG } from '../src/data/initialCatalog.js';
 import { buildSitemapXml } from '../src/utils/sitemap.js';
+import { readPublishedProvenance } from './_lib/provenancePublication.js';
 
 export default async function handler(req, res) {
   if (req.query?.resource === 'sitemap') {
@@ -74,9 +75,21 @@ export default async function handler(req, res) {
 
   try {
     const { snapshot } = await readPublicContentSnapshot();
+    // Provenance is published through its own immutable R2 pointer. Overlay
+    // it here so a provenance publication becomes visible immediately even
+    // while the shared catalog snapshot is still cached.
+    let provenanceData = snapshot.provenanceData;
+    try {
+      const dedicated = await readPublishedProvenance();
+      if (dedicated?.data) provenanceData = dedicated.data;
+    } catch (error) {
+      if (error?.$metadata?.httpStatusCode !== 404 && error?.name !== 'NotFound') {
+        console.warn('Dedicated provenance read failed; using shared snapshot:', error.message);
+      }
+    }
     // The large shared website snapshot is cacheable only because project
     // content is always stripped. The gated project has its own no-store API.
-    const serialized = JSON.stringify({ ...snapshot, rembrandtProject: { isEnabled: false } });
+    const serialized = JSON.stringify({ ...snapshot, provenanceData, rembrandtProject: { isEnabled: false } });
 
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=300");

@@ -1,394 +1,87 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Feather } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, ExternalLink, Image as ImageIcon, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { DEFAULT_PROVENANCE_DATA } from '../utils/storage';
-import FaqSection from './FaqSection';
+import { defaultProvenance } from '../data/defaultProvenance';
+import { localized, migrateProvenance } from '../utils/provenance';
 
-const getLocalizedField = (obj, field, lang = 'nl') => {
-  if (!obj) return '';
-  if (lang === 'nl') return obj[field] || '';
-  const langKey = `${field}_${lang}`;
-  if (obj[langKey] && typeof obj[langKey] === 'string' && obj[langKey].trim() !== '') {
-    return obj[langKey];
-  }
-  return obj[field] || '';
-};
+const copy = (value, language) => localized(value, language) || localized(value, 'nl');
 
-const getLocalizedArray = (obj, field, lang = 'nl') => {
-  if (!obj) return [];
-  if (lang === 'nl') return obj[field] || [];
-  const localized = obj[`${field}_${lang}`];
-  if (Array.isArray(localized)) return localized;
-  return obj[field] || [];
-};
+function SectionHeading({ section, language }) {
+  return (
+    <header className="max-w-3xl">
+      {copy(section.eyebrow, language) && <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8E7035]">{copy(section.eyebrow, language)}</p>}
+      <h2 className="mt-3 font-serif text-3xl font-bold leading-tight text-[#4A1521] sm:text-4xl">{copy(section.title, language)}</h2>
+      {copy(section.intro, language) && <p className="mt-4 max-w-2xl font-serif text-base leading-7 text-[#51483F]">{copy(section.intro, language)}</p>}
+    </header>
+  );
+}
 
-const splitEditorialTitle = (title = '') => {
-  const separatorIndex = title.indexOf('&');
-  if (separatorIndex <= 0) {
-    return { primary: title, secondary: '' };
-  }
-  return {
-    primary: title.slice(0, separatorIndex).trim(),
-    secondary: `& ${title.slice(separatorIndex + 1).trim()}`
-  };
-};
+function AssetImage({ asset, language, className = '', sizes = '100vw' }) {
+  if (!asset?.url) return <div className={`flex items-center justify-center bg-[#eee8dd] text-[#8E7035] ${className}`}><ImageIcon aria-hidden="true" /></div>;
+  return <img src={asset.url} srcSet={asset.srcSet || undefined} sizes={sizes} alt={copy(asset.alt, language)} loading="lazy" className={className} />;
+}
 
 export default function HerkomstPage({ provenanceData, faqItems = [], onRequestConsultation }) {
   const { language } = useLanguage();
-  const heroRef = useRef(null);
+  const [lightboxId, setLightboxId] = useState(null);
+  const data = useMemo(() => migrateProvenance(provenanceData, defaultProvenance()), [provenanceData]);
+  const assets = useMemo(() => new Map((data.assets || []).map(asset => [asset.id, asset])), [data.assets]);
+  const section = id => data.sections.find(item => item.id === id && item.enabled);
+  const image = id => assets.get(id);
+  const visibleGallery = (data.gallery?.assetIds || []).map(image).filter(asset => asset?.url);
+  const activeFaq = data.faq?.length ? data.faq : faqItems.map((item, index) => ({ id: `legacy-${index}`, enabled: true, question: { nl: item.question || item.question_nl || '' }, answer: { nl: item.answer || item.answer_nl || '' } }));
+  const lightboxAsset = lightboxId ? image(lightboxId) : null;
 
-  const data = provenanceData || DEFAULT_PROVENANCE_DATA;
-  const hero = data.hero || DEFAULT_PROVENANCE_DATA.hero;
-  const protocol = data.protocol || DEFAULT_PROVENANCE_DATA.protocol;
-  const story = data.story || DEFAULT_PROVENANCE_DATA.story;
-  const cta = data.cta || DEFAULT_PROVENANCE_DATA.cta;
-  const verificationSteps = protocol.steps || DEFAULT_PROVENANCE_DATA.protocol.steps;
+  useEffect(() => {
+    if (!lightboxId) return undefined;
+    const onKeyDown = event => { if (event.key === 'Escape') setLightboxId(null); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lightboxId]);
 
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
-
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.12, delayChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] }
-    }
-  };
-
-  const heroBadge = getLocalizedField(hero, 'badge', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.hero, 'badge', language);
-  const heroTitle = getLocalizedField(hero, 'title', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.hero, 'title', language);
-  const { primary: heroTitle1, secondary: heroTitle2 } = splitEditorialTitle(heroTitle);
-  const heroSubtitle = getLocalizedField(hero, 'subtitle', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.hero, 'subtitle', language);
-
-  const protocolBadge = getLocalizedField(protocol, 'badge', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.protocol, 'badge', language);
-  const protocolTitle = getLocalizedField(protocol, 'title', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.protocol, 'title', language);
-  const protocolSubtitle = getLocalizedField(protocol, 'subtitle', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.protocol, 'subtitle', language);
-
-  const storyBadge = getLocalizedField(story, 'badge', language) || "Ex-Libris & Eigendomssporen";
-  const storyTitle = getLocalizedField(story, 'title', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.story, 'title', language);
-  const storyQuote = getLocalizedField(story, 'quote', language);
-  const storyQuoteAuthor = getLocalizedField(story, 'quoteAuthor', language) || 'Atelier Rembrandt';
-  const storyNarrative = getLocalizedField(story, 'narrative', language) || getLocalizedField(DEFAULT_PROVENANCE_DATA.story, 'narrative', language);
-  const storyImageCaption = getLocalizedField(story, 'imageCaption', language) || "Ex-Libris Vacheron-Poinsot op handgemaakt gemarmerd schutblad (1829).";
-  const storyBullets = getLocalizedArray(story, 'bullets', language);
-
-  const ctaBadge = getLocalizedField(cta, 'badge', language) || "Particuliere Expertise & Consultatie";
-  const ctaTitle = getLocalizedField(cta, 'title', language) || "Wilt u de Herkomst van uw Eigen Collectie Laten Verifiëren?";
-  const ctaSubtitle = getLocalizedField(cta, 'subtitle', language) || "Atelier Rembrandt adviseert verzamelaars en erfgenamen bij de waardebepaling, conservering en authenticiteitsverificatie van historische privé-bibliotheken.";
-  const ctaButtonText = getLocalizedField(cta, 'buttonText', language) || "Privé Consultatie Aanvragen";
+  const scrollTo = id => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const heroImage = image(data.hero.assetId);
 
   return (
-    <div className="editorial-readable bg-white min-h-screen text-[#111111] overflow-hidden">
-      <h1 className="sr-only">{heroTitle}</h1>
-
-      {/* Mobile presentation: photography and copy never compete for contrast. */}
-      <section className="lg:hidden bg-white pt-16">
-        <div className="relative h-[43svh] min-h-[300px] max-h-[440px] overflow-hidden bg-[#e9e3d9]">
-          <img
-            src={hero.bgImage || "/images/hero/hero-voltaire-exlibris.jpg"}
-            alt="Atelier Rembrandt Herkomst & Expertise"
-            className="h-full w-full object-cover object-center"
-          />
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent" aria-hidden="true" />
-        </div>
-
-        <div className="mobile-page-gutter -mt-2 pb-14">
-          <div className="flex items-center gap-3 text-[11px] font-serif font-semibold tracking-[0.2em] text-[#8E7035] uppercase">
-            <span className="h-px w-8 bg-[#B8860B]" aria-hidden="true" />
-            <span>{heroBadge}</span>
+    <main className="overflow-hidden bg-[#fbfaf7] text-[#17130F]">
+      <section className="relative isolate border-b border-[#ded4c3] bg-[#f3eee5]">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-12 lg:py-24">
+          <div className="order-2 lg:order-1">
+            <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#8E7035]"><span className="h-px w-9 bg-[#B8860B]" />{copy(data.hero.eyebrow, language)}</p>
+            <h1 className="mt-5 max-w-2xl font-serif text-4xl font-bold leading-[1.02] tracking-[-0.03em] text-[#4A1521] sm:text-6xl">{copy(data.hero.title, language)}</h1>
+            <p className="mt-6 max-w-xl font-serif text-lg leading-8 text-[#51483F]">{copy(data.hero.description, language)}</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button type="button" onClick={() => scrollTo('methods')} className="inline-flex min-h-12 items-center gap-3 bg-[#1C1A17] px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#4A1521]">{copy(data.hero.primaryLabel, language)}<ArrowRight className="h-4 w-4" /></button>
+              <button type="button" onClick={onRequestConsultation} className="inline-flex min-h-12 items-center gap-3 border border-[#8E7035] px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#4A1521] transition hover:bg-white">{copy(data.hero.secondaryLabel, language)}</button>
+            </div>
           </div>
-          <div className="mt-5 text-[clamp(2.5rem,12vw,4.5rem)] font-serif font-bold text-[#4A1521] tracking-[-0.035em] leading-[0.98]">
-            <span className="block">{heroTitle1}</span>
-            {heroTitle2 && (
-              <span className="mt-2 block text-[0.7em] font-normal italic text-[#8E7035]">{heroTitle2}</span>
-            )}
+          <div className="order-1 aspect-[4/3] overflow-hidden border border-[#d8ceb8] bg-[#e9e3d9] shadow-xl lg:order-2 lg:aspect-[5/4]">
+            <AssetImage asset={heroImage} language={language} className="h-full w-full object-cover" sizes="(min-width: 1024px) 55vw, 100vw" />
           </div>
-          <p className="mt-6 max-w-xl text-[1.05rem] leading-7 text-[#3d342d] font-serif">
-            {heroSubtitle}
-          </p>
-        </div>
-      </section>
-      
-      {/* ------------------------------------------------------------- */}
-      {/* 1. HERO SECTION WITH HERO PHOTO SHOWCASE                      */}
-      {/* ------------------------------------------------------------- */}
-      <section 
-        ref={heroRef}
-        className="relative w-full h-screen min-h-[680px] hidden lg:flex flex-col justify-center overflow-hidden bg-white pt-20 sm:pt-24 pb-12 sm:pb-20 select-none"
-      >
-        {/* Photography Background Showcase */}
-        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
-          {/* Parallax Image */}
-          <motion.div style={{ y: bgY }} className="w-full h-full absolute inset-0">
-            <img
-              src={hero.bgImage || "/images/hero/hero-voltaire-exlibris.jpg"}
-              alt="Atelier Rembrandt Herkomst & Expertise"
-              className="absolute top-0 right-0 w-full lg:w-[65%] h-full object-cover filter contrast-[1.02] brightness-[0.97] opacity-35 lg:opacity-60"
-            />
-          </motion.div>
-
-          {/* Crisp text protection overlay on left side */}
-          <div
-            className="absolute inset-y-0 left-0 w-full h-full z-10 pointer-events-none"
-            style={{
-              background: 'linear-gradient(to right, #FFFFFF 0%, #FFFFFF 38%, rgba(255, 255, 255, 0.65) 52%, transparent 70%)'
-            }}
-          />
-
-          {/* Silky-smooth bottom edge transition fade */}
-          <div 
-            className="absolute inset-x-0 bottom-0 h-24 z-10 pointer-events-none"
-            style={{
-              background: 'linear-gradient(to top, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 40%, transparent 100%)'
-            }}
-          />
-        </div>
-        {/* Hero Content */}
-        <div className="relative z-20 page-shell-wide my-auto">
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="max-w-2xl lg:max-w-3xl space-y-6"
-          >
-
-
-            {/* Subtitle / Badge */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center space-x-3 text-xs font-serif font-medium tracking-[0.25em] text-[#8E7035] uppercase pt-2"
-            >
-              <motion.span 
-                initial={{ width: 0 }}
-                animate={{ width: 40 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="h-[1.5px] bg-[#B8860B] inline-block" 
-              />
-              <span>{heroBadge}</span>
-            </motion.div>
-
-            {/* Headline */}
-            <motion.div
-              variants={itemVariants}
-              className="heritage-hero-title text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-[#4A1521] tracking-tight leading-[1.06]"
-            >
-              <span className="block">{heroTitle1}</span>
-              {heroTitle2 && (
-                <span className="heritage-hero-subtitle text-[#8E7035] italic font-normal block mt-2 text-3xl sm:text-5xl lg:text-6xl font-serif">
-                  {heroTitle2}
-                </span>
-              )}
-            </motion.div>
-
-            {/* Lead Paragraph */}
-            <motion.p 
-              variants={itemVariants}
-              className="heritage-lead-copy text-base sm:text-lg lg:text-xl text-[#333333] font-serif font-light leading-relaxed max-w-xl"
-            >
-              {heroSubtitle}
-            </motion.p>
-
-
-          </motion.div>
         </div>
       </section>
 
-      {/* ------------------------------------------------------------- */}
-      {/* MAIN CONTENT SECTION                                          */}
-      {/* ------------------------------------------------------------- */}
-      <div className="relative w-full bg-white">
-        
-        <div className="relative z-10">
-          
-          {/* Compact editorial research register */}
-          <section className="border-y border-[#DED4C3] bg-[#F8F5EF] py-14 sm:py-16 lg:py-20">
-            <div className="page-shell-wide mx-auto max-w-[100rem]">
-              <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14 xl:gap-20">
-                <header className="lg:col-span-4 lg:pr-4">
-                  <div className="flex items-center gap-3 text-[11px] font-serif font-semibold uppercase tracking-[0.2em] text-[#795B16]">
-                    <span className="h-px w-8 bg-[#795B16]" aria-hidden="true" />
-                    <span>{protocolBadge}</span>
-                  </div>
-
-                  <h2 className="mt-5 max-w-xl font-serif text-[clamp(2.25rem,3.7vw,4rem)] font-bold leading-[1.02] tracking-[-0.035em] text-[#17130F]">
-                    {protocolTitle}
-                  </h2>
-
-                  <p className="mt-6 max-w-[34rem] font-serif text-base leading-7 text-[#51483F] sm:text-lg sm:leading-8">
-                    {protocolSubtitle}
-                  </p>
-                </header>
-
-                <ol className="grid grid-cols-1 border-t border-[#BDB09C] sm:grid-cols-2 lg:col-span-8">
-                  {verificationSteps.map((v, i) => {
-                    const stepTitle = getLocalizedField(v, 'title', language) || v.title;
-                    const stepDesc = getLocalizedField(v, 'description', language) || v.description;
-
-                    return (
-                      <motion.li
-                        key={v.step || i}
-                        initial={{ opacity: 0, y: 12 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-30px" }}
-                        transition={{ duration: 0.35, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                        className={`grid grid-cols-[2.75rem_minmax(0,1fr)] gap-4 border-b border-[#CEC3B2] py-6 sm:min-h-[12.5rem] sm:px-6 sm:py-7 ${
-                          i % 2 === 1 ? 'sm:border-l sm:border-[#CEC3B2]' : ''
-                        }`}
-                      >
-                        <span className="font-serif text-lg font-semibold tabular-nums text-[#795B16]">
-                          {v.step || `0${i + 1}`}
-                        </span>
-
-                        <div>
-                          <h3 className="font-serif text-xl font-bold leading-tight text-[#17130F] xl:text-2xl">
-                            {stepTitle}
-                          </h3>
-                          <p className="mt-3 max-w-[31rem] font-serif text-[0.95rem] leading-6 text-[#5E554B] sm:text-base sm:leading-7">
-                            {stepDesc}
-                          </p>
-                        </div>
-                      </motion.li>
-                    );
-                  })}
-                </ol>
-              </div>
-            </div>
-          </section>
-
-          {/* ------------------------------------------------------------- */}
-          {/* 3. VISUELE BLIKVANGER & UITGELICHT TOPSTUK SHOWCASE           */}
-          {/* ------------------------------------------------------------- */}
-          <section className="py-16 sm:py-24 lg:py-32">
-            <div className="page-shell-wide space-y-16">
-              
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-                
-                {/* Left Photography Showcase */}
-                <div className="lg:col-span-7">
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.97 }}
-                    whileInView={{ opacity: 1, scale: 1.0 }}
-                    viewport={{ once: true, margin: "-40px" }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative h-[280px] sm:h-[420px] lg:h-[500px] w-full overflow-hidden rounded-xl border border-[#D8CEB8] shadow-2xl group bg-white"
-                  >
-                    <img
-                      src={story.image || "/images/voltaire-marbled-endpaper-exlibris.jpg"}
-                      alt="Ex-Libris Vacheron-Poinsot en gemarmerd papier"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 filter contrast-[1.04]"
-                    />
-                    
-                    {/* Subtle vignette */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80" />
-
-                    <div className="absolute bottom-6 left-6 right-6 p-4 sm:p-6 bg-white/95 backdrop-blur-md rounded-lg border border-[#D8CEB8] shadow-lg">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#B8860B] block mb-1">
-                        Authenticiteitsvoorbeeld
-                      </span>
-                      <p className="text-xs sm:text-sm font-serif italic text-[#222222]">
-                        {storyImageCaption}
-                      </p>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Right Editorial Storytelling */}
-                <div className="lg:col-span-5 space-y-8">
-                  <div className="space-y-3">
-                    <span className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#B8860B] block">
-                      {storyBadge}
-                    </span>
-                    
-                    <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#111111] tracking-tight leading-tight">
-                      {storyTitle}
-                    </h2>
-                  </div>
-
-                  <p className="text-sm text-[#444444] font-serif font-light leading-relaxed">
-                    {storyNarrative}
-                  </p>
-
-                  {storyQuote && (
-                    <blockquote className="border-l border-[#9A7938] pl-5">
-                      <Feather className="mb-3 h-4 w-4 text-[#9A7938]" aria-hidden="true" />
-                      <p className="font-serif text-base italic leading-7 text-[#29231D]">
-                        “{storyQuote}”
-                      </p>
-                      <cite className="mt-3 block font-serif text-[11px] not-italic uppercase tracking-[0.16em] text-[#795B16]">
-                        {storyQuoteAuthor}
-                      </cite>
-                    </blockquote>
-                  )}
-
-                  {Array.isArray(storyBullets) && storyBullets.length > 0 && (
-                    <div className="pt-2 flex flex-col space-y-3 text-xs font-mono text-[#333333]">
-                      {storyBullets.map((bullet, idx) => (
-                        <div key={idx} className="flex items-center space-x-3">
-                          <div className="w-2 h-2 rounded-full bg-[#B8860B]" />
-                          <span>{bullet}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-            </div>
-          </section>
-
-          {/* ------------------------------------------------------------- */}
-          {/* 4. AFSLUITING & PRIVÉ CONSULTATIE CTA                         */}
-          {/* ------------------------------------------------------------- */}
-          <section className="py-16 sm:py-24 lg:py-32">
-            <div className="page-shell-wide">
-              
-              <div className="border-y border-[#D8CEB8] py-10 sm:py-14 flex flex-col items-center text-center lg:flex-row lg:text-left lg:items-center justify-between gap-6 sm:gap-10">
-                <div className="space-y-4 text-center lg:text-left max-w-2xl">
-                  <span className="text-xs font-serif text-[#8E7035] uppercase font-semibold tracking-[0.16em] block">
-                    {ctaBadge}
-                  </span>
-                  <h3 className="text-2xl sm:text-4xl font-serif font-bold text-[#111111] leading-tight">
-                    {ctaTitle}
-                  </h3>
-                  <p className="text-sm sm:text-base text-[#555555] font-serif leading-relaxed">
-                    {ctaSubtitle}
-                  </p>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={onRequestConsultation}
-                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#1C1A17] hover:bg-[#4A1521] text-white font-serif font-semibold text-sm sm:text-base tracking-[0.14em] uppercase transition-colors duration-300 shrink-0 cursor-pointer flex items-center space-x-3 min-h-[48px] w-full sm:w-auto justify-center"
-                >
-                  <span>{ctaButtonText}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </div>
-
-            </div>
-          </section>
-
-          <FaqSection items={faqItems} onRequestConsultation={onRequestConsultation} />
-
+      <nav aria-label="Paginaonderdelen" className="sticky top-0 z-20 border-b border-[#ded4c3] bg-[#fbfaf7]/95 px-5 py-3 backdrop-blur sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-7xl gap-5 overflow-x-auto text-xs font-semibold uppercase tracking-[0.16em] text-[#695a49]">
+          {data.sections.filter(item => item.enabled).map(item => <button type="button" key={item.id} onClick={() => scrollTo(item.id)} className="whitespace-nowrap py-1 transition hover:text-[#4A1521]">{copy(item.eyebrow, language) || copy(item.title, language)}</button>)}
         </div>
-      </div>
+      </nav>
 
-    </div>
+      {section('workflow') && <section id="workflow" className="scroll-mt-16 border-b border-[#ded4c3] bg-white px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('workflow')} language={language} /><ol className="mt-12 grid gap-0 border-t border-[#cfc3b0] sm:grid-cols-2 lg:grid-cols-3">{data.steps.filter(step => step.enabled).map((step, index) => <li key={step.id} className="border-b border-[#cfc3b0] py-7 pr-6 sm:min-h-48 sm:even:border-l sm:even:pl-6"><span className="font-mono text-xs font-bold tracking-[0.2em] text-[#8E7035]">{String(index + 1).padStart(2, '0')}</span><h3 className="mt-3 font-serif text-xl font-bold text-[#17130F]">{copy(step.title, language)}</h3><p className="mt-3 font-serif leading-7 text-[#5E554B]">{copy(step.description, language)}</p></li>)}</ol></div></section>}
+
+      {section('methods') && <section id="methods" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('methods')} language={language} /><div className="mt-12 grid gap-6 lg:grid-cols-2">{data.methods.filter(method => method.enabled).map(method => <article key={method.id} className="border border-[#d8ceb8] bg-white p-6 sm:p-8"><h3 className="font-serif text-2xl font-bold text-[#4A1521]">{copy(method.title, language)}</h3><p className="mt-3 font-serif text-lg italic leading-7 text-[#695a49]">{copy(method.question, language)}</p><p className="mt-5 font-serif leading-7 text-[#51483F]">{copy(method.description, language)}</p><div className="mt-6 grid gap-4 border-t border-[#e4dccf] pt-5 sm:grid-cols-2"><div><h4 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Wat zien we?' : language === 'fr' ? 'Observations' : 'Observations'}</h4><p className="mt-2 text-sm leading-6 text-[#51483F]">{copy(method.findings, language)}</p></div><div><h4 className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Grenzen' : language === 'fr' ? 'Limites' : 'Limits'}</h4><p className="mt-2 text-sm leading-6 text-[#51483F]">{copy(method.limitations, language)}</p></div></div>{method.assetIds?.length > 0 && <div className="mt-6 grid grid-cols-3 gap-2">{method.assetIds.map(id => image(id)).filter(asset => asset?.url).map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="aspect-square overflow-hidden bg-[#eee8dd]" aria-label={copy(asset.alt, language)}><AssetImage asset={asset} language={language} className="h-full w-full object-cover transition hover:scale-105" sizes="180px" /></button>)}</div>}{method.sourceIds?.length > 0 && <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#e4dccf] pt-4">{method.sourceIds.map(id => data.sources.find(source => source.id === id && source.enabled)).filter(Boolean).map(source => <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#8E7035] hover:text-[#4A1521]">{copy(source.title, language)}<ExternalLink className="h-3 w-3" /></a>)}</div>}</article>)}</div></div></section>}
+
+      {section('examples') && <section id="examples" className="scroll-mt-16 border-y border-[#ded4c3] bg-[#f3eee5] px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('examples')} language={language} /><div className="mt-12 grid gap-8 lg:grid-cols-2">{data.examples.filter(item => item.enabled).map(example => <article key={example.id} className="overflow-hidden border border-[#d8ceb8] bg-white">{example.assetIds?.length > 0 && <div className="grid aspect-[16/6] grid-cols-2 gap-px bg-[#d8ceb8]">{example.assetIds.slice(0, 2).map(id => image(id)).filter(asset => asset?.url).map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="overflow-hidden bg-[#eee8dd]"><AssetImage asset={asset} language={language} className="h-full w-full object-cover" sizes="(min-width: 1024px) 40vw, 50vw" /></button>)}</div>}<div className="p-6 sm:p-8"><h3 className="font-serif text-2xl font-bold text-[#4A1521]">{copy(example.title, language)}</h3><p className="mt-3 font-serif text-lg italic leading-7 text-[#695a49]">{copy(example.question, language)}</p><p className="mt-5 leading-7 text-[#51483F]">{copy(example.description, language)}</p><dl className="mt-6 grid gap-4 border-t border-[#e4dccf] pt-5 sm:grid-cols-2"><div><dt className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Bevinding' : language === 'fr' ? 'Observation' : 'Finding'}</dt><dd className="mt-2 text-sm leading-6 text-[#51483F]">{copy(example.findings, language)}</dd></div><div><dt className="text-xs font-bold uppercase tracking-[0.16em] text-[#8E7035]">{language === 'nl' ? 'Open vraag' : language === 'fr' ? 'Question ouverte' : 'Open question'}</dt><dd className="mt-2 text-sm leading-6 text-[#51483F]">{copy(example.uncertainties, language)}</dd></div></dl></div></article>)}</div></div></section>}
+
+      {section('gallery') && <section id="gallery" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('gallery')} language={language} /><div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{visibleGallery.map(asset => <button type="button" key={asset.id} onClick={() => setLightboxId(asset.id)} className="group text-left"><div className="aspect-[4/3] overflow-hidden bg-[#eee8dd]"><AssetImage asset={asset} language={language} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" sizes="(min-width: 1024px) 25vw, 50vw" /></div><p className="mt-2 text-sm font-serif text-[#51483F]">{copy(asset.title, language)}</p></button>)}</div></div></section>}
+
+      {section('dossier') && <section id="dossier" className="scroll-mt-16 border-y border-[#ded4c3] bg-white px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-7xl"><SectionHeading section={section('dossier')} language={language} /><p className="mt-8 max-w-3xl font-serif text-lg leading-8 text-[#51483F]">{copy(data.dossier.description, language)}</p><div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{data.dossier.items.filter(item => item.enabled).map(item => <div key={item.id} className="border-l-2 border-[#B8860B] pl-5"><h3 className="font-serif text-xl font-bold text-[#4A1521]">{copy(item.title, language)}</h3><p className="mt-2 leading-7 text-[#5E554B]">{copy(item.description, language)}</p></div>)}</div></div></section>}
+
+      {section('faq') && <section id="faq" className="scroll-mt-16 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-4xl"><SectionHeading section={section('faq')} language={language} /><div className="mt-10 divide-y divide-[#d8ceb8] border-y border-[#d8ceb8]">{activeFaq.filter(item => item.enabled !== false).map(item => <details key={item.id} className="group py-5"><summary className="cursor-pointer list-none pr-8 font-serif text-lg font-semibold text-[#4A1521] marker:hidden">{copy(item.question, language)}</summary><p className="mt-3 max-w-3xl leading-7 text-[#51483F]">{copy(item.answer, language)}</p></details>)}</div></div></section>}
+
+      {section('contact') && <section id="contact" className="scroll-mt-16 bg-[#4A1521] px-5 py-16 text-white sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"><div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7bd76]">{copy(section('contact').eyebrow, language)}</p><h2 className="mt-3 font-serif text-3xl font-bold sm:text-4xl">{copy(data.cta.title, language)}</h2><p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-white/80">{copy(data.cta.description, language)}</p></div><button type="button" onClick={onRequestConsultation} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-3 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#4A1521] transition hover:bg-[#f3eee5]">{copy(data.cta.buttonLabel, language)}<ArrowRight className="h-4 w-4" /></button></div></section>}
+
+      {lightboxAsset && <div role="dialog" aria-modal="true" aria-label={copy(lightboxAsset.title, language)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" onClick={() => setLightboxId(null)}><button type="button" aria-label={language === 'nl' ? 'Sluiten' : 'Close'} onClick={() => setLightboxId(null)} className="absolute right-4 top-4 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"><X className="h-6 w-6" /></button><figure className="max-h-[90vh] max-w-6xl" onClick={event => event.stopPropagation()}><AssetImage asset={lightboxAsset} language={language} className="max-h-[78vh] w-auto max-w-full object-contain" sizes="90vw" /><figcaption className="mt-3 text-center font-serif text-sm text-white/80">{copy(lightboxAsset.caption, language)}</figcaption></figure></div>}
+    </main>
   );
 }
