@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultProvenance } from '../src/data/defaultProvenance.js';
-import { normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
+import { MEDIA_CATEGORIES, normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
 
 test('default provenance has valid comparison for UV vs daylight', () => {
   const draft = defaultProvenance();
@@ -70,4 +70,24 @@ test('publicProvenance projects comparison with ready assets', () => {
   assert.ok(right, 'right asset must be in public projection');
   assert.equal(left.url, 'https://cdn.example.com/20.webp');
   assert.equal(right.url, 'https://cdn.example.com/27.webp');
+});
+
+test('schema preserves material-analysis media categories', () => {
+  assert.ok(MEDIA_CATEGORIES.includes('methods'));
+  const draft = defaultProvenance();
+  const materialAsset = draft.assets.find(asset => asset.id === '00000000-0000-4000-8000-000000000014');
+  assert.equal(materialAsset.category, 'methods');
+  assert.equal(normalizeProvenance(draft).assets.find(asset => asset.id === materialAsset.id).category, 'methods');
+});
+
+test('sources and timelines survive the public projection while disabled dossier items do not', () => {
+  const draft = defaultProvenance();
+  draft.sources = [{ id: 'archive', enabled: true, title: { nl: 'Archief', en: 'Archive', fr: 'Archives' }, url: 'https://example.com/archive' }];
+  draft.examples[0].sourceIds = ['archive'];
+  draft.examples[0].timeline = [{ id: 'event-1', date: { nl: '1650', en: '1650', fr: '1650' }, description: { nl: 'Vermelding', en: 'Recorded', fr: 'Mention' }, sourceId: 'archive' }];
+  draft.dossier.items[0].enabled = false;
+  const pub = publicProvenance(draft, []);
+  assert.deepEqual(pub.sources.map(source => source.id), ['archive']);
+  assert.equal(pub.examples[0].timeline[0].sourceId, 'archive');
+  assert.ok(!pub.dossier.items.some(item => item.id === draft.dossier.items[0].id));
 });

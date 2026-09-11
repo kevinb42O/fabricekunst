@@ -216,6 +216,7 @@ export function buildPageSeo({
   pathname = "/",
   items = [],
   projectData = null,
+  provenanceData = null,
 } = {}) {
   const lang = PAGE_COPY[language] ? language : "nl";
   const copy = PAGE_COPY[lang];
@@ -253,6 +254,10 @@ export function buildPageSeo({
       ? publishedRembrandtProject(projectData)
       : null;
   const investigation = projectRoute?.investigationSlug ? project?.investigations.find((entry) => entry.slug === projectRoute.investigationSlug) : null;
+  const provenanceSeo = pageKind === 'herkomst' ? provenanceData?.seo : null;
+  const provenanceImage = provenanceSeo?.assetId
+    ? provenanceData?.assets?.find(asset => asset.id === provenanceSeo.assetId)
+    : null;
   const hiddenProject = pageKind === "rembrandtProject" && (project?.isEnabled !== true || (projectRoute?.investigationSlug && !investigation));
   const effectiveCanonical = hiddenProject
     ? `${SITE_URL}${localizePath("/", lang)}`
@@ -281,7 +286,9 @@ export function buildPageSeo({
             ),
             72,
           )
-        : copy[pageKind]?.title || copy.home.title;
+        : provenanceSeo
+          ? truncate(localizedProjectValue(provenanceSeo.title, lang, copy.herkomst.title), 72)
+          : copy[pageKind]?.title || copy.home.title;
   const description =
     pageKind === "item"
       ? truncate(
@@ -301,7 +308,9 @@ export function buildPageSeo({
             ),
             158,
           )
-        : copy[pageKind]?.description || copy.home.description;
+        : provenanceSeo
+          ? truncate(localizedProjectValue(provenanceSeo.description, lang, copy.herkomst.description), 158)
+          : copy[pageKind]?.description || copy.home.description;
 
   return {
     title,
@@ -312,8 +321,9 @@ export function buildPageSeo({
       absoluteUrl(
         investigation?.coverImage || project?.settings?.socialImage || project?.settings?.heroImage,
       ) ||
+      absoluteUrl(provenanceImage?.url) ||
       DEFAULT_SHARE_IMAGE,
-    imageAlt: pageKind === "item" ? itemTitle : title,
+    imageAlt: pageKind === "item" ? itemTitle : provenanceSeo ? localizedProjectValue(provenanceSeo.imageAlt, lang, title) : title,
     type: pageKind === "item" ? "product" : "website",
     language: lang,
     locale: LANGUAGE_TAGS[lang],
@@ -332,6 +342,8 @@ export function buildPageSeo({
       canonical: effectiveCanonical,
       items,
       projectData: project,
+      seoTitle: title,
+      seoDescription: description,
     }),
   };
 }
@@ -343,6 +355,8 @@ export function buildStructuredData({
   canonical,
   items = [],
   projectData = null,
+  seoTitle = '',
+  seoDescription = '',
 }) {
   const inLanguage = LANGUAGE_TAGS[language] || LANGUAGE_TAGS.nl;
   const publicProject =
@@ -357,7 +371,8 @@ export function buildStructuredData({
       name:
         page === "item" && item
           ? localizedField(item, "title", language)
-          : PAGE_COPY[language]?.[page]?.title,
+          : seoTitle || PAGE_COPY[language]?.[page]?.title,
+      ...(seoDescription ? { description: seoDescription } : {}),
       isPartOf: { "@id": `${SITE_URL}/#website` },
       about: { "@id": `${SITE_URL}/#organization` },
       inLanguage,
@@ -396,7 +411,7 @@ export function buildStructuredData({
       breadcrumbItems.push({
         "@type": "ListItem",
         position: 2,
-        name: PAGE_COPY[language]?.[page]?.title || SITE_NAME,
+        name: seoTitle || PAGE_COPY[language]?.[page]?.title || SITE_NAME,
         item: canonical,
       });
     }

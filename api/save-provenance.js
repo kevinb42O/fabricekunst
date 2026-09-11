@@ -2,7 +2,7 @@ import { HeadObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'node:crypto';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
 import { getR2Client, getR2ConfigurationError } from './_lib/r2.js';
-import { normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
+import { migrateProvenance, normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
 import { defaultProvenance } from '../src/data/defaultProvenance.js';
 import { finishProvenancePublication, readPublishedProvenance } from './_lib/provenancePublication.js';
 import { provenanceMediaAction } from './_lib/provenanceMedia.js';
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         supabase.from('provenance_revisions').select('id,version,kind,created_at').order('version', { ascending: false }).limit(31),
       ]);
       if (mediaError || revisionsError) throw mediaError || revisionsError;
-      return sendJson(res, 200, { ok: true, ...row, draft: row.draft?.schemaVersion === 3 ? normalizeProvenance(row.draft) : defaultProvenance(), media, revisions });
+      return sendJson(res, 200, { ok: true, ...row, draft: migrateProvenance(row.draft, defaultProvenance()), media, revisions });
     }
     if (getR2ConfigurationError()) throw new Error('De R2-mediabibliotheek is niet beschikbaar.');
     const body = req.body || {};

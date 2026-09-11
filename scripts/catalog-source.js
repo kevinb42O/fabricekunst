@@ -63,12 +63,31 @@ export async function loadCatalogForBuild() {
         Array.isArray(snapshot?.catalog) &&
         snapshot.catalog.length
       ) {
+        let provenanceData = snapshot.provenanceData || null;
+        try {
+          const provenancePointerResponse = await fetch(`${baseUrl}/site-data/provenance-current.json`, {
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+          });
+          if (provenancePointerResponse.ok) {
+            const provenancePointer = await provenancePointerResponse.json();
+            if (!/^site-data\/provenance-[a-zA-Z0-9-]+\.json$/.test(provenancePointer?.key || '') || provenancePointer.key.includes('..')) throw new Error('provenance pointer contains an invalid key');
+            const provenanceResponse = await fetch(`${baseUrl}/${provenancePointer.key}`, { headers: { Accept: 'application/json' } });
+            if (!provenanceResponse.ok) throw new Error(`provenance request returned ${provenanceResponse.status}`);
+            const dedicatedProvenance = await provenanceResponse.json();
+            if (dedicatedProvenance?.schemaVersion !== 3) throw new Error('provenance payload uses an invalid schema');
+            provenanceData = dedicatedProvenance;
+          }
+        } catch (error) {
+          console.warn(`R2 provenance fetch warning: ${error.message}`);
+        }
         return {
           items: snapshot.catalog,
           project: access?.schemaVersion === 1 && access?.enabled === true
             ? snapshot.rembrandtProject || null
             : { isEnabled: false },
           snapshot,
+          provenanceData,
           source: "R2 public snapshot",
         };
       }
@@ -81,6 +100,7 @@ export async function loadCatalogForBuild() {
     items: INITIAL_CATALOG,
     project: null,
     snapshot: null,
+    provenanceData: null,
     source: "initial catalog fallback",
   };
 }

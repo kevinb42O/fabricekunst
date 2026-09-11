@@ -124,6 +124,23 @@ test("a private Rembrandt preview is always noindex", () => {
   assert.equal(seo.canonical, "https://www.atelierrembrandt.com/lost-rembrandt-project");
 });
 
+test("provenance metadata is read from the published provenance payload", () => {
+  const provenanceData = {
+    seo: {
+      title: { nl: 'Aangepaste herkomsttitel', en: 'Custom provenance title', fr: 'Titre provenance personnalisé' },
+      description: { nl: 'Aangepaste herkomstbeschrijving.', en: 'Custom provenance description.', fr: 'Description personnalisée.' },
+      imageAlt: { nl: 'Onderzoeksbeeld', en: 'Research image', fr: 'Image de recherche' },
+      assetId: 'seo-image',
+    },
+    assets: [{ id: 'seo-image', url: 'https://media.atelierrembrandt.com/provenance/seo.webp' }],
+  };
+  const seo = buildPageSeo({ page: 'herkomst', language: 'en', pathname: '/en/herkomst', provenanceData });
+  assert.equal(seo.title, 'Custom provenance title');
+  assert.equal(seo.description, 'Custom provenance description.');
+  assert.equal(seo.imageAlt, 'Research image');
+  assert.equal(seo.image, 'https://media.atelierrembrandt.com/provenance/seo.webp');
+});
+
 test("each dossier has its own canonical, translated metadata and scoped timeline", () => {
   const project = cloneDefaultRembrandtProject();
   project.isEnabled = true;

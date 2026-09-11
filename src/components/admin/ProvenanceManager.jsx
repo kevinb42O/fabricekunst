@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Eye, Filter, ImageIcon, ImagePlus, Maximize2, Plus, Save, Search, Send, ShieldCheck, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import { defaultProvenance } from '../../data/defaultProvenance';
 import defaultAssets from '../../data/provenanceAssets.json';
-import { PROVENANCE_LANGUAGES, PROVENANCE_SECTIONS, localized, normalizeProvenance, provenanceIssues } from '../../utils/provenance';
+import { PROVENANCE_LANGUAGES, PROVENANCE_SECTIONS, localized, migrateProvenance, normalizeProvenance, provenanceIssues, referencedAssetIds } from '../../utils/provenance';
 import { fetchProvenanceAdminAsync, publishProvenanceAsync, restoreProvenanceRevisionAsync, saveProvenanceDraftAsync, uploadProvenanceMediaAsync } from '../../utils/storage';
 import ComparisonSlider from '../ComparisonSlider';
 
@@ -30,6 +30,50 @@ function ReorderButtons({ index, total, move }) { return <div className="flex ga
 function ListEditor({ title, itemLabel, items, setItems, fields, language, canAdd = true }) {
   const move = (from,to) => setItems(current => { const next=[...current]; [next[from],next[to]]=[next[to],next[from]]; return next; });
   return <section className="space-y-4"><div className="flex items-center justify-between"><h3 className="font-serif text-xl font-semibold text-[#211b16]">{title}</h3>{canAdd && <button type="button" onClick={() => setItems(current => [...current, { id:newId(itemLabel.toLowerCase()), enabled:true, ...Object.fromEntries(fields.map(f => [f.key, {}])) }])} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#4a1521] px-3 text-xs font-semibold uppercase tracking-[.08em] text-[#4a1521]"><Plus size={15}/> Toevoegen</button>}</div>{items.length===0 && <p className="rounded-lg border border-dashed border-[#d8cebd] p-4 text-sm text-[#74695f]">Nog geen onderdelen.</p>}{items.map((item,index) => <article key={item.id} className={cardClass}><div className="flex items-start justify-between gap-3"><div><span className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#8e7035]">{itemLabel} {String(index+1).padStart(2,'0')}</span><label className="mt-2 flex items-center gap-2 text-xs text-[#5f554c]"><input type="checkbox" checked={item.enabled !== false} onChange={e => setItems(current => current.map((x,i)=>i===index?{...x,enabled:e.target.checked}:x))}/> Zichtbaar op de publieke pagina</label></div><div className="flex items-center gap-1"><ReorderButtons index={index} total={items.length} move={move}/><button type="button" aria-label={`${itemLabel} verwijderen`} onClick={() => setItems(current => current.filter((_,i)=>i!==index))} className="rounded p-2 text-[#8d2b2b]"><Trash2 size={16}/></button></div></div><div className="mt-4 grid gap-4 md:grid-cols-2">{fields.map(field => <LocalizedField key={field.key} label={field.label} value={item[field.key]} language={language} multiline={field.multiline} hint={field.hint} onChange={value => setItems(current => current.map((x,i)=>i===index?{...x,[field.key]:value}:x))}/>)}</div></article>)}</section>;
+}
+
+function SourceEditor({ sources, methods, examples, language, update }) {
+  const addSource = () => update(current => ({
+    ...current,
+    sources: [...current.sources, { id: newId('source'), enabled: true, title: { nl: '', en: '', fr: '' }, url: '' }],
+  }));
+  const removeSource = sourceId => update(current => ({
+    ...current,
+    sources: current.sources.filter(source => source.id !== sourceId),
+    methods: current.methods.map(method => ({ ...method, sourceIds: method.sourceIds.filter(id => id !== sourceId) })),
+    examples: current.examples.map(example => ({
+      ...example,
+      sourceIds: example.sourceIds.filter(id => id !== sourceId),
+      timeline: example.timeline.map(event => event.sourceId === sourceId ? { ...event, sourceId: '' } : event),
+    })),
+  }));
+  const toggleRelation = (relation, entityId, sourceId) => update(current => ({
+    ...current,
+    [relation]: current[relation].map(entity => {
+      if (entity.id !== entityId) return entity;
+      const linked = entity.sourceIds.includes(sourceId);
+      return { ...entity, sourceIds: linked ? entity.sourceIds.filter(id => id !== sourceId) : [...entity.sourceIds, sourceId] };
+    }),
+  }));
+
+  return <section className={cardClass}>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div><h2 className="font-serif text-2xl text-[#211b16]">Bronnen & koppelingen</h2><p className="mt-2 text-sm text-[#62594f]">Voeg controleerbare bronnen toe en koppel ze expliciet aan methoden en praktijkvoorbeelden.</p></div>
+      <button type="button" onClick={addSource} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#4a1521] px-3 text-xs font-semibold uppercase tracking-[.08em] text-[#4a1521]"><Plus size={15}/> Bron toevoegen</button>
+    </div>
+    {sources.length === 0 ? <p className="mt-5 rounded-lg border border-dashed border-[#d8cebd] p-4 text-sm text-[#74695f]">Nog geen bronnen. Publiceer geen bronclaims voordat de relevante bron hier is vastgelegd en gekoppeld.</p> : <div className="mt-5 space-y-4">{sources.map((source, index) => <article key={source.id} className="rounded-lg border border-[#ded4c3] bg-white p-4">
+      <div className="flex items-center justify-between gap-3"><label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-[#8e7035]"><input type="checkbox" checked={source.enabled !== false} onChange={event => update(current => ({ ...current, sources: current.sources.map((item, i) => i === index ? { ...item, enabled: event.target.checked } : item) }))}/> Publiek beschikbaar</label><button type="button" aria-label="Bron verwijderen" onClick={() => removeSource(source.id)} className="rounded p-2 text-[#8d2b2b]"><Trash2 size={16}/></button></div>
+      <div className="mt-3 grid gap-4 md:grid-cols-2"><LocalizedField label="Brontitel" value={source.title} language={language} onChange={value => update(current => ({ ...current, sources: current.sources.map((item, i) => i === index ? { ...item, title: value } : item) }))}/><Field label="HTTPS-link" value={source.url} hint="Optioneel voor niet-digitale archiefbronnen; gebruik anders altijd de directe https-link." onChange={value => update(current => ({ ...current, sources: current.sources.map((item, i) => i === index ? { ...item, url: value.trim() } : item) }))}/></div>
+    </article>)}</div>}
+    {sources.length > 0 && <div className="mt-6 grid gap-5 lg:grid-cols-2">{[['methods', 'Onderzoeksmethoden', methods], ['examples', 'Praktijkvoorbeelden', examples]].map(([relation, title, entities]) => <div key={relation}><h3 className="font-serif text-lg font-semibold text-[#211b16]">{title}</h3><div className="mt-3 space-y-3">{entities.map(entity => <fieldset key={entity.id} className="rounded-lg border border-[#ded4c3] bg-white p-3"><legend className="px-1 text-sm font-semibold text-[#4a1521]">{localized(entity.title, language) || entity.id}</legend><div className="mt-1 space-y-2">{sources.map(source => <label key={source.id} className={`flex items-start gap-2 text-xs ${source.enabled === false ? 'text-[#9a9188]' : 'text-[#51483f]'}`}><input type="checkbox" disabled={source.enabled === false} checked={entity.sourceIds.includes(source.id)} onChange={() => toggleRelation(relation, entity.id, source.id)}/><span>{localized(source.title, language) || source.id}</span></label>)}</div></fieldset>)}</div></div>)}</div>}
+  </section>;
+}
+
+function TimelineEditor({ examples, sources, language, update }) {
+  const addEvent = exampleId => update(current => ({ ...current, examples: current.examples.map(example => example.id === exampleId ? { ...example, timeline: [...example.timeline, { id: newId('event'), date: { nl: '', en: '', fr: '' }, description: { nl: '', en: '', fr: '' }, sourceId: '' }] } : example) }));
+  const updateEvent = (exampleId, eventId, patch) => update(current => ({ ...current, examples: current.examples.map(example => example.id === exampleId ? { ...example, timeline: example.timeline.map(event => event.id === eventId ? { ...event, ...patch } : event) } : example) }));
+  const removeEvent = (exampleId, eventId) => update(current => ({ ...current, examples: current.examples.map(example => example.id === exampleId ? { ...example, timeline: example.timeline.filter(event => event.id !== eventId) } : example) }));
+  return <section className="space-y-4"><div><h3 className="font-serif text-xl font-semibold text-[#211b16]">Onderzoekstijdlijnen</h3><p className="mt-1 text-sm text-[#62594f]">Elke tijdlijnvermelding wordt met een zichtbare bron gepubliceerd.</p></div>{examples.map(example => <article key={example.id} className={cardClass}><div className="flex items-center justify-between gap-3"><h4 className="font-serif text-lg font-semibold text-[#4a1521]">{localized(example.title, language) || example.id}</h4><button type="button" onClick={() => addEvent(example.id)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[#4a1521] px-3 text-xs font-semibold text-[#4a1521]"><Plus size={14}/> Moment</button></div>{example.timeline.length === 0 ? <p className="mt-3 text-sm text-[#74695f]">Geen tijdlijnmomenten.</p> : <div className="mt-4 space-y-4">{example.timeline.map(event => <div key={event.id} className="rounded-lg border border-[#ded4c3] bg-white p-4"><div className="grid gap-4 md:grid-cols-2"><LocalizedField label="Datum / periode" value={event.date} language={language} onChange={value => updateEvent(example.id, event.id, { date: value })}/><label className="block text-sm font-medium text-[#3f352d]"><span>Bron</span><select value={event.sourceId} onChange={e => updateEvent(example.id, event.id, { sourceId: e.target.value })} className={inputClass}><option value="">— Kies een bron —</option>{sources.filter(source => source.enabled !== false).map(source => <option key={source.id} value={source.id}>{localized(source.title, language) || source.id}</option>)}</select></label><div className="md:col-span-2"><LocalizedField label="Toelichting" value={event.description} language={language} multiline onChange={value => updateEvent(example.id, event.id, { description: value })}/></div></div><button type="button" onClick={() => removeEvent(example.id, event.id)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#8d2b2b]"><Trash2 size={14}/> Moment verwijderen</button></div>)}</div>}</article>)}</section>;
 }
 
 function AssetSelect({ label, value, assets = [], media = [], onChange, onUpload, uploadBusy = false }) {
@@ -727,7 +771,7 @@ function MediaRelationsEditor({
 }
 
 export default function ProvenanceManager({ provenanceData, onSaveProvenance, showToast }) {
-  const [formData, setFormData] = useState(() => normalizeProvenance(provenanceData?.schemaVersion === 3 ? provenanceData : defaultProvenance()));
+  const [formData, setFormData] = useState(() => migrateProvenance(provenanceData, defaultProvenance()));
   const [version, setVersion] = useState(0);
   const [media, setMedia] = useState([]);
   const [revisions, setRevisions] = useState([]);
@@ -752,29 +796,18 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
       const next = normalizeProvenance(body.draft);
       // Ensure all 40 assets from defaultAssets are merged if missing or empty
       const assetMap = new Map((next.assets || []).map(a => [a.id, a]));
+      let repairedLegacyCategory = false;
       for (const def of defaultAssets) {
         if (!assetMap.has(def.id)) {
           assetMap.set(def.id, { ...def, credit: { nl: '', en: '', fr: '' } });
         } else {
           const cur = assetMap.get(def.id);
+          const category = def.category === 'methods' && cur.category === 'context' ? 'methods' : cur.category;
+          if (category !== cur.category) repairedLegacyCategory = true;
           assetMap.set(def.id, {
             ...def,
             ...cur,
-            title: {
-              nl: cur.title?.nl || def.title.nl,
-              en: cur.title?.en || def.title.en,
-              fr: cur.title?.fr || def.title.fr,
-            },
-            caption: {
-              nl: cur.caption?.nl || def.caption.nl,
-              en: cur.caption?.en || def.caption.en,
-              fr: cur.caption?.fr || def.caption.fr,
-            },
-            alt: {
-              nl: cur.alt?.nl || def.alt.nl,
-              en: cur.alt?.en || def.alt.en,
-              fr: cur.alt?.fr || def.alt.fr,
-            },
+            category,
           });
         }
       }
@@ -783,8 +816,9 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
       setVersion(body.version);
       setMedia(body.media || []);
       setRevisions(body.revisions || []);
-      setDirty(false);
+      setDirty(repairedLegacyCategory);
       setIssues([]);
+      if (repairedLegacyCategory) setMessage({ type: 'success', text: 'Twee oudere materiaalanalysebeelden zijn hersteld naar de juiste categorie. Sla het concept op om deze correctie vast te leggen.' });
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -855,7 +889,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
       setBusy(false);
     }
   };
-  const upload = async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; setBusy(true); try { const record = await uploadProvenanceMediaAsync(file); setMedia(current => [...current, record]); setMessage({ type: 'success', text: 'Afbeelding naar R2 geüpload en publieke varianten aangemaakt.' }); } catch (error) { setMessage({ type: 'error', text: error.message }); } finally { setBusy(false); } };
+  const upload = async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; setBusy(true); try { const record = await uploadProvenanceMediaAsync(file); setMedia(current => [...current, record]); const baseName = file.name.replace(/\.[^/.]+$/, ''); update(current => ({ ...current, assets: [...current.assets, { id: record.id, title: { nl: baseName, en: baseName, fr: baseName }, caption: { nl: '', en: '', fr: '' }, alt: { nl: baseName, en: baseName, fr: baseName }, credit: { nl: '', en: '', fr: '' }, objectLabel: { nl: '', en: '', fr: '' }, category: 'unconfirmed', approved: false, url: '', width: 0, height: 0, srcSet: '', variants: [] }] })); setMessage({ type: 'success', text: 'Afbeelding naar R2 geüpload. Vul metadata in, koppel het beeld en keur het daarna goed voor publicatie.' }); } catch (error) { setMessage({ type: 'error', text: error.message }); } finally { setBusy(false); } };
 
   if (loading) return <div className="rounded-xl border border-[#ded4c3] bg-[#fcfaf6] p-8 text-sm text-[#62594f]">Herkomsteditor laden…</div>;
   const tabs = [['overview', 'Overzicht'], ['content', 'Pagina-inhoud'], ['methods', 'Onderzoeksmethoden'], ['examples', 'Praktijkvoorbeelden'], ['comparisons', 'Voor/Na Sliders'], ['media', 'Beeldbank'], ['publish', 'Publiceren']];
@@ -869,6 +903,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     documents: 'Inscripties & Archief',
     methods: 'Materiaalanalyse (XRF)',
     context: 'Atelier & Context',
+    unconfirmed: 'Nog niet geclassificeerd',
   };
 
   const getAsset = item => {
@@ -879,14 +914,15 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     return { id: item.id, title: {}, caption: {}, alt: {}, category: 'context', approved: false };
   };
 
-  const publicGalleryCount = media.filter(m => formData.gallery.assetIds.includes(m.id)).length;
-  const referenceCount = media.length - publicGalleryCount;
+  const linkedAssetIds = new Set(referencedAssetIds(formData));
+  const linkedCount = media.filter(item => linkedAssetIds.has(item.id)).length;
+  const unlinkedCount = media.length - linkedCount;
 
   const filteredMedia = media.filter(item => {
     const asset = getAsset(item);
-    const isSelected = formData.gallery.assetIds.includes(item.id);
-    if (mediaStatus === 'public' && !isSelected) return false;
-    if (mediaStatus === 'reference' && isSelected) return false;
+    const isLinked = linkedAssetIds.has(item.id);
+    if (mediaStatus === 'public' && !isLinked) return false;
+    if (mediaStatus === 'reference' && isLinked) return false;
     if (mediaCategory !== 'all' && asset.category !== mediaCategory) return false;
     if (mediaSearch.trim()) {
       const q = mediaSearch.toLowerCase().trim();
@@ -909,13 +945,14 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
       <div className="space-y-8">
         <ListEditor title="Onderzoeksmethoden" itemLabel="Methode" items={formData.methods} setItems={items=>update(current=>({...current,methods:typeof items==='function'?items(current.methods):items}))} fields={[{key:'title',label:'Titel'},{key:'question',label:'Onderzoeksvraag'},{key:'description',label:'Uitleg',multiline:true},{key:'findings',label:'Wat kan zichtbaar worden?',multiline:true},{key:'limitations',label:'Beperkingen',multiline:true}]} language={language}/>
         <MediaRelationsEditor title="Onderzoeksmethoden" items={formData.methods} media={media} relationKey="methods" language={language} update={update} getAsset={getAsset} categoryLabels={categoryLabels} onPreview={setPreviewItem} />
-        <section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Bronnen</h2><div className="mt-4 space-y-4">{formData.sources.map((item,index)=><div className="grid gap-4 rounded-lg border border-[#ded4c3] bg-white p-4 md:grid-cols-2" key={item.id}><LocalizedField label="Bron" value={item.title} language={language} onChange={value=>update(current=>({...current,sources:current.sources.map((x,i)=>i===index?{...x,title:value}:x)}))}/><Field label="HTTPS-link" value={item.url} onChange={value=>update(current=>({...current,sources:current.sources.map((x,i)=>i===index?{...x,url:value}:x)}))}/></div>)}</div></section>
+        <SourceEditor sources={formData.sources} methods={formData.methods} examples={formData.examples} language={language} update={update}/>
       </div>
     )}
     {activeTab==='examples' && (
       <div className="space-y-8">
         <ListEditor title="Praktijkvoorbeelden" itemLabel="Voorbeeld" items={formData.examples} setItems={items=>update(current=>({...current,examples:typeof items==='function'?items(current.examples):items}))} fields={[{key:'title',label:'Titel'},{key:'question',label:'Onderzoeksvraag'},{key:'description',label:'Beschrijving',multiline:true},{key:'findings',label:'Bevindingen',multiline:true},{key:'uncertainties',label:'Onzekerheden',multiline:true}]} language={language}/>
         <MediaRelationsEditor title="Praktijkvoorbeelden" items={formData.examples} media={media} relationKey="examples" language={language} update={update} getAsset={getAsset} categoryLabels={categoryLabels} onPreview={setPreviewItem} />
+        <TimelineEditor examples={formData.examples} sources={formData.sources} language={language} update={update}/>
         <ListEditor title="Veelgestelde vragen" itemLabel="FAQ" items={formData.faq} setItems={items=>update(current=>({...current,faq:typeof items==='function'?items(current.faq):items}))} fields={[{key:'question',label:'Vraag'},{key:'answer',label:'Antwoord',multiline:true}]} language={language}/>
       </div>
     )}
@@ -928,7 +965,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
             <div>
               <h2 className="font-serif text-2xl text-[#211b16]">R2-beeldbank ({media.length} afbeeldingen)</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#62594f]">
-                Alle 40 geoptimaliseerde beelden zijn gereed in de Cloudflare R2-opslag. Klik op een foto voor een grote voorvertoning. Beschrijvingen en alt-teksten zijn per taal beheerbaar en worden nooit blanco getoond.
+                Alle {media.length} beheerde beelden staan in de Cloudflare R2-opslag. Klik op een foto voor een grote voorvertoning. Alle publieke metadata is per taal beheerbaar.
               </p>
             </div>
             <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#4a1521] px-4 text-xs font-semibold uppercase tracking-[.08em] text-white transition hover:bg-[#381019]">
@@ -953,14 +990,14 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                 onClick={() => setMediaStatus('public')}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${mediaStatus === 'public' ? 'bg-[#4a1521] text-white' : 'border border-[#d8cebd] bg-white text-[#4a1521] hover:bg-[#f5ede0]'}`}
               >
-                In publieke galerij ({publicGalleryCount})
+                Gekoppeld ({linkedCount})
               </button>
               <button
                 type="button"
                 onClick={() => setMediaStatus('reference')}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${mediaStatus === 'reference' ? 'bg-[#4a1521] text-white' : 'border border-[#d8cebd] bg-white text-[#4a1521] hover:bg-[#f5ede0]'}`}
               >
-                Referentie / Archief ({referenceCount})
+                Niet gekoppeld ({unlinkedCount})
               </button>
             </div>
 
@@ -1019,6 +1056,11 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
               {filteredMedia.map(item => {
                 const selected = formData.gallery.assetIds.includes(item.id);
                 const asset = getAsset(item);
+                const updateAsset = patch => update(current => {
+                  const existing = current.assets.find(entry => entry.id === item.id);
+                  const next = { ...(existing || getAsset(item)), ...patch };
+                  return { ...current, assets: existing ? current.assets.map(entry => entry.id === item.id ? next : entry) : [...current.assets, next] };
+                });
 
                 return (
                   <article
@@ -1113,38 +1155,27 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                         </button>
                       </div>
 
+                      <LocalizedField label="Publieke titel" value={asset.title} language={language} onChange={value => updateAsset({ title: value })}/>
+
                       <LocalizedField
                         label="Bijschrift / Beschrijving"
                         value={asset.caption}
                         language={language}
                         multiline
-                        onChange={value => update(current => {
-                          const exists = current.assets.some(x => x.id === item.id);
-                          const base = getAsset(item);
-                          return {
-                            ...current,
-                            assets: exists
-                              ? current.assets.map(x => x.id === item.id ? { ...x, caption: value, approved: true } : x)
-                              : [...current.assets, { ...base, caption: value, approved: true }]
-                          };
-                        })}
+                        onChange={value => updateAsset({ caption: value })}
                       />
 
                       <LocalizedField
                         label="Alt-tekst (Toegankelijkheid)"
                         value={asset.alt}
                         language={language}
-                        onChange={value => update(current => {
-                          const exists = current.assets.some(x => x.id === item.id);
-                          const base = getAsset(item);
-                          return {
-                            ...current,
-                            assets: exists
-                              ? current.assets.map(x => x.id === item.id ? { ...x, alt: value, approved: true } : x)
-                              : [...current.assets, { ...base, alt: value, approved: true }]
-                          };
-                        })}
+                        onChange={value => updateAsset({ alt: value })}
                       />
+
+                      <LocalizedField label="Fotocredit / bronvermelding" value={asset.credit} language={language} onChange={value => updateAsset({ credit: value })}/>
+                      <LocalizedField label="Objectlabel / inventarisreferentie" value={asset.objectLabel} language={language} onChange={value => updateAsset({ objectLabel: value })}/>
+                      <label className="block text-sm font-medium text-[#3f352d]"><span>Categorie</span><select value={asset.category || 'context'} onChange={event => updateAsset({ category: event.target.value })} className={inputClass}>{Object.entries(categoryLabels).filter(([key]) => key !== 'all').map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+                      <label className="flex items-center gap-2 text-xs font-semibold text-[#4a1521]"><input type="checkbox" checked={asset.approved === true} onChange={event => updateAsset({ approved: event.target.checked })}/> Goedgekeurd voor publieke publicatie</label>
                     </div>
                   </article>
                 );
@@ -1154,7 +1185,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
         </section>
       </div>
     )}
-    {activeTab==='publish' && <div className="space-y-6"><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Publicatiecontrole</h2><p className="mt-2 text-sm leading-6 text-[#62594f]">Alle zichtbare onderdelen, drie talen, bronverwijzingen en R2-varianten worden gecontroleerd voordat de live versie wordt vervangen.</p>{issues.length>0?<ul className="mt-5 space-y-2 text-sm text-[#7b2525]">{issues.map((issue,index)=><li key={`${issue}-${index}`} className="flex gap-2"><AlertCircle size={16} className="mt-0.5 shrink-0"/>{issue}</li>)}</ul>:<p className="mt-5 flex items-center gap-2 text-sm text-[#215f35]"><Check size={17}/> Nog geen fouten gevonden in de laatste controle.</p>}</section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">SEO</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><LocalizedField label="SEO-titel" value={formData.seo.title} language={language} onChange={value=>update(current=>({...current,seo:{...current.seo,title:value}}))}/><LocalizedField label="SEO-beschrijving" value={formData.seo.description} language={language} multiline onChange={value=>update(current=>({...current,seo:{...current.seo,description:value}}))}/><AssetSelect label="Social share afbeelding (SEO)" value={formData.seo.assetId} assets={formData.assets} media={media} onChange={id=>update(current=>({...current,seo:{...current.seo,assetId:id}}))}/></div></section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Gepubliceerde revisies</h2><div className="mt-4 divide-y divide-[#ded4c3]">{revisions.filter(item=>item.kind==='publication').map(item=><div key={item.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"><span className="text-sm text-[#62594f]">Versie {item.version} · {new Date(item.created_at).toLocaleString('nl-BE')}</span><button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{const body=await restoreProvenanceRevisionAsync(item.id,version);setFormData(normalizeProvenance(body.draft));setVersion(body.version);setDirty(false);setIssues([]);setMessage({type:'success',text:`Revisie ${item.version} als nieuw concept hersteld.`});}catch(error){setMessage({type:'error',text:error.message});}finally{setBusy(false);}}} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#4a1521] px-3 text-xs font-semibold uppercase tracking-[.08em] text-[#4a1521] disabled:opacity-40"><Eye size={15}/> Herstellen als concept</button></div>)}{revisions.filter(item=>item.kind==='publication').length===0&&<p className="py-3 text-sm text-[#62594f]">Nog geen nieuwe revisies geregistreerd.</p>}</div></section></div>}
+    {activeTab==='publish' && <div className="space-y-6"><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Publicatiecontrole</h2><p className="mt-2 text-sm leading-6 text-[#62594f]">Alle zichtbare onderdelen, drie talen, bronverwijzingen en R2-varianten worden gecontroleerd voordat de live versie wordt vervangen.</p>{issues.length>0?<ul className="mt-5 space-y-2 text-sm text-[#7b2525]">{issues.map((issue,index)=><li key={`${issue}-${index}`} className="flex gap-2"><AlertCircle size={16} className="mt-0.5 shrink-0"/>{issue}</li>)}</ul>:<p className="mt-5 flex items-center gap-2 text-sm text-[#215f35]"><Check size={17}/> Nog geen fouten gevonden in de laatste controle.</p>}</section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">SEO</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><LocalizedField label="SEO-titel" value={formData.seo.title} language={language} onChange={value=>update(current=>({...current,seo:{...current.seo,title:value}}))}/><LocalizedField label="SEO-beschrijving" value={formData.seo.description} language={language} multiline onChange={value=>update(current=>({...current,seo:{...current.seo,description:value}}))}/><LocalizedField label="Social share alt-tekst" value={formData.seo.imageAlt} language={language} onChange={value=>update(current=>({...current,seo:{...current.seo,imageAlt:value}}))}/><AssetSelect label="Social share afbeelding (SEO)" value={formData.seo.assetId} assets={formData.assets} media={media} onChange={id=>update(current=>({...current,seo:{...current.seo,assetId:id}}))}/></div></section><section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Gepubliceerde revisies</h2><div className="mt-4 divide-y divide-[#ded4c3]">{revisions.filter(item=>item.kind==='publication').map(item=><div key={item.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"><span className="text-sm text-[#62594f]">Versie {item.version} · {new Date(item.created_at).toLocaleString('nl-BE')}</span><button type="button" disabled={busy} onClick={async()=>{setBusy(true);try{const body=await restoreProvenanceRevisionAsync(item.id,version);setFormData(normalizeProvenance(body.draft));setVersion(body.version);setDirty(false);setIssues([]);setMessage({type:'success',text:`Revisie ${item.version} als nieuw concept hersteld.`});}catch(error){setMessage({type:'error',text:error.message});}finally{setBusy(false);}}} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#4a1521] px-3 text-xs font-semibold uppercase tracking-[.08em] text-[#4a1521] disabled:opacity-40"><Eye size={15}/> Herstellen als concept</button></div>)}{revisions.filter(item=>item.kind==='publication').length===0&&<p className="py-3 text-sm text-[#62594f]">Nog geen nieuwe revisies geregistreerd.</p>}</div></section></div>}
     {activeTab==='content' && <section className={cardClass}><h2 className="font-serif text-2xl text-[#211b16]">Homepage-teaser</h2><div className="mt-5 grid gap-4 md:grid-cols-2"><LocalizedField label="Titel" value={formData.homepageTeaser.title} language={language} onChange={value=>update(current=>({...current,homepageTeaser:{...current.homepageTeaser,title:value}}))}/><LocalizedField label="Knop" value={formData.homepageTeaser.buttonLabel} language={language} onChange={value=>update(current=>({...current,homepageTeaser:{...current.homepageTeaser,buttonLabel:value}}))}/><LocalizedField label="Beschrijving" value={formData.homepageTeaser.description} language={language} multiline onChange={value=>update(current=>({...current,homepageTeaser:{...current.homepageTeaser,description:value}}))}/><AssetSelect label="Teaser-afbeelding" value={formData.homepageTeaser.assetId} assets={formData.assets} media={media} onChange={id=>update(current=>({...current,homepageTeaser:{...current.homepageTeaser,assetId:id}}))}/></div><label className="mt-4 flex items-center gap-2 text-sm text-[#5f554c]"><input type="checkbox" checked={formData.homepageTeaser.enabled!==false} onChange={e=>update(current=>({...current,homepageTeaser:{...current.homepageTeaser,enabled:e.target.checked}}))}/> Zichtbaar op de homepage</label></section>}
     {activeTab==='content' && <ListEditor title="Dossieronderdelen" itemLabel="Onderdeel" items={formData.dossier.items} setItems={items=>update(current=>({...current,dossier:{...current.dossier,items:typeof items==='function'?items(current.dossier.items):items}}))} fields={[{key:'title',label:'Titel'},{key:'description',label:'Beschrijving',multiline:true}]} language={language}/>}
 

@@ -594,6 +594,7 @@ export default function App() {
       pathname: window.location.pathname,
       items: catalog,
       projectData: rembrandtProjectData,
+      provenanceData,
     });
     applySeoToDocument(seo);
   }, [
@@ -602,6 +603,7 @@ export default function App() {
     language,
     selectedDetailItemId,
     rembrandtProjectData,
+    provenanceData,
     investigationSlug,
   ]);
 

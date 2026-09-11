@@ -17,7 +17,7 @@ if (!fs.existsSync(shellPath)) {
 }
 
 const shell = fs.readFileSync(shellPath, "utf8");
-const { items, project, source } = await loadCatalogForBuild();
+const { items, project, provenanceData, source } = await loadCatalogForBuild();
 
 function escapeAttribute(value) {
   return String(value || "")
@@ -91,6 +91,7 @@ function writePage(route, page, item = null, language = "nl") {
     pathname: localizedRoute,
     items,
     projectData: project,
+    provenanceData,
   });
   const outputPath =
     localizedRoute === "/"

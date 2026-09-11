@@ -1,6 +1,6 @@
 export const PROVENANCE_LANGUAGES = ['nl', 'en', 'fr'];
 export const PROVENANCE_SECTIONS = ['workflow', 'methods', 'examples', 'gallery', 'dossier', 'faq', 'contact'];
-export const MEDIA_CATEGORIES = ['rx', 'microscopy', 'surface', 'support', 'documents', 'context', 'unconfirmed'];
+export const MEDIA_CATEGORIES = ['rx', 'microscopy', 'surface', 'support', 'documents', 'methods', 'context', 'unconfirmed'];
 export const localized = (value, language = 'nl') => typeof value === 'string' ? value : value?.[language] || '';
 export const languages = (nl = '', en = '', fr = '') => ({ nl, en, fr });
 const text = value => languages(...PROVENANCE_LANGUAGES.map(lang => typeof value === 'string' ? (lang === 'nl' ? value : '') : String(value?.[lang] || '')));
@@ -76,6 +76,9 @@ export function provenanceIssues(input, { publishing = false } = {}) {
   }
   if (data.sections.length !== 7 || data.sections.some(s => !PROVENANCE_SECTIONS.includes(s.id))) issues.push('Elke paginasectie moet precies eenmaal voorkomen.');
   if (data.dossier.items.length > 20) issues.push('Maximaal 20 dossieronderdelen.');
+  if (new Set(data.dossier.items.map(item => item.id)).size !== data.dossier.items.length || data.dossier.items.some(item => !/^[a-zA-Z0-9_-]{1,80}$/.test(item.id))) issues.push('Dossieronderdelen: ontbrekende of dubbele identifier.');
+  if (new Set(data.gallery.assetIds).size !== data.gallery.assetIds.length) issues.push('De galerij bevat een afbeelding meer dan eenmaal.');
+  for (const example of data.examples) if (new Set(example.timeline.map(event => event.id)).size !== example.timeline.length || example.timeline.some(event => !/^[a-zA-Z0-9_-]{1,80}$/.test(event.id))) issues.push(`${example.id}: tijdlijn bevat een ontbrekende of dubbele identifier.`);
   const assets = new Set(data.assets.map(a => a.id));
   for (const id of referencedAssetIds(data)) if (!assets.has(id)) issues.push(`Afbeelding ${id} ontbreekt in de beeldbank.`);
   const sourceIds = new Set(data.sources.filter(s => s.enabled).map(s => s.id));
@@ -91,7 +94,7 @@ export function provenanceIssues(input, { publishing = false } = {}) {
   const visible = id => data.sections.some(s => s.id === id && s.enabled);
   const requiredAsset = (id, label) => { if (!id || !assets.has(id)) issues.push(`${label}: kies een beeld uit de beeldbank.`); };
   for (const field of ['title', 'description', 'primaryLabel', 'secondaryLabel']) required(data.hero[field], `Introductie / ${field}`);
-  for (const field of ['title', 'description']) required(data.seo[field], `SEO / ${field}`);
+  for (const field of ['title', 'description', 'imageAlt']) required(data.seo[field], `SEO / ${field}`);
   requiredAsset(data.hero.assetId, 'Introductie / hero-afbeelding');
   requiredAsset(data.seo.assetId, 'SEO / afbeelding');
   for (const section of data.sections.filter(x => x.enabled)) { required(section.title, `Sectie ${section.id}`); consistent(section.intro, `Intro ${section.id}`); consistent(section.eyebrow, `Label ${section.id}`); }
@@ -111,7 +114,7 @@ export function provenanceIssues(input, { publishing = false } = {}) {
     for (const field of ['title','leftLabel','rightLabel']) required(pair[field], `Vergelijking / ${field}`);
   }
   if (visible('contact')) for (const field of ['title','description','buttonLabel']) required(data.cta[field], `Contact / ${field}`);
-  if (visible('dossier')) { required(data.dossier.description, 'Dossier'); for (const item of data.dossier.items) { required(item.title, 'Dossieronderdeel'); consistent(item.description, 'Dossieronderdeel / toelichting'); } }
+  if (visible('dossier')) { required(data.dossier.description, 'Dossier'); for (const item of data.dossier.items.filter(entry => entry.enabled)) { required(item.title, 'Dossieronderdeel'); consistent(item.description, 'Dossieronderdeel / toelichting'); } }
   if (data.homepageTeaser.enabled) {
     requiredAsset(data.homepageTeaser.assetId, 'Homepage / afbeelding');
     for (const field of ['title','description','buttonLabel']) required(data.homepageTeaser[field], `Homepage / ${field}`);
@@ -134,6 +137,7 @@ export function publicProvenance(input, media = []) {
   data.sections = data.sections.filter(s => s.enabled);
   if (!visible('gallery')) data.gallery = { assetIds: [] };
   if (!visible('dossier')) data.dossier = { description: languages(), items: [] };
+  else data.dossier.items = data.dossier.items.filter(item => item.enabled);
   if (!visible('contact')) data.cta = { title: languages(), description: languages(), buttonLabel: languages(), action: 'consultation' };
   if (!data.homepageTeaser.enabled) data.homepageTeaser = { enabled: false };
   const sources = new Set([...data.methods, ...data.examples].flatMap(e => [...e.sourceIds, ...(e.timeline || []).map(t => t.sourceId)]));

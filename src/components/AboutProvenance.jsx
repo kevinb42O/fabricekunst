@@ -11,7 +11,6 @@ export default function AboutProvenance({ provenanceData }) {
   const { t, language } = useLanguage();
   const published = migrateProvenance(provenanceData, defaultProvenance());
   const homepageTeaser = published.homepageTeaser;
-  if (!homepageTeaser.enabled) return null;
   const teaserAsset = published.assets.find(asset => asset.id === homepageTeaser.assetId && asset.url);
 
   const sectionRef = useRef(null);
@@ -21,7 +20,7 @@ export default function AboutProvenance({ provenanceData }) {
   });
 
   const imageY = useTransform(scrollYProgress, [0, 1], ["-5%", "5%"]);
-  const glowY = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
+  if (!homepageTeaser.enabled) return null;
 
   return (
     <section 

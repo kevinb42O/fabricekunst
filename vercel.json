@@ -140,6 +140,18 @@
     {
       "source": "/fr/rembrandt-project/:slug",
       "destination": "/fr/lost-rembrandt-project"
+    },
+    {
+      "source": "/collectie/:slug",
+      "destination": "/"
+    },
+    {
+      "source": "/en/collectie/:slug",
+      "destination": "/en"
+    },
+    {
+      "source": "/fr/collectie/:slug",
+      "destination": "/fr"
     }
   ]
 }
