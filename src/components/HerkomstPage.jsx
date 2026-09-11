@@ -119,6 +119,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onRequestC
 
   const heroImage = image(data.hero.assetId);
   const currentHeroUrl = heroImage?.url || '/images/provenience-light-cream-hero.jpg';
+  const contactAsset = featureAssets.at(-1) || visibleGallery.at(-1) || heroImage;
 
   // Parallax translation matching homepage Hero.jsx
   const { scrollYProgress } = useScroll({
@@ -402,7 +403,35 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onRequestC
 
       {section('faq') && <section id="faq" className="scroll-mt-24 sm:scroll-mt-28 px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto max-w-4xl"><SectionHeading section={section('faq')} language={language} /><div className="mt-10 divide-y divide-[#d8ceb8] border-y border-[#d8ceb8]">{activeFaq.filter(item => item.enabled !== false).map(item => <details key={item.id} className="group py-5"><summary className="cursor-pointer list-none pr-8 font-serif text-lg font-semibold text-[#4A1521] marker:hidden">{copy(item.question, language)}</summary><p className="mt-3 max-w-3xl leading-7 text-[#51483F]">{copy(item.answer, language)}</p></details>)}</div></div></section>}
 
-      {section('contact') && <section id="contact" className="scroll-mt-24 sm:scroll-mt-28 bg-[#4A1521] px-5 py-16 text-white sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"><div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7bd76]">{copy(section('contact').eyebrow, language)}</p><h2 className="mt-3 font-serif text-xl font-semibold text-white/80 sm:text-2xl">{copy(section('contact').title, language)}</h2>{copy(section('contact').intro, language) && <p className="mt-3 max-w-2xl font-serif leading-7 text-white/70">{copy(section('contact').intro, language)}</p>}<h3 className="mt-6 font-serif text-3xl font-bold sm:text-4xl">{copy(data.cta.title, language)}</h3><p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-white/80">{copy(data.cta.description, language)}</p></div><button type="button" onClick={onRequestConsultation} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-3 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#4A1521] transition hover:bg-[#f3eee5]">{copy(data.cta.buttonLabel, language)}<ArrowRight className="h-4 w-4" /></button></div></section>}
+      {section('contact') && (
+        <section id="contact" className="scroll-mt-24 sm:scroll-mt-28 bg-[#fbfaf7] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid overflow-hidden border border-[#d8ceb8] bg-white shadow-[0_24px_70px_rgba(65,45,24,0.10)] lg:grid-cols-[1.08fr_.92fr]">
+              <div className="relative min-h-[22rem] bg-[#201913] sm:min-h-[29rem]">
+                {contactAsset ? (
+                  <ImageTile asset={contactAsset} language={language} onOpen={setLightboxId} className="absolute inset-0 h-full w-full" sizes="(min-width: 1024px) 50vw, 100vw" />
+                ) : (
+                  <div className="absolute inset-0 bg-[#201913]" />
+                )}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent px-6 pb-6 pt-24 sm:px-9 sm:pb-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#e2c985]">{language === 'nl' ? 'Een werk laten onderzoeken' : language === 'fr' ? 'Faire examiner une œuvre' : 'Submit a work for research'}</p>
+                </div>
+              </div>
+              <div className="flex flex-col justify-center bg-[#1c1a17] px-6 py-12 text-white sm:px-9 sm:py-16 lg:px-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7bd76]">{copy(section('contact').eyebrow, language)}</p>
+                <p className="mt-4 max-w-md font-serif text-lg leading-7 text-white/70">{copy(section('contact').title, language)}</p>
+                <h2 className="mt-5 max-w-lg font-serif text-3xl font-bold leading-tight sm:text-4xl">{copy(data.cta.title, language)}</h2>
+                <p className="mt-5 max-w-md font-serif text-lg leading-8 text-white/75">{copy(data.cta.description, language)}</p>
+                <div className="mt-8 border-t border-white/20 pt-7">
+                  <button type="button" onClick={onRequestConsultation} className="group inline-flex min-h-12 items-center justify-center gap-3 bg-[#ead8aa] px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.12em] text-[#1c1a17] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ead8aa]">
+                    {copy(data.cta.buttonLabel, language)}<ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {lightboxAsset && <div role="dialog" aria-modal="true" aria-label={copy(lightboxAsset.title, language)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" onClick={() => setLightboxId(null)}><button type="button" aria-label={language === 'nl' ? 'Sluiten' : 'Close'} onClick={() => setLightboxId(null)} className="absolute right-4 top-4 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"><X className="h-6 w-6" /></button><figure className="max-h-[90vh] max-w-6xl" onClick={event => event.stopPropagation()}><AssetImage asset={lightboxAsset} language={language} className="max-h-[74vh] w-auto max-w-full object-contain" sizes="90vw" /><figcaption className="mx-auto mt-3 max-w-3xl text-center text-white/80"><strong className="block font-serif text-base text-white">{copy(lightboxAsset.title, language)}</strong>{copy(lightboxAsset.caption, language) && <span className="mt-1 block font-serif text-sm">{copy(lightboxAsset.caption, language)}</span>}{copy(lightboxAsset.objectLabel, language) && <span className="mt-1 block text-xs">{copy(lightboxAsset.objectLabel, language)}</span>}{copy(lightboxAsset.credit, language) && <span className="mt-1 block text-xs text-white/60">{copy(lightboxAsset.credit, language)}</span>}</figcaption></figure></div>}
     </main>
