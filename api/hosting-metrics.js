@@ -1,5 +1,6 @@
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
+import { getR2SubmissionsBucketName } from './_lib/r2.js';
 
 const SUPABASE_MANAGEMENT_TOKEN = process.env.SUPABASE_PAT || process.env.SUPABASE_ACCESS_TOKEN;
 const getSupabaseProjectRef = () => {
@@ -25,34 +26,43 @@ const s3 = new S3Client({
   },
 });
 
-async function getR2BucketSize() {
-  if (!process.env.R2_BUCKET_NAME) return null;
+const PUBLIC_MEDIA_PREFIXES = ['catalog/', 'provenance/', 'site/', 'rembrandt-project/'];
+const IMAGE_FILE_EXTENSION = /\.(?:avif|jpe?g|png|webp)$/i;
+
+async function getR2ImageSize(bucket, prefixes, includesObject = () => true) {
+  if (!bucket) return null;
   try {
     let totalSize = 0;
-    let isTruncated = true;
-    let continuationToken = undefined;
-
-    while (isTruncated) {
-      const command = new ListObjectsV2Command({
-        Bucket: process.env.R2_BUCKET_NAME,
-        ContinuationToken: continuationToken,
-      });
-      const response = await s3.send(command);
-
-      if (response.Contents) {
-        response.Contents.forEach(obj => {
-          totalSize += obj.Size;
-        });
+    for (const Prefix of prefixes) {
+      let isTruncated = true;
+      let continuationToken;
+      while (isTruncated) {
+        const response = await s3.send(new ListObjectsV2Command({ Bucket: bucket, Prefix, ContinuationToken: continuationToken }));
+        for (const object of response.Contents || []) {
+          if (includesObject(object.Key || '')) totalSize += Number(object.Size || 0);
+        }
+        isTruncated = response.IsTruncated === true;
+        continuationToken = response.NextContinuationToken;
       }
-
-      isTruncated = response.IsTruncated;
-      continuationToken = response.NextContinuationToken;
     }
     return totalSize;
   } catch (e) {
-    console.error("Failed to fetch R2 bucket size", e);
+    console.error('Failed to fetch R2 media size', e);
     return null;
   }
+}
+
+async function getManagedMediaSize() {
+  const publicBucket = process.env.R2_BUCKET_NAME;
+  const publicImages = await getR2ImageSize(publicBucket, PUBLIC_MEDIA_PREFIXES, key => IMAGE_FILE_EXTENSION.test(key));
+  const privateBucket = getR2SubmissionsBucketName();
+  if (privateBucket === publicBucket) return publicImages;
+
+  // Provenance originals have UUID keys without an extension. Their dedicated
+  // prefix contains only images and must be included alongside public variants.
+  const provenanceOriginals = await getR2ImageSize(privateBucket, ['provenance/originals/']);
+  if (!Number.isFinite(publicImages) || !Number.isFinite(provenanceOriginals)) return null;
+  return publicImages + provenanceOriginals;
 }
 
 async function getHostingPlan() {
@@ -174,8 +184,8 @@ export default async function handler(req, res) {
   if (!admin.ok) return sendJson(res, admin.status, { error: 'Beheerderssessie vereist.' });
 
   try {
-    const [r2Size, plan, databaseSizeResult, r2EgressResult] = await Promise.all([
-      getR2BucketSize(),
+    const [mediaSize, plan, databaseSizeResult, r2EgressResult] = await Promise.all([
+      getManagedMediaSize(),
       getHostingPlan(),
       getSupabaseDatabaseSize(),
       getR2Egress(),
@@ -192,11 +202,11 @@ export default async function handler(req, res) {
     // cached egress is generated.
     setUsage(usages, 'cached_egress', 0, 'not_applicable_supabase_cdn');
 
-    // Uploaded website media lives in R2. Keep Supabase Storage separate from
-    // this customer-facing media figure and only fall back to it when R2 is not
-    // available.
-    if (Number.isFinite(r2Size)) {
-      setUsage(usages, 'storage_size', r2Size, 'cloudflare_r2');
+    // Media storage is the physical total of every managed image object in R2:
+    // public originals/variants plus private provenance originals. JSON snapshots
+    // and unrelated operational objects are deliberately excluded.
+    if (Number.isFinite(mediaSize)) {
+      setUsage(usages, 'storage_size', mediaSize, 'cloudflare_r2_managed_media');
     }
 
     // Website media traffic is served by R2. Never manufacture traffic from a
