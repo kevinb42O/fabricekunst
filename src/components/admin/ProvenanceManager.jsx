@@ -830,7 +830,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
   const update = updater => { setFormData(current => normalizeProvenance(typeof updater === 'function' ? updater(current) : updater)); setDirty(true); setMessage(null); };
   const updateLocalized = (section, field, value) => update(current => ({ ...current, [section]: { ...current[section], [field]: { ...(current[section]?.[field] || {}), [language]: value } } }));
   const saveDraft = async () => { setBusy(true); try { const body = await saveProvenanceDraftAsync(formData, version); setVersion(body.version); setFormData(migrateProvenance(body.draft, defaultProvenance())); setDirty(false); setIssues([]); setMessage({ type: 'success', text: 'Concept opgeslagen. De live pagina is niet gewijzigd.' }); showToast?.('Herkomstconcept opgeslagen.', 'info'); } catch (error) { setMessage({ type: 'error', text: error.message }); if (error.message.includes('andere beheerder')) await load(); } finally { setBusy(false); } };
-  const publish = async () => { const nextIssues = provenanceIssues(formData, { publishing: true }); setIssues(nextIssues); if (nextIssues.length) { setActiveTab('publish'); setMessage({ type: 'error', text: 'De publicatiecontrole vond aandachtspunten.' }); return; } setBusy(true); try { const saved = await saveProvenanceDraftAsync(formData, version); setVersion(saved.version); const body = await publishProvenanceAsync(saved.version); const published = migrateProvenance(body.provenanceData, defaultProvenance()); setFormData(published); setDirty(false); setIssues([]); if (onSaveProvenance) { onSaveProvenance(published); } setMessage({ type: 'success', text: 'Nieuwe herkomstversie gepubliceerd.' }); showToast?.('Herkomstpagina gepubliceerd.', 'info'); await load(); } catch (error) { setMessage({ type: 'error', text: error.message }); } finally { setBusy(false); } };
+  const publish = async () => { const nextIssues = provenanceIssues(formData, { publishing: true }); setIssues(nextIssues); if (nextIssues.length) { const assetIssue = nextIssues.map(issue => issue.match(/^Afbeelding ([a-f0-9-]{36})\b/i)?.[1]).find(Boolean); if (assetIssue) { setMediaSearch(assetIssue); setMediaCategory('all'); setMediaStatus('all'); setActiveTab('media'); setMessage({ type: 'error', text: 'Deze afbeelding heeft nog publicatiegegevens nodig. Vul in de Beeldbank het bijschrift en de alt-tekst aan voor iedere taal.' }); } else { setActiveTab('publish'); setMessage({ type: 'error', text: 'De publicatiecontrole vond aandachtspunten.' }); } return; } setBusy(true); try { const saved = await saveProvenanceDraftAsync(formData, version); setVersion(saved.version); const body = await publishProvenanceAsync(saved.version); const published = migrateProvenance(body.provenanceData, defaultProvenance()); setFormData(published); setDirty(false); setIssues([]); if (onSaveProvenance) { onSaveProvenance(published); } setMessage({ type: 'success', text: 'Nieuwe herkomstversie gepubliceerd.' }); showToast?.('Herkomstpagina gepubliceerd.', 'info'); await load(); } catch (error) { setMessage({ type: 'error', text: error.message }); } finally { setBusy(false); } };
   const handleAssetSelect = (section, id) => {
     const isContact = section === 'cta';
     const defaultLabel = isContact ? 'Contactafbeelding' : 'Hero-afbeelding';
@@ -941,7 +941,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
       const titleNL = (asset.title?.nl || '').toLowerCase();
       const captionNL = (asset.caption?.nl || '').toLowerCase();
       const filename = (item.filename || '').toLowerCase();
-      if (!titleNL.includes(q) && !captionNL.includes(q) && !filename.includes(q)) return false;
+      if (!titleNL.includes(q) && !captionNL.includes(q) && !filename.includes(q) && !item.id.toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -971,6 +971,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
     {activeTab==='comparisons' && <ComparisonsEditor comparisons={formData.comparisons} assets={formData.assets} media={media} language={language} update={update}/>}
     {activeTab==='media' && (
       <div className="space-y-6">
+        {mediaSearch && media.some(item => item.id === mediaSearch) && <div role="status" className="flex items-start gap-2 rounded-lg border border-[#d8cebd] bg-[#f8f4ed] p-4 text-sm text-[#62594f]"><AlertCircle size={17} className="mt-0.5 shrink-0 text-[#8e7035]"/><p><strong className="text-[#211b16]">Afbeelding uit de publicatiecontrole.</strong> Vul hieronder het bijschrift en de alt-tekst in voor de geselecteerde taal. Gebruik bovenaan <strong className="text-[#211b16]">EN</strong> en daarna <strong className="text-[#211b16]">FR</strong> om de ontbrekende vertalingen aan te vullen.</p></div>}
         {/* Beeldbank Top Bar */}
         <section className={cardClass}>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -1029,7 +1030,7 @@ export default function ProvenanceManager({ provenanceData, onSaveProvenance, sh
                 <Search size={14} className="pointer-events-none absolute left-3 top-3 text-[#8e7035]" />
                 <input
                   type="text"
-                  placeholder="Zoek op titel of bestandsnaam…"
+                  placeholder="Zoek op titel, bestand of afbeeldings-ID…"
                   value={mediaSearch}
                   onChange={e => setMediaSearch(e.target.value)}
                   className="h-10 w-full rounded-lg border border-[#d8cebd] bg-white pl-9 pr-8 text-xs text-[#211b16] outline-none transition focus:border-[#4a1521] sm:w-60"
