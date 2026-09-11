@@ -30,13 +30,19 @@ export function normalizeProvenance(input = {}) {
     comparisons: list(value.comparisons).map(pair => ({ ...base(pair), ...texts(pair, ['title', 'leftLabel', 'rightLabel']), leftId: string(pair.leftId), rightId: string(pair.rightId), sameObjectConfirmed: pair.sameObjectConfirmed === true })),
     gallery: { assetIds: strings(value.gallery?.assetIds) },
     dossier: { ...texts(value.dossier, ['description']), items: list(value.dossier?.items).map(item => ({ id: string(item.id), enabled: item.enabled !== false, ...texts(item, ['title', 'description']) })) },
-    cta: { ...texts(value.cta, ['title', 'description', 'buttonLabel']), action: 'consultation' },
+    cta: { ...texts(value.cta, ['title', 'description', 'buttonLabel']), assetId: string(value.cta?.assetId), action: 'consultation' },
     faq: list(value.faq).map(item => ({ ...base(item), ...texts(item, ['question', 'answer']) })),
   };
 }
 
 export function migrateProvenance(input, defaults) {
-  if (input?.schemaVersion === 3) return normalizeProvenance(input);
+  if (input?.schemaVersion === 3) {
+    const data = normalizeProvenance(input);
+    // Schema v3 predates the editorial contact image. Preserve an intentional
+    // empty selection, but give legacy saved pages the current safe default.
+    if (!Object.prototype.hasOwnProperty.call(input.cta || {}, 'assetId')) data.cta.assetId = defaults?.cta?.assetId || '';
+    return data;
+  }
   const data = structuredClone(defaults);
   if (!input || !Object.keys(input).length) return data;
   const legacy = (section, field) => languages(section?.[field] || '', section?.[`${field}_en`] || '', section?.[`${field}_fr`] || '');
@@ -55,6 +61,7 @@ export function referencedAssetIds(data) {
   return [...new Set([
     data.hero.assetId, data.seo.assetId,
     ...(data.homepageTeaser.enabled ? [data.homepageTeaser.assetId] : []),
+    ...(visible('contact') ? [data.cta.assetId] : []),
     ...(visible('methods') ? data.methods.filter(x => x.enabled).flatMap(x => x.assetIds) : []),
     ...(visible('examples') ? data.examples.filter(x => x.enabled).flatMap(x => x.assetIds) : []),
     ...(visible('gallery') ? [...data.gallery.assetIds, ...data.comparisons.filter(x => x.enabled).flatMap(x => [x.leftId, x.rightId])] : []),
@@ -113,7 +120,10 @@ export function provenanceIssues(input, { publishing = false } = {}) {
     if (!pair.leftId || !pair.rightId || pair.leftId === pair.rightId || !pair.sameObjectConfirmed) issues.push('Vergelijking: kies twee verschillende beelden en bevestig hetzelfde object.');
     for (const field of ['title','leftLabel','rightLabel']) required(pair[field], `Vergelijking / ${field}`);
   }
-  if (visible('contact')) for (const field of ['title','description','buttonLabel']) required(data.cta[field], `Contact / ${field}`);
+  if (visible('contact')) {
+    for (const field of ['title','description','buttonLabel']) required(data.cta[field], `Contact / ${field}`);
+    requiredAsset(data.cta.assetId, 'Contact / afbeelding');
+  }
   if (visible('dossier')) { required(data.dossier.description, 'Dossier'); for (const item of data.dossier.items.filter(entry => entry.enabled)) { required(item.title, 'Dossieronderdeel'); consistent(item.description, 'Dossieronderdeel / toelichting'); } }
   if (data.homepageTeaser.enabled) {
     requiredAsset(data.homepageTeaser.assetId, 'Homepage / afbeelding');
@@ -138,7 +148,7 @@ export function publicProvenance(input, media = []) {
   if (!visible('gallery')) data.gallery = { assetIds: [] };
   if (!visible('dossier')) data.dossier = { description: languages(), items: [] };
   else data.dossier.items = data.dossier.items.filter(item => item.enabled);
-  if (!visible('contact')) data.cta = { title: languages(), description: languages(), buttonLabel: languages(), action: 'consultation' };
+  if (!visible('contact')) data.cta = { title: languages(), description: languages(), buttonLabel: languages(), assetId: '', action: 'consultation' };
   if (!data.homepageTeaser.enabled) data.homepageTeaser = { enabled: false };
   const sources = new Set([...data.methods, ...data.examples].flatMap(e => [...e.sourceIds, ...(e.timeline || []).map(t => t.sourceId)]));
   data.sources = data.sources.filter(s => s.enabled && sources.has(s.id));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultProvenance } from '../src/data/defaultProvenance.js';
-import { MEDIA_CATEGORIES, normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
+import { MEDIA_CATEGORIES, migrateProvenance, normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
 
 test('default provenance has valid comparison for UV vs daylight', () => {
   const draft = defaultProvenance();
@@ -70,6 +70,29 @@ test('publicProvenance projects comparison with ready assets', () => {
   assert.ok(right, 'right asset must be in public projection');
   assert.equal(left.url, 'https://cdn.example.com/20.webp');
   assert.equal(right.url, 'https://cdn.example.com/27.webp');
+});
+
+test('contact CTA image is explicit, public, and compatible with saved v3 content', () => {
+  const draft = defaultProvenance();
+  const contactId = draft.cta.assetId;
+  assert.ok(contactId, 'the contact CTA should have an explicit image');
+  assert.ok(draft.assets.some(asset => asset.id === contactId), 'the contact image should be in the image bank');
+
+  const publicPage = publicProvenance(draft, [{
+    id: contactId,
+    status: 'ready',
+    variants: [{ url: 'https://cdn.example.com/contact.webp', width: 1200, height: 800 }],
+  }]);
+  assert.equal(publicPage.cta.assetId, contactId);
+  assert.equal(publicPage.assets.find(asset => asset.id === contactId)?.url, 'https://cdn.example.com/contact.webp');
+
+  const legacyV3 = defaultProvenance();
+  delete legacyV3.cta.assetId;
+  assert.equal(migrateProvenance(legacyV3, defaultProvenance()).cta.assetId, contactId, 'legacy v3 data gets a safe default');
+
+  const intentionallyEmpty = defaultProvenance();
+  intentionallyEmpty.cta.assetId = '';
+  assert.equal(migrateProvenance(intentionallyEmpty, defaultProvenance()).cta.assetId, '', 'an editor can intentionally clear the selection');
 });
 
 test('schema preserves material-analysis media categories', () => {

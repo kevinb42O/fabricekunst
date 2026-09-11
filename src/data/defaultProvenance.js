@@ -535,6 +535,7 @@ export const DEFAULT_PROVENANCE = normalizeProvenance({
       'Vous conservez un volume rare, un manuscrit ou un tableau et souhaitez clarifier son parcours et sa valeur ? Nous accompagnons collectionneurs privés et institutions avec la plus stricte discrétion.'
     ),
     buttonLabel: l('Bespreek uw collectie', 'Consult with our curators', 'Consulter notre équipe'),
+    assetId: aid(37),
     action: 'consultation',
   },
 });

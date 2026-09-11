@@ -119,7 +119,7 @@ export default function HerkomstPage({ provenanceData, faqItems = [], onRequestC
 
   const heroImage = image(data.hero.assetId);
   const currentHeroUrl = heroImage?.url || '/images/provenience-light-cream-hero.jpg';
-  const contactAsset = featureAssets.at(-1) || visibleGallery.at(-1) || heroImage;
+  const contactAsset = image(data.cta.assetId) || featureAssets.at(-1) || visibleGallery.at(-1) || heroImage;
 
   // Parallax translation matching homepage Hero.jsx
   const { scrollYProgress } = useScroll({
