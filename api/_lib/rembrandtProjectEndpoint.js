@@ -14,6 +14,10 @@ import {
   writeRembrandtProjectAccess,
 } from "./rembrandtProjectAccess.js";
 import { DEFAULT_REMBRANDT_PROJECT } from "../../src/data/defaultRembrandtProject.js";
+import {
+  finalizeMediaAssetUsageStage,
+  stageMediaAssetUsages,
+} from "./mediaAssetUsage.js";
 
 const SETTING_KEY = "rembrandt_project_data";
 const MAX_PAYLOAD_BYTES = 900 * 1024;
@@ -66,11 +70,15 @@ export const isVersionMatch = (expected, current) => {
 const isStrictDate = (value) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return false;
   const parsed = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  return (
+    Number.isFinite(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
 };
 
 const isIsoDateTime = (value) => {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(value)) return false;
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T/.test(value))
+    return false;
   const parsed = new Date(value);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString() === value;
 };
@@ -122,7 +130,7 @@ export const validateRembrandtProjectShape = (value, depth = 0) => {
   );
 };
 
-const managedR2Image = (value) => {
+export const managedR2Image = (value) => {
   if (!value) return null;
   if (typeof value !== "string" || value.length > 2048)
     throw new RequestError("Invalid image URL");
@@ -144,7 +152,12 @@ const managedR2Image = (value) => {
     );
   }
   const objectKey = decodeURIComponent(url.pathname.replace(/^\//, ""));
-  if (!objectKey.startsWith("rembrandt-project/") || objectKey.includes("..")) {
+  if (
+    !["rembrandt-project/", "media/variants/"].some((prefix) =>
+      objectKey.startsWith(prefix),
+    ) ||
+    objectKey.includes("..")
+  ) {
     throw new RequestError("Invalid Rembrandt Project image path");
   }
   return objectKey;
@@ -167,6 +180,42 @@ const projectImageUrls = (project) => {
   return [...new Set(urls.filter(Boolean))];
 };
 
+const stageProjectMediaUsage = async (supabase, project) => {
+  const urls = projectImageUrls(project).filter((url) => {
+    try {
+      return decodeURIComponent(new URL(url).pathname).includes(
+        "/media/variants/",
+      );
+    } catch {
+      return false;
+    }
+  });
+  if (!urls.length)
+    return stageMediaAssetUsages(supabase, {
+      consumerType: "rembrandt-project",
+      consumerId: "main",
+      usages: [],
+    });
+  const matches = await Promise.all(
+    urls.map(async (url) => {
+      const { data, error } = await supabase
+        .from("media_assets")
+        .select("id,variants")
+        .contains("variants", [{ url }])
+        .limit(1);
+      if (error) throw error;
+      return data?.[0]?.id || null;
+    }),
+  );
+  return stageMediaAssetUsages(supabase, {
+    consumerType: "rembrandt-project",
+    consumerId: "main",
+    usages: matches
+      .filter(Boolean)
+      .map((assetId) => ({ assetId, placement: "project-reference" })),
+  });
+};
+
 export const validateProject = async (project) => {
   validateRembrandtProjectShape(project);
   if (
@@ -179,8 +228,10 @@ export const validateProject = async (project) => {
   ) {
     throw new RequestError("Required project sections are missing");
   }
-  if (project.schemaVersion !== 2) throw new RequestError("De projectversie is ongeldig.");
-  if (typeof project.isEnabled !== "boolean") throw new RequestError("De zichtbaarheid van het project is ongeldig.");
+  if (project.schemaVersion !== 2)
+    throw new RequestError("De projectversie is ongeldig.");
+  if (typeof project.isEnabled !== "boolean")
+    throw new RequestError("De zichtbaarheid van het project is ongeldig.");
   if (project.phases.length < 1 || project.phases.length > MAX_PHASES)
     throw new RequestError("Het project heeft een ongeldig aantal fases.");
   if (project.updates.length > MAX_UPDATES)
@@ -195,7 +246,9 @@ export const validateProject = async (project) => {
   const phaseOrders = new Set();
   for (const phase of project.phases) {
     if (!phase?.id || !ID_PATTERN.test(phase.id) || phaseIds.has(phase.id))
-      throw new RequestError("Elke fase heeft een unieke, geldige sleutel nodig.");
+      throw new RequestError(
+        "Elke fase heeft een unieke, geldige sleutel nodig.",
+      );
     if (
       !Number.isInteger(Number(phase.sortOrder)) ||
       phaseOrders.has(Number(phase.sortOrder))
@@ -215,24 +268,46 @@ export const validateProject = async (project) => {
   const investigationSlugs = new Set();
   const investigationOrders = new Set();
   for (const investigation of project.investigations) {
-    if (!ID_PATTERN.test(investigation?.id || "") || investigationIds.has(investigation.id))
-      throw new RequestError("Elk onderzoeksdossier heeft een unieke, geldige sleutel nodig.");
-    if (!ID_PATTERN.test(investigation?.slug || "") || investigation.slug === "preview" || investigationSlugs.has(investigation.slug))
-      throw new RequestError("Elk onderzoeksdossier heeft een unieke URL-slug nodig.");
+    if (
+      !ID_PATTERN.test(investigation?.id || "") ||
+      investigationIds.has(investigation.id)
+    )
+      throw new RequestError(
+        "Elk onderzoeksdossier heeft een unieke, geldige sleutel nodig.",
+      );
+    if (
+      !ID_PATTERN.test(investigation?.slug || "") ||
+      investigation.slug === "preview" ||
+      investigationSlugs.has(investigation.slug)
+    )
+      throw new RequestError(
+        "Elk onderzoeksdossier heeft een unieke URL-slug nodig.",
+      );
     const order = Number(investigation.sortOrder);
     if (!Number.isInteger(order) || order < 1 || investigationOrders.has(order))
-      throw new RequestError("Elk onderzoeksdossier heeft een unieke positieve volgorde nodig.");
+      throw new RequestError(
+        "Elk onderzoeksdossier heeft een unieke positieve volgorde nodig.",
+      );
     if (!INVESTIGATION_STATUSES.has(investigation.status))
-      throw new RequestError("Een onderzoeksdossier bevat een ongeldige status.");
-    if (investigation.visible !== false && !String(investigation.title?.nl || "").trim())
-      throw new RequestError("Elk zichtbaar onderzoeksdossier heeft een Nederlandse titel nodig.");
+      throw new RequestError(
+        "Een onderzoeksdossier bevat een ongeldige status.",
+      );
+    if (
+      investigation.visible !== false &&
+      !String(investigation.title?.nl || "").trim()
+    )
+      throw new RequestError(
+        "Elk zichtbaar onderzoeksdossier heeft een Nederlandse titel nodig.",
+      );
     investigationIds.add(investigation.id);
     investigationSlugs.add(investigation.slug);
     investigationOrders.add(order);
     const galleryIds = new Set();
     for (const image of investigation.gallery || []) {
       if (!UPDATE_ID_PATTERN.test(image?.id || "") || galleryIds.has(image.id))
-        throw new RequestError("Elk dossierbeeld heeft een unieke, geldige sleutel nodig.");
+        throw new RequestError(
+          "Elk dossierbeeld heeft een unieke, geldige sleutel nodig.",
+        );
       galleryIds.add(image.id);
     }
   }
@@ -241,11 +316,17 @@ export const validateProject = async (project) => {
   for (const section of project.aboutSections) {
     const order = Number(section.sortOrder);
     if (!ID_PATTERN.test(section?.id || "") || aboutIds.has(section.id))
-      throw new RequestError("Elke inhoudssectie heeft een unieke, geldige sleutel nodig.");
+      throw new RequestError(
+        "Elke inhoudssectie heeft een unieke, geldige sleutel nodig.",
+      );
     if (!Number.isInteger(order) || order < 1 || aboutOrders.has(order))
-      throw new RequestError("Elke inhoudssectie heeft een unieke positieve volgorde nodig.");
+      throw new RequestError(
+        "Elke inhoudssectie heeft een unieke positieve volgorde nodig.",
+      );
     if (section.visible !== false && !String(section.title?.nl || "").trim())
-      throw new RequestError("Elke zichtbare inhoudssectie heeft een Nederlandse titel nodig.");
+      throw new RequestError(
+        "Elke zichtbare inhoudssectie heeft een Nederlandse titel nodig.",
+      );
     aboutIds.add(section.id);
     aboutOrders.add(order);
   }
@@ -254,11 +335,17 @@ export const validateProject = async (project) => {
   for (const step of project.researchSteps) {
     const order = Number(step.sortOrder);
     if (!ID_PATTERN.test(step?.id || "") || stepIds.has(step.id))
-      throw new RequestError("Elke onderzoeksstap heeft een unieke, geldige sleutel nodig.");
+      throw new RequestError(
+        "Elke onderzoeksstap heeft een unieke, geldige sleutel nodig.",
+      );
     if (!Number.isInteger(order) || order < 1 || stepOrders.has(order))
-      throw new RequestError("Elke onderzoeksstap heeft een unieke positieve volgorde nodig.");
+      throw new RequestError(
+        "Elke onderzoeksstap heeft een unieke positieve volgorde nodig.",
+      );
     if (step.visible !== false && !String(step.title?.nl || "").trim())
-      throw new RequestError("Elke zichtbare onderzoeksstap heeft een Nederlandse titel nodig.");
+      throw new RequestError(
+        "Elke zichtbare onderzoeksstap heeft een Nederlandse titel nodig.",
+      );
     stepIds.add(step.id);
     stepOrders.add(order);
   }
@@ -280,15 +367,24 @@ export const validateProject = async (project) => {
       throw new RequestError("Een update bevat een ongeldig bewijstype.");
     if (!phaseIds.has(update.phaseId))
       throw new RequestError("Every update must belong to an existing phase");
-    if (project.investigations.length && !investigationIds.has(update.investigationId))
-      throw new RequestError("Elke update moet aan een bestaand onderzoeksdossier gekoppeld zijn.");
+    if (
+      project.investigations.length &&
+      !investigationIds.has(update.investigationId)
+    )
+      throw new RequestError(
+        "Elke update moet aan een bestaand onderzoeksdossier gekoppeld zijn.",
+      );
     if (update.status === "published" && !String(update.title?.nl || "").trim())
       throw new RequestError("Every published update needs a Dutch title");
     if (!isStrictDate(update.eventDate))
-      throw new RequestError("Elke update heeft een geldige onderzoeksdatum nodig.");
+      throw new RequestError(
+        "Elke update heeft een geldige onderzoeksdatum nodig.",
+      );
     const sequence = Number(update.sequence);
     if (!Number.isInteger(sequence) || sequence < 1 || sequences.has(sequence))
-      throw new RequestError("Elke update heeft een unieke positieve volgorde nodig.");
+      throw new RequestError(
+        "Elke update heeft een unieke positieve volgorde nodig.",
+      );
     if (update.status === "published") {
       const publishTime = new Date(update.publishedAt || 0).getTime();
       if (!isIsoDateTime(update.publishedAt))
@@ -306,7 +402,9 @@ export const validateProject = async (project) => {
     const galleryIds = new Set();
     for (const image of update.gallery || []) {
       if (!UPDATE_ID_PATTERN.test(image?.id || "") || galleryIds.has(image.id))
-        throw new RequestError("Elk galerijbeeld heeft een unieke, geldige sleutel nodig.");
+        throw new RequestError(
+          "Elk galerijbeeld heeft een unieke, geldige sleutel nodig.",
+        );
       galleryIds.add(image.id);
     }
   }
@@ -321,7 +419,10 @@ export const validateProject = async (project) => {
 
   const managedImageUrls = imageUrls.filter((url) => managedR2Image(url));
   if (managedImageUrls.length) {
-    if (getR2ConfigurationError()) throw new RequestError("De online mediabibliotheek is tijdelijk niet beschikbaar.");
+    if (getR2ConfigurationError())
+      throw new RequestError(
+        "De online mediabibliotheek is tijdelijk niet beschikbaar.",
+      );
     const r2 = getR2Client();
     const verifyImage = async (url) => {
       const objectKey = managedR2Image(url);
@@ -336,11 +437,15 @@ export const validateProject = async (project) => {
         !object.ContentLength ||
         object.ContentLength > 20 * 1024 * 1024
       ) {
-        throw new RequestError("Een gekoppelde afbeelding is niet beschikbaar of ongeldig.");
+        throw new RequestError(
+          "Een gekoppelde afbeelding is niet beschikbaar of ongeldig.",
+        );
       }
     };
     for (let index = 0; index < managedImageUrls.length; index += 6) {
-      await Promise.all(managedImageUrls.slice(index, index + 6).map(verifyImage));
+      await Promise.all(
+        managedImageUrls.slice(index, index + 6).map(verifyImage),
+      );
     }
   }
   return serialized;
@@ -354,17 +459,26 @@ async function readProject(supabase) {
     .maybeSingle();
   if (error) throw error;
   const storedProject = parseSetting(data?.value);
-  const project = Number(storedProject?.schemaVersion) === 2
-    ? storedProject
-    : { ...DEFAULT_REMBRANDT_PROJECT, isEnabled: false };
+  const project =
+    Number(storedProject?.schemaVersion) === 2
+      ? storedProject
+      : { ...DEFAULT_REMBRANDT_PROJECT, isEnabled: false };
   return { project, row: data || null };
 }
 
-async function writeProjectVisibility(supabase, enabled, expectedVersion = undefined) {
+async function writeProjectVisibility(
+  supabase,
+  enabled,
+  expectedVersion = undefined,
+) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const { project, row } = await readProject(supabase);
     const currentVersion = row?.updated_at || null;
-    if (expectedVersion !== undefined && expectedVersion !== null && !isVersionMatch(expectedVersion, currentVersion)) {
+    if (
+      expectedVersion !== undefined &&
+      expectedVersion !== null &&
+      !isVersionMatch(expectedVersion, currentVersion)
+    ) {
       throw new RequestError(
         "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
         409,
@@ -387,7 +501,10 @@ async function writeProjectVisibility(supabase, enabled, expectedVersion = undef
       if (error?.code === "23505") continue;
       if (error) throw error;
       const finalVersion = data?.updated_at || updatedAt;
-      return { project: { ...nextProject, updatedAt: finalVersion }, version: finalVersion };
+      return {
+        project: { ...nextProject, updatedAt: finalVersion },
+        version: finalVersion,
+      };
     }
 
     const { data, error } = await supabase
@@ -400,10 +517,16 @@ async function writeProjectVisibility(supabase, enabled, expectedVersion = undef
     if (error) throw error;
     if (data) {
       const finalVersion = data.updated_at || updatedAt;
-      return { project: { ...nextProject, updatedAt: finalVersion }, version: finalVersion };
+      return {
+        project: { ...nextProject, updatedAt: finalVersion },
+        version: finalVersion,
+      };
     }
   }
-  throw new RequestError("De zichtbaarheid kon door een gelijktijdige wijziging niet worden opgeslagen. Probeer opnieuw.", 409);
+  throw new RequestError(
+    "De zichtbaarheid kon door een gelijktijdige wijziging niet worden opgeslagen. Probeer opnieuw.",
+    409,
+  );
 }
 
 async function listRevisions(supabase) {
@@ -494,7 +617,10 @@ export default async function handler(req, res) {
       ]);
       return sendJson(res, 200, {
         ok: true,
-        project: { ...project, isEnabled: access.enabled === true && project.isEnabled === true },
+        project: {
+          ...project,
+          isEnabled: access.enabled === true && project.isEnabled === true,
+        },
         version: row?.updated_at || null,
         revisions,
       });
@@ -502,7 +628,10 @@ export default async function handler(req, res) {
 
     if (req.query?.resource === "rembrandt-project-access-admin") {
       if (typeof req.body?.enabled !== "boolean")
-        throw new RequestError("Kies of het project openbaar of verborgen moet zijn.", 400);
+        throw new RequestError(
+          "Kies of het project openbaar of verborgen moet zijn.",
+          400,
+        );
       const enabled = req.body.enabled;
 
       if (!enabled) {
@@ -512,10 +641,16 @@ export default async function handler(req, res) {
         const saved = await writeProjectVisibility(supabase, false);
         let warning = "";
         try {
-          await publishPublicContentSnapshot(supabase, { includeRembrandtProject: false });
+          await publishPublicContentSnapshot(supabase, {
+            includeRembrandtProject: false,
+          });
         } catch (publicationError) {
-          console.error("Hidden project snapshot refresh failed:", publicationError);
-          warning = "Het project is verborgen. De websitegegevens worden bij een volgende publicatie opgeschoond.";
+          console.error(
+            "Hidden project snapshot refresh failed:",
+            publicationError,
+          );
+          warning =
+            "Het project is verborgen. De websitegegevens worden bij een volgende publicatie opgeschoond.";
         }
         return sendJson(res, 200, { ok: true, ...saved, warning });
       }
@@ -527,14 +662,18 @@ export default async function handler(req, res) {
       let saved = null;
       try {
         saved = await writeProjectVisibility(supabase, true, expectedVersion);
-        await publishPublicContentSnapshot(supabase, { includeRembrandtProject: true });
+        await publishPublicContentSnapshot(supabase, {
+          includeRembrandtProject: true,
+        });
         await writeRembrandtProjectAccess(true, saved.version);
         return sendJson(res, 200, { ok: true, ...saved });
       } catch (enableError) {
         if (saved) {
           await writeRembrandtProjectAccess(false).catch(() => {});
           await writeProjectVisibility(supabase, false).catch(() => {});
-          await publishPublicContentSnapshot(supabase, { includeRembrandtProject: false }).catch(() => {});
+          await publishPublicContentSnapshot(supabase, {
+            includeRembrandtProject: false,
+          }).catch(() => {});
         }
         throw enableError;
       }
@@ -553,10 +692,14 @@ export default async function handler(req, res) {
       isEnabled: shouldBePublic,
     };
     await validateProject(project);
+    const projectUsageStage = await stageProjectMediaUsage(supabase, project);
     const { row: previous } = await readProject(supabase);
     const expectedVersion = req.body?.expectedVersion ?? null;
     const currentVersion = previous?.updated_at || null;
-    if (expectedVersion !== null && !isVersionMatch(expectedVersion, currentVersion)) {
+    if (
+      expectedVersion !== null &&
+      !isVersionMatch(expectedVersion, currentVersion)
+    ) {
       throw new RequestError(
         "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
         409,
@@ -610,6 +753,14 @@ export default async function handler(req, res) {
       const publication = await publishPublicContentSnapshot(supabase, {
         includeRembrandtProject: shouldBePublic,
       });
+      try {
+        await finalizeMediaAssetUsageStage(supabase, projectUsageStage);
+      } catch (usageError) {
+        console.warn(
+          "Rembrandt Project media usage cleanup could not be completed:",
+          usageError.message,
+        );
+      }
       if (shouldBePublic) {
         await writeRembrandtProjectAccess(true, finalVersion);
       }
@@ -643,22 +794,20 @@ export default async function handler(req, res) {
           .eq("updated_at", finalVersion);
       }
       await publishPublicContentSnapshot(supabase).catch(() => {});
-      await writeRembrandtProjectAccess(access.enabled === true).catch(() => {});
+      await writeRembrandtProjectAccess(access.enabled === true).catch(
+        () => {},
+      );
       throw publishError;
     }
   } catch (error) {
     console.error("Rembrandt Project request failed:", error);
-    return sendJson(
-      res,
-      error instanceof RequestError ? error.status : 500,
-      {
+    return sendJson(res, error instanceof RequestError ? error.status : 500, {
       error:
         error instanceof RequestError
           ? error.message
           : req.method === "POST"
             ? "Het project is niet gepubliceerd. Controleer de inhoud en afbeeldingen en probeer opnieuw."
             : "Het project kon niet worden geladen.",
-      },
-    );
+    });
   }
 }

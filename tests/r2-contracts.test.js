@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { containsForbiddenImageSource } from '../api/_lib/publicContent.js';
 import { createUploadReceipt, verifyUploadReceipt } from '../api/_lib/uploadReceipt.js';
 import { classifyProvenanceImageUrl, validateProvenanceShape } from '../api/save-provenance.js';
+import { managedR2Image } from '../api/_lib/rembrandtProjectEndpoint.js';
 
 const metadata = {
   objectKey: 'provenance/hero/123-example.webp',
@@ -35,6 +36,22 @@ test('provenance image policy accepts only this project R2 bucket', () => {
   assert.equal(classifyProvenanceImageUrl('/images/local.jpg'), null);
   assert.equal(classifyProvenanceImageUrl('https://another-bucket.r2.dev/provenance/hero/file.webp'), null);
   assert.equal(classifyProvenanceImageUrl('https://project.supabase.co/storage/v1/object/file.jpg'), null);
+  assert.deepEqual(
+    classifyProvenanceImageUrl('https://pub-managed.r2.dev/media/variants/123/variant-1200.webp'),
+    { kind: 'r2', objectKey: 'media/variants/123/variant-1200.webp' }
+  );
+});
+
+test('Lost Rembrandt accepts a public variant from the universal image library only', () => {
+  process.env.R2_PUBLIC_URL = 'https://pub-managed.r2.dev';
+  assert.equal(
+    managedR2Image('https://pub-managed.r2.dev/media/variants/123/variant-1200.webp'),
+    'media/variants/123/variant-1200.webp',
+  );
+  assert.throws(
+    () => managedR2Image('https://pub-managed.r2.dev/media/originals/123'),
+    /Invalid Rembrandt Project image path/,
+  );
 });
 
 test('provenance payload guard rejects oversized and deeply nested content', () => {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultProvenance } from '../src/data/defaultProvenance.js';
-import { MEDIA_CATEGORIES, migrateProvenance, normalizeProvenance, provenanceIssues, publicProvenance } from '../src/utils/provenance.js';
+import { MEDIA_CATEGORIES, hydrateProvenanceMediaMetadata, migrateProvenance, normalizeProvenance, provenanceIssues, provenanceMediaUsages, publicProvenance } from '../src/utils/provenance.js';
 
 test('default provenance has valid comparison for UV vs daylight', () => {
   const draft = defaultProvenance();
@@ -72,6 +72,33 @@ test('publicProvenance projects comparison with ready assets', () => {
   assert.equal(right.url, 'https://cdn.example.com/27.webp');
 });
 
+test('a ready central image is publishable without editorial metadata', () => {
+  const draft = defaultProvenance();
+  const assetId = draft.hero.assetId;
+  draft.assets = draft.assets.map((asset) =>
+    asset.id === assetId
+      ? {
+          ...asset,
+          title: { nl: '', en: '', fr: '' },
+          caption: { nl: '', en: '', fr: '' },
+          alt: { nl: '', en: '', fr: '' },
+          credit: { nl: '', en: '', fr: '' },
+          approved: false,
+        }
+      : asset,
+  );
+  const media = [{
+    id: assetId,
+    status: 'ready',
+    metadata: {},
+    variants: [{ url: 'https://cdn.example.com/optional-metadata.webp', width: 1200, height: 800 }],
+  }];
+
+  assert.deepEqual(provenanceIssues(draft, { publishing: true }), []);
+  const publicAsset = publicProvenance(draft, media).assets.find((asset) => asset.id === assetId);
+  assert.equal(publicAsset.url, 'https://cdn.example.com/optional-metadata.webp');
+});
+
 test('contact CTA image is explicit, public, and compatible with saved v3 content', () => {
   const draft = defaultProvenance();
   const contactId = draft.cta.assetId;
@@ -101,6 +128,40 @@ test('schema preserves material-analysis media categories', () => {
   const materialAsset = draft.assets.find(asset => asset.id === '00000000-0000-4000-8000-000000000014');
   assert.equal(materialAsset.category, 'methods');
   assert.equal(normalizeProvenance(draft).assets.find(asset => asset.id === materialAsset.id).category, 'methods');
+});
+
+test('only concrete Provenance placements create media usages', () => {
+  const draft = defaultProvenance();
+  const unusedAsset = draft.assets.find(asset => asset.id !== draft.hero.assetId && !draft.gallery.assetIds.includes(asset.id));
+  const usages = provenanceMediaUsages(draft);
+  assert.ok(usages.some(usage => usage.assetId === draft.hero.assetId && usage.placement === 'hero'));
+  assert.ok(usages.some(usage => usage.placement.startsWith('gallery:')));
+  assert.ok(!usages.some(usage => usage.assetId === unusedAsset.id), 'an asset merely listed in the old editorial catalogue is not in use');
+});
+
+test('central media metadata overrides the historical page copy at publication', () => {
+  const draft = defaultProvenance();
+  const assetId = draft.hero.assetId;
+  const hydrated = hydrateProvenanceMediaMetadata(draft, [{
+    id: assetId,
+    status: 'ready',
+    metadata: {
+      title: { nl: 'Centrale titel', en: 'Central title', fr: 'Titre central' },
+      caption: { nl: 'Centraal bijschrift', en: 'Central caption', fr: 'Légende centrale' },
+      alt: { nl: 'Centrale alt', en: 'Central alt', fr: 'Texte alternatif central' },
+      credit: { nl: 'Atelier Rembrandt', en: 'Atelier Rembrandt', fr: 'Atelier Rembrandt' },
+      objectLabel: { nl: '', en: '', fr: '' },
+      category: 'research',
+      approved: true,
+    },
+    variants: [{ url: 'https://cdn.example.com/central.webp', width: 1200, height: 800 }],
+    width: 1200,
+    height: 800,
+  }]);
+  const asset = hydrated.assets.find(item => item.id === assetId);
+  assert.equal(asset.title.nl, 'Centrale titel');
+  assert.equal(asset.caption.nl, 'Centraal bijschrift');
+  assert.equal(asset.category, 'research');
 });
 
 test('sources and timelines survive the public projection while disabled dossier items do not', () => {

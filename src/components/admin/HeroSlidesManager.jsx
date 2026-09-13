@@ -1,19 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { Check, Image as ImageIcon, RefreshCw, Save, Upload } from 'lucide-react';
-import { DEFAULT_HERO_IMAGE, DEFAULT_MOBILE_HERO_IMAGE, uploadCatalogImage } from '../../utils/storage';
+import React, { useEffect, useState } from "react";
+import {
+  Check,
+  Image as ImageIcon,
+  RefreshCw,
+  Save,
+  Upload,
+} from "lucide-react";
+import {
+  DEFAULT_HERO_IMAGE,
+  DEFAULT_MOBILE_HERO_IMAGE,
+  syncUniversalMediaUrlsAsync,
+  uploadUniversalMediaAsync,
+} from "../../utils/storage";
+import MediaPicker from "./MediaPicker";
 
 export default function HeroSlidesManager({
-  heroImage = '',
-  mobileHeroImage = '',
+  heroImage = "",
+  mobileHeroImage = "",
   onSaveHeroImage,
   onSaveMobileHeroImage,
-  onShowToast = () => {}
+  onShowToast = () => {},
 }) {
   const [imageUrl, setImageUrl] = useState(heroImage || DEFAULT_HERO_IMAGE);
-  const [mobileImageUrl, setMobileImageUrl] = useState(mobileHeroImage || DEFAULT_MOBILE_HERO_IMAGE);
+  const [mobileImageUrl, setMobileImageUrl] = useState(
+    mobileHeroImage || DEFAULT_MOBILE_HERO_IMAGE,
+  );
   const [uploadingTarget, setUploadingTarget] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState(null);
   const saveDesktopImage = onSaveHeroImage || (() => Promise.resolve());
   const saveMobileImage = onSaveMobileHeroImage || (() => Promise.resolve());
 
@@ -30,47 +45,76 @@ export default function HeroSlidesManager({
     if (!file) return;
     setUploadingTarget(target);
     try {
-      const publicUrl = await uploadCatalogImage(file, {
-        purpose: target === 'desktop' ? 'home-hero' : 'mobile-hero'
-      });
-      if (!publicUrl) throw new Error('Upload leverde geen URL op.');
-      if (target === 'desktop') setImageUrl(publicUrl);
+      const record = await uploadUniversalMediaAsync(file);
+      const publicUrl =
+        record?.variants?.at(-1)?.url || record?.variants?.[0]?.url;
+      if (!publicUrl) throw new Error("Upload leverde geen URL op.");
+      if (target === "desktop") setImageUrl(publicUrl);
       else setMobileImageUrl(publicUrl);
-      onShowToast(`${target === 'desktop' ? 'Desktop' : 'Mobiele'} afbeelding is geüpload.`, 'info');
+      onShowToast(
+        `${target === "desktop" ? "Desktop" : "Mobiele"} afbeelding is geüpload.`,
+        "info",
+      );
     } catch (error) {
-      console.error('Hero image upload failed:', error);
-      onShowToast('Uploaden mislukt. Probeer een andere afbeelding.', 'error');
+      console.error("Hero image upload failed:", error);
+      onShowToast("Uploaden mislukt. Probeer een andere afbeelding.", "error");
     } finally {
       setUploadingTarget(null);
-      event.target.value = '';
+      event.target.value = "";
     }
   };
 
   const handleReset = (target) => {
-    const label = target === 'desktop' ? 'desktopafbeelding' : 'mobiele afbeelding';
+    const label =
+      target === "desktop" ? "desktopafbeelding" : "mobiele afbeelding";
     if (!window.confirm(`De standaard ${label} herstellen?`)) return;
-    if (target === 'desktop') setImageUrl(DEFAULT_HERO_IMAGE);
+    if (target === "desktop") setImageUrl(DEFAULT_HERO_IMAGE);
     else setMobileImageUrl(DEFAULT_MOBILE_HERO_IMAGE);
-    onShowToast(`De standaard ${label} staat klaar. Klik op opslaan om te bevestigen.`, 'info');
+    onShowToast(
+      `De standaard ${label} staat klaar. Klik op opslaan om te bevestigen.`,
+      "info",
+    );
   };
 
   const handleSave = async () => {
     if (uploadingTarget) {
-      onShowToast('Wacht tot de afbeelding volledig is geüpload.', 'error');
+      onShowToast("Wacht tot de afbeelding volledig is geüpload.", "error");
       return;
     }
     setIsSaving(true);
     try {
+      // Mark new central images as in-use before page writes. A failed page
+      // save can only leave a harmless blocker, never a deletable live image.
+      await Promise.all([
+        syncUniversalMediaUrlsAsync("site", "hero-desktop", [imageUrl], {
+          stage: true,
+        }),
+        syncUniversalMediaUrlsAsync("site", "hero-mobile", [mobileImageUrl], {
+          stage: true,
+        }),
+      ]);
       await Promise.all([
         saveDesktopImage(imageUrl),
-        saveMobileImage(mobileImageUrl)
+        saveMobileImage(mobileImageUrl),
       ]);
+      await Promise.all([
+        syncUniversalMediaUrlsAsync("site", "hero-desktop", [imageUrl]),
+        syncUniversalMediaUrlsAsync("site", "hero-mobile", [mobileImageUrl]),
+      ]).catch((usageError) =>
+        console.warn(
+          "Hero media usage index could not be updated:",
+          usageError.message,
+        ),
+      );
       setIsSaved(true);
-      onShowToast('Beide hero-afbeeldingen zijn opgeslagen.');
+      onShowToast("Beide hero-afbeeldingen zijn opgeslagen.");
       window.setTimeout(() => setIsSaved(false), 2200);
     } catch (error) {
-      console.error('Hero save failed:', error);
-      onShowToast('De hero-afbeeldingen konden niet worden opgeslagen.', 'error');
+      console.error("Hero save failed:", error);
+      onShowToast(
+        "De hero-afbeeldingen konden niet worden opgeslagen.",
+        "error",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -78,23 +122,25 @@ export default function HeroSlidesManager({
 
   const panels = [
     {
-      id: 'desktop',
-      eyebrow: 'Desktop · vanaf 1024 px',
-      title: 'Brede hero-afbeelding',
-      description: 'Gebruik een rustig beeld met voldoende vrije ruimte voor de tekst. Aanbevolen: 1920 × 1080 px.',
+      id: "desktop",
+      eyebrow: "Desktop · vanaf 1024 px",
+      title: "Brede hero-afbeelding",
+      description:
+        "Gebruik een rustig beeld met voldoende vrije ruimte voor de tekst. Aanbevolen: 1920 × 1080 px.",
       value: imageUrl,
       setValue: setImageUrl,
-      aspectClass: 'admin-hero-preview--desktop'
+      aspectClass: "admin-hero-preview--desktop",
     },
     {
-      id: 'mobile',
-      eyebrow: 'Mobiel · tot 1023 px',
-      title: 'Staande hero-afbeelding',
-      description: 'Deze afbeelding staat volledig los van desktop. Aanbevolen verhouding: 3:4 of 4:5.',
+      id: "mobile",
+      eyebrow: "Mobiel · tot 1023 px",
+      title: "Staande hero-afbeelding",
+      description:
+        "Deze afbeelding staat volledig los van desktop. Aanbevolen verhouding: 3:4 of 4:5.",
       value: mobileImageUrl,
       setValue: setMobileImageUrl,
-      aspectClass: 'admin-hero-preview--mobile'
-    }
+      aspectClass: "admin-hero-preview--mobile",
+    },
   ];
 
   return (
@@ -103,49 +149,113 @@ export default function HeroSlidesManager({
         <div>
           <p className="admin-eyebrow">Homepage</p>
           <h1>Hero-afbeeldingen</h1>
-          <p>Beheer de desktop- en mobiele presentatie onafhankelijk van elkaar.</p>
+          <p>
+            Beheer de desktop- en mobiele presentatie onafhankelijk van elkaar.
+          </p>
         </div>
-        <button type="button" className="admin-button admin-button--primary" onClick={handleSave} disabled={isSaving || Boolean(uploadingTarget)}>
+        <button
+          type="button"
+          className="admin-button admin-button--primary"
+          onClick={handleSave}
+          disabled={isSaving || Boolean(uploadingTarget)}
+        >
           {isSaved ? <Check aria-hidden="true" /> : <Save aria-hidden="true" />}
-          {isSaving ? 'Opslaan…' : isSaved ? 'Opgeslagen' : 'Wijzigingen opslaan'}
+          {isSaving
+            ? "Opslaan…"
+            : isSaved
+              ? "Opgeslagen"
+              : "Wijzigingen opslaan"}
         </button>
       </section>
 
       <div className="admin-hero-grid">
         {panels.map((panel) => (
-          <section className="admin-hero-card" key={panel.id} aria-labelledby={`${panel.id}-hero-title`}>
+          <section
+            className="admin-hero-card"
+            key={panel.id}
+            aria-labelledby={`${panel.id}-hero-title`}
+          >
             <div className="admin-hero-card__header">
               <div>
                 <p className="admin-eyebrow">{panel.eyebrow}</p>
                 <h2 id={`${panel.id}-hero-title`}>{panel.title}</h2>
                 <p>{panel.description}</p>
               </div>
-              <button type="button" className="admin-icon-button" onClick={() => handleReset(panel.id)} title="Standaard herstellen" aria-label={`${panel.title} herstellen`}>
+              <button
+                type="button"
+                className="admin-icon-button"
+                onClick={() => handleReset(panel.id)}
+                title="Standaard herstellen"
+                aria-label={`${panel.title} herstellen`}
+              >
                 <RefreshCw aria-hidden="true" />
               </button>
             </div>
 
             <div className={`admin-hero-preview ${panel.aspectClass}`}>
-              {panel.value ? <img src={panel.value} alt={`${panel.title} voorbeeld`} /> : <ImageIcon aria-hidden="true" />}
+              {panel.value ? (
+                <img src={panel.value} alt={`${panel.title} voorbeeld`} />
+              ) : (
+                <ImageIcon aria-hidden="true" />
+              )}
               <span>Voorbeeld</span>
             </div>
 
             <label className="admin-upload-control">
               <Upload aria-hidden="true" />
               <span>
-                <strong>{uploadingTarget === panel.id ? 'Uploaden…' : 'Afbeelding vervangen'}</strong>
+                <strong>
+                  {uploadingTarget === panel.id
+                    ? "Uploaden…"
+                    : "Afbeelding vervangen"}
+                </strong>
                 <small>JPG, PNG of WebP</small>
               </span>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={isSaving || Boolean(uploadingTarget)} onChange={(event) => handleImageUpload(event, panel.id)} />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                disabled={isSaving || Boolean(uploadingTarget)}
+                onChange={(event) => handleImageUpload(event, panel.id)}
+              />
             </label>
+            <button
+              type="button"
+              className="admin-text-button"
+              onClick={() => setPickerTarget(panel.id)}
+            >
+              Kies uit de universele beeldbank
+            </button>
 
             <label className="admin-field">
               <span>Afbeeldings-URL</span>
-              <input type="url" value={panel.value} onChange={(event) => panel.setValue(event.target.value)} placeholder="/images/hero.jpg" />
+              <input
+                type="url"
+                value={panel.value}
+                onChange={(event) => panel.setValue(event.target.value)}
+                placeholder="/images/hero.jpg"
+              />
             </label>
           </section>
         ))}
       </div>
+      <MediaPicker
+        open={Boolean(pickerTarget)}
+        onClose={() => setPickerTarget(null)}
+        onSelect={(asset) => {
+          const url = asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url;
+          if (pickerTarget === "desktop") setImageUrl(url);
+          if (pickerTarget === "mobile") setMobileImageUrl(url);
+          onShowToast(
+            "Beeld uit de universele beeldbank geselecteerd.",
+            "info",
+          );
+        }}
+        title={
+          pickerTarget === "mobile"
+            ? "Kies een mobiele hero-afbeelding"
+            : "Kies een brede hero-afbeelding"
+        }
+      />
     </div>
   );
 }

@@ -41,10 +41,11 @@ const AnalyticsManager = React.lazy(() => import('./AnalyticsManager'));
 const TokensManager = React.lazy(() => import('./TokensManager'));
 const CollectorListManager = React.lazy(() => import('./CollectorListManager'));
 const RembrandtProjectManager = React.lazy(() => import('./RembrandtProjectManager'));
+const MediaLibraryManager = React.lazy(() => import('./MediaLibraryManager'));
 
 const VALID_TABS = new Set([
   'dashboard', 'analytics-overview', 'analytics-acquisition', 'analytics-behavior', 'items', 'certificates', 'hero', 'provenance', 'faq',
-  'inquiries', 'customers', 'collectors', 'rembrandt-project', 'settings', 'tokens'
+  'inquiries', 'customers', 'collectors', 'rembrandt-project', 'media-library', 'settings', 'tokens'
 ]);
 
 const getTabFromHash = () => {
@@ -182,6 +183,7 @@ export default function AdminDashboard({
     { id: 'items', label: 'Collectie', icon: BookOpen, count: activeItems.length },
     { id: 'certificates', label: 'Certificaten', icon: Award },
     { id: 'hero', label: 'Hero', icon: ImageIcon },
+    { id: 'media-library', label: 'Beeldbank', icon: ImageIcon },
     { id: 'provenance', label: 'Herkomst', icon: ShieldCheck },
     { id: 'faq', label: 'FAQ', icon: HelpCircle },
     { id: 'rembrandt-project', label: 'Lost Rembrandt', icon: Search },
@@ -199,6 +201,7 @@ export default function AdminDashboard({
     items: 'Collectie',
     certificates: 'Certificaten',
     hero: 'Hero-afbeeldingen',
+    'media-library': 'Beeldbank',
     provenance: 'Herkomstpagina',
     faq: 'Veelgestelde vragen',
     'rembrandt-project': 'The Lost Rembrandt Project',
@@ -398,8 +401,9 @@ export default function AdminDashboard({
                   onShowToast={showToast}
                 />
               )}
+              {activeTab === 'media-library' && <MediaLibraryManager onShowToast={showToast} />}
               {activeTab === 'provenance' && (
-                <ProvenanceManager provenanceData={provenanceData} onSaveProvenance={onSaveProvenance} showToast={showToast} />
+                <ProvenanceManager provenanceData={provenanceData} onSaveProvenance={onSaveProvenance} showToast={showToast} onOpenMediaLibrary={() => navigateTo('media-library')} />
               )}
               {activeTab === 'faq' && (
                 <FaqManager faqItems={faqItems} onSaveFaqItems={onSaveFaqItems} onShowToast={showToast} />

@@ -41,7 +41,9 @@ const REMBRANDT_PROJECT_ADMIN_KEY = "atelier_rembrandt_project_admin";
 const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
   if (force) publicContentPromise = null;
   if (!publicContentPromise) {
-    const url = force ? `/api/public-content?t=${Date.now()}` : "/api/public-content";
+    const url = force
+      ? `/api/public-content?t=${Date.now()}`
+      : "/api/public-content";
     publicContentPromise = fetch(url, {
       method: "GET",
       credentials: "same-origin",
@@ -68,13 +70,16 @@ const fetchPublicContentSnapshot = async ({ force = false } = {}) => {
 
 const publishPublicContentSnapshot = async () => {
   if (!isSupabaseConfigured() || !supabase) return;
-  const response = await authenticatedAdminFetch("/api/publish-public-content", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: {
-      Accept: "application/json",
+  const response = await authenticatedAdminFetch(
+    "/api/publish-public-content",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+      },
     },
-  });
+  );
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.ok) {
     throw new Error(
@@ -128,7 +133,9 @@ const isManagedImageUrl = (value, { allowLocal = true } = {}) =>
 
 const assertManagedImageUrl = (value, options) => {
   if (value && !isManagedImageUrl(value, options)) {
-    throw new Error("Afbeeldingen moeten via de online mediabibliotheek worden geüpload.");
+    throw new Error(
+      "Afbeeldingen moeten via de online mediabibliotheek worden geüpload.",
+    );
   }
 };
 
@@ -723,7 +730,8 @@ const mapDbInquiryToFrontend = (dbInq) => ({
   message: dbInq.message,
   status: dbInq.status,
   notes: dbInq.notes,
-  metadata: dbInq.metadata && typeof dbInq.metadata === "object" ? dbInq.metadata : {},
+  metadata:
+    dbInq.metadata && typeof dbInq.metadata === "object" ? dbInq.metadata : {},
   attachments: Array.isArray(dbInq.attachments) ? dbInq.attachments : [],
 });
 
@@ -1054,7 +1062,8 @@ export const uploadCatalogImage = async (
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}));
       throw new Error(
-        payload.error || `De upload kon niet worden voorbereid (${res.status}).`,
+        payload.error ||
+          `De upload kon niet worden voorbereid (${res.status}).`,
       );
     }
 
@@ -1067,7 +1076,9 @@ export const uploadCatalogImage = async (
       !cacheControl ||
       !isR2CatalogImageUrl(publicUrl)
     ) {
-      throw new Error("De uploadservice gaf geen geldige afbeeldings-URL terug.");
+      throw new Error(
+        "De uploadservice gaf geen geldige afbeeldings-URL terug.",
+      );
     }
 
     phase = "de afbeelding uploaden";
@@ -1117,7 +1128,8 @@ export const uploadCatalogImage = async (
     const verification = await verifyRes.json().catch(() => ({}));
     if (!verifyRes.ok || !verification.ok) {
       throw new Error(
-        verification.error || "De geüploade afbeelding kon niet worden bevestigd.",
+        verification.error ||
+          "De geüploade afbeelding kon niet worden bevestigd.",
       );
     }
 
@@ -1130,8 +1142,7 @@ export const uploadCatalogImage = async (
       );
     }
     throw new Error(
-      e?.message ||
-        "De upload is mislukt. Het bestand is niet opgeslagen.",
+      e?.message || "De upload is mislukt. Het bestand is niet opgeslagen.",
     );
   }
 };
@@ -1152,14 +1163,22 @@ export const getRembrandtProjectData = () => {
 
 export const fetchRembrandtProjectDataAsync = async () => {
   try {
-    const response = await fetch('/api/public-content?resource=rembrandt-project', {
-      method: 'GET',
-      credentials: 'same-origin',
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-    });
+    const response = await fetch(
+      "/api/public-content?resource=rembrandt-project",
+      {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      },
+    );
     const result = await response.json().catch(() => null);
-    if (response.ok && result?.ok && result.project && typeof result.project === 'object') {
+    if (
+      response.ok &&
+      result?.ok &&
+      result.project &&
+      typeof result.project === "object"
+    ) {
       const project = normalizeRembrandtProject(result.project);
       localStorage.setItem(
         REMBRANDT_PROJECT_PUBLIC_KEY,
@@ -1183,31 +1202,50 @@ export const fetchRembrandtProjectDataAsync = async () => {
 };
 
 export const fetchRembrandtProjectPreviewAsync = async (token) => {
-  const response = await fetch('/api/public-content?resource=rembrandt-project-preview', {
-    method: 'POST',
-    credentials: 'same-origin',
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ token }),
-  });
+  const response = await fetch(
+    "/api/public-content?resource=rembrandt-project-preview",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ token }),
+    },
+  );
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result.ok || !result.project) {
-    throw new Error(result.error || 'Deze privélink is ongeldig of niet meer actief.');
+    throw new Error(
+      result.error || "Deze privélink is ongeldig of niet meer actief.",
+    );
   }
-  return { project: normalizeRembrandtProject(result.project), expiresAt: result.expiresAt || null };
+  return {
+    project: normalizeRembrandtProject(result.project),
+    expiresAt: result.expiresAt || null,
+  };
 };
 
 export const validateRembrandtProjectPreviewAsync = async (token) => {
-  const response = await fetch('/api/public-content?resource=rembrandt-project-preview', {
-    method: 'POST',
-    credentials: 'same-origin',
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ token, validateOnly: true }),
-  });
+  const response = await fetch(
+    "/api/public-content?resource=rembrandt-project-preview",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ token, validateOnly: true }),
+    },
+  );
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result.ok) {
-    throw new Error(result.error || 'Deze privélink is ongeldig of niet meer actief.');
+    throw new Error(
+      result.error || "Deze privélink is ongeldig of niet meer actief.",
+    );
   }
   return { expiresAt: result.expiresAt || null };
 };
@@ -1217,9 +1255,9 @@ export const fetchRembrandtProjectAdminAsync = async () => {
     const response = await authenticatedAdminFetch(
       "/api/publish-public-content?resource=rembrandt-project",
       {
-      method: "GET",
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
+        method: "GET",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
       },
     );
     const result = await response.json().catch(() => ({}));
@@ -1305,13 +1343,18 @@ export const setRembrandtProjectAccessAsync = async (
     {
       method: "POST",
       credentials: "same-origin",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({ enabled, expectedVersion }),
     },
   );
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result.ok || !result.project)
-    throw new Error(result.error || "De publieke toegang kon niet worden gewijzigd.");
+    throw new Error(
+      result.error || "De publieke toegang kon niet worden gewijzigd.",
+    );
   return {
     project: normalizeRembrandtProject(result.project),
     version: result.version || result.project.updatedAt || null,
@@ -1320,37 +1363,60 @@ export const setRembrandtProjectAccessAsync = async (
 };
 
 export const fetchRembrandtPreviewLinkAsync = async () => {
-  const response = await authenticatedAdminFetch('/api/publish-public-content?resource=rembrandt-project-preview-links', {
-    method: 'GET',
-    credentials: 'same-origin',
-    headers: { Accept: 'application/json' },
-  });
+  const response = await authenticatedAdminFetch(
+    "/api/publish-public-content?resource=rembrandt-project-preview-links",
+    {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    },
+  );
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok) throw new Error(result.error || 'De privélink kon niet worden geladen.');
+  if (!response.ok || !result.ok)
+    throw new Error(result.error || "De privélink kon niet worden geladen.");
   return result.link || null;
 };
 
-export const createRembrandtPreviewLinkAsync = async ({ days = 30, label = '' } = {}) => {
-  const response = await authenticatedAdminFetch('/api/publish-public-content?resource=rembrandt-project-preview-links', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ days, label }),
-  });
+export const createRembrandtPreviewLinkAsync = async ({
+  days = 30,
+  label = "",
+} = {}) => {
+  const response = await authenticatedAdminFetch(
+    "/api/publish-public-content?resource=rembrandt-project-preview-links",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ days, label }),
+    },
+  );
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok || !result.url) throw new Error(result.error || 'De privélink kon niet worden aangemaakt.');
+  if (!response.ok || !result.ok || !result.url)
+    throw new Error(result.error || "De privélink kon niet worden aangemaakt.");
   return result;
 };
 
 export const revokeRembrandtPreviewLinkAsync = async (id) => {
-  const response = await authenticatedAdminFetch('/api/publish-public-content?resource=rembrandt-project-preview-links', {
-    method: 'DELETE',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ id }),
-  });
+  const response = await authenticatedAdminFetch(
+    "/api/publish-public-content?resource=rembrandt-project-preview-links",
+    {
+      method: "DELETE",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ id }),
+    },
+  );
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok) throw new Error(result.error || 'De privélink kon niet worden ingetrokken.');
+  if (!response.ok || !result.ok)
+    throw new Error(
+      result.error || "De privélink kon niet worden ingetrokken.",
+    );
   return true;
 };
 
@@ -1371,7 +1437,11 @@ export const saveRembrandtProjectDataAsync = async (
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ project: savedProject, expectedVersion, publish }),
+        body: JSON.stringify({
+          project: savedProject,
+          expectedVersion,
+          publish,
+        }),
       },
     );
     const result = await response.json().catch(() => ({}));
@@ -1529,22 +1599,36 @@ export const savePaintingSubmissionAsync = async (
   const attachments = [];
   try {
     for (const [index, file] of selectedFiles.entries()) {
-      onProgress({ phase: "uploading", current: index + 1, total: selectedFiles.length });
-      const prepareResponse = await fetch("/api/inquiries?scope=painting-submission", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          action: "prepare-upload",
-          filename: file.name,
-          contentType: file.type,
-          size: file.size,
-        }),
+      onProgress({
+        phase: "uploading",
+        current: index + 1,
+        total: selectedFiles.length,
       });
+      const prepareResponse = await fetch(
+        "/api/inquiries?scope=painting-submission",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            action: "prepare-upload",
+            filename: file.name,
+            contentType: file.type,
+            size: file.size,
+          }),
+        },
+      );
       const prepared = await prepareResponse.json().catch(() => ({}));
-      if (!prepareResponse.ok || !prepared?.path || !prepared?.uploadUrl || !prepared?.receipt || !prepared?.cacheControl) {
+      if (
+        !prepareResponse.ok ||
+        !prepared?.path ||
+        !prepared?.uploadUrl ||
+        !prepared?.receipt ||
+        !prepared?.cacheControl
+      ) {
         throw new Error(
-          prepared?.error || `De bijlage “${file.name}” kon niet worden voorbereid.`,
+          prepared?.error ||
+            `De bijlage “${file.name}” kon niet worden voorbereid.`,
         );
       }
       attachments.push({ path: prepared.path, receipt: prepared.receipt });
@@ -1557,11 +1641,17 @@ export const savePaintingSubmissionAsync = async (
         },
       });
       if (!uploadResponse.ok) {
-        throw new Error(`De bijlage “${file.name}” kon niet veilig worden geüpload.`);
+        throw new Error(
+          `De bijlage “${file.name}” kon niet veilig worden geüpload.`,
+        );
       }
     }
 
-    onProgress({ phase: "submitting", current: selectedFiles.length, total: selectedFiles.length });
+    onProgress({
+      phase: "submitting",
+      current: selectedFiles.length,
+      total: selectedFiles.length,
+    });
     const response = await fetch("/api/inquiries?scope=painting-submission", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1570,7 +1660,9 @@ export const savePaintingSubmissionAsync = async (
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok || !body?.inquiry?.id) {
-      throw new Error(body?.error || "Uw schilderij kon niet veilig worden ingediend.");
+      throw new Error(
+        body?.error || "Uw schilderij kon niet veilig worden ingediend.",
+      );
     }
 
     fetch("/api/send-push", {
@@ -1579,10 +1671,17 @@ export const savePaintingSubmissionAsync = async (
       credentials: "same-origin",
       body: JSON.stringify({ inquiryId: body.inquiry.id }),
     }).catch((error) =>
-      console.error("Melding voor schilderij-inzending kon niet worden verstuurd:", error),
+      console.error(
+        "Melding voor schilderij-inzending kon niet worden verstuurd:",
+        error,
+      ),
     );
 
-    onProgress({ phase: "complete", current: selectedFiles.length, total: selectedFiles.length });
+    onProgress({
+      phase: "complete",
+      current: selectedFiles.length,
+      total: selectedFiles.length,
+    });
     return body.inquiry;
   } catch (error) {
     if (attachments.length) {
@@ -2057,7 +2156,10 @@ export const fetchProvenanceDataAsync = async ({ force = true } = {}) => {
     try {
       const snapshot = await fetchPublicContentSnapshot({ force });
       if (snapshot.provenanceData) {
-        const merged = migrateProvenance(snapshot.provenanceData, defaultProvenance());
+        const merged = migrateProvenance(
+          snapshot.provenanceData,
+          defaultProvenance(),
+        );
         localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(merged));
         return merged;
       }
@@ -2069,22 +2171,54 @@ export const fetchProvenanceDataAsync = async ({ force = true } = {}) => {
 };
 
 export const saveProvenanceDataAsync = async (data) => {
-  if (!isSupabaseConfigured() || !supabase) throw new Error('De online inhoudsopslag is niet geconfigureerd.');
-  const currentResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'GET', credentials: 'same-origin' });
+  if (!isSupabaseConfigured() || !supabase)
+    throw new Error("De online inhoudsopslag is niet geconfigureerd.");
+  const currentResponse = await authenticatedAdminFetch(
+    "/api/save-provenance",
+    { method: "GET", credentials: "same-origin" },
+  );
   const current = await currentResponse.json().catch(() => ({}));
-  if (!currentResponse.ok || !current.ok) throw new Error(current.error || 'De conceptversie kon niet worden opgehaald.');
-  const draftResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save-draft', content: normalizeProvenance(data), expectedVersion: current.version }) });
+  if (!currentResponse.ok || !current.ok)
+    throw new Error(
+      current.error || "De conceptversie kon niet worden opgehaald.",
+    );
+  const draftResponse = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "save-draft",
+      content: normalizeProvenance(data),
+      expectedVersion: current.version,
+    }),
+  });
   const draft = await draftResponse.json().catch(() => ({}));
-  if (!draftResponse.ok || !draft.ok) throw new Error(draft.error || 'De conceptversie kon niet worden opgeslagen.');
-  const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'publish', expectedVersion: draft.version }) });
+  if (!draftResponse.ok || !draft.ok)
+    throw new Error(
+      draft.error || "De conceptversie kon niet worden opgeslagen.",
+    );
+  const response = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "publish", expectedVersion: draft.version }),
+  });
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok) throw new Error(result.issues?.join('\n') || result.error || 'De herkomstpagina kon niet veilig worden gepubliceerd.');
+  if (!response.ok || !result.ok)
+    throw new Error(
+      result.issues?.join("\n") ||
+        result.error ||
+        "De herkomstpagina kon niet veilig worden gepubliceerd.",
+    );
   publicContentPromise = null;
 
   // Browser state is updated only after the authoritative save and R2
   // publication have both succeeded.
   try {
-    localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(normalizeProvenance(result.provenanceData || data)));
+    localStorage.setItem(
+      PROVENANCE_PAGE_KEY,
+      JSON.stringify(normalizeProvenance(result.provenanceData || data)),
+    );
   } catch (err) {
     console.warn(
       "Herkomstpagina is gepubliceerd, maar de browsercache kon niet worden bijgewerkt:",
@@ -2095,70 +2229,276 @@ export const saveProvenanceDataAsync = async (data) => {
 };
 
 export const fetchProvenanceAdminAsync = async () => {
-  const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'GET', credentials: 'same-origin' });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || !body.ok) throw new Error(body.error || 'De herkomsteditor kon niet worden geladen.');
-  return body;
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await authenticatedAdminFetch("/api/save-provenance", {
+        method: "GET",
+        credentials: "same-origin",
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.ok)
+        throw new Error(
+          body.error || "De herkomsteditor kon niet worden geladen.",
+        );
+      return body;
+    } catch (error) {
+      lastError = error;
+      if (
+        attempt === 0 &&
+        /gateway timeout|timeout|temporar|network|fetch failed/i.test(
+          error.message || "",
+        )
+      )
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      else break;
+    }
+  }
+  throw lastError || new Error("De herkomsteditor kon niet worden geladen.");
 };
 
 export const saveProvenanceDraftAsync = async (content, expectedVersion) => {
-  const response = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save-draft', content: normalizeProvenance(content), expectedVersion }) });
+  const response = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "save-draft",
+      content: normalizeProvenance(content),
+      expectedVersion,
+    }),
+  });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok || !body.ok) throw new Error(body.error || 'Het concept kon niet worden opgeslagen.');
+  if (!response.ok || !body.ok)
+    throw new Error(body.error || "Het concept kon niet worden opgeslagen.");
   return body;
 };
 
 export const publishProvenanceAsync = async (expectedVersion) => {
-  const response = await authenticatedAdminFetch('/api/save-provenance', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'publish', expectedVersion }),
+  const response = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "publish", expectedVersion }),
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.ok) {
-    throw new Error(body.issues?.join('\n') || body.error || 'Publiceren is mislukt.');
+    throw new Error(
+      body.issues?.join("\n") || body.error || "Publiceren is mislukt.",
+    );
   }
   publicContentPromise = null;
 
   try {
     if (body.provenanceData) {
-      localStorage.setItem(PROVENANCE_PAGE_KEY, JSON.stringify(normalizeProvenance(body.provenanceData)));
+      localStorage.setItem(
+        PROVENANCE_PAGE_KEY,
+        JSON.stringify(normalizeProvenance(body.provenanceData)),
+      );
     }
   } catch (err) {
-    console.warn("Herkomstpagina kon niet in browsercache worden bijgewerkt:", err);
+    console.warn(
+      "Herkomstpagina kon niet in browsercache worden bijgewerkt:",
+      err,
+    );
   }
 
   return body;
 };
 
-export const restoreProvenanceRevisionAsync = async (revisionId, expectedVersion) => {
-  const response = await authenticatedAdminFetch('/api/save-provenance', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'restore', revisionId, expectedVersion }),
+export const restoreProvenanceRevisionAsync = async (
+  revisionId,
+  expectedVersion,
+) => {
+  const response = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "restore", revisionId, expectedVersion }),
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok || !body.ok) throw new Error(body.error || 'De revisie kon niet worden hersteld.');
+  if (!response.ok || !body.ok)
+    throw new Error(body.error || "De revisie kon niet worden hersteld.");
   return body;
 };
 
-export const uploadProvenanceMediaAsync = async (file, { crop = null } = {}) => {
-  if (!file) throw new Error('Kies eerst een afbeelding.');
-  const initResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'media-init', filename: file.name, contentType: file.type, size: file.size }) });
+export const uploadProvenanceMediaAsync = async (
+  file,
+  { crop = null } = {},
+) => {
+  if (!file) throw new Error("Kies eerst een afbeelding.");
+  const initResponse = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "media-init",
+      filename: file.name,
+      contentType: file.type,
+      size: file.size,
+    }),
+  });
   const init = await initResponse.json().catch(() => ({}));
-  if (!initResponse.ok || !init.ok) throw new Error(init.error || 'De R2-upload kon niet worden voorbereid.');
-  const uploadResponse = await fetch(init.presignedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type, 'Cache-Control': init.cacheControl } });
-  if (!uploadResponse.ok) throw new Error(`De R2-upload is geweigerd (${uploadResponse.status}).`);
-  const completeResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'media-complete', id: init.id, uploadReceipt: init.uploadReceipt }) });
+  if (!initResponse.ok || !init.ok)
+    throw new Error(init.error || "De R2-upload kon niet worden voorbereid.");
+  const uploadResponse = await fetch(init.presignedUrl, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type, "Cache-Control": init.cacheControl },
+  });
+  if (!uploadResponse.ok)
+    throw new Error(`De R2-upload is geweigerd (${uploadResponse.status}).`);
+  const completeResponse = await authenticatedAdminFetch(
+    "/api/save-provenance",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "media-complete",
+        id: init.id,
+        uploadReceipt: init.uploadReceipt,
+      }),
+    },
+  );
   const complete = await completeResponse.json().catch(() => ({}));
-  if (!completeResponse.ok || !complete.ok) throw new Error(complete.error || 'De R2-upload kon niet worden bevestigd.');
-  const renderResponse = await authenticatedAdminFetch('/api/save-provenance', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'media-render', id: complete.media.id, crop, confirmPublic: true }) });
+  if (!completeResponse.ok || !complete.ok)
+    throw new Error(
+      complete.error || "De R2-upload kon niet worden bevestigd.",
+    );
+  const renderResponse = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "media-render",
+      id: complete.media.id,
+      crop,
+      confirmPublic: true,
+    }),
+  });
   const rendered = await renderResponse.json().catch(() => ({}));
-  if (!renderResponse.ok || !rendered.ok) throw new Error(rendered.error || 'De publieke R2-variant kon niet worden gemaakt.');
+  if (!renderResponse.ok || !rendered.ok)
+    throw new Error(
+      rendered.error || "De publieke R2-variant kon niet worden gemaakt.",
+    );
   return rendered.media;
 };
+
+const mediaLibraryRequest = async (payload) => {
+  // Keep the universal library behind the existing authenticated Provenance
+  // endpoint. This project is on Vercel Hobby, where a separate endpoint
+  // would consume an additional serverless-function slot.
+  const response = await authenticatedAdminFetch("/api/save-provenance", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok)
+    throw new Error(
+      body.error || "De beeldbewerking kon niet worden voltooid.",
+    );
+  return body;
+};
+
+export const fetchMediaLibraryAsync = async ({
+  includeArchived = false,
+} = {}) => {
+  let lastError;
+  // Reads are safe to retry. This cushions a short-lived upstream 504 without
+  // retrying any media write, upload or destructive action.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await authenticatedAdminFetch(
+        `/api/save-provenance?resource=media-library${includeArchived ? "&includeArchived=1" : ""}`,
+        { method: "GET", credentials: "same-origin" },
+      );
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.ok)
+        throw new Error(body.error || "De beeldbank kon niet worden geladen.");
+      return body.media || [];
+    } catch (error) {
+      lastError = error;
+      if (
+        attempt === 0 &&
+        /gateway timeout|timeout|temporar|network|fetch failed/i.test(
+          error.message || "",
+        )
+      )
+        await new Promise((resolve) => setTimeout(resolve, 350));
+      else break;
+    }
+  }
+  throw lastError || new Error("De beeldbank kon niet worden geladen.");
+};
+
+/** Upload a single source file once, then create safe responsive public variants. */
+export const uploadUniversalMediaAsync = async (
+  file,
+  { crop = null, metadata = null } = {},
+) => {
+  if (!file) throw new Error("Kies eerst een afbeelding.");
+  const init = await mediaLibraryRequest({
+    action: "media-init",
+    filename: file.name,
+    contentType: file.type,
+    size: file.size,
+  });
+  const upload = await fetch(init.presignedUrl, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type, "Cache-Control": init.cacheControl },
+  });
+  if (!upload.ok)
+    throw new Error(`De R2-upload is geweigerd (${upload.status}).`);
+  const complete = await mediaLibraryRequest({
+    action: "media-complete",
+    id: init.id,
+    uploadReceipt: init.uploadReceipt,
+  });
+  if (complete.duplicate) return complete.media;
+  const rendered = await mediaLibraryRequest({
+    action: "media-render",
+    id: complete.media.id,
+    crop,
+    confirmPublic: true,
+  });
+  if (!metadata) return rendered.media;
+  const updated = await mediaLibraryRequest({
+    action: "media-metadata",
+    id: rendered.media.id,
+    metadata,
+  });
+  return updated.media;
+};
+
+export const updateUniversalMediaMetadataAsync = async (id, metadata) =>
+  (await mediaLibraryRequest({ action: "media-metadata", id, metadata })).media;
+export const archiveUniversalMediaAsync = async (id) =>
+  (await mediaLibraryRequest({ action: "media-archive", id })).media;
+export const restoreUniversalMediaAsync = async (id) =>
+  (await mediaLibraryRequest({ action: "media-restore", id })).media;
+export const deleteUniversalMediaAsync = async (id) =>
+  mediaLibraryRequest({
+    action: "media-delete",
+    id,
+    confirmation: "VERWIJDER",
+  });
+export const syncUniversalMediaUrlsAsync = async (
+  consumerType,
+  consumerId,
+  urls,
+  { stage = false } = {},
+) =>
+  mediaLibraryRequest({
+    action: "media-sync-urls",
+    consumerType,
+    consumerId,
+    urls,
+    stage,
+  });
 
 // ==========================================
 // FAQ ITEMS STORAGE & SUPABASE SYNC
