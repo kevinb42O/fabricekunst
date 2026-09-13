@@ -1068,13 +1068,15 @@
   display: grid;
   grid-template-columns: minmax(18rem, .7fr) minmax(0, 1.3fr);
   gap: clamp(2rem, 7vw, 7rem);
-  align-items: start;
+  align-items: stretch;
 }
 /* The outer grid cell stretches to the form's full height. The static inner
  * sticky layer can therefore follow every field without Framer Motion's
  * reveal transform affecting the browser's positioning calculation. */
 .lost-rembrandt__submit-sticky {
   align-self: stretch;
+  height: 100%;
+  min-height: 100%;
 }
 .lost-rembrandt__submit-intro {
   position: sticky;
