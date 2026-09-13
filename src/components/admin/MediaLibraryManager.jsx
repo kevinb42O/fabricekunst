@@ -140,8 +140,10 @@ export default function MediaLibraryManager({ onShowToast }) {
         return [
           asset.filename,
           asset.id,
-          asset.metadata?.title?.nl,
-          asset.metadata?.caption?.nl,
+          ...Object.values(asset.metadata?.title || {}),
+          ...Object.values(asset.metadata?.caption || {}),
+          ...Object.values(asset.metadata?.alt || {}),
+          ...Object.values(asset.metadata?.objectLabel || {}),
           ...(asset.metadata?.tags || []),
         ]
           .filter(Boolean)
