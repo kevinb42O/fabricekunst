@@ -1061,7 +1061,11 @@
 .lost-process__visual li svg { width: 1rem; flex: 0 0 auto; color: #d9b86f; }
 
 .lost-rembrandt__submit-section {
+  --submission-sticky-top: calc(3.7rem + clamp(1rem, 2vw, 1.75rem));
   padding-block: clamp(5rem, 10vw, 9rem);
+  /* Reserve one viewport at the end so the editorial column stays beside
+     every form field instead of releasing before the form has finished. */
+  padding-bottom: max(clamp(5rem, 10vw, 9rem), calc(100svh - var(--submission-sticky-top)));
   background: var(--rp-ivory-deep);
 }
 .lost-rembrandt__submit-layout {
@@ -1070,15 +1074,15 @@
   gap: clamp(2rem, 7vw, 7rem);
   align-items: start;
 }
-/*
- * The invitation stays in view while the long, multi-step form moves beside it.
- * `align-self` is important in a grid: it gives the sticky element its own
- * natural height instead of stretching it to the height of the form.
- */
-.lost-rembrandt__submit-intro {
+/* Keep the sticky behavior on a non-animated wrapper. Framer Motion applies a
+ * transform to the inner element during its reveal, which must not interfere
+ * with the browser's sticky positioning calculation. */
+.lost-rembrandt__submit-sticky {
   position: sticky;
-  top: calc(3.7rem + clamp(1rem, 2vw, 1.75rem));
+  top: var(--submission-sticky-top);
   align-self: start;
+}
+.lost-rembrandt__submit-intro {
   padding-bottom: 1.5rem;
 }
 .lost-rembrandt__submit-intro > h2 {
@@ -1195,9 +1199,9 @@
   .lost-investigation__gallery img { height: 19rem; }
   .lost-process__visual > img { height: 20rem; grid-row: auto; }
   .lost-rembrandt__submit-intro {
-    position: static;
     padding-bottom: 0;
   }
+  .lost-rembrandt__submit-sticky { position: static; }
   .lost-rembrandt__submit-intro > h2 { max-width: 9ch; }
   .lost-rembrandt__submit-intro > div { display: none; }
   .lost-submission__trust { display: grid; }

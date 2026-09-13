@@ -383,10 +383,12 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
 
         <section id="submit-a-painting" className="lost-rembrandt__submit-section">
           <div className="rembrandt-project__shell lost-rembrandt__submit-layout">
-            <motion.div {...reveal} className="lost-rembrandt__submit-intro">
-              <p>{labels.nav.submit}</p><h2>{localizedProjectValue(settings.submissionTitle, language)}</h2><span>{localizedProjectValue(settings.submissionIntro, language)}</span>
-              <div><LockKeyhole aria-hidden="true" /><strong>{localizedProjectValue(settings.confidentialityTitle, language)}</strong><p>{localizedProjectValue(settings.confidentialityText, language)}</p></div>
-            </motion.div>
+            <div className="lost-rembrandt__submit-sticky">
+              <motion.div {...reveal} className="lost-rembrandt__submit-intro">
+                <p>{labels.nav.submit}</p><h2>{localizedProjectValue(settings.submissionTitle, language)}</h2><span>{localizedProjectValue(settings.submissionIntro, language)}</span>
+                <div><LockKeyhole aria-hidden="true" /><strong>{localizedProjectValue(settings.confidentialityTitle, language)}</strong><p>{localizedProjectValue(settings.confidentialityText, language)}</p></div>
+              </motion.div>
+            </div>
             <PaintingSubmissionForm language={language} settings={settings} />
           </div>
         </section>
