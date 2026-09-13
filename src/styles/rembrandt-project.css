@@ -1078,7 +1078,9 @@
   align-self: stretch;
 }
 .lost-rembrandt__submit-intro {
-  position: relative;
+  /* Let the end state anchor to the full-height rail, whose height mirrors
+   * the form, rather than to this content-sized intermediary. */
+  position: static;
 }
 .lost-rembrandt__submit-intro-content {
   padding-bottom: 1.5rem;
