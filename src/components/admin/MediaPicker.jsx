@@ -2,12 +2,24 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Image as ImageIcon, Search, X } from "lucide-react";
 import { fetchMediaLibraryAsync } from "../../utils/storage";
+import {
+  catalogContextsFor,
+  collectionGroupsFor,
+  collectionWorksFor,
+  findMediaAssets,
+  mediaTitle,
+} from "../../utils/mediaSearch";
 import "../../styles/media-library.css";
 
 const largestUrl = (asset) =>
   asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url || "";
-const titleFor = (asset) =>
-  asset?.metadata?.title?.nl || asset?.filename || "Naamloos beeld";
+const titleFor = (asset) => mediaTitle(asset);
+const collectionGroupLabel = (group) =>
+  ({
+    books: "Boeken",
+    art: "Kunst",
+    "historical-objects": "Historische objecten",
+  })[group] || group;
 
 /** Reusable, read-only picker. Uploading and editorial metadata deliberately
  * remain in the central library so every file starts with a clear owner. */
@@ -19,6 +31,10 @@ export default function MediaPicker({
 }) {
   const [media, setMedia] = useState([]);
   const [query, setQuery] = useState("");
+  const [scope, setScope] = useState("all");
+  const [collectionGroup, setCollectionGroup] = useState("");
+  const [workId, setWorkId] = useState("");
+  const [sort, setSort] = useState("relevance");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -79,26 +95,29 @@ export default function MediaPicker({
   useEffect(() => {
     if (!open) return;
     setQuery("");
+    setScope("all");
+    setCollectionGroup("");
+    setWorkId("");
+    setSort("relevance");
     load();
   }, [open]);
 
   const filtered = useMemo(
     () =>
-      media.filter((asset) => {
-        if (asset.status !== "ready") return false;
-        const haystack = [
-          asset.filename,
-          asset.id,
-          asset.metadata?.title?.nl,
-          asset.metadata?.caption?.nl,
-          ...(asset.metadata?.tags || []),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(query.trim().toLowerCase());
+      findMediaAssets(media, {
+        query,
+        scope,
+        collectionGroup,
+        workId,
+        sort,
+        readyOnly: true,
       }),
-    [media, query],
+    [media, query, scope, collectionGroup, workId, sort],
+  );
+  const collectionGroups = useMemo(() => collectionGroupsFor(media), [media]);
+  const collectionWorks = useMemo(
+    () => collectionWorksFor(media, collectionGroup),
+    [media, collectionGroup],
   );
 
   if (!open) return null;
@@ -153,6 +172,53 @@ export default function MediaPicker({
                 : "Nog niet geladen"}
           </p>
         </div>
+        <div className="media-picker__filter-row">
+          <label>
+            <span>Toepassing</span>
+            <select value={scope} onChange={(event) => setScope(event.target.value)}>
+              <option value="all">Alle beelden</option>
+              <option value="collection">Alleen collectie</option>
+              <option value="provenance">Herkomst</option>
+              <option value="rembrandt-project">Lost Rembrandt</option>
+              <option value="site">Website</option>
+              <option value="unused">Nog nergens gebruikt</option>
+            </select>
+          </label>
+          <label>
+            <span>Collectie</span>
+            <select
+              value={collectionGroup}
+              disabled={!collectionGroups.length}
+              onChange={(event) => {
+                setCollectionGroup(event.target.value);
+                setWorkId("");
+              }}
+            >
+              <option value="">Alle collecties</option>
+              {collectionGroups.map((group) => (
+                <option key={group} value={group}>{collectionGroupLabel(group)}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Werk</span>
+            <select value={workId} disabled={!collectionWorks.length} onChange={(event) => setWorkId(event.target.value)}>
+              <option value="">Alle werken</option>
+              {collectionWorks.map((work) => (
+                <option key={work.item_id} value={work.item_id}>{work.title}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Sortering</span>
+            <select value={sort} onChange={(event) => setSort(event.target.value)}>
+              <option value="relevance">{query ? "Beste overeenkomst" : "Recent bijgewerkt"}</option>
+              <option value="recent">Recent bijgewerkt</option>
+              <option value="title">Titel A–Z</option>
+              <option value="collection">Collectie en werk</option>
+            </select>
+          </label>
+        </div>
         <div className="media-picker__content">
           {loading && <p className="media-picker__message">Beeldbank laden…</p>}
           {error && (
@@ -165,7 +231,7 @@ export default function MediaPicker({
           )}
           {!loading && !error && Boolean(filtered.length) && (
             <div className="media-picker__grid">
-              {filtered.map((asset) => (
+              {filtered.map(({ asset }) => (
                 <button
                   type="button"
                   key={asset.id}
@@ -187,6 +253,11 @@ export default function MediaPicker({
                     <small>
                       {asset.width || "?"} × {asset.height || "?"} px
                     </small>
+                    {catalogContextsFor(asset)[0]?.title && (
+                      <small className="media-picker__context">
+                        Collectie · {catalogContextsFor(asset)[0].title}
+                      </small>
+                    )}
                   </span>
                 </button>
               ))}

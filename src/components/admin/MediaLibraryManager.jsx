@@ -20,6 +20,14 @@ import {
   updateUniversalMediaMetadataAsync,
   uploadUniversalMediaAsync,
 } from "../../utils/storage";
+import {
+  catalogContextsFor,
+  collectionGroupsFor,
+  collectionWorksFor,
+  findMediaAssets,
+  groupMediaByCollection,
+  mediaTitle,
+} from "../../utils/mediaSearch";
 import "../../styles/media-library.css";
 
 const languages = [
@@ -42,8 +50,7 @@ const defaultMetadata = (filename) => ({
 });
 const largestUrl = (asset) =>
   asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url || "";
-const titleFor = (asset) =>
-  asset?.metadata?.title?.nl || asset?.filename || "Naamloos beeld";
+const titleFor = (asset) => mediaTitle(asset);
 const statusLabel = (status) => {
   if (status === "ready") return "Klaar voor gebruik";
   if (status === "archived") return "Gearchiveerd";
@@ -52,7 +59,7 @@ const statusLabel = (status) => {
 const isHistoricalUsage = (usage) =>
   usage?.consumer_type === "provenance" &&
   usage?.consumer_id?.startsWith("revision:");
-const usageLabel = (usage) => {
+const usageLabel = (usage, asset) => {
   if (
     usage.consumer_type === "provenance" &&
     usage.consumer_id === "main:draft"
@@ -67,7 +74,12 @@ const usageLabel = (usage) => {
     return "Herkomst · bewaarde revisie";
   if (usage.consumer_type === "rembrandt-project")
     return "Lost Rembrandt Project";
-  if (usage.consumer_type === "catalog") return "Collectie";
+  if (usage.consumer_type === "catalog") {
+    const context = catalogContextsFor(asset).find(
+      (entry) => entry.item_id === String(usage.consumer_id),
+    );
+    return context?.title ? `Collectie · ${context.title}` : "Collectie";
+  }
   if (usage.consumer_type === "site") return "Website";
   return "Een redactionele pagina";
 };
@@ -89,12 +101,44 @@ const placementLabel = (usage) => {
   if (placement === "url-reference") return "Gekoppelde afbeelding";
   return placement || "Gekoppelde plaatsing";
 };
+const collectionGroupLabel = (group) =>
+  ({
+    books: "Boeken",
+    art: "Kunst",
+    "historical-objects": "Historische objecten",
+  })[group] || group;
+
+function MediaListItem({ asset, active, onSelect, context: contextOverride }) {
+  const context = contextOverride || catalogContextsFor(asset)[0];
+  return (
+    <button
+      type="button"
+      className={active ? "is-active" : ""}
+      onClick={() => onSelect(asset.id)}
+    >
+      {largestUrl(asset) ? <img src={largestUrl(asset)} alt="" /> : <ImageIcon />}
+      <span>
+        <strong>{titleFor(asset)}</strong>
+        <small>
+          {context?.title
+            ? `Collectie · ${context.title}`
+            : `${statusLabel(asset.status)} · ${asset.media_asset_usages?.length || 0} toepassing${asset.media_asset_usages?.length === 1 ? "" : "en"}`}
+        </small>
+      </span>
+    </button>
+  );
+}
 
 export default function MediaLibraryManager({ onShowToast }) {
   const [media, setMedia] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const [scope, setScope] = useState("all");
+  const [collectionGroup, setCollectionGroup] = useState("");
+  const [workId, setWorkId] = useState("");
+  const [sort, setSort] = useState("relevance");
+  const [view, setView] = useState("flat");
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -127,37 +171,51 @@ export default function MediaLibraryManager({ onShowToast }) {
   useEffect(() => {
     load();
   }, []);
-  const filtered = useMemo(
+  const results = useMemo(
     () =>
-      media.filter((asset) => {
-        if (filter === "ready" && asset.status !== "ready") return false;
-        if (
-          filter === "draft" &&
-          (asset.status === "ready" || asset.status === "archived")
-        )
-          return false;
-        if (filter === "archived" && asset.status !== "archived") return false;
-        return [
-          asset.filename,
-          asset.id,
-          ...Object.values(asset.metadata?.title || {}),
-          ...Object.values(asset.metadata?.caption || {}),
-          ...Object.values(asset.metadata?.alt || {}),
-          ...Object.values(asset.metadata?.objectLabel || {}),
-          ...(asset.metadata?.tags || []),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(query.trim().toLowerCase());
+      findMediaAssets(media, {
+        query,
+        status: filter,
+        scope,
+        collectionGroup,
+        workId,
+        sort,
       }),
-    [media, filter, query],
+    [media, query, filter, scope, collectionGroup, workId, sort],
+  );
+  const collectionGroups = useMemo(() => collectionGroupsFor(media), [media]);
+  const collectionWorks = useMemo(
+    () => collectionWorksFor(media, collectionGroup),
+    [media, collectionGroup],
+  );
+  const groupedResults = useMemo(
+    () => groupMediaByCollection(results),
+    [results],
   );
   const selected = media.find((asset) => asset.id === selectedId) || null;
   const readyCount = media.filter((asset) => asset.status === "ready").length;
   const archivedCount = media.filter(
     (asset) => asset.status === "archived",
   ).length;
+  const draftCount = media.length - readyCount - archivedCount;
+  const hasActiveFilters = Boolean(
+    query ||
+      filter !== "all" ||
+      scope !== "all" ||
+      collectionGroup ||
+      workId ||
+      sort !== "relevance" ||
+      view !== "flat",
+  );
+  const clearFilters = () => {
+    setQuery("");
+    setFilter("all");
+    setScope("all");
+    setCollectionGroup("");
+    setWorkId("");
+    setSort("relevance");
+    setView("flat");
+  };
   const saveMetadata = async (next) => {
     if (!selected) return;
     setBusy(true);
@@ -348,6 +406,71 @@ export default function MediaLibraryManager({ onShowToast }) {
               disabled={!hasLoaded}
             />
           </label>
+          <div className="media-library__filter-stack">
+            <label className="media-library__field">
+              <span>Toepassing</span>
+              <select
+                value={scope}
+                disabled={!hasLoaded}
+                onChange={(event) => setScope(event.target.value)}
+              >
+                <option value="all">Alle beelden</option>
+                <option value="collection">Alleen collectie</option>
+                <option value="provenance">Herkomst</option>
+                <option value="rembrandt-project">Lost Rembrandt</option>
+                <option value="site">Website</option>
+                <option value="unused">Nog nergens gebruikt</option>
+              </select>
+            </label>
+            <label className="media-library__field">
+              <span>Collectie</span>
+              <select
+                value={collectionGroup}
+                disabled={!hasLoaded || !collectionGroups.length}
+                onChange={(event) => {
+                  setCollectionGroup(event.target.value);
+                  setWorkId("");
+                }}
+              >
+                <option value="">Alle collecties</option>
+                {collectionGroups.map((group) => (
+                  <option key={group} value={group}>
+                    {collectionGroupLabel(group)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="media-library__field">
+              <span>Werk</span>
+              <select
+                value={workId}
+                disabled={!hasLoaded || !collectionWorks.length}
+                onChange={(event) => setWorkId(event.target.value)}
+              >
+                <option value="">Alle werken</option>
+                {collectionWorks.map((work) => (
+                  <option key={work.item_id} value={work.item_id}>
+                    {work.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="media-library__field">
+              <span>Sortering</span>
+              <select
+                value={sort}
+                disabled={!hasLoaded}
+                onChange={(event) => setSort(event.target.value)}
+              >
+                <option value="relevance">{query ? "Beste overeenkomst" : "Recent bijgewerkt"}</option>
+                <option value="recent">Recent bijgewerkt</option>
+                <option value="oldest">Oudst toegevoegd</option>
+                <option value="title">Titel A–Z</option>
+                <option value="collection">Collectie en werk</option>
+                <option value="usage">Meest gebruikt</option>
+              </select>
+            </label>
+          </div>
           <div
             className="media-library__filters"
             role="group"
@@ -375,7 +498,7 @@ export default function MediaLibraryManager({ onShowToast }) {
               onClick={() => setFilter("draft")}
               disabled={!hasLoaded}
             >
-              Te voltooien
+              Te voltooien <b>{hasLoaded ? draftCount : "—"}</b>
             </button>
             <button
               type="button"
@@ -386,36 +509,75 @@ export default function MediaLibraryManager({ onShowToast }) {
               Archief <b>{hasLoaded ? archivedCount : "—"}</b>
             </button>
           </div>
+          <div className="media-library__view-controls">
+            <span>Weergave</span>
+            <div role="group" aria-label="Resultaten groeperen">
+              <button
+                type="button"
+                className={view === "flat" ? "is-active" : ""}
+                onClick={() => setView("flat")}
+                disabled={!hasLoaded}
+              >
+                Lijst
+              </button>
+              <button
+                type="button"
+                className={view === "collection" ? "is-active" : ""}
+                onClick={() => setView("collection")}
+                disabled={!hasLoaded}
+              >
+                Per werk
+              </button>
+            </div>
+          </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="media-library__clear-filters"
+              onClick={clearFilters}
+            >
+              Wis zoekopdracht en filters
+            </button>
+          )}
           <p>
             {loading
               ? "Beeldbank laden…"
               : hasLoaded
-                ? `${filtered.length} resultaat${filtered.length === 1 ? "" : "en"}`
+                ? `${results.length} resultaat${results.length === 1 ? "" : "en"}`
                 : "Er zijn nog geen resultaten geladen."}
           </p>
           <div className="media-library__items">
-            {filtered.map((asset) => (
-              <button
-                type="button"
-                key={asset.id}
-                className={asset.id === selectedId ? "is-active" : ""}
-                onClick={() => setSelectedId(asset.id)}
-              >
-                {largestUrl(asset) ? (
-                  <img src={largestUrl(asset)} alt="" />
-                ) : (
-                  <ImageIcon />
-                )}
-                <span>
-                  <strong>{titleFor(asset)}</strong>
-                  <small>
-                    {statusLabel(asset.status)} ·{" "}
-                    {asset.media_asset_usages?.length || 0} geregistreerde
-                    toepassingen
-                  </small>
-                </span>
-              </button>
-            ))}
+            {view === "flat"
+              ? results.map(({ asset }) => (
+                  <MediaListItem
+                    key={asset.id}
+                    asset={asset}
+                    active={asset.id === selectedId}
+                    onSelect={setSelectedId}
+                  />
+                ))
+              : groupedResults.map((group) => (
+                  <section className="media-library__group" key={group.key}>
+                    <h2>
+                      {group.label}
+                      <small>
+                        {group.context?.collection_group
+                          ? `${collectionGroupLabel(group.context.collection_group)} · `
+                          : ""}
+                        {group.results.length} beeld{group.results.length === 1 ? "" : "en"}
+                      </small>
+                    </h2>
+                    {group.results.map(({ asset, context }) => (
+                      <MediaListItem
+                        key={asset.id}
+                        asset={asset}
+                        active={asset.id === selectedId}
+                        onSelect={setSelectedId}
+                        context={context}
+                      />
+                    ))}
+                  </section>
+                ))}
           </div>
         </aside>
         <main>
@@ -528,7 +690,7 @@ function MediaDetails({
                 <li
                   key={`${usage.consumer_type}-${usage.consumer_id}-${usage.placement}`}
                 >
-                  <strong>{usageLabel(usage)}</strong>
+                  <strong>{usageLabel(usage, asset)}</strong>
                   <span>{placementLabel(usage)}</span>
                 </li>
               ))}

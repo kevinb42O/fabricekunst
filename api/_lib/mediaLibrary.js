@@ -146,6 +146,58 @@ const transientReadFailure = (error) =>
     String(error?.message || error || ""),
   );
 
+const parseSetting = (row) => {
+  if (!row?.value) return null;
+  if (typeof row.value !== "string") return row.value;
+  try {
+    return JSON.parse(row.value);
+  } catch {
+    return null;
+  }
+};
+
+/** Keep the image API independent of the public snapshot, while still giving
+ * editors a truthful collection name wherever a catalog image is used. */
+export const buildCatalogContexts = (usages, items, settings) => {
+  const itemById = new Map((items || []).map((item) => [String(item.id), item]));
+  const extensionByItemId = new Map(
+    (settings || [])
+      .filter((setting) => typeof setting.key === "string" && setting.key.startsWith("item_ext_"))
+      .map((setting) => [setting.key.slice("item_ext_".length), parseSetting(setting)])
+      .filter(([, extension]) => extension && typeof extension === "object"),
+  );
+  const contextsByAsset = new Map();
+  for (const usage of usages || []) {
+    if (usage.consumer_type !== "catalog" || !usage.consumer_id) continue;
+    const itemId = String(usage.consumer_id);
+    const item = itemById.get(itemId) || {};
+    const extension = extensionByItemId.get(itemId) || {};
+    const context = {
+      item_id: itemId,
+      title: extension.title || item.title || "Onbenoemd collectiewerk",
+      title_en: extension.title_en || item.title_en || "",
+      title_fr: extension.title_fr || item.title_fr || "",
+      author: extension.author || item.author || "",
+      year: extension.year || item.year || "",
+      item_type: extension.itemType || extension.item_type || item.item_type || item.itemType || "",
+      collection_group: extension.collectionGroup || extension.collection_group || item.collection_group || item.collectionGroup || "",
+      placements: [],
+    };
+    const entries = contextsByAsset.get(usage.asset_id) || new Map();
+    const existing = entries.get(itemId) || context;
+    if (usage.placement && !existing.placements.includes(usage.placement))
+      existing.placements.push(usage.placement);
+    entries.set(itemId, existing);
+    contextsByAsset.set(usage.asset_id, entries);
+  }
+  return new Map(
+    [...contextsByAsset].map(([assetId, contexts]) => [
+      assetId,
+      [...contexts.values()].sort((left, right) => left.title.localeCompare(right.title, "nl")),
+    ]),
+  );
+};
+
 /**
  * Read the media library without a PostgREST relation expansion.  The latter
  * became intermittently slow once the usage index started retaining precise
@@ -199,9 +251,37 @@ export async function listMediaAssetsWithUsages(
     entries.push(entry);
     usagesByAsset.set(usage.asset_id, entries);
   }
+  const catalogItemIds = [
+    ...new Set(
+      (usages || [])
+        .filter((usage) => usage.consumer_type === "catalog" && usage.consumer_id)
+        .map((usage) => String(usage.consumer_id)),
+    ),
+  ];
+  let catalogContextsByAsset = new Map();
+  if (catalogItemIds.length) {
+    try {
+      // Catalog metadata may live partly in the base item and partly in its
+      // extension record. Both reads stay tiny (there are only referenced
+      // works) and never prevent the library itself from opening.
+      const [{ data: items, error: itemsError }, { data: settings, error: settingsError }] =
+        await Promise.all([
+          supabase.from("items").select("*").in("id", catalogItemIds),
+          supabase.from("admin_settings").select("key,value").like("key", "item_ext_%"),
+        ]);
+      if (itemsError) throw itemsError;
+      if (settingsError) throw settingsError;
+      catalogContextsByAsset = buildCatalogContexts(usages, items, settings);
+    } catch (error) {
+      // A temporarily slow context lookup must not recreate the historical
+      // Gateway Timeout failure for the entire image library.
+      console.warn("Could not enrich media library catalog contexts:", error.message);
+    }
+  }
   return assets.map((asset) => ({
     ...asset,
     media_asset_usages: usagesByAsset.get(asset.id) || [],
+    catalog_contexts: catalogContextsByAsset.get(asset.id) || [],
   }));
 }
 

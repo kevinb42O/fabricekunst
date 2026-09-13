@@ -180,6 +180,93 @@
   background: #e9eee0;
   color: #445438;
 }
+.media-library__filter-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+.media-library__field {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+.media-library__field > span,
+.media-library__view-controls > span,
+.media-picker__filter-row label > span {
+  color: #727866;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.media-library__field select,
+.media-picker__filter-row select {
+  width: 100%;
+  min-height: 34px;
+  padding: 0.35rem 1.65rem 0.35rem 0.5rem;
+  border: 1px solid #d5d8cb;
+  border-radius: 6px;
+  background: #fff;
+  color: #4c5544;
+  font: inherit;
+  font-size: 10px;
+}
+.media-library__field select:focus,
+.media-picker__filter-row select:focus {
+  outline: 0;
+  border-color: #82916c;
+  box-shadow: 0 0 0 3px #d9e2cc80;
+}
+.media-library__field select:disabled,
+.media-picker__filter-row select:disabled {
+  cursor: not-allowed;
+  color: #94988e;
+  background: #f6f7f2;
+}
+.media-library__view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.media-library__view-controls > div {
+  display: flex;
+  padding: 0.15rem;
+  border: 1px solid #d8dbcf;
+  border-radius: 7px;
+  background: #fff;
+}
+.media-library__view-controls button {
+  min-height: 27px;
+  padding: 0.25rem 0.45rem;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #73796e;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+.media-library__view-controls button.is-active {
+  background: #e9eee0;
+  color: #405036;
+}
+.media-library__clear-filters {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.2rem;
+  border: 0;
+  background: transparent;
+  color: #536745;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.media-library__clear-filters:hover { color: #2e4524; }
 .media-library__layout aside > p {
   margin: 0.65rem 0.25rem;
   color: var(--admin-muted);
@@ -210,6 +297,29 @@
   border-color: #c9d1ba;
   background: #fff;
   box-shadow: 0 1px 4px #3536220a;
+}
+.media-library__group {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.15rem 0;
+}
+.media-library__group + .media-library__group {
+  margin-top: 0.55rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e4e6dc;
+}
+.media-library__group h2 {
+  display: grid;
+  gap: 0.14rem;
+  margin: 0.1rem 0.3rem 0.3rem;
+  color: #4b5840;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.media-library__group h2 small {
+  color: #838979;
+  font-size: 9px;
+  font-weight: 600;
 }
 .media-library__items img {
   width: 46px;
@@ -496,7 +606,7 @@
   background: var(--media-surface);
   box-shadow: 0 28px 90px rgb(0 0 0 / 0.35);
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 .media-picker__header {
   padding: 1.25rem 1.4rem 1.05rem;
@@ -568,6 +678,19 @@
   font-size: 11px;
   white-space: nowrap;
 }
+.media-picker__filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0.75rem 1.4rem;
+  border-bottom: 1px solid #e6e7df;
+  background: #fbfcf8;
+}
+.media-picker__filter-row label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
 .media-picker__content {
   min-height: 0;
   overflow: auto;
@@ -629,6 +752,12 @@
   color: #74796d;
   font-size: 10px;
 }
+.media-picker__grid .media-picker__context {
+  overflow: hidden;
+  color: #607052;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .media-picker__message {
   margin: 1.4rem;
   color: #6f7568;
@@ -683,6 +812,9 @@
   .media-picker__grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+  .media-picker__filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 620px) {
   .media-library__header,
@@ -692,6 +824,9 @@
   }
   .media-library__copy-fields,
   .media-library__publication-fields {
+    grid-template-columns: 1fr;
+  }
+  .media-library__filter-stack {
     grid-template-columns: 1fr;
   }
   .media-library__copy-fields label:first-child {
@@ -710,6 +845,11 @@
   .media-picker__header,
   .media-picker__toolbar {
     padding: 1rem;
+  }
+  .media-picker__filter-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
   }
   .media-picker__toolbar {
     align-items: stretch;
