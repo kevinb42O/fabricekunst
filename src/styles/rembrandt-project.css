@@ -1060,19 +1060,64 @@
 .lost-process__visual li { display: flex; gap: .75rem; color: #c9c0b4; font-size: .76rem; line-height: 1.5; }
 .lost-process__visual li svg { width: 1rem; flex: 0 0 auto; color: #d9b86f; }
 
-.lost-rembrandt__submit-section { padding-block: clamp(5rem,10vw,9rem); background: var(--rp-ivory-deep); }
-.lost-rembrandt__submit-layout { display: grid; grid-template-columns: minmax(18rem,.7fr) minmax(0,1.3fr); gap: clamp(2rem,7vw,7rem); align-items: start; }
-.lost-rembrandt__submit-intro { position: sticky; top: 6rem; }
-.lost-rembrandt__submit-intro > h2 { margin: .8rem 0 1rem; color: var(--rp-burgundy); font: 500 clamp(3rem,6vw,6rem)/.9 "Cormorant Garamond",Georgia,serif; }
-.lost-rembrandt__submit-intro > span { display: block; color: var(--rp-copy); font-size: 1.04rem; line-height: 1.75; }
+.lost-rembrandt__submit-section {
+  padding-block: clamp(5rem, 10vw, 9rem);
+  background: var(--rp-ivory-deep);
+}
+.lost-rembrandt__submit-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, .7fr) minmax(0, 1.3fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: start;
+}
+/*
+ * The invitation stays in view while the long, multi-step form moves beside it.
+ * `align-self` is important in a grid: it gives the sticky element its own
+ * natural height instead of stretching it to the height of the form.
+ */
+.lost-rembrandt__submit-intro {
+  position: sticky;
+  top: calc(3.7rem + clamp(1rem, 2vw, 1.75rem));
+  align-self: start;
+  padding-bottom: 1.5rem;
+}
+.lost-rembrandt__submit-intro > h2 {
+  max-width: 8ch;
+  margin: .8rem 0 1.35rem;
+  color: var(--rp-burgundy);
+  font: 500 clamp(3.3rem, 5.6vw, 6rem)/.9 "Cormorant Garamond", Georgia, serif;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.lost-rembrandt__submit-intro > span {
+  display: block;
+  max-width: 34rem;
+  color: var(--rp-copy);
+  font-size: clamp(1rem, 1.25vw, 1.12rem);
+  line-height: 1.72;
+}
 .lost-rembrandt__submit-intro > div,
-.lost-submission__trust { margin-top: 2rem; padding: 1.25rem; display: grid; grid-template-columns: auto 1fr; gap: .9rem; border: 1px solid var(--rp-border); background: rgba(255,255,255,.55); }
+.lost-submission__trust {
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .9rem 1.1rem;
+  border: 1px solid var(--rp-border);
+  background: rgba(255, 255, 255, .55);
+}
 .lost-rembrandt__submit-intro > div svg,
 .lost-submission__trust > svg { width: 1.15rem; color: var(--rp-gold); }
 .lost-rembrandt__submit-intro > div strong,
 .lost-submission__trust strong { display: block; font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; }
 .lost-rembrandt__submit-intro > div p,
-.lost-submission__trust p { grid-column: 2; margin: .45rem 0 0; color: var(--rp-copy); font-size: .84rem; line-height: 1.65; }
+.lost-submission__trust p {
+  grid-column: 2;
+  margin: .45rem 0 0;
+  color: var(--rp-copy);
+  font-size: clamp(.84rem, 1vw, .96rem);
+  line-height: 1.68;
+}
 .lost-submission { padding: clamp(1.25rem,4vw,3rem); border: 1px solid var(--rp-border); background: var(--rp-paper); box-shadow: 0 1rem 3rem rgba(43,31,19,.08); }
 .lost-submission__trust { display: none; }
 .lost-submission fieldset { margin: 0 0 2.5rem; padding: 0; border: 0; }
@@ -1126,11 +1171,9 @@
 
 @media (max-width: 63.99rem) {
   .lost-investigation,
-  .lost-process__layout,
-  .lost-rembrandt__submit-layout { grid-template-columns: 1fr; }
+  .lost-process__layout { grid-template-columns: 1fr; }
   .lost-investigation__image { min-height: 24rem; }
-  .lost-process__visual,
-  .lost-rembrandt__submit-intro { position: static; }
+  .lost-process__visual { position: static; }
   .lost-process__visual { display: grid; grid-template-columns: minmax(16rem,.7fr) 1fr; }
   .lost-process__visual > img { height: 100%; grid-row: span 2; }
 }
@@ -1142,7 +1185,8 @@
   .lost-investigation__gallery,
   .lost-submission__grid,
   .lost-submission__checklist,
-  .lost-process__visual { grid-template-columns: 1fr; }
+  .lost-process__visual,
+  .lost-rembrandt__submit-layout { grid-template-columns: 1fr; }
   .lost-rembrandt__about-grid article:first-child,
   .lost-submission__field:has(textarea) { grid-column: auto; }
   .lost-investigation__image { min-height: 20rem; }
@@ -1150,6 +1194,11 @@
   .lost-investigation__copy > h3 { font-size: 3.25rem; }
   .lost-investigation__gallery img { height: 19rem; }
   .lost-process__visual > img { height: 20rem; grid-row: auto; }
+  .lost-rembrandt__submit-intro {
+    position: static;
+    padding-bottom: 0;
+  }
+  .lost-rembrandt__submit-intro > h2 { max-width: 9ch; }
   .lost-rembrandt__submit-intro > div { display: none; }
   .lost-submission__trust { display: grid; }
   .lost-submission { padding: 1.25rem; }
