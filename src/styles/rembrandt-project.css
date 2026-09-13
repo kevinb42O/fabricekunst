@@ -1074,17 +1074,27 @@
  * sticky layer can therefore follow every field without Framer Motion's
  * reveal transform affecting the browser's positioning calculation. */
 .lost-rembrandt__submit-sticky {
+  position: relative;
   align-self: stretch;
-  height: 100%;
-  min-height: 100%;
 }
 .lost-rembrandt__submit-intro {
-  position: sticky;
-  top: calc(3.7rem + clamp(1rem, 2vw, 1.75rem));
-  align-self: start;
+  position: relative;
 }
 .lost-rembrandt__submit-intro-content {
   padding-bottom: 1.5rem;
+}
+.lost-rembrandt__submit-intro-content.is-fixed {
+  position: fixed;
+  z-index: 12;
+  top: var(--submission-intro-top);
+  left: var(--submission-intro-left);
+  width: var(--submission-intro-width);
+}
+.lost-rembrandt__submit-intro-content.is-at-end {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 }
 .lost-rembrandt__submit-intro-content > h2 {
   max-width: 8ch;

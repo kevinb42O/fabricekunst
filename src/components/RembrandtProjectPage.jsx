@@ -227,6 +227,85 @@ function DetailImage({ image, language, copy }) {
   </figure>;
 }
 
+function StickySubmissionIntro({ reveal, language, labels, settings }) {
+  const railRef = useRef(null);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    const content = contentRef.current;
+    if (!rail || !content) return undefined;
+
+    const form = rail.parentElement?.querySelector(".lost-submission");
+    const navigation = document.querySelector(".lost-rembrandt__nav");
+    const desktop = window.matchMedia("(min-width: 48rem)");
+
+    const reset = () => {
+      rail.style.removeProperty("min-height");
+      content.style.removeProperty("--submission-intro-left");
+      content.style.removeProperty("--submission-intro-width");
+      content.style.removeProperty("--submission-intro-top");
+      content.classList.remove("is-fixed", "is-at-end");
+    };
+
+    const update = () => {
+      if (!form || !desktop.matches) {
+        reset();
+        return;
+      }
+
+      // Reserve the full form height in the left grid rail. This gives the
+      // fixed panel a stable visual column throughout the long form.
+      rail.style.minHeight = `${form.offsetHeight}px`;
+      const railBounds = rail.getBoundingClientRect();
+      const navHeight = navigation?.getBoundingClientRect().height || 59;
+      const top = navHeight + Math.min(Math.max(window.innerWidth * 0.02, 16), 28);
+      const contentHeight = content.offsetHeight;
+
+      content.style.setProperty("--submission-intro-left", `${railBounds.left}px`);
+      content.style.setProperty("--submission-intro-width", `${railBounds.width}px`);
+      content.style.setProperty("--submission-intro-top", `${top}px`);
+
+      if (railBounds.top >= top) {
+        content.classList.remove("is-fixed", "is-at-end");
+      } else if (railBounds.bottom <= top + contentHeight) {
+        content.classList.remove("is-fixed");
+        content.classList.add("is-at-end");
+      } else {
+        content.classList.remove("is-at-end");
+        content.classList.add("is-fixed");
+      }
+    };
+
+    const observer = new ResizeObserver(update);
+    observer.observe(form);
+    observer.observe(content);
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    desktop.addEventListener("change", update);
+    update();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      desktop.removeEventListener("change", update);
+      reset();
+    };
+  }, []);
+
+  return (
+    <div ref={railRef} className="lost-rembrandt__submit-sticky">
+      <div className="lost-rembrandt__submit-intro">
+        <motion.div ref={contentRef} {...reveal} className="lost-rembrandt__submit-intro-content">
+          <p>{labels.nav.submit}</p><h2>{localizedProjectValue(settings.submissionTitle, language)}</h2><span>{localizedProjectValue(settings.submissionIntro, language)}</span>
+          <div><LockKeyhole aria-hidden="true" /><strong>{localizedProjectValue(settings.confidentialityTitle, language)}</strong><p>{localizedProjectValue(settings.confidentialityText, language)}</p></div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
 function InvestigationPage({ investigation, project, language, labels, privatePreview }) {
   const copy = DOSSIER_UI[language] || DOSSIER_UI.nl;
   const updates = project.updates.filter((update) => update.investigationId === investigation.id);
@@ -383,14 +462,7 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
 
         <section id="submit-a-painting" className="lost-rembrandt__submit-section">
           <div className="rembrandt-project__shell lost-rembrandt__submit-layout">
-            <div className="lost-rembrandt__submit-sticky">
-              <div className="lost-rembrandt__submit-intro">
-                <motion.div {...reveal} className="lost-rembrandt__submit-intro-content">
-                  <p>{labels.nav.submit}</p><h2>{localizedProjectValue(settings.submissionTitle, language)}</h2><span>{localizedProjectValue(settings.submissionIntro, language)}</span>
-                  <div><LockKeyhole aria-hidden="true" /><strong>{localizedProjectValue(settings.confidentialityTitle, language)}</strong><p>{localizedProjectValue(settings.confidentialityText, language)}</p></div>
-                </motion.div>
-              </div>
-            </div>
+            <StickySubmissionIntro reveal={reveal} language={language} labels={labels} settings={settings} />
             <PaintingSubmissionForm language={language} settings={settings} />
           </div>
         </section>
