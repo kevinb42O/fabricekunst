@@ -220,6 +220,10 @@
     display: contents;
   }
 
+  .detail-summary-sticky {
+    display: contents;
+  }
+
   .detail-summary-heading {
     grid-row: 1;
   }
@@ -267,6 +271,29 @@
     display: block;
     grid-column: 2;
     grid-row: 1;
+    align-self: stretch;
+  }
+
+  .detail-summary-sticky.detail-summary-sticky {
+    position: sticky;
+    top: 7rem;
+    align-self: start;
+    display: block;
+    /* Keep the complete sales card usable on shorter desktop screens. */
+    max-height: calc(100svh - 8rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #D8CEB8 transparent;
+  }
+
+  .detail-summary-sticky.detail-summary-sticky::-webkit-scrollbar {
+    width: 0.375rem;
+  }
+
+  .detail-summary-sticky.detail-summary-sticky::-webkit-scrollbar-thumb {
+    background: #D8CEB8;
+    border-radius: 999px;
   }
 
   .detail-dossier-copy.detail-dossier-copy {
@@ -543,7 +570,9 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
-    overflow-x: hidden;
+    /* `clip` prevents horizontal bleed without becoming a scroll container,
+       so desktop sticky panels retain the document scroll as their reference. */
+    overflow-x: clip;
   }
   
   html {

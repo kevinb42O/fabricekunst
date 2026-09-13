@@ -403,74 +403,76 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
           {/* ========================================================= */}
           {/* RIGHT COLUMN: STICKY TITEL, METADATA & CONSULTATIE CARD    */}
           {/* ========================================================= */}
-          <div className="detail-summary-column lg:col-span-5 space-y-5 sm:space-y-8 lg:sticky lg:top-28 lg:self-start order-1 lg:order-2">
+          <div className="detail-summary-column lg:col-span-5 space-y-5 sm:space-y-8 order-1 lg:order-2">
+            <div className="detail-summary-sticky space-y-5 sm:space-y-8">
             
-            {/* Header Titles */}
-            <div className="detail-summary-heading space-y-3 border-b border-[#D8CEB8]/70 pb-6">
-              <h2
-                style={{ viewTransitionName: getArtworkTitleTransitionName(item.id) }}
-                className="display-detail-wide text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
-              >
-                {getItemField(item, 'title', language)}
-              </h2>
+              {/* Header Titles */}
+              <div className="detail-summary-heading space-y-3 border-b border-[#D8CEB8]/70 pb-6">
+                <h2
+                  style={{ viewTransitionName: getArtworkTitleTransitionName(item.id) }}
+                  className="display-detail-wide text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.12]"
+                >
+                  {getItemField(item, 'title', language)}
+                </h2>
 
-              <div className="text-sm font-serif italic text-[#555555] space-y-1">
-                <p className="text-base font-bold text-[#111111] not-italic">
-                  {detailLabels.maker}: {item.author}
-                </p>
-                <p>
-                  {detailLabels.publisher}: {localizedPublisher || '—'}{localizedCity ? ` (${localizedCity})` : ''}
-                </p>
+                <div className="text-sm font-serif italic text-[#555555] space-y-1">
+                  <p className="text-base font-bold text-[#111111] not-italic">
+                    {detailLabels.maker}: {item.author}
+                  </p>
+                  <p>
+                    {detailLabels.publisher}: {localizedPublisher || '—'}{localizedCity ? ` (${localizedCity})` : ''}
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Price & Status Display */}
+              <div className="detail-summary-price flex items-center justify-between border-b border-[#D8CEB8]/70 pb-6">
+                <div>
+                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
+                  <span className="text-3xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
+                  <PriceAssurance showDuties className="max-w-md" />
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono border inline-block ${
+                    item.status === 'Beschikbaar' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+                    item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
+                    'bg-stone-100 text-stone-700 border-stone-300'
+                  }`}>
+                    {getLocalizedStatus(item.status, language)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Bibliographic Specs Grid */}
+              <div className="detail-summary-specs grid grid-cols-2 gap-2 sm:gap-3 text-xs font-mono">
+                <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
+                  <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.format')}</span>
+                  <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{localizedDimensions || '—'}</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
+                  <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.century')}</span>
+                  <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{getLocalizedCentury(item.century, language)}</span>
+                </div>
+              </div>
+
+              {/* Primary Action Consultation Block */}
+              <div className="detail-summary-action border-y border-[#D8CEB8] py-5 sm:py-6 space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-serif font-bold text-[#111111]">
+                    {t('commerce.askArtwork')}
+                  </h3>
+                  <p className="text-sm text-[#555555] font-serif leading-relaxed">
+                    {t('commerce.askArtworkDesc')}
+                  </p>
+                </div>
+
+                <ArtworkContactActions item={item} onPurchase={handleInquiryClick} />
+
               </div>
 
             </div>
-
-            {/* Price & Status Display */}
-            <div className="detail-summary-price flex items-center justify-between border-b border-[#D8CEB8]/70 pb-6">
-              <div>
-                <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
-                <span className="text-3xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
-                <PriceAssurance showDuties className="max-w-md" />
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono border inline-block ${
-                  item.status === 'Beschikbaar' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                  item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-                  'bg-stone-100 text-stone-700 border-stone-300'
-                }`}>
-                  {getLocalizedStatus(item.status, language)}
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Bibliographic Specs Grid */}
-            <div className="detail-summary-specs grid grid-cols-2 gap-2 sm:gap-3 text-xs font-mono">
-              <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
-                <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.format')}</span>
-                <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{localizedDimensions || '—'}</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-white border border-[#D8CEB8]/80 shadow-2xs">
-                <span className="text-[#666666] uppercase block text-[10px]">{t('item_detail.century')}</span>
-                <span className="font-bold text-[#111111] font-serif text-sm mt-0.5 block">{getLocalizedCentury(item.century, language)}</span>
-              </div>
-            </div>
-
-            {/* Primary Action Consultation Block */}
-            <div className="detail-summary-action border-y border-[#D8CEB8] py-5 sm:py-6 space-y-4">
-              <div className="space-y-1">
-                <h3 className="text-xl font-serif font-bold text-[#111111]">
-                  {t('commerce.askArtwork')}
-                </h3>
-                <p className="text-sm text-[#555555] font-serif leading-relaxed">
-                  {t('commerce.askArtworkDesc')}
-                </p>
-              </div>
-
-              <ArtworkContactActions item={item} onPurchase={handleInquiryClick} />
-
-            </div>
-
           </div>
 
         </div>
