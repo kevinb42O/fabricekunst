@@ -38,6 +38,7 @@ export default function MediaPicker({
   const [sort, setSort] = useState("relevance");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectingId, setSelectingId] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
   const searchInput = useRef(null);
   const dialogRef = useRef(null);
@@ -120,6 +121,32 @@ export default function MediaPicker({
     () => collectionWorksFor(media, collectionGroup),
     [media, collectionGroup],
   );
+
+  const selectAsset = async (asset) => {
+    if (selectingId) return;
+    setSelectingId(asset.id);
+    setError("");
+    try {
+      // A picker can be kept open when its caller no longer has a valid
+      // destination. That is much safer than silently throwing a selection
+      // away, and makes the outcome of every click explicit to the editor.
+      const selected = await onSelect(asset);
+      if (selected === false) {
+        setError(
+          "Dit beeld kon niet aan het gekozen veld worden gekoppeld. Sluit de kiezer en probeer opnieuw.",
+        );
+        return;
+      }
+      onClose();
+    } catch (selectionError) {
+      setError(
+        selectionError?.message ||
+          "Dit beeld kon niet worden gekoppeld. Probeer het opnieuw.",
+      );
+    } finally {
+      setSelectingId("");
+    }
+  };
 
   if (!open) return null;
   return createPortal(
@@ -251,10 +278,8 @@ export default function MediaPicker({
                 <button
                   type="button"
                   key={asset.id}
-                  onClick={() => {
-                    onSelect(asset);
-                    onClose();
-                  }}
+                  onClick={() => selectAsset(asset)}
+                  disabled={Boolean(selectingId)}
                   aria-label={`${titleFor(asset)} selecteren`}
                 >
                   <div className="media-picker__image">
@@ -265,7 +290,11 @@ export default function MediaPicker({
                     )}
                   </div>
                   <span>
-                    <strong>{titleFor(asset)}</strong>
+                    <strong>
+                      {selectingId === asset.id
+                        ? "Beeld koppelen…"
+                        : titleFor(asset)}
+                    </strong>
                     <small>
                       {asset.width || "?"} × {asset.height || "?"} px
                     </small>

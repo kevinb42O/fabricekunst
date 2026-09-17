@@ -963,11 +963,13 @@ export default function RembrandtProjectManager({
 
   const selectLibraryAsset = (asset) => {
     const url = preferredMediaVariantUrl(asset);
-    if (!url || !mediaPickerTarget) return;
+    if (!url || !mediaPickerTarget) return false;
     const target = mediaPickerTarget;
-    if (target.kind === "setting") updateSettings(target.field, url, false);
-    if (target.kind === "update-cover") updateSelected("coverImage", url);
-    if (target.kind === "update-gallery")
+    if (target.kind === "setting") {
+      updateSettings(target.field, url, false);
+    } else if (target.kind === "update-cover") {
+      updateSelected("coverImage", url);
+    } else if (target.kind === "update-gallery") {
       setProject((current) => ({
         ...current,
         updates: current.updates.map((entry) =>
@@ -981,7 +983,7 @@ export default function RembrandtProjectManager({
               },
         ),
       }));
-    if (target.kind === "investigation-cover")
+    } else if (target.kind === "investigation-cover") {
       setProject((current) => ({
         ...current,
         investigations: current.investigations.map((entry) =>
@@ -990,7 +992,7 @@ export default function RembrandtProjectManager({
             : entry,
         ),
       }));
-    if (target.kind === "investigation-gallery")
+    } else if (target.kind === "investigation-gallery") {
       setProject((current) => ({
         ...current,
         investigations: current.investigations.map((entry) =>
@@ -1004,7 +1006,16 @@ export default function RembrandtProjectManager({
               },
         ),
       }));
+    } else {
+      return false;
+    }
+
+    // The shared picker also closes after a successful result. Clearing the
+    // target here makes the editor resilient if that component is ever
+    // replaced or unmounted while a selection is in progress.
+    setMediaPickerTarget(null);
     onShowToast("Beeld uit de centrale beeldbank gekoppeld.", "info");
+    return true;
   };
 
   const updateGallery = (imageId, field, value, localized = false) =>
