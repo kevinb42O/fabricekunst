@@ -47,6 +47,7 @@ import {
   setRembrandtProjectAccessAsync,
 } from "../../utils/storage";
 import { localizePath } from "../../utils/locales";
+import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
 import { REMBRANDT_PROJECT_ROUTE } from "../../utils/rembrandtProject";
 import MediaPicker from "./MediaPicker";
 import "../../styles/rembrandt-project-admin.css";
