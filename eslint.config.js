@@ -10,14 +10,49 @@ export default [
     ]
   },
   {
-    files: ['**/*.{js,jsx,mjs}'],
+    files: ['src/**/*.{js,jsx,mjs}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      parserOptions: {
-        ecmaFeatures: { jsx: true }
-      }
+      parserOptions: { ecmaFeatures: { jsx: true } },
+      globals: Object.fromEntries(
+        [
+          'AbortController', 'alert', 'Blob', 'crypto', 'console', 'CSS', 'CustomEvent',
+          'document', 'DOMParser', 'Element', 'Event', 'fetch', 'File', 'FileReader',
+          'FormData', 'Headers', 'history', 'Image', 'IntersectionObserver',
+          'HTMLElement', 'localStorage', 'location', 'matchMedia', 'navigator', 'Node', 'Notification',
+          'performance', 'ReadableStream', 'Request', 'ResizeObserver', 'Response',
+          'requestAnimationFrame', 'sessionStorage', 'setInterval', 'setTimeout', 'clearInterval',
+          'clearTimeout', 'structuredClone', 'TextDecoder', 'TextEncoder', 'URL',
+          'URLSearchParams', 'window', 'atob', 'btoa',
+        ].map((name) => [name, 'readonly']),
+      ),
     },
+    rules: {
+      'no-undef': 'error',
+    },
+  },
+  {
+    files: ['api/**/*.{js,mjs}', 'tests/**/*.{js,mjs}', 'middleware.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: Object.fromEntries(
+        [
+          'AbortController', 'Blob', 'Buffer', 'btoa', 'atob', 'console', 'crypto',
+          'fetch', 'File', 'FormData', 'Headers', 'process', 'queueMicrotask',
+          'ReadableStream', 'Request', 'Response', 'setInterval', 'setTimeout',
+          'clearInterval', 'clearTimeout', 'structuredClone', 'TextDecoder',
+          'TextEncoder', 'URL', 'URLSearchParams',
+        ].map((name) => [name, 'readonly']),
+      ),
+    },
+    rules: {
+      'no-undef': 'error',
+    },
+  },
+  {
+    files: ['**/*.{js,jsx,mjs}'],
     rules: {
       'constructor-super': 'error',
       'for-direction': 'error',

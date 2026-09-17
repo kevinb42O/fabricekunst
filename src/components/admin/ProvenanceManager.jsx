@@ -614,7 +614,7 @@ function AssetSelect({
           <span>Kies uit Beeldbank</span>
         </button>
       </div>
-      {selectedMedia?.variants?.[0]?.url && (
+      {preferredMediaVariantUrl(selectedMedia) && (
         <div className="flex items-center gap-2.5 rounded-lg border border-[#d8cebd] bg-white p-2 shadow-xs">
           <img
             src={preferredMediaVariantUrl(selectedMedia)}
@@ -742,7 +742,7 @@ function ComparisonsEditor({
         const leftObj = leftAsset
           ? {
               ...leftAsset,
-              url: leftMedia?.variants?.at(-1)?.url || leftAsset.url,
+              url: preferredMediaVariantUrl(leftMedia) || leftAsset.url,
               srcSet: leftMedia?.variants
                 ?.map((v) => `${v.url} ${v.width}w`)
                 .join(", "),
@@ -751,7 +751,7 @@ function ComparisonsEditor({
         const rightObj = rightAsset
           ? {
               ...rightAsset,
-              url: rightMedia?.variants?.at(-1)?.url || rightAsset.url,
+              url: preferredMediaVariantUrl(rightMedia) || rightAsset.url,
               srcSet: rightMedia?.variants
                 ?.map((v) => `${v.url} ${v.width}w`)
                 .join(", "),
@@ -978,7 +978,7 @@ function MediaRelationsEditor({
               objectLabel: { nl: "", en: "", fr: "" },
               category: "context",
               approved: true,
-              url: med?.variants?.at(-1)?.url || "",
+              url: preferredMediaVariantUrl(med),
               width: med?.width || 0,
               height: med?.height || 0,
               variants: med?.variants || [],
@@ -1625,7 +1625,7 @@ export default function ProvenanceManager({
         objectLabel: libraryMetadata.objectLabel || { nl: "", en: "", fr: "" },
         category: libraryMetadata.category || "context",
         approved: libraryMetadata.approved === true,
-        url: med?.variants?.at(-1)?.url || "",
+        url: preferredMediaVariantUrl(med),
         width: med?.width || 0,
         height: med?.height || 0,
         variants: med?.variants || [],
@@ -2356,9 +2356,9 @@ export default function ProvenanceManager({
                         onClick={() => setPreviewItem(item)}
                         title="Klik om te vergroten en alle details te bekijken"
                       >
-                        {item.variants?.[0]?.url ? (
+                        {preferredMediaVariantUrl(item) ? (
                           <img
-                            src={item.variants[0].url}
+                            src={preferredMediaVariantUrl(item)}
                             alt={localized(asset.alt, language) || ""}
                             className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                           />
@@ -2764,8 +2764,7 @@ export default function ProvenanceManager({
         (() => {
           const pAsset = getAsset(previewItem);
           const pSelected = formData.gallery.assetIds.includes(previewItem.id);
-          const pVariants = previewItem.variants || [];
-          const pUrl = pVariants.at(-1)?.url || pVariants[0]?.url;
+          const pUrl = preferredMediaVariantUrl(previewItem);
           const previewList =
             activeTab === "media" && filteredMedia.length > 0
               ? filteredMedia

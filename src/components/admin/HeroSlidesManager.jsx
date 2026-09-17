@@ -12,6 +12,7 @@ import {
   syncUniversalMediaUrlsAsync,
   uploadUniversalMediaAsync,
 } from "../../utils/storage";
+import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
 import MediaPicker from "./MediaPicker";
 
 export default function HeroSlidesManager({
@@ -46,8 +47,7 @@ export default function HeroSlidesManager({
     setUploadingTarget(target);
     try {
       const record = await uploadUniversalMediaAsync(file);
-      const publicUrl =
-        record?.variants?.at(-1)?.url || record?.variants?.[0]?.url;
+      const publicUrl = preferredMediaVariantUrl(record);
       if (!publicUrl) throw new Error("Upload leverde geen URL op.");
       if (target === "desktop") setImageUrl(publicUrl);
       else setMobileImageUrl(publicUrl);
@@ -242,13 +242,16 @@ export default function HeroSlidesManager({
         open={Boolean(pickerTarget)}
         onClose={() => setPickerTarget(null)}
         onSelect={(asset) => {
-          const url = asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url;
+          const url = preferredMediaVariantUrl(asset);
+          if (!url || !pickerTarget) return false;
           if (pickerTarget === "desktop") setImageUrl(url);
-          if (pickerTarget === "mobile") setMobileImageUrl(url);
+          else if (pickerTarget === "mobile") setMobileImageUrl(url);
+          else return false;
           onShowToast(
             "Beeld uit de universele beeldbank geselecteerd.",
             "info",
           );
+          return true;
         }}
         title={
           pickerTarget === "mobile"

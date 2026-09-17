@@ -131,9 +131,10 @@ export default function MediaPicker({
       // destination. That is much safer than silently throwing a selection
       // away, and makes the outcome of every click explicit to the editor.
       const selected = await onSelect(asset);
-      if (selected === false) {
+      if (selected === false || selected?.ok === false) {
         setError(
-          "Dit beeld kon niet aan het gekozen veld worden gekoppeld. Sluit de kiezer en probeer opnieuw.",
+          selected?.message ||
+            "Dit beeld kon niet aan het gekozen veld worden gekoppeld. Sluit de kiezer en probeer opnieuw.",
         );
         return;
       }

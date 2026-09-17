@@ -1,3 +1,5 @@
+import { preferredMediaVariantUrl } from "./mediaSearch.js";
+
 export const PROVENANCE_LANGUAGES = ["nl", "en", "fr"];
 export const PROVENANCE_SECTIONS = [
   "workflow",
@@ -489,7 +491,7 @@ export function hydrateProvenanceMediaMetadata(input, media = []) {
       objectLabel: shared("objectLabel"),
       category: shared("category"),
       approved: shared("approved"),
-      url: record.variants?.at(-1)?.url || asset.url,
+      url: preferredMediaVariantUrl(record) || asset.url,
       width: record.width || asset.width,
       height: record.height || asset.height,
       variants: record.variants || asset.variants,

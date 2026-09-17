@@ -50,6 +50,7 @@ import {
   syncUniversalMediaUrlsAsync,
   uploadUniversalMediaAsync,
 } from "../../utils/storage";
+import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
 import MediaPicker from "./MediaPicker";
 import {
   isPriceOnRequest,
@@ -926,8 +927,7 @@ export default function ItemManager({
     for (const file of files) {
       try {
         const record = await uploadUniversalMediaAsync(file);
-        const publicUrl =
-          record?.variants?.at(-1)?.url || record?.variants?.[0]?.url;
+        const publicUrl = preferredMediaVariantUrl(record);
         if (publicUrl) {
           setEditingItem((prev) => ({
             ...prev,
@@ -997,8 +997,7 @@ export default function ItemManager({
     setImageUploadError(false);
     try {
       const record = await uploadUniversalMediaAsync(file);
-      const publicUrl =
-        record?.variants?.at(-1)?.url || record?.variants?.[0]?.url;
+      const publicUrl = preferredMediaVariantUrl(record);
       if (publicUrl) {
         updateComparableSale(index, "imageUrl", publicUrl);
         updateComparableSale(index, "imageCaption", file.name);
@@ -3576,15 +3575,14 @@ export default function ItemManager({
         open={Boolean(mediaPickerTarget)}
         onClose={() => setMediaPickerTarget(null)}
         onSelect={(asset) => {
-          const url = asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url;
-          if (!url || !mediaPickerTarget) return;
+          const url = preferredMediaVariantUrl(asset);
+          if (!url || !mediaPickerTarget) return false;
           if (mediaPickerTarget.type === "gallery") {
             if ((editingItem?.images?.length || 0) >= 30) {
-              onShowToast?.(
-                "Een catalogusitem kan maximaal 30 afbeeldingen bevatten.",
-                "error",
-              );
-              return;
+              return {
+                ok: false,
+                message: "Een catalogusitem kan maximaal 30 afbeeldingen bevatten.",
+              };
             }
             setEditingItem((current) => ({
               ...current,
@@ -3599,8 +3597,7 @@ export default function ItemManager({
                 },
               ],
             }));
-          }
-          if (mediaPickerTarget.type === "comparable") {
+          } else if (mediaPickerTarget.type === "comparable") {
             updateComparableSale(mediaPickerTarget.index, "imageUrl", url);
             updateComparableSale(
               mediaPickerTarget.index,
@@ -3609,8 +3606,9 @@ export default function ItemManager({
                 asset.metadata?.title?.nl ||
                 asset.filename,
             );
-          }
+          } else return false;
           onShowToast?.("Beeld uit de universele beeldbank gekoppeld.", "info");
+          return true;
         }}
         title="Kies een beeld voor de collectie"
       />

@@ -72,6 +72,24 @@ test('publicProvenance projects comparison with ready assets', () => {
   assert.equal(right.url, 'https://cdn.example.com/27.webp');
 });
 
+test('hydrated provenance media chooses the largest public variant regardless of order', () => {
+  const draft = defaultProvenance();
+  const assetId = draft.hero.assetId;
+  const hydrated = hydrateProvenanceMediaMetadata(draft, [{
+    id: assetId,
+    status: 'ready',
+    variants: [
+      { url: 'https://cdn.example.com/hero-large.webp', width: 1600 },
+      { url: 'https://cdn.example.com/hero-small.webp', width: 360 },
+    ],
+  }]);
+
+  assert.equal(
+    hydrated.assets.find((asset) => asset.id === assetId)?.url,
+    'https://cdn.example.com/hero-large.webp',
+  );
+});
+
 test('a ready central image is publishable without editorial metadata', () => {
   const draft = defaultProvenance();
   const assetId = draft.hero.assetId;

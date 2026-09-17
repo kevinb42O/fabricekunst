@@ -836,14 +836,6 @@ export default function RembrandtProjectManager({
     const target = index + direction;
     if (index < 0 || target < 0 || target >= ordered.length) return;
     const other = ordered[target];
-    const contentKey =
-      collection === "aboutSections"
-        ? "about"
-        : collection === "researchSteps"
-          ? "steps"
-          : null;
-    if (contentKey)
-      setContentSelection((current) => ({ ...current, [contentKey]: target }));
     setProject((current) => ({
       ...current,
       phases: current.phases.map((phase) =>
