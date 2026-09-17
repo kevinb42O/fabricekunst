@@ -48,9 +48,17 @@ test('Lost Rembrandt accepts a public variant from the universal image library o
     managedR2Image('https://pub-managed.r2.dev/media/variants/123/variant-1200.webp'),
     'media/variants/123/variant-1200.webp',
   );
+  assert.equal(
+    managedR2Image('https://pub-managed.r2.dev/provenance/media/123/variant-1200.webp'),
+    'provenance/media/123/variant-1200.webp',
+  );
   assert.throws(
     () => managedR2Image('https://pub-managed.r2.dev/media/originals/123'),
     /Invalid Rembrandt Project image path/,
+  );
+  assert.throws(
+    () => managedR2Image('https://pub-managed.r2.dev/media/variants/123/variant.webp?width=1200'),
+    /online mediabibliotheek/,
   );
 });
 

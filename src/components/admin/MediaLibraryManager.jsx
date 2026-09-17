@@ -27,6 +27,7 @@ import {
   findMediaAssets,
   groupMediaByCollection,
   mediaTitle,
+  preferredMediaVariantUrl,
 } from "../../utils/mediaSearch";
 import "../../styles/media-library.css";
 
@@ -48,8 +49,7 @@ const defaultMetadata = (filename) => ({
   approved: false,
   tags: [],
 });
-const largestUrl = (asset) =>
-  asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url || "";
+const largestUrl = preferredMediaVariantUrl;
 const titleFor = (asset) => mediaTitle(asset);
 const statusLabel = (status) => {
   if (status === "ready") return "Klaar voor gebruik";

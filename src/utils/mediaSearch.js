@@ -22,6 +22,14 @@ export const mediaTitle = (asset, language = "nl") =>
   asset?.filename ||
   "Naamloos beeld";
 
+/** The API normally returns variants in ascending order, but choosing by width
+ * keeps every editor resilient to imported or manually repaired records. */
+export const preferredMediaVariantUrl = (asset) =>
+  [...(asset?.variants || [])]
+    .filter((variant) => typeof variant?.url === "string" && variant.url)
+    .sort((left, right) => Number(right.width || 0) - Number(left.width || 0))[0]
+    ?.url || "";
+
 export const catalogContextsFor = (asset) =>
   Array.isArray(asset?.catalog_contexts) ? asset.catalog_contexts : [];
 

@@ -51,6 +51,7 @@ const INVESTIGATION_STATUSES = new Set([
 ]);
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const UPDATE_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
+const MEDIA_LIBRARY_PREFIXES = ["media/variants/", "provenance/media/"];
 
 export const resolveSavedProjectVisibility = ({ publish, accessEnabled }) =>
   publish === true || accessEnabled === true;
@@ -145,6 +146,10 @@ export const managedR2Image = (value) => {
   }
   if (
     url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash ||
     ![configuredHost, "media.atelierrembrandt.com"].includes(url.hostname)
   ) {
     throw new RequestError(
@@ -153,7 +158,7 @@ export const managedR2Image = (value) => {
   }
   const objectKey = decodeURIComponent(url.pathname.replace(/^\//, ""));
   if (
-    !["rembrandt-project/", "media/variants/"].some((prefix) =>
+    !["rembrandt-project/", ...MEDIA_LIBRARY_PREFIXES].some((prefix) =>
       objectKey.startsWith(prefix),
     ) ||
     objectKey.includes("..")
@@ -161,6 +166,47 @@ export const managedR2Image = (value) => {
     throw new RequestError("Invalid Rembrandt Project image path");
   }
   return objectKey;
+};
+
+const isMediaLibraryObjectKey = (objectKey) =>
+  MEDIA_LIBRARY_PREFIXES.some((prefix) => objectKey.startsWith(prefix));
+
+const mediaLibraryProjectUrls = (urls) =>
+  urls.filter((url) => {
+    try {
+      return isMediaLibraryObjectKey(managedR2Image(url));
+    } catch {
+      return false;
+    }
+  });
+
+/**
+ * A trusted R2 hostname and a plausible key are necessary but not sufficient:
+ * a project must only reference a ready asset actually registered in the
+ * central library. This admits the immutable pre-library Provenance variants
+ * without opening a path-based bypass to arbitrary bucket objects.
+ */
+const assertRegisteredMediaLibraryImages = async (supabase, urls) => {
+  if (!supabase) return;
+  const libraryUrls = [...new Set(mediaLibraryProjectUrls(urls))];
+  const assertOne = async (url) => {
+    const { data, error } = await supabase
+      .from("media_assets")
+      .select("id")
+      .eq("status", "ready")
+      .contains("variants", JSON.stringify([{ url }]))
+      .limit(1);
+    if (error) throw error;
+    if (!data?.[0])
+      throw new RequestError(
+        "Een gekozen beeld is niet meer als gebruiksklare variant in de beeldbank beschikbaar.",
+      );
+  };
+  // The project permits up to 80 images. Keep database pressure bounded while
+  // avoiding a long sequence of round trips for a legitimate large dossier.
+  for (let index = 0; index < libraryUrls.length; index += 6) {
+    await Promise.all(libraryUrls.slice(index, index + 6).map(assertOne));
+  }
 };
 
 const projectImageUrls = (project) => {
@@ -181,15 +227,7 @@ const projectImageUrls = (project) => {
 };
 
 const stageProjectMediaUsage = async (supabase, project) => {
-  const urls = projectImageUrls(project).filter((url) => {
-    try {
-      return decodeURIComponent(new URL(url).pathname).includes(
-        "/media/variants/",
-      );
-    } catch {
-      return false;
-    }
-  });
+  const urls = mediaLibraryProjectUrls(projectImageUrls(project));
   if (!urls.length)
     return stageMediaAssetUsages(supabase, {
       consumerType: "rembrandt-project",
@@ -201,7 +239,7 @@ const stageProjectMediaUsage = async (supabase, project) => {
       const { data, error } = await supabase
         .from("media_assets")
         .select("id,variants")
-        .contains("variants", [{ url }])
+        .contains("variants", JSON.stringify([{ url }]))
         .limit(1);
       if (error) throw error;
       return data?.[0]?.id || null;
@@ -216,7 +254,7 @@ const stageProjectMediaUsage = async (supabase, project) => {
   });
 };
 
-export const validateProject = async (project) => {
+export const validateProject = async (project, { supabase } = {}) => {
   validateRembrandtProjectShape(project);
   if (
     !project?.settings ||
@@ -448,6 +486,7 @@ export const validateProject = async (project) => {
       );
     }
   }
+  await assertRegisteredMediaLibraryImages(supabase, imageUrls);
   return serialized;
 };
 
@@ -486,7 +525,7 @@ async function writeProjectVisibility(
     }
     const updatedAt = new Date().toISOString();
     const nextProject = { ...project, isEnabled: enabled, updatedAt };
-    if (enabled) await validateProject(nextProject);
+    if (enabled) await validateProject(nextProject, { supabase });
 
     if (!row) {
       const { data, error } = await supabase
@@ -691,7 +730,7 @@ export default async function handler(req, res) {
       // public gate unless this authenticated save explicitly publishes.
       isEnabled: shouldBePublic,
     };
-    await validateProject(project);
+    await validateProject(project, { supabase });
     const projectUsageStage = await stageProjectMediaUsage(supabase, project);
     const { row: previous } = await readProject(supabase);
     const expectedVersion = req.body?.expectedVersion ?? null;

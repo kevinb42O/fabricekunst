@@ -23,7 +23,6 @@ import {
   Search,
   ShieldCheck,
   Trash2,
-  Upload,
 } from "lucide-react";
 import {
   REMBRANDT_EVIDENCE_TYPES,
@@ -46,7 +45,6 @@ import {
   revokeRembrandtPreviewLinkAsync,
   saveRembrandtProjectDataAsync,
   setRembrandtProjectAccessAsync,
-  uploadUniversalMediaAsync,
 } from "../../utils/storage";
 import { localizePath } from "../../utils/locales";
 import { REMBRANDT_PROJECT_ROUTE } from "../../utils/rembrandtProject";
@@ -245,6 +243,7 @@ function SwitchControl({
 export default function RembrandtProjectManager({
   onPublished = () => {},
   onShowToast = () => {},
+  onOpenMediaLibrary = () => {},
   isActive = true,
 }) {
   const [project, setProject] = useState(() => createEmptyRembrandtProject());
@@ -270,7 +269,6 @@ export default function RembrandtProjectManager({
   const [needsRepair, setNeedsRepair] = useState(false);
   const [saving, setSaving] = useState(false);
   const [accessSaving, setAccessSaving] = useState(false);
-  const [uploading, setUploading] = useState(() => new Set());
   const [mediaPickerTarget, setMediaPickerTarget] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [updateInvestigationFilter, setUpdateInvestigationFilter] =
@@ -665,7 +663,7 @@ export default function RembrandtProjectManager({
     }));
 
   const save = async ({ publish = false } = {}) => {
-    if (saving || uploading.size || loadError) return;
+    if (saving || loadError) return;
     if ((publish || savedPublicEnabled) && publicationIssues.length) {
       onShowToast(publicationIssues[0], "error");
       return;
@@ -963,47 +961,8 @@ export default function RembrandtProjectManager({
     setDeleteConfirmId(null);
   };
 
-  const uploadImage = async (file, target, galleryId = null) => {
-    if (!file) return;
-    const uploadKey = galleryId ? `gallery-${galleryId}` : target;
-    setUploading((current) => new Set(current).add(uploadKey));
-    try {
-      const record = await uploadUniversalMediaAsync(file);
-      const url = record?.variants?.at(-1)?.url || record?.variants?.[0]?.url;
-      if (target === "heroImage") updateSettings("heroImage", url, false);
-      else if (target === "researchImage")
-        updateSettings("researchImage", url, false);
-      else if (target === "socialImage")
-        updateSettings("socialImage", url, false);
-      else if (target === "coverImage") updateSelected("coverImage", url);
-      else
-        setProject((current) => ({
-          ...current,
-          updates: current.updates.map((entry) =>
-            entry.id !== selectedId
-              ? entry
-              : {
-                  ...entry,
-                  gallery: entry.gallery.map((image) =>
-                    image.id === galleryId ? { ...image, url } : image,
-                  ),
-                },
-          ),
-        }));
-      onShowToast("Afbeelding veilig geüpload.", "info");
-    } catch (error) {
-      onShowToast(error.message, "error");
-    } finally {
-      setUploading((current) => {
-        const next = new Set(current);
-        next.delete(uploadKey);
-        return next;
-      });
-    }
-  };
-
   const selectLibraryAsset = (asset) => {
-    const url = asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url;
+    const url = preferredMediaVariantUrl(asset);
     if (!url || !mediaPickerTarget) return;
     const target = mediaPickerTarget;
     if (target.kind === "setting") updateSettings(target.field, url, false);
@@ -1151,46 +1110,6 @@ export default function RembrandtProjectManager({
     }
   };
 
-  const uploadInvestigationImage = async (
-    file,
-    investigationId,
-    galleryId = null,
-  ) => {
-    if (!file) return;
-    const uploadKey = galleryId
-      ? `investigation-gallery-${galleryId}`
-      : `investigation-cover-${investigationId}`;
-    setUploading((current) => new Set(current).add(uploadKey));
-    try {
-      const record = await uploadUniversalMediaAsync(file);
-      const url = record?.variants?.at(-1)?.url || record?.variants?.[0]?.url;
-      setProject((current) => ({
-        ...current,
-        investigations: current.investigations.map((entry) =>
-          entry.id !== investigationId
-            ? entry
-            : galleryId
-              ? {
-                  ...entry,
-                  gallery: entry.gallery.map((image) =>
-                    image.id === galleryId ? { ...image, url } : image,
-                  ),
-                }
-              : { ...entry, coverImage: url },
-        ),
-      }));
-      onShowToast("Dossierbeeld veilig geüpload.", "info");
-    } catch (error) {
-      onShowToast(error.message, "error");
-    } finally {
-      setUploading((current) => {
-        const next = new Set(current);
-        next.delete(uploadKey);
-        return next;
-      });
-    }
-  };
-
   if (loading)
     return (
       <div className="rp-admin-loading">
@@ -1237,7 +1156,7 @@ export default function RembrandtProjectManager({
             type="button"
             className="admin-button admin-button--primary"
             onClick={save}
-            disabled={saving || uploading.size > 0}
+            disabled={saving}
           >
             {saving ? (
               <Loader2 className="is-spinning" aria-hidden="true" />
@@ -1644,27 +1563,12 @@ export default function RembrandtProjectManager({
                 </div>
                 <div>
                   <p>
-                    Afbeeldingen worden veilig opgeslagen en na een geslaagde
-                    upload automatisch aan deze pagina gekoppeld.
+                    Kies een voorbereide afbeelding uit de centrale beeldbank.
+                    Nieuwe beelden voegt u daar eerst toe.
                   </p>
-                  <label className="admin-button admin-button--secondary">
-                    <Upload aria-hidden="true" />
-                    {uploading.has("heroImage")
-                      ? "Uploaden…"
-                      : "Afbeelding kiezen"}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/avif"
-                      disabled={uploading.has("heroImage")}
-                      onChange={(event) => {
-                        uploadImage(event.target.files?.[0], "heroImage");
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
                   <button
                     type="button"
-                    className="admin-text-button"
+                    className="admin-button admin-button--secondary"
                     onClick={() =>
                       setMediaPickerTarget({
                         kind: "setting",
@@ -1672,6 +1576,7 @@ export default function RembrandtProjectManager({
                       })
                     }
                   >
+                    <ImageIcon aria-hidden="true" />
                     Kies uit beeldbank
                   </button>
                   {project.settings.heroImage && (
@@ -2235,24 +2140,9 @@ export default function RembrandtProjectManager({
                         )}
                       </div>
                       <div>
-                        <label className="admin-button admin-button--secondary">
-                          <Upload aria-hidden="true" />
-                          Hoofdbeeld uploaden
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/avif"
-                            onChange={(event) => {
-                              uploadInvestigationImage(
-                                event.target.files?.[0],
-                                selectedInvestigation.id,
-                              );
-                              event.target.value = "";
-                            }}
-                          />
-                        </label>
                         <button
                           type="button"
-                          className="admin-text-button"
+                          className="admin-button admin-button--secondary"
                           onClick={() =>
                             setMediaPickerTarget({
                               kind: "investigation-cover",
@@ -2260,6 +2150,7 @@ export default function RembrandtProjectManager({
                             })
                           }
                         >
+                          <ImageIcon aria-hidden="true" />
                           Kies uit beeldbank
                         </button>
                         {selectedInvestigation.coverImage && (
@@ -2337,25 +2228,9 @@ export default function RembrandtProjectManager({
                             </div>
                             <div className="rp-admin-gallery-item__fields">
                               <strong>Beeld {index + 1}</strong>
-                              <label className="admin-button admin-button--secondary">
-                                <Upload aria-hidden="true" />
-                                Uploaden
-                                <input
-                                  type="file"
-                                  accept="image/jpeg,image/png,image/webp,image/avif"
-                                  onChange={(event) => {
-                                    uploadInvestigationImage(
-                                      event.target.files?.[0],
-                                      selectedInvestigation.id,
-                                      image.id,
-                                    );
-                                    event.target.value = "";
-                                  }}
-                                />
-                              </label>
                               <button
                                 type="button"
-                                className="admin-text-button"
+                                className="admin-button admin-button--secondary"
                                 onClick={() =>
                                   setMediaPickerTarget({
                                     kind: "investigation-gallery",
@@ -2364,6 +2239,7 @@ export default function RembrandtProjectManager({
                                   })
                                 }
                               >
+                                <ImageIcon aria-hidden="true" />
                                 Kies uit beeldbank
                               </button>
                               <Field label="Alternatieve tekst">
@@ -2715,24 +2591,9 @@ export default function RembrandtProjectManager({
                       }
                     />
                   </Field>
-                  <label className="admin-button admin-button--secondary">
-                    <Upload aria-hidden="true" />
-                    {uploading.has("researchImage")
-                      ? "Uploaden…"
-                      : "Onderzoeksafbeelding kiezen"}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/avif"
-                      disabled={uploading.has("researchImage")}
-                      onChange={(event) => {
-                        uploadImage(event.target.files?.[0], "researchImage");
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
                   <button
                     type="button"
-                    className="admin-text-button"
+                    className="admin-button admin-button--secondary"
                     onClick={() =>
                       setMediaPickerTarget({
                         kind: "setting",
@@ -2740,6 +2601,7 @@ export default function RembrandtProjectManager({
                       })
                     }
                   >
+                    <ImageIcon aria-hidden="true" />
                     Kies uit beeldbank
                   </button>
                   {project.settings.researchImage && (
@@ -3376,28 +3238,14 @@ export default function RembrandtProjectManager({
                       )}
                     </div>
                     <div>
-                      <label className="admin-button admin-button--secondary">
-                        <Upload aria-hidden="true" />
-                        {uploading.has("coverImage")
-                          ? "Uploaden…"
-                          : "Afbeelding kiezen"}
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/avif"
-                          disabled={uploading.has("coverImage")}
-                          onChange={(event) => {
-                            uploadImage(event.target.files?.[0], "coverImage");
-                            event.target.value = "";
-                          }}
-                        />
-                      </label>
                       <button
                         type="button"
-                        className="admin-text-button"
+                        className="admin-button admin-button--secondary"
                         onClick={() =>
                           setMediaPickerTarget({ kind: "update-cover" })
                         }
                       >
+                        <ImageIcon aria-hidden="true" />
                         Kies uit beeldbank
                       </button>
                       {selectedUpdate.coverImage && (
@@ -3455,28 +3303,9 @@ export default function RembrandtProjectManager({
                         </div>
                         <div className="rp-admin-gallery-item__fields">
                           <strong>Beeld {index + 1}</strong>
-                          <label className="admin-button admin-button--secondary">
-                            <Upload aria-hidden="true" />
-                            {uploading.has(`gallery-${image.id}`)
-                              ? "Uploaden…"
-                              : "Afbeelding uploaden"}
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/avif"
-                              disabled={uploading.has(`gallery-${image.id}`)}
-                              onChange={(event) => {
-                                uploadImage(
-                                  event.target.files?.[0],
-                                  "gallery",
-                                  image.id,
-                                );
-                                event.target.value = "";
-                              }}
-                            />
-                          </label>
                           <button
                             type="button"
-                            className="admin-text-button"
+                            className="admin-button admin-button--secondary"
                             onClick={() =>
                               setMediaPickerTarget({
                                 kind: "update-gallery",
@@ -3484,6 +3313,7 @@ export default function RembrandtProjectManager({
                               })
                             }
                           >
+                            <ImageIcon aria-hidden="true" />
                             Kies uit beeldbank
                           </button>
                           <Field label="Alternatieve tekst">
@@ -3605,24 +3435,9 @@ export default function RembrandtProjectManager({
                     Optionele deelafbeelding voor zoekmachines en sociale
                     kanalen. Zonder deze afbeelding wordt de hero gebruikt.
                   </p>
-                  <label className="admin-button admin-button--secondary">
-                    <Upload aria-hidden="true" />
-                    {uploading.has("socialImage")
-                      ? "Uploaden…"
-                      : "Deelafbeelding kiezen"}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/avif"
-                      disabled={uploading.has("socialImage")}
-                      onChange={(event) => {
-                        uploadImage(event.target.files?.[0], "socialImage");
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
                   <button
                     type="button"
-                    className="admin-text-button"
+                    className="admin-button admin-button--secondary"
                     onClick={() =>
                       setMediaPickerTarget({
                         kind: "setting",
@@ -3630,6 +3445,7 @@ export default function RembrandtProjectManager({
                       })
                     }
                   >
+                    <ImageIcon aria-hidden="true" />
                     Kies uit beeldbank
                   </button>
                   {project.settings.socialImage && (
@@ -3698,9 +3514,7 @@ export default function RembrandtProjectManager({
                         className="admin-button admin-button--primary"
                         disabled={
                           saving ||
-                          accessSaving ||
-                          uploading.size > 0 ||
-                          publicationIssues.length > 0
+                          accessSaving || publicationIssues.length > 0
                         }
                         onClick={() => save({ publish: true })}
                       >
@@ -3956,9 +3770,7 @@ export default function RembrandtProjectManager({
                 onClick={() => save({ publish: !savedPublicEnabled })}
                 disabled={
                   saving ||
-                  accessSaving ||
-                  uploading.size > 0 ||
-                  publicationIssues.length > 0
+                  accessSaving || publicationIssues.length > 0
                 }
               >
                 {saving ? (
@@ -4034,8 +3846,8 @@ export default function RembrandtProjectManager({
                 <h2>Startinhoud herstellen</h2>
                 <p>
                   Zet alle teksten en updates terug naar de zorgvuldig
-                  voorbereide basisversie. Geüploade afbeeldingen blijven veilig
-                  bewaard.
+                  voorbereide basisversie. Bestaande beeldbankafbeeldingen
+                  blijven veilig bewaard.
                 </p>
               </div>
               <button
@@ -4074,6 +3886,7 @@ export default function RembrandtProjectManager({
         open={Boolean(mediaPickerTarget)}
         onClose={() => setMediaPickerTarget(null)}
         onSelect={selectLibraryAsset}
+        onOpenMediaLibrary={onOpenMediaLibrary}
         title="Kies een beeld voor Lost Rembrandt"
       />
     </div>

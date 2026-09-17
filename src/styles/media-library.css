@@ -365,8 +365,9 @@
   border: 1px solid #d6d7ca;
   border-radius: 10px;
   background: #f4f3ed;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
   overflow: hidden;
 }
 .media-library__preview img {
@@ -374,6 +375,7 @@
   height: 100%;
   max-height: 420px;
   object-fit: contain;
+  object-position: left top;
 }
 .media-library__preview svg {
   color: var(--admin-muted);
@@ -634,7 +636,12 @@
   color: #73766d;
   font-size: 11px;
 }
-.media-picker__header button {
+.media-picker__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.media-picker__header button:not(.media-picker__open-library) {
   flex: none;
   width: 40px;
   height: 40px;
@@ -648,11 +655,11 @@
     background-color 140ms ease,
     border-color 140ms ease;
 }
-.media-picker__header button:hover {
+.media-picker__header button:not(.media-picker__open-library):hover {
   border-color: #aeb8a0;
   background: #eff3e8;
 }
-.media-picker__header button:focus-visible,
+.media-picker__header button:not(.media-picker__open-library):focus-visible,
 .media-picker__grid button:focus-visible {
   outline: 3px solid #c8d6b6;
   outline-offset: 2px;
@@ -661,6 +668,29 @@
   width: 18px;
   height: 18px;
 }
+.media-picker__open-library {
+  min-height: 40px;
+  padding: 0 0.8rem;
+  border: 1px solid #82916c;
+  border-radius: 8px;
+  background: #fff;
+  color: #405036;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+.media-picker__open-library:hover {
+  border-color: #596c49;
+  background: #eff3e8;
+}
+.media-picker__open-library:focus-visible {
+  outline: 3px solid #c8d6b6;
+  outline-offset: 2px;
+}
+.media-picker__open-library svg { width: 16px; height: 16px; }
 .media-picker__toolbar {
   display: flex;
   align-items: center;
@@ -845,6 +875,13 @@
   .media-picker__header,
   .media-picker__toolbar {
     padding: 1rem;
+  }
+  .media-picker__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .media-picker__header-actions {
+    justify-content: flex-end;
   }
   .media-picker__filter-row {
     grid-template-columns: 1fr;

@@ -9,7 +9,6 @@ import {
   Eye,
   Filter,
   ImageIcon,
-  ImagePlus,
   Maximize2,
   Plus,
   Save,
@@ -31,12 +30,12 @@ import {
   provenanceIssues,
   referencedAssetIds,
 } from "../../utils/provenance";
+import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
 import {
   fetchProvenanceAdminAsync,
   publishProvenanceAsync,
   restoreProvenanceRevisionAsync,
   saveProvenanceDraftAsync,
-  uploadProvenanceMediaAsync,
 } from "../../utils/storage";
 import ComparisonSlider from "../ComparisonSlider";
 import MediaPicker from "./MediaPicker";
@@ -588,7 +587,6 @@ function TimelineEditor({ examples, sources, language, update }) {
 function AssetSelect({
   label,
   value,
-  assets = [],
   media = [],
   onChange,
   onOpenMediaLibrary,
@@ -600,28 +598,6 @@ function AssetSelect({
       window.location.hash = "media-library";
   };
   const selectedMedia = media.find((m) => m.id === value);
-  const assetIds = new Set(assets.map((a) => a.id));
-  const options = [
-    ...assets.map((a) => {
-      const med = media.find((m) => m.id === a.id);
-      const titleStr =
-        typeof a.title === "string"
-          ? a.title
-          : a.title?.nl || a.title?.en || "";
-      return {
-        id: a.id,
-        label: titleStr
-          ? `${titleStr} (${med?.filename || a.category || "beeld"})`
-          : med?.filename || a.id.slice(0, 8),
-      };
-    }),
-    ...media
-      .filter((m) => !assetIds.has(m.id))
-      .map((m) => ({
-        id: m.id,
-        label: `${m.filename || "Beeld"} (${m.width || "?"} × ${m.height || "?"}px)`,
-      })),
-  ];
 
   return (
     <div className="space-y-1.5">
@@ -632,31 +608,16 @@ function AssetSelect({
         <button
           type="button"
           onClick={() => setPickerOpen(true)}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-[#8e7035] hover:text-[#46583a]"
+          className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#46583a] bg-white px-3 text-xs font-semibold text-[#46583a] transition hover:bg-[#eff3e8]"
         >
-          <ImageIcon size={13} />
+          <ImageIcon size={15} />
           <span>Kies uit Beeldbank</span>
         </button>
       </div>
-      <select
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className={inputClass}
-      >
-        <option value="">— Kies een afbeelding —</option>
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
       {selectedMedia?.variants?.[0]?.url && (
         <div className="flex items-center gap-2.5 rounded-lg border border-[#d8cebd] bg-white p-2 shadow-xs">
           <img
-            src={
-              selectedMedia.variants.at(-1)?.url ||
-              selectedMedia.variants[0].url
-            }
+            src={preferredMediaVariantUrl(selectedMedia)}
             alt=""
             className="h-14 w-20 rounded object-cover"
           />
@@ -688,6 +649,7 @@ function AssetSelect({
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={(asset) => onChange(asset.id)}
+        onOpenMediaLibrary={openLibrary}
         title={`Kies een beeld voor ${label}`}
       />
     </div>
@@ -1677,91 +1639,6 @@ export default function ProvenanceManager({
   };
   const handleHeroSelect = (id) => handleAssetSelect("hero", id);
   const handleCtaAssetSelect = (id) => handleAssetSelect("cta", id);
-  const uploadSectionImage = async (section, event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    const isContact = section === "cta";
-    const label = isContact ? "Contactafbeelding" : "Hero-afbeelding";
-    const englishLabel = isContact ? "Contact image" : "Hero background image.";
-    const frenchLabel = isContact ? "Image de contact" : "Image de fond hero.";
-    setBusy(true);
-    try {
-      const record = await uploadProvenanceMediaAsync(file);
-      setMedia((current) => [...current, record]);
-      const baseName = file.name.replace(/\.[^/.]+$/, "");
-      const newAsset = {
-        id: record.id,
-        title: { nl: baseName, en: baseName, fr: baseName },
-        caption: { nl: `${label}.`, en: englishLabel, fr: frenchLabel },
-        alt: { nl: baseName, en: baseName, fr: baseName },
-        credit: { nl: "", en: "", fr: "" },
-        objectLabel: { nl: "", en: "", fr: "" },
-        category: "context",
-        approved: true,
-        url: record.variants?.at(-1)?.url || "",
-        width: record.width || 0,
-        height: record.height || 0,
-        variants: record.variants || [],
-      };
-      update((current) => ({
-        ...current,
-        assets: [...current.assets.filter((a) => a.id !== record.id), newAsset],
-        [section]: { ...current[section], assetId: record.id },
-      }));
-      setMessage({
-        type: "success",
-        text: `Nieuwe ${isContact ? "contact" : "hero"}-afbeelding geüpload en gekoppeld. Klik op Publiceren om live te zetten.`,
-      });
-    } catch (error) {
-      setMessage({ type: "error", text: error.message });
-    } finally {
-      setBusy(false);
-    }
-  };
-  const uploadHeroImage = (event) => uploadSectionImage("hero", event);
-  const uploadCtaImage = (event) => uploadSectionImage("cta", event);
-  const upload = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    setBusy(true);
-    try {
-      const record = await uploadProvenanceMediaAsync(file);
-      setMedia((current) => [...current, record]);
-      const baseName = file.name.replace(/\.[^/.]+$/, "");
-      update((current) => ({
-        ...current,
-        assets: [
-          ...current.assets,
-          {
-            id: record.id,
-            title: { nl: baseName, en: baseName, fr: baseName },
-            caption: { nl: "", en: "", fr: "" },
-            alt: { nl: baseName, en: baseName, fr: baseName },
-            credit: { nl: "", en: "", fr: "" },
-            objectLabel: { nl: "", en: "", fr: "" },
-            category: "unconfirmed",
-            approved: false,
-            url: "",
-            width: 0,
-            height: 0,
-            srcSet: "",
-            variants: [],
-          },
-        ],
-      }));
-      setMessage({
-        type: "success",
-        text: "Afbeelding naar R2 geüpload. Koppel het beeld waar je het wilt gebruiken; metadata is optioneel.",
-      });
-    } catch (error) {
-      setMessage({ type: "error", text: error.message });
-    } finally {
-      setBusy(false);
-    }
-  };
-
   if (loading)
     return (
       <div className="rounded-xl border border-[#ded4c3] bg-[#fcfaf6] p-8 text-sm text-[#62594f]">
@@ -1999,8 +1876,6 @@ export default function ProvenanceManager({
                 value={formData.hero.assetId}
                 assets={formData.assets}
                 media={media}
-                uploadBusy={busy}
-                onUpload={uploadHeroImage}
                 onChange={handleHeroSelect}
               />
             </div>
@@ -2157,8 +2032,6 @@ export default function ProvenanceManager({
                 value={formData.cta.assetId}
                 assets={formData.assets}
                 media={media}
-                uploadBusy={busy}
-                onUpload={uploadCtaImage}
                 onChange={handleCtaAssetSelect}
               />
               <LocalizedField
@@ -2336,15 +2209,13 @@ export default function ProvenanceManager({
                   publieke metadata is per taal beheerbaar.
                 </p>
               </div>
-              <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#46583a] px-4 text-xs font-semibold uppercase tracking-[.08em] text-white transition hover:bg-[#34462a]">
-                <ImagePlus size={16} /> Afbeelding uploaden
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  className="sr-only"
-                  onChange={upload}
-                />
-              </label>
+              <button
+                type="button"
+                onClick={onOpenMediaLibrary}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#46583a] px-4 text-xs font-semibold uppercase tracking-[.08em] text-white transition hover:bg-[#34462a]"
+              >
+                <ImageIcon size={16} /> Open Beeldbank
+              </button>
             </div>
 
             {/* Search and Filters Bar */}

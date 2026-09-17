@@ -4,6 +4,7 @@ import {
   findMediaAssets,
   groupMediaByCollection,
   normalizeMediaSearchText,
+  preferredMediaVariantUrl,
 } from "../src/utils/mediaSearch.js";
 
 const asset = (id, overrides = {}) => ({
@@ -82,4 +83,15 @@ test("relevance promotes a title match and grouped view retains each work bounda
   assert.equal(results[0].asset.id, "title-match");
   const groups = groupMediaByCollection(findMediaAssets([portrait, scarron, unused], { sort: "collection" }));
   assert.deepEqual(groups.map((group) => group.key), ["art-1", "book-1", "unassigned"]);
+});
+
+test("the preferred variant is selected by actual width, not array order", () => {
+  const image = asset("variant-order", {
+    variants: [
+      { url: "https://media.example/large.webp", width: 1600 },
+      { url: "https://media.example/small.webp", width: 360 },
+      { url: "https://media.example/medium.webp", width: 720 },
+    ],
+  });
+  assert.equal(preferredMediaVariantUrl(image), "https://media.example/large.webp");
 });

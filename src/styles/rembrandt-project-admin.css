@@ -369,8 +369,9 @@
   border-radius: 7px;
   overflow: hidden;
   background: var(--admin-subtle);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
   color: #a3a3a3;
 }
 .rp-admin-media-preview img {
@@ -378,6 +379,7 @@
   height: 100%;
   max-height: 17rem;
   object-fit: contain;
+  object-position: left top;
   background: #fafafa;
 }
 .rp-admin-media-preview svg {

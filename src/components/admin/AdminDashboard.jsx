@@ -342,6 +342,7 @@ export default function AdminDashboard({
               <RembrandtProjectManager
                 onPublished={onRembrandtProjectPublished}
                 onShowToast={showToast}
+                onOpenMediaLibrary={() => navigateTo('media-library')}
                 isActive={activeTab === 'rembrandt-project'}
               />
             </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Image as ImageIcon, Search, X } from "lucide-react";
+import { Image as ImageIcon, LibraryBig, Search, X } from "lucide-react";
 import { fetchMediaLibraryAsync } from "../../utils/storage";
 import {
   catalogContextsFor,
@@ -8,11 +8,11 @@ import {
   collectionWorksFor,
   findMediaAssets,
   mediaTitle,
+  preferredMediaVariantUrl,
 } from "../../utils/mediaSearch";
 import "../../styles/media-library.css";
 
-const largestUrl = (asset) =>
-  asset?.variants?.at(-1)?.url || asset?.variants?.[0]?.url || "";
+const largestUrl = preferredMediaVariantUrl;
 const titleFor = (asset) => mediaTitle(asset);
 const collectionGroupLabel = (group) =>
   ({
@@ -27,6 +27,7 @@ export default function MediaPicker({
   open,
   onClose,
   onSelect,
+  onOpenMediaLibrary,
   title = "Kies een beeld uit de beeldbank",
 }) {
   const [media, setMedia] = useState([]);
@@ -146,13 +147,28 @@ export default function MediaPicker({
               is optioneel.
             </span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Beeldbank sluiten"
-          >
-            <X />
-          </button>
+          <div className="media-picker__header-actions">
+            {onOpenMediaLibrary && (
+              <button
+                type="button"
+                className="media-picker__open-library"
+                onClick={() => {
+                  onClose();
+                  onOpenMediaLibrary();
+                }}
+              >
+                <LibraryBig aria-hidden="true" />
+                Nieuw beeld toevoegen
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Beeldbank sluiten"
+            >
+              <X />
+            </button>
+          </div>
         </header>
         <div className="media-picker__toolbar">
           <label className="media-picker__search">

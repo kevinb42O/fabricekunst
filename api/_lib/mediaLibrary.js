@@ -308,7 +308,7 @@ export async function syncMediaUrlUsages(
       const { data, error } = await supabase
         .from("media_assets")
         .select("id")
-        .contains("variants", [{ url }])
+        .contains("variants", JSON.stringify([{ url }]))
         .limit(1);
       if (error) throw error;
       return data?.[0]?.id || null;
