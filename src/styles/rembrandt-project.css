@@ -538,9 +538,7 @@
 .rembrandt-project__figure img {
   display: block;
   width: 100%;
-  max-height: 42rem;
-  object-fit: contain;
-  background: var(--rp-ivory);
+  height: auto;
 }
 .rembrandt-project__figure figcaption {
   padding: 0.7rem 0;
@@ -1263,8 +1261,8 @@
 .dossier-hero__status > span { color: #b9ab98; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; }
 .dossier-hero__status strong { display: flex; gap: .6rem; align-items: center; color: #eee2cf; font-size: .8rem; font-weight: 400; }
 .dossier-hero__status i { flex: 0 0 6px; height: 6px; border-radius: 50%; background: #cba56b; }
-.dossier-hero__art { margin: 0; min-width: 0; }
-.dossier-hero__art img { display: block; width: 100%; height: min(62vh, 42rem); min-height: 24rem; object-fit: contain; background: #191611; }
+.dossier-hero__art { margin: 0; min-width: 0; overflow: hidden; }
+.dossier-hero__art img { display: block; width: 100%; height: min(62vh, 42rem); min-height: 24rem; object-fit: cover; }
 .dossier-hero__art figcaption { display: flex; justify-content: space-between; margin-top: 1rem; color: #b9ab98; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
 .dossier-page--2 .dossier-hero__art { order: -1; }
 .dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr 1.25fr; }
@@ -1287,16 +1285,16 @@
 .dossier-gallery__grid > :first-child:nth-last-child(3) { grid-column: 1 / -1; }
 .dossier-gallery__grid.is-single { grid-template-columns: minmax(0, 1fr); max-width: 58rem; margin-inline: auto; }
 .dossier-image { margin: 0; min-width: 0; }
-.dossier-image > button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: #211d18; cursor: zoom-in; }
-.dossier-image > button > img { width: 100%; max-height: 38rem; object-fit: contain; }
+.dossier-image > button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.dossier-image > button > img { display: block; width: 100%; height: auto; }
 .dossier-image > button > span { position: absolute; right: 1rem; bottom: 1rem; display: flex; gap: .5rem; align-items: center; background: #211d18ed; color: #fff6e7; padding: .65rem .8rem; font-size: .65rem; }
 .dossier-image svg { width: 15px; height: 15px; }
 .dossier-image figcaption { padding: 1rem 0; color: #6c5e4a; font-size: .75rem; border-bottom: 1px solid #cfc1ab; }
-.dossier-lightbox { width: min(94vw, 90rem); max-width: 94vw; max-height: 94dvh; padding: 3.5rem 1.5rem 1rem; border: 1px solid #625440; background: #191611; color: #f7eddd; }
+.dossier-lightbox { width: fit-content; max-width: 94vw; max-height: 94dvh; padding: 0; border: 0; background: transparent; color: #f7eddd; }
 .dossier-lightbox::backdrop { background: #100e0bf2; }
-.dossier-lightbox > img { display: block; width: 100%; height: 75dvh; object-fit: contain; }
+.dossier-lightbox > img { display: block; width: auto; max-width: 94vw; height: auto; max-height: 94dvh; }
 .dossier-lightbox > button { position: absolute; top: .5rem; right: .5rem; width: 44px; height: 44px; display: grid; place-items: center; }
-.dossier-lightbox > p { text-align: center; font-size: .8rem; }
+.dossier-lightbox > p { position: absolute; right: 1rem; bottom: .5rem; left: 1rem; margin: 0; color: #fff6e7; font-size: .8rem; text-align: center; text-shadow: 0 1px 3px #000; }
 .dossier-research { padding-block: 6rem; }
 .dossier-research__layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 4rem; align-items: start; }
 .dossier-index { position: sticky; top: 11rem; display: grid; border-top: 1px solid #cdbb9f; }
@@ -1351,6 +1349,4 @@
 }
 @media (prefers-reduced-motion: reduce) { .dossier-page *, .lost-investigation, .lost-investigation * { scroll-behavior: auto !important; transition: none !important; } }
 @media (min-width: 701px) { .dossier-nav { top: 88px; } }
-/* Reserve image space so direct links into the timeline stay in place. */
-.dossier-image > button > img { display: block; height: clamp(18rem, 40vw, 38rem); }
-.dossier-page .rembrandt-update .rembrandt-project__figure > img { aspect-ratio: 4 / 3; }
+/* Images retain their own proportions: no letterboxing for portrait, landscape, or square files. */
