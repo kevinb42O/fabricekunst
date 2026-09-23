@@ -21,6 +21,7 @@ const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 50 * 1024 * 1024;
 const MAX_ATTACHMENTS = 10;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const UPLOAD_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const LOCAL_ORIGINS = new Set([
   'http://localhost:3000',
   'http://localhost:5173',
@@ -202,10 +203,25 @@ const prepareUpload = async (req, res, supabase, body) => {
     return sendJson(res, 429, { error: 'Te veel uploadpogingen. Probeer het later opnieuw.' });
   }
 
-  const claimId = randomUUID();
-  const path = `pending/${new Date().toISOString().slice(0, 10)}/${claimId}/${safeFilename(filename)}`;
+  const uploadId = randomUUID();
+  const path = `pending/${new Date().toISOString().slice(0, 10)}/${uploadId}/${safeFilename(filename)}`;
+  const expiresAt = Date.now() + 30 * 60 * 1000;
   ensurePrivateR2();
   const objectKey = paintingSubmissionObjectKey(path);
+  const { error: uploadRecordError } = await supabase
+    .from('painting_submission_uploads')
+    .insert({
+      id: uploadId,
+      object_path: path,
+      filename,
+      content_type: contentType,
+      size_bytes: size,
+      expires_at: new Date(expiresAt).toISOString(),
+    });
+  if (uploadRecordError) {
+    console.error('[painting-submissions] Upload reservation failed:', uploadRecordError.message);
+    return sendJson(res, 503, { error: 'De beveiligde upload kon niet worden voorbereid.' });
+  }
   let uploadUrl;
   try {
     uploadUrl = await getSignedUrl(
@@ -220,11 +236,13 @@ const prepareUpload = async (req, res, supabase, body) => {
       { expiresIn: 5 * 60 },
     );
   } catch (error) {
+    await supabase.from('painting_submission_uploads').delete().eq('id', uploadId).catch(() => {});
     console.error('[painting-submissions] Private R2 upload signing failed:', error?.message || 'Unknown R2 error.');
     return sendJson(res, 503, { error: 'De beveiligde upload kon niet worden voorbereid.' });
   }
-  const receipt = createReceipt({ path, filename, contentType, size, expiresAt: Date.now() + 30 * 60 * 1000 });
+  const receipt = createReceipt({ uploadId, path, filename, contentType, size, expiresAt });
   return sendJson(res, 200, {
+    uploadId,
     path,
     uploadUrl,
     receipt,
@@ -242,6 +260,8 @@ export const validateAttachments = (attachments) => {
     const payload = readReceipt(attachment.receipt);
     if (
       !payload ||
+      !UPLOAD_ID_PATTERN.test(payload.uploadId || '') ||
+      payload.uploadId !== attachment.uploadId ||
       payload.path !== attachment.path ||
       !/^pending\/\d{4}-\d{2}-\d{2}\/[0-9a-f-]{36}\/[a-zA-Z0-9._-]+$/i.test(payload.path) ||
       !ALLOWED_TYPES.has(payload.contentType) ||
@@ -254,6 +274,7 @@ export const validateAttachments = (attachments) => {
     total += Number(payload.size) || 0;
     if (total > MAX_TOTAL_BYTES) return null;
     verified.push({
+      uploadId: payload.uploadId,
       path: payload.path,
       name: payload.filename,
       contentType: payload.contentType,
@@ -313,7 +334,25 @@ const deleteStoredAttachments = async (attachments) => {
 const cleanupUploads = async (res, supabase, body) => {
   const attachments = validateAttachments(body.attachments || []);
   if (!attachments) return sendJson(res, 400, { error: 'Ongeldige uploadbewijzen.' });
-  await deleteStoredAttachments(attachments);
+  const uploadIds = attachments.map((attachment) => attachment.uploadId);
+  const { error: reserveError } = await supabase.rpc('reserve_painting_submission_upload_cleanup', {
+    p_upload_ids: uploadIds,
+  });
+  if (reserveError) {
+    // A submission claims its uploads atomically. A late/replayed browser
+    // cleanup must never be able to delete those confidential attachments.
+    return sendJson(res, 409, { error: 'Deze uploads zijn niet meer beschikbaar voor opruimen.' });
+  }
+  try {
+    await deleteStoredAttachments(attachments);
+  } catch (error) {
+    await supabase.rpc('release_painting_submission_upload_cleanup', { p_upload_ids: uploadIds }).catch(() => {});
+    throw error;
+  }
+  const { error: completeError } = await supabase.rpc('complete_painting_submission_upload_cleanup', {
+    p_upload_ids: uploadIds,
+  });
+  if (completeError) throw completeError;
   return sendJson(res, 200, { ok: true });
 };
 
@@ -356,38 +395,41 @@ const submitPainting = async (req, res, supabase, body) => {
     data.notes && `Aanvullende informatie: ${data.notes}`,
   ].filter(Boolean).join('\n\n');
 
-  const { data: inserted, error } = await supabase
-    .from('inquiries')
-    .insert({
-      id,
-      date: timestamp,
-      created_at: timestamp,
-      item_title: data.paintingTitle,
-      item_ref: 'LOST-REMBRANDT',
-      name: data.name,
-      email: data.email,
-      phone: data.phone || null,
-      type: 'painting_submission',
-      message,
-      status: 'Nieuw',
-      notes: null,
-      metadata: {
-        country: data.country,
-        estimatedDate: data.estimatedDate,
-        dimensions: data.dimensions,
-        support: data.support,
-        signature: data.signature,
-        provenance: data.provenance,
-        preferredLanguage: data.preferredLanguage,
-      },
-      attachments,
-      notification_sent_at: null,
-    })
-    .select('id, date, created_at, status')
-    .single();
+  const inquiry = {
+    id,
+    date: timestamp,
+    created_at: timestamp,
+    item_title: data.paintingTitle,
+    item_ref: 'LOST-REMBRANDT',
+    name: data.name,
+    email: data.email,
+    phone: data.phone || null,
+    type: 'painting_submission',
+    message,
+    status: 'Nieuw',
+    notes: null,
+    metadata: {
+      country: data.country,
+      estimatedDate: data.estimatedDate,
+      dimensions: data.dimensions,
+      support: data.support,
+      signature: data.signature,
+      provenance: data.provenance,
+      preferredLanguage: data.preferredLanguage,
+    },
+    attachments,
+    notification_sent_at: null,
+  };
+  const { data: inserted, error } = await supabase.rpc('claim_painting_submission_uploads', {
+    p_inquiry: inquiry,
+    p_upload_ids: attachments.map((attachment) => attachment.uploadId),
+  });
   if (error || !inserted) {
-    console.error('[painting-submissions] Insert failed:', error?.message || 'No row returned.');
-    await deleteStoredAttachments(attachments).catch(() => {});
+    const message = error?.message || 'No row returned.';
+    console.error('[painting-submissions] Atomic claim/insert failed:', message);
+    if (/expired|claimed|unavailable|mismatch/i.test(message)) {
+      return sendJson(res, 409, { error: 'Een of meer bijlagen zijn niet meer beschikbaar. Upload ze opnieuw.' });
+    }
     return sendJson(res, 503, { error: 'Uw inzending kon tijdelijk niet worden opgeslagen.' });
   }
   return sendJson(res, 201, {

@@ -31,6 +31,7 @@ test.after(() => {
 
 const attachment = (overrides = {}) => {
   const payload = {
+    uploadId: "11111111-1111-4111-8111-111111111111",
     path: "pending/2026-09-07/11111111-1111-4111-8111-111111111111/photo.jpg",
     filename: "photo.jpg",
     contentType: "image/jpeg",
@@ -39,6 +40,7 @@ const attachment = (overrides = {}) => {
     ...overrides,
   };
   return {
+    uploadId: payload.uploadId,
     path: payload.path,
     receipt: createReceipt(payload),
   };
@@ -51,6 +53,8 @@ test("painting upload receipts reject tampering, expiry and duplicate paths", ()
   assert.equal(validateAttachments([valid, valid]), null);
   assert.equal(readReceipt(`${valid.receipt}x`), null);
   assert.equal(readReceipt(attachment({ expiresAt: Date.now() - 1 }).receipt), null);
+  const validWithWrongId = { ...valid, uploadId: "22222222-2222-4222-8222-222222222222" };
+  assert.equal(validateAttachments([validWithWrongId]), null);
 });
 
 test("painting attachments resolve only inside the private R2 prefix", () => {

@@ -1,7 +1,6 @@
 import { INITIAL_CATALOG } from "../data/initialCatalog";
 import {
   getCategorySlug,
-  getCollectionGroupForItem,
   normalizeCatalogItemTaxonomy,
 } from "../data/catalogTaxonomy";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
@@ -544,179 +543,6 @@ const mapDbItemToFrontend = (dbItem) => {
   return normalizeCatalogItemTaxonomy(item);
 };
 
-// Map frontend item object (camelCase) to database column names (snake_case)
-const mapFrontendItemToDb = (item) => {
-  const images = Array.isArray(item.images) ? [...item.images] : [];
-  const cleanImages = images.filter((img) => !img || !img.__ext__);
-  cleanImages.push({
-    __ext__: true,
-    payload: {
-      historicalContext: item.historicalContext || "",
-      conditionReport: item.conditionReport || "",
-      provenanceDetails: item.provenanceDetails || "",
-      collationSpecs: item.collationSpecs || "",
-      comparableSales: Array.isArray(item.comparableSales)
-        ? item.comparableSales
-        : [],
-      title_en: item.title_en || "",
-      title_fr: item.title_fr || "",
-      subtitle_en: item.subtitle_en || "",
-      subtitle_fr: item.subtitle_fr || "",
-      description_en: item.description_en || "",
-      description_fr: item.description_fr || "",
-      binding_en: item.binding_en || "",
-      binding_fr: item.binding_fr || "",
-      condition_en: item.condition_en || "",
-      condition_fr: item.condition_fr || "",
-      provenance_en: item.provenance_en || "",
-      provenance_fr: item.provenance_fr || "",
-      provenanceDetails_en: item.provenanceDetails_en || "",
-      provenanceDetails_fr: item.provenanceDetails_fr || "",
-      conditionReport_en: item.conditionReport_en || "",
-      conditionReport_fr: item.conditionReport_fr || "",
-      historicalContext_en: item.historicalContext_en || "",
-      historicalContext_fr: item.historicalContext_fr || "",
-      collationSpecs_en: item.collationSpecs_en || "",
-      collationSpecs_fr: item.collationSpecs_fr || "",
-      publisher_en: item.publisher_en || "",
-      publisher_fr: item.publisher_fr || "",
-      city_en: item.city_en || "",
-      city_fr: item.city_fr || "",
-      dimensions_en: item.dimensions_en || "",
-      dimensions_fr: item.dimensions_fr || "",
-      collectionGroup: getCollectionGroupForItem(item),
-      attributes: item.attributes || {},
-      emptyFields: item.emptyFields || item.empty_fields || {},
-    },
-  });
-
-  return {
-    id: item.id,
-    item_type: item.itemType || item.item_type || "book",
-    collection_group: getCollectionGroupForItem(item),
-    ref: item.ref,
-    title: item.title,
-    subtitle: item.subtitle,
-    author: item.author,
-    publisher: item.publisher,
-    city: item.city,
-    year: item.year,
-    century: item.century,
-    category: getCategorySlug(item.category),
-    price: item.price,
-    status: item.status,
-    featured: Boolean(item.featured),
-    condition: item.condition,
-    binding: item.binding,
-    dimensions: item.dimensions,
-    provenance: item.provenance,
-    description: item.description,
-    historical_context: item.historicalContext || item.historical_context || "",
-    condition_report: item.conditionReport || item.condition_report || "",
-    provenance_details: item.provenanceDetails || item.provenance_details || "",
-    collation_specs: item.collationSpecs || item.collation_specs || "",
-    comparable_sales: Array.isArray(item.comparableSales)
-      ? item.comparableSales
-      : [],
-    attributes: item.attributes || {},
-    images: cleanImages,
-
-    // Multi-Language Fields (EN & FR)
-    title_en: extractFieldValue(item, "title", "en"),
-    title_fr: extractFieldValue(item, "title", "fr"),
-    subtitle_en: extractFieldValue(item, "subtitle", "en"),
-    subtitle_fr: extractFieldValue(item, "subtitle", "fr"),
-    description_en: extractFieldValue(item, "description", "en"),
-    description_fr: extractFieldValue(item, "description", "fr"),
-    binding_en: extractFieldValue(item, "binding", "en"),
-    binding_fr: extractFieldValue(item, "binding", "fr"),
-    condition_en: extractFieldValue(item, "condition", "en"),
-    condition_fr: extractFieldValue(item, "condition", "fr"),
-    provenance_en: extractFieldValue(item, "provenance", "en"),
-    provenance_fr: extractFieldValue(item, "provenance", "fr"),
-    provenance_details_en: extractFieldValue(item, "provenanceDetails", "en"),
-    provenance_details_fr: extractFieldValue(item, "provenanceDetails", "fr"),
-    condition_report_en: extractFieldValue(item, "conditionReport", "en"),
-    condition_report_fr: extractFieldValue(item, "conditionReport", "fr"),
-    historical_context_en: extractFieldValue(item, "historicalContext", "en"),
-    historical_context_fr: extractFieldValue(item, "historicalContext", "fr"),
-    collation_specs_en: extractFieldValue(item, "collationSpecs", "en"),
-    collation_specs_fr: extractFieldValue(item, "collationSpecs", "fr"),
-    updated_at: new Date().toISOString(),
-  };
-};
-
-// Map frontend item object to minimal DB columns supported by any schema version
-const mapFrontendItemToBasicDb = (item) => {
-  const images = Array.isArray(item.images) ? [...item.images] : [];
-  const cleanImages = images.filter((img) => !img || !img.__ext__);
-  cleanImages.push({
-    __ext__: true,
-    payload: {
-      historicalContext: item.historicalContext || "",
-      conditionReport: item.conditionReport || "",
-      provenanceDetails: item.provenanceDetails || "",
-      collationSpecs: item.collationSpecs || "",
-      comparableSales: Array.isArray(item.comparableSales)
-        ? item.comparableSales
-        : [],
-      title_en: item.title_en || "",
-      title_fr: item.title_fr || "",
-      subtitle_en: item.subtitle_en || "",
-      subtitle_fr: item.subtitle_fr || "",
-      description_en: item.description_en || "",
-      description_fr: item.description_fr || "",
-      binding_en: item.binding_en || "",
-      binding_fr: item.binding_fr || "",
-      condition_en: item.condition_en || "",
-      condition_fr: item.condition_fr || "",
-      provenance_en: item.provenance_en || "",
-      provenance_fr: item.provenance_fr || "",
-      provenanceDetails_en: item.provenanceDetails_en || "",
-      provenanceDetails_fr: item.provenanceDetails_fr || "",
-      conditionReport_en: item.conditionReport_en || "",
-      conditionReport_fr: item.conditionReport_fr || "",
-      historicalContext_en: item.historicalContext_en || "",
-      historicalContext_fr: item.historicalContext_fr || "",
-      collationSpecs_en: item.collationSpecs_en || "",
-      collationSpecs_fr: item.collationSpecs_fr || "",
-      publisher_en: item.publisher_en || "",
-      publisher_fr: item.publisher_fr || "",
-      city_en: item.city_en || "",
-      city_fr: item.city_fr || "",
-      dimensions_en: item.dimensions_en || "",
-      dimensions_fr: item.dimensions_fr || "",
-      collectionGroup: getCollectionGroupForItem(item),
-      attributes: item.attributes || {},
-      emptyFields: item.emptyFields || item.empty_fields || {},
-    },
-  });
-
-  return {
-    id: item.id,
-    item_type: item.itemType || item.item_type || "book",
-    ref: item.ref,
-    title: item.title,
-    subtitle: item.subtitle,
-    author: item.author,
-    publisher: item.publisher,
-    city: item.city,
-    year: item.year,
-    century: item.century,
-    category: getCategorySlug(item.category),
-    price: item.price,
-    status: item.status,
-    featured: Boolean(item.featured),
-    condition: item.condition,
-    binding: item.binding,
-    dimensions: item.dimensions,
-    provenance: item.provenance,
-    description: item.description,
-    images: cleanImages,
-    updated_at: new Date().toISOString(),
-  };
-};
-
 // Map database inquiry (snake_case) to frontend inquiry object
 const mapDbInquiryToFrontend = (dbInq) => ({
   id: dbInq.id,
@@ -833,37 +659,16 @@ export const saveCatalogAsync = async (items) => {
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      const dbItems = items.map(mapFrontendItemToDb);
-      const { error } = await supabase
-        .from("items")
-        .upsert(dbItems, { onConflict: "id" });
-      if (error) {
-        console.warn(
-          "Supabase catalog upsert warning (retrying with basic fields):",
-          error.message,
-        );
-        const baseItems = items.map(mapFrontendItemToBasicDb);
-        const { error: err2 } = await supabase
-          .from("items")
-          .upsert(baseItems, { onConflict: "id" });
-        if (err2) {
-          supabaseSuccess = false;
-          supabaseError = formatSupabaseErrorMessage(err2);
-        }
+      const response = await authenticatedAdminFetch("/api/catalog-items", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ action: "save-many", items }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body?.ok) {
+        throw new Error(body?.error || "Catalogusitems konden niet worden opgeslagen.");
       }
-
-      // Save extended items to admin_settings so no translation or detail is ever lost
-      for (const item of items) {
-        const { error: extError } = await supabase
-          .from("admin_settings")
-          .upsert({
-            key: `item_ext_${item.id}`,
-            value: JSON.stringify(item),
-            updated_at: new Date().toISOString(),
-          });
-        if (extError) throw extError;
-      }
-      if (supabaseSuccess) await publishPublicContentSnapshot();
     } catch (e) {
       console.error("Supabase catalog save failed", e);
       supabaseSuccess = false;
@@ -908,58 +713,15 @@ export const saveItemAsync = async (item) => {
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      let mainTableSuccess = false;
-      const dbItem = mapFrontendItemToDb(item);
-      const { error } = await supabase
-        .from("items")
-        .upsert(dbItem, { onConflict: "id" });
-
-      if (!error) {
-        mainTableSuccess = true;
-      } else {
-        console.warn(
-          "Supabase item upsert warning (retrying with basic schema):",
-          error.message,
-        );
-        const basicDbItem = mapFrontendItemToBasicDb(item);
-        const { error: fallbackErr } = await supabase
-          .from("items")
-          .upsert(basicDbItem, { onConflict: "id" });
-        if (!fallbackErr) {
-          mainTableSuccess = true;
-        } else {
-          console.warn(
-            "Supabase basic schema upsert warning:",
-            fallbackErr.message,
-          );
-          supabaseError = formatSupabaseErrorMessage(fallbackErr || error);
-        }
-      }
-
-      // Save full item JSON into admin_settings as a bulletproof secondary backup
-      let extBackupSuccess = false;
-      try {
-        const { error: extErr } = await supabase.from("admin_settings").upsert({
-          key: `item_ext_${item.id}`,
-          value: JSON.stringify(item),
-          updated_at: new Date().toISOString(),
-        });
-        if (!extErr) extBackupSuccess = true;
-      } catch (backupErr) {
-        console.warn("Could not save item_ext backup:", backupErr);
-      }
-
-      // The item row is mandatory. An item_ext row alone is an orphaned backup and
-      // must never be reported as a successful catalog save.
-      if (mainTableSuccess && extBackupSuccess) {
-        supabaseSuccess = true;
-        supabaseError = null;
-        await publishPublicContentSnapshot();
-      } else {
-        supabaseSuccess = false;
-        supabaseError ||= mainTableSuccess
-          ? "De catalogusdata is opgeslagen, maar de volledige cloudback-up kon niet worden bevestigd."
-          : "Het item kon niet in de cloudcatalogus worden opgeslagen.";
+      const response = await authenticatedAdminFetch("/api/catalog-items", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ action: "save", item }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body?.ok) {
+        throw new Error(body?.error || "Het item kon niet in de cloudcatalogus worden opgeslagen.");
       }
     } catch (e) {
       console.error("Supabase item save exception:", e);
@@ -988,17 +750,15 @@ export const deleteItemAsync = async (itemId) => {
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      const { error } = await supabase.from("items").delete().eq("id", itemId);
-      const { error: extError } = await supabase
-        .from("admin_settings")
-        .delete()
-        .eq("key", `item_ext_${itemId}`);
-      if (error || extError) {
-        console.error("Supabase item delete error:", error || extError);
-        supabaseSuccess = false;
-        supabaseError = formatSupabaseErrorMessage(error || extError);
-      } else {
-        await publishPublicContentSnapshot();
+      const response = await authenticatedAdminFetch("/api/catalog-items", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ action: "delete", itemId }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body?.ok) {
+        throw new Error(body?.error || "Het item kon niet uit de cloudcatalogus worden verwijderd.");
       }
     } catch (e) {
       console.error("Supabase item delete exception:", e);
@@ -1622,6 +1382,7 @@ export const savePaintingSubmissionAsync = async (
       if (
         !prepareResponse.ok ||
         !prepared?.path ||
+        !prepared?.uploadId ||
         !prepared?.uploadUrl ||
         !prepared?.receipt ||
         !prepared?.cacheControl
@@ -1631,7 +1392,11 @@ export const savePaintingSubmissionAsync = async (
             `De bijlage “${file.name}” kon niet worden voorbereid.`,
         );
       }
-      attachments.push({ path: prepared.path, receipt: prepared.receipt });
+      attachments.push({
+        uploadId: prepared.uploadId,
+        path: prepared.path,
+        receipt: prepared.receipt,
+      });
       const uploadResponse = await fetch(prepared.uploadUrl, {
         method: "PUT",
         body: file,
