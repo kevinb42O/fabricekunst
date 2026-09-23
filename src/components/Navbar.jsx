@@ -63,6 +63,9 @@ export default function Navbar({
   };
 
   const showNavbarBackground = activeTab === "rembrandt-project" || scrolled || isNavInteractive || mobileMenuOpen;
+  const transparentHeaderText = showNavbarBackground
+    ? ""
+    : "[text-shadow:0_1px_10px_rgba(255,255,255,0.92)]";
 
   return (
     <motion.nav
@@ -86,31 +89,34 @@ export default function Navbar({
       <div className="nav-shell relative">
         <div className="flex xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between gap-4 xl:gap-12 min-h-[76px] sm:min-h-[88px] py-3">
           {/* LEFT ZONE: Navigation Links */}
-          <div className="hidden xl:flex items-center gap-8 2xl:gap-10 min-w-0">
-            {navLinks.map((link) => (
-              <a
-                key={link.id}
-                href={link.href}
-                onClick={(event) => {
-                  event.preventDefault();
-                  handleNavClick(link.id);
-                }}
-                className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
-                  activeTab === link.id
-                    ? "text-[#111111] font-semibold"
-                    : "text-[#111111]/75 hover:text-[#111111]"
-                }`}
-              >
-                {link.label}
-                {activeTab === link.id && (
-                  <motion.span
-                    layoutId="activeTabUnderline"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#111111]"
-                  />
-                )}
-              </a>
-            ))}
+          <div className="hidden xl:flex items-center gap-7 2xl:gap-10 min-w-0">
+            {navLinks.map((link) => {
+              const isProjectLink = link.id === "rembrandt-project";
+              return (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    handleNavClick(link.id);
+                  }}
+                  className={`${isProjectLink ? "text-[11px] 2xl:text-xs tracking-[0.1em] whitespace-nowrap" : "text-xs sm:text-sm tracking-[0.14em]"} font-serif font-medium uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
+                    activeTab === link.id
+                      ? "text-[#111111] font-semibold"
+                      : "text-[#111111]/90 hover:text-[#111111]"
+                  }`}
+                >
+                  {link.label}
+                  {activeTab === link.id && (
+                    <motion.span
+                      layoutId="activeTabUnderline"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#111111]"
+                    />
+                  )}
+                </a>
+              );
+            })}
           </div>
 
           {/* CENTER ZONE: Brand Logo - DEAD CENTER (Louis Vuitton Architecture) */}
@@ -138,10 +144,10 @@ export default function Navbar({
           <div className="hidden xl:flex items-center justify-end gap-10 2xl:gap-12 min-w-0">
             <button
               onClick={() => handleNavClick("contact")}
-              className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none cursor-pointer ${
+              className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
                 activeTab === "contact"
                   ? "text-[#111111] font-semibold"
-                  : "text-[#111111]/75 hover:text-[#111111]"
+                  : "text-[#111111]/90 hover:text-[#111111]"
               }`}
             >
               {t("nav.contact") || "Contact"}
@@ -161,10 +167,10 @@ export default function Navbar({
                   )}
                   <button
                     onClick={() => setLanguage(lang.code)}
-                    className={`text-xs font-serif tracking-wider transition-colors cursor-pointer ${
+                    className={`text-xs font-serif tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
                       language === lang.code
                         ? "text-[#111111] font-semibold border-b border-[#111111] pb-0.5"
-                        : "text-[#666666] hover:text-[#111111]"
+                        : "text-[#3F3F3F] hover:text-[#111111]"
                     }`}
                   >
                     {lang.label}

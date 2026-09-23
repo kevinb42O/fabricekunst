@@ -97,7 +97,7 @@ export default function CollectorListSection({ source = 'homepage', className = 
             <label htmlFor={emailId} className="block font-sans text-[10px] font-bold uppercase tracking-[0.18em] text-[#535353]">
               {t('collectorList.emailLabel')}
             </label>
-            <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="mt-3">
               <div className="relative border-b-2 border-[#111111] transition-colors focus-within:border-[#5B1420]">
                 <input
                   id={emailId}
@@ -113,14 +113,6 @@ export default function CollectorListSection({ source = 'homepage', className = 
                   className="min-h-16 w-full bg-white px-0 py-3 font-serif text-xl text-[#111111] placeholder:text-[#898989] focus:outline-none"
                 />
               </div>
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="group flex min-h-16 items-center justify-between gap-8 bg-[#5B1420] px-6 font-sans text-[10px] font-bold uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-[#741B2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-wait disabled:opacity-65 sm:justify-center"
-              >
-                <span>{status === 'loading' ? t('collectorList.submitting') : t('collectorList.submit')}</span>
-                <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
-              </button>
             </div>
 
             <div className="sr-only" aria-hidden="true">
@@ -128,7 +120,7 @@ export default function CollectorListSection({ source = 'homepage', className = 
               <input id={`${emailId}-website`} name="website" tabIndex="-1" autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
             </div>
 
-            <div className="mt-7 flex items-start gap-3">
+            <div className="mt-6 flex items-start gap-3">
               <input
                 id={consentId}
                 type="checkbox"
@@ -144,6 +136,24 @@ export default function CollectorListSection({ source = 'homepage', className = 
                 </a>
               </label>
             </div>
+
+            <p
+              id={`${emailId}-consent-hint`}
+              aria-live="polite"
+              className="mt-3 min-h-4 font-sans text-[10px] font-medium tracking-[0.02em] text-[#6A5360]"
+            >
+              {!consent && status !== 'loading' && status !== 'success' ? t('collectorList.consentHint') : ''}
+            </p>
+
+            <button
+              type="submit"
+              disabled={status === 'loading' || !consent}
+              aria-describedby={!consent ? `${emailId}-consent-hint` : undefined}
+              className="group mt-3 flex min-h-16 w-full items-center justify-between gap-8 bg-[#5B1420] px-6 font-sans text-[10px] font-bold uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-[#741B2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:bg-[#E8E0DC] disabled:text-[#806F72] disabled:hover:bg-[#E8E0DC] sm:w-auto sm:min-w-64 sm:justify-center"
+            >
+              <span>{status === 'loading' ? t('collectorList.submitting') : t('collectorList.submit')}</span>
+              <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1 group-disabled:translate-x-0" aria-hidden="true" />
+            </button>
 
             {feedback && (
               <div
