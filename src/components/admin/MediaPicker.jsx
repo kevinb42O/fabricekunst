@@ -29,6 +29,7 @@ export default function MediaPicker({
   onSelect,
   onOpenMediaLibrary,
   title = "Kies een beeld uit de beeldbank",
+  description = "Elk beeld met een publieke variant is direct beschikbaar. Metadata is optioneel.",
 }) {
   const [media, setMedia] = useState([]);
   const [query, setQuery] = useState("");
@@ -171,8 +172,7 @@ export default function MediaPicker({
             <p>UNIVERSELE BEELDBANK</p>
             <h2 id="media-picker-title">{title}</h2>
             <span id="media-picker-description">
-              Elk beeld met een publieke variant is direct beschikbaar. Metadata
-              is optioneel.
+              {description}
             </span>
           </div>
           <div className="media-picker__header-actions">

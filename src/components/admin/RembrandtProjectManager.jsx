@@ -48,6 +48,11 @@ import {
 } from "../../utils/storage";
 import { localizePath } from "../../utils/locales";
 import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
+import {
+  fillMediaText,
+  getProjectImageDescriptionIssues,
+  imageDescriptionFieldId,
+} from "../../utils/rembrandtEditor";
 import { REMBRANDT_PROJECT_ROUTE } from "../../utils/rembrandtProject";
 import MediaPicker from "./MediaPicker";
 import "../../styles/rembrandt-project-admin.css";
@@ -125,19 +130,60 @@ const toLocalDateTime = (value) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
-function Field({ label, hint, children }) {
+function Field({ label, hint, error, children }) {
   const id = useId();
   return (
-    <label className="rp-admin-field">
+    <label className={`rp-admin-field${error ? " has-error" : ""}`}>
       <span id={`${id}-label`}>{label}</span>
       {hint && <small id={`${id}-hint`}>{hint}</small>}
       {React.isValidElement(children)
         ? React.cloneElement(children, {
             "aria-labelledby": `${id}-label`,
-            "aria-describedby": hint ? `${id}-hint` : undefined,
+            "aria-describedby":
+              [hint && `${id}-hint`, error && `${id}-error`]
+                .filter(Boolean)
+                .join(" ") || undefined,
+            "aria-invalid": error ? true : undefined,
           })
         : children}
+      {error && (
+        <small id={`${id}-error`} className="rp-admin-field__error">
+          {error}
+        </small>
+      )}
     </label>
+  );
+}
+
+function ImageDescription({ id, url, value, language, onChange }) {
+  const dutch = language === "nl";
+  return (
+    <Field
+      label={
+        dutch
+          ? url
+            ? "Beeldbeschrijving (verplicht voor publicatie)"
+            : "Beeldbeschrijving (bij een gekozen beeld)"
+          : "Beeldbeschrijving (vertaling, optioneel)"
+      }
+      hint={
+        dutch
+          ? "Beschrijf kort wat op de foto te zien is, voor bezoekers die het beeld niet kunnen zien. Bijvoorbeeld: ‘Röntgenopname van het schilderij, detail van het doek.’"
+          : "Zonder vertaling gebruikt de website de Nederlandse beeldbeschrijving."
+      }
+      error={
+        url && dutch && !value.trim()
+          ? "Vul hier een korte Nederlandse beschrijving van dit beeld in voordat u het publiceert."
+          : undefined
+      }
+    >
+      <input
+        id={id}
+        value={value}
+        aria-required={Boolean(url && dutch)}
+        onChange={onChange}
+      />
+    </Field>
   );
 }
 
@@ -282,6 +328,8 @@ export default function RembrandtProjectManager({
   const [previewBusy, setPreviewBusy] = useState(false);
   const [confirmPublicDisable, setConfirmPublicDisable] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
+  const [validationAttempted, setValidationAttempted] = useState(false);
+  const [pendingFieldFocus, setPendingFieldFocus] = useState(null);
 
   const loadProject = () => {
     let active = true;
@@ -333,7 +381,7 @@ export default function RembrandtProjectManager({
     () =>
       Boolean(
         needsRepair ||
-        (savedSnapshot && JSON.stringify(project) !== savedSnapshot),
+          (savedSnapshot && JSON.stringify(project) !== savedSnapshot),
       ),
     [needsRepair, project, savedSnapshot],
   );
@@ -468,46 +516,55 @@ export default function RembrandtProjectManager({
         issues.push(
           `Update ${update.sequence} heeft een ongeldig of toekomstig publicatiemoment.`,
         );
-      if (update.coverImage && !update.coverAlt?.nl?.trim())
-        issues.push(
-          `De hoofdafbeelding van update ${update.sequence} mist Nederlandse alternatieve tekst.`,
-        );
-      for (const [imageIndex, image] of (update.gallery || []).entries()) {
-        if (image.url && !image.alt?.nl?.trim())
-          issues.push(
-            `Galerijafbeelding ${imageIndex + 1} van update ${update.sequence} mist Nederlandse alternatieve tekst.`,
-          );
-      }
     }
     for (const investigation of project.investigations) {
       if (investigation.visible !== false && !investigation.title?.nl?.trim())
         issues.push(
           `${investigation.reference || investigation.id} mist een Nederlandse titel.`,
         );
-      if (investigation.coverImage && !investigation.coverAlt?.nl?.trim())
-        issues.push(
-          `${investigation.reference || investigation.id} mist Nederlandse alternatieve tekst bij de hoofdafbeelding.`,
-        );
-      for (const [imageIndex, image] of (
-        investigation.gallery || []
-      ).entries()) {
-        if (image.url && !image.alt?.nl?.trim())
-          issues.push(
-            `Dossierbeeld ${imageIndex + 1} van ${investigation.reference || investigation.id} mist Nederlandse alternatieve tekst.`,
-          );
-      }
     }
-    if (project.settings.heroImage && !project.settings.heroAlt?.nl?.trim())
-      issues.push("De hero-afbeelding mist Nederlandse alternatieve tekst.");
-    if (
-      project.settings.researchImage &&
-      !project.settings.researchImageAlt?.nl?.trim()
-    )
-      issues.push(
-        "De onderzoeksafbeelding mist Nederlandse alternatieve tekst.",
-      );
-    return [...new Set(issues)];
+    return [
+      ...[...new Set(issues)].map((message) => ({ message })),
+      ...getProjectImageDescriptionIssues(project),
+    ];
   }, [project]);
+  const openPublicationIssue = (issue) => {
+    setLanguage("nl");
+    const target = issue.target;
+    if (!target) {
+      setPanel("publish");
+      setPublishTab("1");
+      return;
+    }
+    setPanel(target.panel);
+    if (target.panel === "updates") {
+      setSearchQuery("");
+      setUpdateInvestigationFilter("all");
+      setSelectedId(target.ownerId);
+      setUpdateTab("media");
+    } else if (target.panel === "investigations") {
+      setSelectedInvestigationId(target.ownerId);
+      setWorkspaceMode("edit");
+      setDossierTab("media");
+    } else if (target.panel === "page") {
+      setPageTab("2");
+    } else if (target.panel === "process") {
+      setProcessTab("1");
+    }
+    setPendingFieldFocus({ id: target.fieldId });
+  };
+  const showPublicationIssue = (issue) => {
+    setValidationAttempted(true);
+    openPublicationIssue(issue);
+    onShowToast(issue.message, "error");
+  };
+  useEffect(() => {
+    if (!pendingFieldFocus) return;
+    const input = document.getElementById(pendingFieldFocus.id);
+    input?.focus({ preventScroll: true });
+    input?.scrollIntoView({ block: "center", behavior: "auto" });
+    setPendingFieldFocus(null);
+  }, [pendingFieldFocus]);
   const uniqueR2ImageCount = useMemo(
     () =>
       new Set(
@@ -666,7 +723,7 @@ export default function RembrandtProjectManager({
   const save = async ({ publish = false } = {}) => {
     if (saving || loadError) return;
     if ((publish || savedPublicEnabled) && publicationIssues.length) {
-      onShowToast(publicationIssues[0], "error");
+      showPublicationIssue(publicationIssues[0]);
       return;
     }
     setSaving(true);
@@ -707,6 +764,7 @@ export default function RembrandtProjectManager({
       setSavedSnapshot(JSON.stringify(result.project));
       setIntegrityIssues([]);
       setNeedsRepair(false);
+      setValidationAttempted(false);
       onPublished(result.project);
       onShowToast(
         result.project.isEnabled
@@ -730,7 +788,7 @@ export default function RembrandtProjectManager({
       return;
     }
     if (enabled && publicationIssues.length) {
-      onShowToast(publicationIssues[0], "error");
+      showPublicationIssue(publicationIssues[0]);
       return;
     }
     setAccessSaving(true);
@@ -958,46 +1016,124 @@ export default function RembrandtProjectManager({
     const url = preferredMediaVariantUrl(asset);
     if (!url || !mediaPickerTarget) return false;
     const target = mediaPickerTarget;
+    const alt = asset.metadata?.alt;
+    const caption = asset.metadata?.caption;
+    let description;
+    let descriptionFieldId;
     if (target.kind === "setting") {
-      updateSettings(target.field, url, false);
-    } else if (target.kind === "update-cover") {
-      updateSelected("coverImage", url);
-    } else if (target.kind === "update-gallery") {
+      const altField = {
+        heroImage: "heroAlt",
+        researchImage: "researchImageAlt",
+      }[target.field];
+      if (altField) {
+        description = fillMediaText(project.settings[altField], alt);
+        descriptionFieldId = imageDescriptionFieldId(
+          target.field === "heroImage" ? "hero" : "research",
+        );
+      }
       setProject((current) => ({
         ...current,
-        updates: current.updates.map((entry) =>
-          entry.id !== selectedId
-            ? entry
-            : {
-                ...entry,
-                gallery: entry.gallery.map((image) =>
-                  image.id === target.galleryId ? { ...image, url } : image,
-                ),
-              },
-        ),
+        settings: {
+          ...current.settings,
+          [target.field]: url,
+          ...(altField
+            ? { [altField]: fillMediaText(current.settings[altField], alt) }
+            : {}),
+        },
       }));
-    } else if (target.kind === "investigation-cover") {
+    } else if (
+      target.kind === "update-cover" ||
+      target.kind === "update-gallery"
+    ) {
+      const update = project.updates.find(
+        (entry) => entry.id === target.updateId,
+      );
+      const image = update?.gallery.find(
+        (entry) => entry.id === target.galleryId,
+      );
+      if (!update || (target.kind === "update-gallery" && !image)) return false;
+      description = fillMediaText(
+        target.kind === "update-cover" ? update.coverAlt : image.alt,
+        alt,
+      );
+      descriptionFieldId = imageDescriptionFieldId(
+        target.kind,
+        target.updateId,
+        target.galleryId,
+      );
       setProject((current) => ({
         ...current,
-        investigations: current.investigations.map((entry) =>
-          entry.id === target.investigationId
-            ? { ...entry, coverImage: url }
-            : entry,
-        ),
+        updates: current.updates.map((entry) => {
+          if (entry.id !== target.updateId) return entry;
+          if (target.kind === "update-cover")
+            return {
+              ...entry,
+              coverImage: url,
+              coverAlt: fillMediaText(entry.coverAlt, alt),
+              coverCaption: fillMediaText(entry.coverCaption, caption),
+            };
+          return {
+            ...entry,
+            gallery: entry.gallery.map((image) =>
+              image.id === target.galleryId
+                ? {
+                    ...image,
+                    url,
+                    alt: fillMediaText(image.alt, alt),
+                    caption: fillMediaText(image.caption, caption),
+                  }
+                : image,
+            ),
+          };
+        }),
       }));
-    } else if (target.kind === "investigation-gallery") {
+    } else if (
+      target.kind === "investigation-cover" ||
+      target.kind === "investigation-gallery"
+    ) {
+      const investigation = project.investigations.find(
+        (entry) => entry.id === target.investigationId,
+      );
+      const image = investigation?.gallery.find(
+        (entry) => entry.id === target.galleryId,
+      );
+      if (!investigation || (target.kind === "investigation-gallery" && !image))
+        return false;
+      description = fillMediaText(
+        target.kind === "investigation-cover"
+          ? investigation.coverAlt
+          : image.alt,
+        alt,
+      );
+      descriptionFieldId = imageDescriptionFieldId(
+        target.kind,
+        target.investigationId,
+        target.galleryId,
+      );
       setProject((current) => ({
         ...current,
-        investigations: current.investigations.map((entry) =>
-          entry.id !== target.investigationId
-            ? entry
-            : {
-                ...entry,
-                gallery: entry.gallery.map((image) =>
-                  image.id === target.galleryId ? { ...image, url } : image,
-                ),
-              },
-        ),
+        investigations: current.investigations.map((entry) => {
+          if (entry.id !== target.investigationId) return entry;
+          if (target.kind === "investigation-cover")
+            return {
+              ...entry,
+              coverImage: url,
+              coverAlt: fillMediaText(entry.coverAlt, alt),
+            };
+          return {
+            ...entry,
+            gallery: entry.gallery.map((image) =>
+              image.id === target.galleryId
+                ? {
+                    ...image,
+                    url,
+                    alt: fillMediaText(image.alt, alt),
+                    caption: fillMediaText(image.caption, caption),
+                  }
+                : image,
+            ),
+          };
+        }),
       }));
     } else {
       return false;
@@ -1007,7 +1143,18 @@ export default function RembrandtProjectManager({
     // target here makes the editor resilient if that component is ever
     // replaced or unmounted while a selection is in progress.
     setMediaPickerTarget(null);
-    onShowToast("Beeld uit de centrale beeldbank gekoppeld.", "info");
+    if (descriptionFieldId && !description?.nl?.trim()) {
+      setLanguage("nl");
+      setPendingFieldFocus({ id: descriptionFieldId });
+    }
+    onShowToast(
+      !descriptionFieldId
+        ? "Beeld uit de centrale beeldbank gekoppeld."
+        : description?.nl?.trim()
+          ? "Beeld gekoppeld. Controleer de beeldbeschrijving bij het beeld; beschikbare tekst uit de beeldbank is overgenomen."
+          : "Beeld gekoppeld. Vul bij het beeld nog een korte Nederlandse beeldbeschrijving in voor publicatie.",
+      "info",
+    );
     return true;
   };
 
@@ -1032,16 +1179,40 @@ export default function RembrandtProjectManager({
             },
       ),
     }));
-  const addGalleryImage = () =>
+  const addGalleryImage = () => {
+    const imageId = crypto.randomUUID();
     updateSelected("gallery", [
       ...(selectedUpdate?.gallery || []),
       {
-        id: crypto.randomUUID(),
+        id: imageId,
         url: "",
         alt: { nl: "", en: "", fr: "" },
         caption: { nl: "", en: "", fr: "" },
       },
     ]);
+    setMediaPickerTarget({
+      kind: "update-gallery",
+      updateId: selectedUpdate.id,
+      galleryId: imageId,
+    });
+  };
+  const addInvestigationGalleryImage = () => {
+    const imageId = crypto.randomUUID();
+    updateInvestigation(selectedInvestigation.id, "gallery", [
+      ...(selectedInvestigation.gallery || []),
+      {
+        id: imageId,
+        url: "",
+        alt: { nl: "", en: "", fr: "" },
+        caption: { nl: "", en: "", fr: "" },
+      },
+    ]);
+    setMediaPickerTarget({
+      kind: "investigation-gallery",
+      investigationId: selectedInvestigation.id,
+      galleryId: imageId,
+    });
+  };
 
   const addInvestigation = () => {
     const investigation = createProjectInvestigation(project);
@@ -1175,6 +1346,39 @@ export default function RembrandtProjectManager({
           </button>
         </div>
       </header>
+
+      {validationAttempted && publicationIssues.length > 0 && (
+        <aside className="rp-admin-data-alert" role="alert">
+          <AlertTriangle aria-hidden="true" />
+          <div>
+            <strong>
+              Nog niet opgeslagen: {publicationIssues.length} aandachtspunt
+              {publicationIssues.length === 1 ? "" : "en"}
+            </strong>
+            <p>
+              Uw wijzigingen staan nog in deze editor. Vul de ontbrekende
+              gegevens in en sla opnieuw op.
+            </p>
+            <ul>
+              {publicationIssues.map((issue) => (
+                <li key={issue.message}>
+                  <button
+                    type="button"
+                    className="rp-admin-issue-link"
+                    onClick={() => openPublicationIssue(issue)}
+                  >
+                    {issue.message}{" "}
+                    <span>
+                      {issue.target ? "Invullen" : "Bekijk publicatiecontrole"}{" "}
+                      →
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      )}
 
       {needsRepair && (
         <aside className="rp-admin-data-alert" role="alert">
@@ -1594,14 +1798,15 @@ export default function RembrandtProjectManager({
                   )}
                 </div>
               </div>
-              <Field label="Alternatieve tekst">
-                <input
-                  value={valueFor(project.settings, "heroAlt", language)}
-                  onChange={(event) =>
-                    updateSettings("heroAlt", event.target.value)
-                  }
-                />
-              </Field>
+              <ImageDescription
+                id={imageDescriptionFieldId("hero")}
+                url={project.settings.heroImage}
+                language={language}
+                value={valueFor(project.settings, "heroAlt", language)}
+                onChange={(event) =>
+                  updateSettings("heroAlt", event.target.value)
+                }
+              />
             </section>
 
             <section hidden={pageTab !== "3"} className="rp-admin-card">
@@ -2174,23 +2379,27 @@ export default function RembrandtProjectManager({
                         )}
                       </div>
                     </div>
-                    <Field label="Alternatieve tekst hoofdbeeld">
-                      <input
-                        value={valueFor(
-                          selectedInvestigation,
+                    <ImageDescription
+                      id={imageDescriptionFieldId(
+                        "investigation-cover",
+                        selectedInvestigation.id,
+                      )}
+                      url={selectedInvestigation.coverImage}
+                      language={language}
+                      value={valueFor(
+                        selectedInvestigation,
+                        "coverAlt",
+                        language,
+                      )}
+                      onChange={(event) =>
+                        updateInvestigation(
+                          selectedInvestigation.id,
                           "coverAlt",
-                          language,
-                        )}
-                        onChange={(event) =>
-                          updateInvestigation(
-                            selectedInvestigation.id,
-                            "coverAlt",
-                            event.target.value,
-                            true,
-                          )
-                        }
-                      />
-                    </Field>
+                          event.target.value,
+                          true,
+                        )
+                      }
+                    />
                     <div className="rp-admin-card__heading rp-admin-subheading">
                       <div>
                         <p>Media</p>
@@ -2199,21 +2408,7 @@ export default function RembrandtProjectManager({
                       <button
                         type="button"
                         className="admin-button admin-button--secondary"
-                        onClick={() =>
-                          updateInvestigation(
-                            selectedInvestigation.id,
-                            "gallery",
-                            [
-                              ...(selectedInvestigation.gallery || []),
-                              {
-                                id: crypto.randomUUID(),
-                                url: "",
-                                alt: { nl: "", en: "", fr: "" },
-                                caption: { nl: "", en: "", fr: "" },
-                              },
-                            ],
-                          )
-                        }
+                        onClick={addInvestigationGalleryImage}
                       >
                         <Plus aria-hidden="true" />
                         Beeld
@@ -2246,31 +2441,38 @@ export default function RembrandtProjectManager({
                                 <ImageIcon aria-hidden="true" />
                                 Kies uit beeldbank
                               </button>
-                              <Field label="Alternatieve tekst">
-                                <input
-                                  value={image.alt?.[language] || ""}
-                                  onChange={(event) =>
-                                    updateInvestigation(
-                                      selectedInvestigation.id,
-                                      "gallery",
-                                      selectedInvestigation.gallery.map(
-                                        (entry) =>
-                                          entry.id === image.id
-                                            ? {
-                                                ...entry,
-                                                alt: {
-                                                  ...entry.alt,
-                                                  [language]:
-                                                    event.target.value,
-                                                },
-                                              }
-                                            : entry,
-                                      ),
-                                    )
-                                  }
-                                />
-                              </Field>
-                              <Field label="Bijschrift">
+                              <ImageDescription
+                                id={imageDescriptionFieldId(
+                                  "investigation-gallery",
+                                  selectedInvestigation.id,
+                                  image.id,
+                                )}
+                                url={image.url}
+                                language={language}
+                                value={image.alt?.[language] || ""}
+                                onChange={(event) =>
+                                  updateInvestigation(
+                                    selectedInvestigation.id,
+                                    "gallery",
+                                    selectedInvestigation.gallery.map(
+                                      (entry) =>
+                                        entry.id === image.id
+                                          ? {
+                                              ...entry,
+                                              alt: {
+                                                ...entry.alt,
+                                                [language]: event.target.value,
+                                              },
+                                            }
+                                          : entry,
+                                    ),
+                                  )
+                                }
+                              />
+                              <Field
+                                label="Bijschrift (optioneel)"
+                                hint="Deze tekst verschijnt onder het beeld. De beeldbeschrijving hierboven vult u apart in."
+                              >
                                 <textarea
                                   rows="2"
                                   value={image.caption?.[language] || ""}
@@ -2583,18 +2785,19 @@ export default function RembrandtProjectManager({
                   )}
                 </div>
                 <div>
-                  <Field label="Alternatieve tekst">
-                    <input
-                      value={valueFor(
-                        project.settings,
-                        "researchImageAlt",
-                        language,
-                      )}
-                      onChange={(event) =>
-                        updateSettings("researchImageAlt", event.target.value)
-                      }
-                    />
-                  </Field>
+                  <ImageDescription
+                    id={imageDescriptionFieldId("research")}
+                    url={project.settings.researchImage}
+                    language={language}
+                    value={valueFor(
+                      project.settings,
+                      "researchImageAlt",
+                      language,
+                    )}
+                    onChange={(event) =>
+                      updateSettings("researchImageAlt", event.target.value)
+                    }
+                  />
                   <button
                     type="button"
                     className="admin-button admin-button--secondary"
@@ -3246,7 +3449,10 @@ export default function RembrandtProjectManager({
                         type="button"
                         className="admin-button admin-button--secondary"
                         onClick={() =>
-                          setMediaPickerTarget({ kind: "update-cover" })
+                          setMediaPickerTarget({
+                            kind: "update-cover",
+                            updateId: selectedUpdate.id,
+                          })
                         }
                       >
                         <ImageIcon aria-hidden="true" />
@@ -3263,15 +3469,22 @@ export default function RembrandtProjectManager({
                       )}
                     </div>
                   </div>
-                  <Field label="Alternatieve tekst">
-                    <input
-                      value={valueFor(selectedUpdate, "coverAlt", language)}
-                      onChange={(event) =>
-                        updateSelected("coverAlt", event.target.value, true)
-                      }
-                    />
-                  </Field>
-                  <Field label="Bijschrift">
+                  <ImageDescription
+                    id={imageDescriptionFieldId(
+                      "update-cover",
+                      selectedUpdate.id,
+                    )}
+                    url={selectedUpdate.coverImage}
+                    language={language}
+                    value={valueFor(selectedUpdate, "coverAlt", language)}
+                    onChange={(event) =>
+                      updateSelected("coverAlt", event.target.value, true)
+                    }
+                  />
+                  <Field
+                    label="Bijschrift (optioneel)"
+                    hint="Deze tekst verschijnt onder het beeld. De beeldbeschrijving hierboven vult u apart in."
+                  >
                     <textarea
                       rows="2"
                       value={valueFor(selectedUpdate, "coverCaption", language)}
@@ -3295,6 +3508,16 @@ export default function RembrandtProjectManager({
                       Beeld toevoegen
                     </button>
                   </div>
+                  <p className="rp-admin-media-help">
+                    Kies een foto uit de beeldbank en vul de beeldbeschrijving
+                    in. Beschikbare beschrijvingen worden automatisch
+                    overgenomen. Een bijschrift is optioneel. Bewaar daarna met
+                    ‘
+                    {savedPublicEnabled
+                      ? "Opslaan & publiceren"
+                      : "Wijzigingen opslaan"}
+                    ’.
+                  </p>
                   <div className="rp-admin-gallery-editor">
                     {(selectedUpdate.gallery || []).map((image, index) => (
                       <div key={image.id} className="rp-admin-gallery-item">
@@ -3313,6 +3536,7 @@ export default function RembrandtProjectManager({
                             onClick={() =>
                               setMediaPickerTarget({
                                 kind: "update-gallery",
+                                updateId: selectedUpdate.id,
                                 galleryId: image.id,
                               })
                             }
@@ -3320,20 +3544,28 @@ export default function RembrandtProjectManager({
                             <ImageIcon aria-hidden="true" />
                             Kies uit beeldbank
                           </button>
-                          <Field label="Alternatieve tekst">
-                            <input
-                              value={image.alt?.[language] || ""}
-                              onChange={(event) =>
-                                updateGallery(
-                                  image.id,
-                                  "alt",
-                                  event.target.value,
-                                  true,
-                                )
-                              }
-                            />
-                          </Field>
-                          <Field label="Bijschrift">
+                          <ImageDescription
+                            id={imageDescriptionFieldId(
+                              "update-gallery",
+                              selectedUpdate.id,
+                              image.id,
+                            )}
+                            url={image.url}
+                            language={language}
+                            value={image.alt?.[language] || ""}
+                            onChange={(event) =>
+                              updateGallery(
+                                image.id,
+                                "alt",
+                                event.target.value,
+                                true,
+                              )
+                            }
+                          />
+                          <Field
+                            label="Bijschrift (optioneel)"
+                            hint="Deze tekst verschijnt onder het beeld. De beeldbeschrijving hierboven vult u apart in."
+                          >
                             <textarea
                               rows="2"
                               value={image.caption?.[language] || ""}
@@ -3516,10 +3748,7 @@ export default function RembrandtProjectManager({
                       <button
                         type="button"
                         className="admin-button admin-button--primary"
-                        disabled={
-                          saving ||
-                          accessSaving || publicationIssues.length > 0
-                        }
+                        disabled={saving || accessSaving}
                         onClick={() => save({ publish: true })}
                       >
                         {saving ? (
@@ -3763,7 +3992,19 @@ export default function RembrandtProjectManager({
                 {publicationIssues.length > 0 && (
                   <ul>
                     {publicationIssues.map((issue) => (
-                      <li key={issue}>{issue}</li>
+                      <li key={issue.message}>
+                        {issue.target ? (
+                          <button
+                            type="button"
+                            className="rp-admin-issue-link"
+                            onClick={() => openPublicationIssue(issue)}
+                          >
+                            {issue.message} <span>Invullen →</span>
+                          </button>
+                        ) : (
+                          issue.message
+                        )}
+                      </li>
                     ))}
                   </ul>
                 )}
@@ -3772,10 +4013,7 @@ export default function RembrandtProjectManager({
                 type="button"
                 className="admin-button admin-button--primary rp-admin-publish-button"
                 onClick={() => save({ publish: !savedPublicEnabled })}
-                disabled={
-                  saving ||
-                  accessSaving || publicationIssues.length > 0
-                }
+                disabled={saving || accessSaving}
               >
                 {saving ? (
                   <Loader2 className="is-spinning" aria-hidden="true" />
@@ -3888,6 +4126,11 @@ export default function RembrandtProjectManager({
       </div>
       <MediaPicker
         open={Boolean(mediaPickerTarget)}
+        description={
+          mediaPickerTarget?.field === "socialImage"
+            ? undefined
+            : "Kies een foto. Een beschikbare beeldbeschrijving wordt overgenomen. Vul ontbrekende Nederlandse beschrijvingen daarna bij het beeld in; voor publicatie zijn ze verplicht."
+        }
         onClose={() => setMediaPickerTarget(null)}
         onSelect={selectLibraryAsset}
         onOpenMediaLibrary={onOpenMediaLibrary}
