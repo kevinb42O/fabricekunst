@@ -3,8 +3,14 @@ import { getR2ConfigurationError } from './_lib/r2.js';
 import { publishPublicContentSnapshot } from './_lib/publicContent.js';
 import rembrandtProjectHandler from './_lib/rembrandtProjectEndpoint.js';
 import rembrandtProjectPreviewLinksHandler from './_lib/rembrandtProjectPreviewLinksEndpoint.js';
+import catalogItemsHandler from './_lib/catalogItemsEndpoint.js';
 
 export default async function handler(req, res) {
+  // Share one deployed function; the catalog handler retains its own admin
+  // authorization, payload limits and atomic database mutations.
+  if (req.query?.resource === 'catalog-items') {
+    return catalogItemsHandler(req, res);
+  }
   if (req.query?.resource === 'rembrandt-project-preview-links') {
     return rembrandtProjectPreviewLinksHandler(req, res);
   }

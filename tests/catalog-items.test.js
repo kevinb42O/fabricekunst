@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCatalogMutation, toStoredCatalogItem } from '../api/catalog-items.js';
+import { parseCatalogMutation, toStoredCatalogItem } from '../api/_lib/catalogItemsEndpoint.js';
 
 test('catalog mutations accept only one bounded, well-formed save request', () => {
   const item = { id: 'rembrandt-001', title: 'Portrait', images: [] };

@@ -1,7 +1,7 @@
-import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
-import { getR2ConfigurationError } from './_lib/r2.js';
-import { publishPublicContentSnapshot } from './_lib/publicContent.js';
-import { getCategorySlug, getCollectionGroupForItem } from '../src/data/catalogTaxonomy.js';
+import { getServerSupabase, requireActiveAdmin, sendJson } from './adminAuth.js';
+import { getR2ConfigurationError } from './r2.js';
+import { publishPublicContentSnapshot } from './publicContent.js';
+import { getCategorySlug, getCollectionGroupForItem } from '../../src/data/catalogTaxonomy.js';
 
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const ITEM_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,159}$/;

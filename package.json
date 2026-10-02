@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/verify-r2-config.js && node scripts/generate-llms.js",
+    "prebuild": "node scripts/verify-vercel-functions.js && node scripts/verify-r2-config.js && node scripts/generate-llms.js",
     "build": "vite build",
     "postbuild": "node scripts/generate-static-pages.js && node scripts/verify-client-confidentiality.js",
     "sitemap:preview": "node scripts/generate-sitemap.js",

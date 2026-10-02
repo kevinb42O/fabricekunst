@@ -9,8 +9,12 @@ import rembrandtProjectPreviewHandler from './_lib/rembrandtProjectPreviewEndpoi
 import { INITIAL_CATALOG } from '../src/data/initialCatalog.js';
 import { buildSitemapXml } from '../src/utils/sitemap.js';
 import { readPublishedProvenance } from './_lib/provenancePublication.js';
+import llmsHandler from './_lib/llmsEndpoint.js';
 
 export default async function handler(req, res) {
+  if (req.query?.resource === 'llms') {
+    return llmsHandler(req, res);
+  }
   if (req.query?.resource === 'sitemap') {
     if (!['GET', 'HEAD'].includes(req.method)) {
       res.setHeader('Allow', 'GET, HEAD');

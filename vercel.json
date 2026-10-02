@@ -86,12 +86,20 @@
   ],
   "rewrites": [
     {
+      "source": "/api/catalog-items",
+      "destination": "/api/publish-public-content?resource=catalog-items"
+    },
+    {
+      "source": "/api/llms",
+      "destination": "/api/public-content?resource=llms"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/api/public-content?resource=sitemap"
     },
     {
       "source": "/llms.txt",
-      "destination": "/api/llms"
+      "destination": "/api/public-content?resource=llms"
     },
     {
       "source": "/lost-rembrandt-project/preview/:slug",

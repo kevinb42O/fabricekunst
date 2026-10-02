@@ -1,8 +1,8 @@
-import { INITIAL_CATALOG } from "../src/data/initialCatalog.js";
-import { getItemSlug } from "../src/utils/itemSlug.js";
-import { getR2ConfigurationError } from "./_lib/r2.js";
-import { readPublicContentSnapshot } from "./_lib/publicContentReader.js";
-import { readRembrandtProjectAccess } from "./_lib/rembrandtProjectAccess.js";
+import { INITIAL_CATALOG } from "../../src/data/initialCatalog.js";
+import { getItemSlug } from "../../src/utils/itemSlug.js";
+import { getR2ConfigurationError } from "./r2.js";
+import { readPublicContentSnapshot } from "./publicContentReader.js";
+import { readRembrandtProjectAccess } from "./rembrandtProjectAccess.js";
 
 export default async function handler(req, res) {
   if (!["GET", "HEAD"].includes(req.method)) {
