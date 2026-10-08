@@ -1,4 +1,4 @@
-import { getLocalizedCategoryLabel } from '../data/catalogTaxonomy';
+import { getLocalizedCategoryLabel } from '../data/catalogTaxonomy.js';
 
 /**
  * Atelier Rembrandt — Antiquarian Translation Service

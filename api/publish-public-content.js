@@ -4,8 +4,12 @@ import { publishPublicContentSnapshot } from './_lib/publicContent.js';
 import rembrandtProjectHandler from './_lib/rembrandtProjectEndpoint.js';
 import rembrandtProjectPreviewLinksHandler from './_lib/rembrandtProjectPreviewLinksEndpoint.js';
 import catalogItemsHandler from './_lib/catalogItemsEndpoint.js';
+import certificateDraftsHandler from './_lib/certificateDraftsEndpoint.js';
 
 export default async function handler(req, res) {
+  if (req.query?.resource === 'certificate-drafts') {
+    return certificateDraftsHandler(req, res);
+  }
   // Share one deployed function; the catalog handler retains its own admin
   // authorization, payload limits and atomic database mutations.
   if (req.query?.resource === 'catalog-items') {

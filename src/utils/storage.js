@@ -488,55 +488,55 @@ const mapDbItemToFrontend = (dbItem) => {
     dimensions_fr,
 
     provenance_details_en:
-      extPayload.provenanceDetails_en ||
+      extractFieldValue(extPayload, "provenanceDetails", "en") ||
       extractFieldValue(dbItem, "provenanceDetails", "en"),
     provenance_details_fr:
-      extPayload.provenanceDetails_fr ||
+      extractFieldValue(extPayload, "provenanceDetails", "fr") ||
       extractFieldValue(dbItem, "provenanceDetails", "fr"),
     provenanceDetails_en:
-      extPayload.provenanceDetails_en ||
+      extractFieldValue(extPayload, "provenanceDetails", "en") ||
       extractFieldValue(dbItem, "provenanceDetails", "en"),
     provenanceDetails_fr:
-      extPayload.provenanceDetails_fr ||
+      extractFieldValue(extPayload, "provenanceDetails", "fr") ||
       extractFieldValue(dbItem, "provenanceDetails", "fr"),
 
     condition_report_en:
-      extPayload.conditionReport_en ||
+      extractFieldValue(extPayload, "conditionReport", "en") ||
       extractFieldValue(dbItem, "conditionReport", "en"),
     condition_report_fr:
-      extPayload.conditionReport_fr ||
+      extractFieldValue(extPayload, "conditionReport", "fr") ||
       extractFieldValue(dbItem, "conditionReport", "fr"),
     conditionReport_en:
-      extPayload.conditionReport_en ||
+      extractFieldValue(extPayload, "conditionReport", "en") ||
       extractFieldValue(dbItem, "conditionReport", "en"),
     conditionReport_fr:
-      extPayload.conditionReport_fr ||
+      extractFieldValue(extPayload, "conditionReport", "fr") ||
       extractFieldValue(dbItem, "conditionReport", "fr"),
 
     historical_context_en:
-      extPayload.historicalContext_en ||
+      extractFieldValue(extPayload, "historicalContext", "en") ||
       extractFieldValue(dbItem, "historicalContext", "en"),
     historical_context_fr:
-      extPayload.historicalContext_fr ||
+      extractFieldValue(extPayload, "historicalContext", "fr") ||
       extractFieldValue(dbItem, "historicalContext", "fr"),
     historicalContext_en:
-      extPayload.historicalContext_en ||
+      extractFieldValue(extPayload, "historicalContext", "en") ||
       extractFieldValue(dbItem, "historicalContext", "en"),
     historicalContext_fr:
-      extPayload.historicalContext_fr ||
+      extractFieldValue(extPayload, "historicalContext", "fr") ||
       extractFieldValue(dbItem, "historicalContext", "fr"),
 
     collation_specs_en:
-      extPayload.collationSpecs_en ||
+      extractFieldValue(extPayload, "collationSpecs", "en") ||
       extractFieldValue(dbItem, "collationSpecs", "en"),
     collation_specs_fr:
-      extPayload.collationSpecs_fr ||
+      extractFieldValue(extPayload, "collationSpecs", "fr") ||
       extractFieldValue(dbItem, "collationSpecs", "fr"),
     collationSpecs_en:
-      extPayload.collationSpecs_en ||
+      extractFieldValue(extPayload, "collationSpecs", "en") ||
       extractFieldValue(dbItem, "collationSpecs", "en"),
     collationSpecs_fr:
-      extPayload.collationSpecs_fr ||
+      extractFieldValue(extPayload, "collationSpecs", "fr") ||
       extractFieldValue(dbItem, "collationSpecs", "fr"),
   };
 
@@ -669,6 +669,7 @@ export const saveCatalogAsync = async (items) => {
       if (!response.ok || !body?.ok) {
         throw new Error(body?.error || "Catalogusitems konden niet worden opgeslagen.");
       }
+      publicContentPromise = null;
     } catch (e) {
       console.error("Supabase catalog save failed", e);
       supabaseSuccess = false;
@@ -723,6 +724,7 @@ export const saveItemAsync = async (item) => {
       if (!response.ok || !body?.ok) {
         throw new Error(body?.error || "Het item kon niet in de cloudcatalogus worden opgeslagen.");
       }
+      publicContentPromise = null;
     } catch (e) {
       console.error("Supabase item save exception:", e);
       supabaseSuccess = false;
@@ -760,6 +762,7 @@ export const deleteItemAsync = async (itemId) => {
       if (!response.ok || !body?.ok) {
         throw new Error(body?.error || "Het item kon niet uit de cloudcatalogus worden verwijderd.");
       }
+      publicContentPromise = null;
     } catch (e) {
       console.error("Supabase item delete exception:", e);
       supabaseSuccess = false;

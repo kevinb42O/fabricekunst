@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Download, 
+  Download,
+  Save,
   Printer, 
   CheckCircle2, 
   ShieldCheck, 
@@ -26,6 +27,8 @@ import { captureCertificateCanvas } from '../../utils/certificatePdf';
 import jsPDF from 'jspdf';
 import FabriceSignature from './FabriceSignature';
 import GallerySeal from './GallerySeal';
+import { CERTIFICATE_TEXTS } from '../../utils/certificateDrafts.js';
+import useCertificateDrafts from '../../hooks/useCertificateDrafts.js';
 
 export default function CertificateManager({ 
   items = [], 
@@ -37,23 +40,25 @@ export default function CertificateManager({
   const [lang, setLang] = useState('nl');
   const [mobilePanel, setMobilePanel] = useState('details');
 
-  const [certNumber, setCertNumber] = useState('');
-  const [issuedTo, setIssuedTo] = useState('Particuliere Collectie');
-  const [certDate, setCertDate] = useState('');
-  const [customTitle, setCustomTitle] = useState('');
-  const [customSubtitle, setCustomSubtitle] = useState('');
-  const [customAuthor, setCustomAuthor] = useState('');
-  const [customPublisher, setCustomPublisher] = useState('');
-  const [customYear, setCustomYear] = useState('');
-  const [customBinding, setCustomBinding] = useState('');
-  const [customDimensions, setCustomDimensions] = useState('');
-  const [customProvenance, setCustomProvenance] = useState('');
-  const [customNotes, setCustomNotes] = useState('');
-  const [customGuaranteeText, setCustomGuaranteeText] = useState('');
+  const { draft, loading, ready, saving, dirty, error: draftError, updateField, saveAll, reload } = useCertificateDrafts(selectedItem, lang);
+  const { certNumber, issuedTo, certDate, customTitle, customSubtitle, customAuthor, customPublisher, customYear, customBinding, customDimensions, customProvenance, customNotes, customGuaranteeText, showImage, showSeal, showSignature } = draft;
+  const setCertNumber = value => updateField('certNumber', value);
+  const setIssuedTo = value => updateField('issuedTo', value);
+  const setCertDate = value => updateField('certDate', value);
+  const setCustomTitle = value => updateField('customTitle', value);
+  const setCustomSubtitle = value => updateField('customSubtitle', value);
+  const setCustomAuthor = value => updateField('customAuthor', value);
+  const setCustomPublisher = value => updateField('customPublisher', value);
+  const setCustomYear = value => updateField('customYear', value);
+  const setCustomBinding = value => updateField('customBinding', value);
+  const setCustomDimensions = value => updateField('customDimensions', value);
+  const setCustomProvenance = value => updateField('customProvenance', value);
+  const setCustomNotes = value => updateField('customNotes', value);
+  const setCustomGuaranteeText = value => updateField('customGuaranteeText', value);
+  const setShowImage = value => updateField('showImage', value);
+  const setShowSeal = value => updateField('showSeal', value);
+  const setShowSignature = value => updateField('showSignature', value);
 
-  const [showImage, setShowImage] = useState(true);
-  const [showSeal, setShowSeal] = useState(true);
-  const [showSignature, setShowSignature] = useState(true);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const [customSignature, setCustomSignature] = useState(() => {
@@ -87,80 +92,7 @@ export default function CertificateManager({
     return () => ro.disconnect();
   }, []);
 
-  const texts = {
-    nl: {
-      documentTitle: "CERTIFICAAT VAN ECHTHEID",
-      subTitle: "Gewaarborgde Echtheidsverklaring & Historisch Herkomstdocument",
-      issuedFor: "Gecertificeerd voor",
-      certNo: "Certificaat Nr.",
-      date: "Datum van uitgifte",
-      itemTitle: "Titel / Omschrijving",
-      authorPublisher: "Maker / Auteur / Atelier",
-      period: "Datering / Eeuw",
-      bindingMedium: "Materiaal / Uitvoering",
-      dimensions: "Formaat & Afmetingen",
-      provenance: "Geverifieerde Herkomst (Provenance)",
-      guaranteeHeader: "ECHTHEIDSGARANTIE",
-      guaranteeText: "Ondergetekende, namens Atelier Rembrandt, verklaart dat het hierboven beschreven antiquarische object grondig is onderzocht en in al zijn onderdelen 100% authentiek is bevonden. De vermelde herkomst, binding, drukgegevens en fysieke kenmerken komen overeen met de historische catalogisering.",
-      expertTitle: "Expert Boeken, Kunst & Historische Objecten",
-      galleryLocation: "ATELIER REMBRANDT",
-      verifyNotice: "Geregistreerd in het archief van Atelier Rembrandt onder de bovenstaande unieke referentie."
-    },
-    fr: {
-      documentTitle: "CERTIFICAT D'AUTHENTICITÉ",
-      subTitle: "Attestation d'Authenticité & Provenance Historique Certifiée",
-      issuedFor: "Délivré à l'attention de",
-      certNo: "N° de Certificat",
-      date: "Date d'émission",
-      itemTitle: "Titre / Description",
-      authorPublisher: "Créateur / Auteur / Atelier",
-      period: "Datation / Époque",
-      bindingMedium: "Matériau / Fabrication",
-      dimensions: "Collation & Dimensions",
-      provenance: "Provenance Historique Vérifiée",
-      guaranteeHeader: "GARANTIE D'AUTHENTICITÉ",
-      guaranteeText: "Le soussigné, pour le compte d'Atelier Rembrandt, certifie que l'œuvre antiquaire décrite ci-dessus a fait l'objet d'un examen approfondi et est garantie 100% authentique. Les spécifications de reliure, d'impression et de provenance sont rigoureusement conformes à nos recherches bibliographiques.",
-      expertTitle: "Expert en Livres Rares, Art & Objets Historiques",
-      galleryLocation: "ATELIER REMBRANDT",
-      verifyNotice: "Ce certificat est immatriculé dans les archives de l'Atelier Rembrandt sous la référence unique ci-dessus."
-    },
-    en: {
-      documentTitle: "CERTIFICATE OF AUTHENTICITY",
-      subTitle: "Official Statement of Authenticity & Historical Provenance",
-      issuedFor: "Issued to",
-      certNo: "Certificate No.",
-      date: "Date of Issue",
-      itemTitle: "Title / Description",
-      authorPublisher: "Maker / Author / Workshop",
-      period: "Date / Period",
-      bindingMedium: "Material / Construction",
-      dimensions: "Collation & Dimensions",
-      provenance: "Verified Provenance",
-      guaranteeHeader: "GUARANTEE OF AUTHENTICITY",
-      guaranteeText: "The undersigned, on behalf of Atelier Rembrandt, hereby guarantees that the antiquarian item described above has been thoroughly examined and verified as 100% genuine and authentic in all respects, matching the cataloged provenance and binding details.",
-      expertTitle: "Expert in Rare Books, Fine Art & Antiquities",
-      galleryLocation: "ATELIER REMBRANDT",
-      verifyNotice: "Officially registered in the archives of Atelier Rembrandt under the unique reference code above."
-    }
-  };
-
-  const t = texts[lang] || texts.nl;
-
-  useEffect(() => {
-    if (!selectedItem) return;
-    const refCode = selectedItem.ref ? selectedItem.ref.replace('FB-', '') : `${new Date().getFullYear()}-1042`;
-    setCertNumber(`COA-FB-${refCode}`);
-    setCertDate(new Date().toLocaleDateString('nl-NL', { year: 'numeric', month: 'long', day: 'numeric' }));
-    setCustomTitle(selectedItem.title || '');
-    setCustomSubtitle(selectedItem.subtitle || '');
-    setCustomAuthor(selectedItem.author || '');
-    setCustomPublisher(selectedItem.publisher || '');
-    setCustomYear(selectedItem.year || selectedItem.century || '');
-    setCustomBinding(selectedItem.binding || '');
-    setCustomDimensions(selectedItem.dimensions || '');
-    setCustomProvenance(selectedItem.provenance || '');
-    setCustomGuaranteeText(t.guaranteeText);
-  }, [selectedItem, lang]);
+  const t = CERTIFICATE_TEXTS[lang] || CERTIFICATE_TEXTS.nl;
 
   const handleItemChange = (itemId) => {
     const found = items.find(i => i.id === itemId);
@@ -188,8 +120,24 @@ export default function CertificateManager({
     if (onShowToast) onShowToast("Standaard handtekening hersteld.");
   };
 
+  const handleSave = async () => {
+    try {
+      if (!await saveAll()) return false;
+      onShowToast('Certificaatwijzigingen zijn opgeslagen.');
+      return true;
+    } catch (error) {
+      onShowToast(error.message, 'error');
+      return false;
+    }
+  };
+  const handleBack = async () => {
+    if (dirty && !await handleSave()) return;
+    onBackToItems();
+  };
+
   const handleDownloadPdf = async () => {
-    if (!certRef.current) return;
+    if (!certRef.current || !ready || saving || isGeneratingPdf) return;
+    if (dirty && !await handleSave()) return;
     setIsGeneratingPdf(true);
     try {
       const canvas = await captureCertificateCanvas(certRef.current);
@@ -201,7 +149,7 @@ export default function CertificateManager({
       const printHeight = (canvas.height * printWidth) / canvas.width;
       const pdfHeight = pdf.internal.pageSize.getHeight();
       pdf.addImage(imgData, 'JPEG', margin, margin, printWidth, Math.min(printHeight, pdfHeight - margin * 2));
-      pdf.save(`Echtheidscertificaat-${selectedItem?.ref || 'AtelierRembrandt'}.pdf`);
+      pdf.save(`Echtheidscertificaat-${selectedItem?.ref || 'AtelierRembrandt'}-${lang.toUpperCase()}.pdf`);
       if (onShowToast) onShowToast("PDF succesvol gegenereerd!");
     } catch (err) {
       console.error("Failed to generate PDF:", err);
@@ -230,7 +178,9 @@ export default function CertificateManager({
       <div className="admin-certificate__header flex-none bg-white border-b border-[#D8CEB8] shadow-sm px-6 py-3.5 flex items-center justify-between gap-4 print:hidden">
         <div className="flex items-center space-x-4">
           <button
-            onClick={onBackToItems}
+            onClick={handleBack}
+            aria-label="Terug naar CMS"
+            disabled={saving || isGeneratingPdf}
             className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#F4F0E8] hover:bg-[#EBE4D4] text-[#111111] text-sm font-bold transition-all border border-[#D8CEB8]"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -254,6 +204,8 @@ export default function CertificateManager({
               <button
                 key={l.code}
                 onClick={() => setLang(l.code)}
+                disabled={saving || isGeneratingPdf}
+                aria-pressed={lang === l.code}
                 className={`py-1 px-2.5 text-xs font-bold rounded-lg transition-all ${lang === l.code ? 'bg-[#111111] text-white shadow-sm' : 'text-stone-500 hover:text-[#111111]'}`}
               >
                 {l.label}
@@ -262,21 +214,37 @@ export default function CertificateManager({
           </div>
 
           <button
-            onClick={() => window.print()}
+            onClick={async () => { if (!dirty || await handleSave()) window.print(); }}
+            aria-label="Afdrukken"
+            disabled={!ready || saving || isGeneratingPdf}
             className="px-4 py-2 rounded-xl bg-[#F4F0E8] hover:bg-[#EBE4D4] text-[#111111] text-sm font-bold transition-all border border-[#D8CEB8] flex items-center space-x-2"
           >
             <Printer className="w-4 h-4" />
             <span>Afdrukken</span>
           </button>
 
+          <button type="button" onClick={handleSave} disabled={!ready || saving || isGeneratingPdf || !dirty}
+            className="px-4 py-2 rounded-xl bg-[#F4F0E8] border border-[#D8CEB8] flex items-center gap-2 text-sm font-bold disabled:opacity-50">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>{saving ? 'Opslaan…' : 'Opslaan'}</span>
+          </button>
+
           <button
             onClick={handleDownloadPdf}
-            disabled={isGeneratingPdf}
+            aria-label="Download PDF"
+            disabled={!ready || saving || isGeneratingPdf}
             className="px-5 py-2 rounded-xl bg-[#C5A059] hover:bg-[#b08b46] text-[#1C1A18] text-sm font-bold transition-all shadow-md flex items-center space-x-2 disabled:opacity-50"
           >
             {isGeneratingPdf ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Genereren...</span></> : <><Download className="w-4 h-4" /><span>Download PDF</span></>}
           </button>
         </div>
+      </div>
+
+      <div className="px-6 py-2 bg-white border-b border-[#D8CEB8] text-sm print:hidden" role="status" aria-live="polite">
+        {loading ? 'Opgeslagen certificaat laden…' : draftError ? (
+          <span className="text-red-700">{draftError} <button type="button" onClick={reload} disabled={saving} className="underline font-bold">Opgeslagen versie herladen</button></span>
+        ) : dirty ? 'Niet-opgeslagen wijzigingen. Downloaden en terugkeren naar het CMS bewaren eerst uw wijzigingen.'
+          : 'Alle wijzigingen bewaard. Certificaatteksten worden apart opgeslagen per object en taal.'}
       </div>
 
       {/* ============================================================ */}
@@ -296,7 +264,7 @@ export default function CertificateManager({
         {/* ---------------------------------------------------------- */}
         {/* LEFT: SPACIOUS EDITING FORM (Scrollable)                   */}
         {/* ---------------------------------------------------------- */}
-        <div className={`admin-certificate__form ${mobilePanel === 'details' ? 'is-mobile-active' : ''} w-[460px] flex-none bg-white border-r border-[#D8CEB8] overflow-y-auto p-7 space-y-7 print:hidden`}>
+        <fieldset disabled={!ready || saving || isGeneratingPdf} className={`admin-certificate__form ${mobilePanel === 'details' ? 'is-mobile-active' : ''} w-[460px] flex-none bg-white border-r border-[#D8CEB8] overflow-y-auto p-7 space-y-7 print:hidden`}>
           
           {/* Object Selector */}
           <div className="space-y-2">
@@ -429,7 +397,7 @@ export default function CertificateManager({
             </div>
           </div>
 
-        </div>
+        </fieldset>
 
         {/* ---------------------------------------------------------- */}
         {/* RIGHT: LIVE CERTIFICATE PREVIEW (Full remaining width)     */}

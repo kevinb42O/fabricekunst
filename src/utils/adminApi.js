@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient.js';
 
 /**
  * Fetch an administrator-only server endpoint with the current Supabase access
