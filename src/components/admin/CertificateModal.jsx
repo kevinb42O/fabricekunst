@@ -17,7 +17,7 @@ import {
   RotateCcw,
   Edit3
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { captureCertificateCanvas } from '../../utils/certificatePdf';
 import jsPDF from 'jspdf';
 import FabriceSignature from './FabriceSignature';
 import GallerySeal from './GallerySeal';
@@ -192,12 +192,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
     setIsGeneratingPdf(true);
 
     try {
-      const canvas = await html2canvas(certRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF'
-      });
+      const canvas = await captureCertificateCanvas(certRef.current);
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
       
@@ -218,7 +213,7 @@ export default function CertificateModal({ item: initialItem, items = [], onClos
       pdf.save(`Echtheidscertificaat-${selectedItem?.ref || 'AtelierRembrandt'}.pdf`);
     } catch (err) {
       console.error("Failed to generate PDF:", err);
-      alert("Er is een fout opgetreden bij het genereren van het PDF-bestand.");
+      alert(err.message || "Er is een fout opgetreden bij het genereren van het PDF-bestand.");
     } finally {
       setIsGeneratingPdf(false);
     }

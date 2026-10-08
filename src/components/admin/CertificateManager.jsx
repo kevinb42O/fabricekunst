@@ -22,7 +22,7 @@ import {
   Eye,
   SlidersHorizontal
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { captureCertificateCanvas } from '../../utils/certificatePdf';
 import jsPDF from 'jspdf';
 import FabriceSignature from './FabriceSignature';
 import GallerySeal from './GallerySeal';
@@ -192,12 +192,7 @@ export default function CertificateManager({
     if (!certRef.current) return;
     setIsGeneratingPdf(true);
     try {
-      const canvas = await html2canvas(certRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#FFFFFF'
-      });
+      const canvas = await captureCertificateCanvas(certRef.current);
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -210,7 +205,7 @@ export default function CertificateManager({
       if (onShowToast) onShowToast("PDF succesvol gegenereerd!");
     } catch (err) {
       console.error("Failed to generate PDF:", err);
-      alert("Er is een fout opgetreden bij het genereren van het PDF-bestand.");
+      alert(err.message || "Er is een fout opgetreden bij het genereren van het PDF-bestand.");
     } finally {
       setIsGeneratingPdf(false);
     }
