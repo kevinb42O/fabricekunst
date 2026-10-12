@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
 import { 
   X, ShieldCheck, Maximize2, ChevronLeft, ChevronRight, Award, Bookmark, 
@@ -7,7 +8,7 @@ import {
 import ImageZoomModal from './ImageZoomModal';
 import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus, getLocalizedPrice } from '../utils/translationService';
+import { getItemField, getLocalizedCentury, getLocalizedCategory, getLocalizedStatus } from '../utils/translationService';
 import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
 import PriceAssurance from './PriceAssurance';
 
@@ -64,8 +65,8 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
           <div className="flex items-center space-x-3">
             <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono border ${
               item.status === 'Beschikbaar' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-              item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-              'bg-stone-100 text-stone-700 border-stone-300'
+              item.status === 'Gereserveerd' ? 'artwork-status--reserved bg-transparent border-transparent' :
+              'artwork-status--unavailable bg-transparent border-transparent'
             }`}>
               {getLocalizedStatus(item.status, language)}
             </span>
@@ -160,22 +161,10 @@ export default function ItemDetailModal({ item, onClose, onRequestInquiry }) {
                 </p>
               </div>
 
-              <div className="flex items-center justify-between border-b border-[#D8CEB8]/70 pb-4">
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
-                  <span className="text-2xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
-                  <PriceAssurance compact className="max-w-sm" />
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono border inline-block ${
-                    item.status === 'Beschikbaar' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                    item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-                    'bg-stone-100 text-stone-700 border-stone-300'
-                  }`}>
-                    {getLocalizedStatus(item.status, language)}
-                  </span>
-                </div>
+              <div className="border-b border-[#D8CEB8]/70 pb-4">
+                <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
+                <ArtworkPriceStatus item={item} showAvailable priceClassName="text-2xl font-serif font-bold text-[#B8860B]" />
+                <PriceAssurance compact className="max-w-sm" />
               </div>
 
               {/* Specs */}

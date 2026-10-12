@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, ShieldCheck, Award, Maximize2, ChevronLeft, ChevronRight, 
@@ -9,7 +10,7 @@ import ImageZoomModal from './ImageZoomModal';
 import ComparableSalesSection from './ComparableSalesSection';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedItemDetailLabels } from '../data/catalogTaxonomy';
-import { getItemField, getLocalizedStatus, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
+import { getItemField, getLocalizedPrice, getLocalizedCentury, getLocalizedCategory } from '../utils/translationService';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { getImagePresentation, rememberImagePresentation } from '../utils/imagePresentation';
 import { trackItemViewed } from '../hooks/useAnalytics';
@@ -427,22 +428,10 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
               </div>
 
               {/* Price & Status Display */}
-              <div className="detail-summary-price flex items-center justify-between border-b border-[#D8CEB8]/70 pb-6">
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
-                  <span className="text-3xl font-serif font-bold text-[#B8860B]">{getLocalizedPrice(item.price, language)}</span>
-                  <PriceAssurance showDuties className="max-w-md" />
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block mb-1">{t('item_detail.status')}</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono border inline-block ${
-                    item.status === 'Beschikbaar' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
-                    item.status === 'Gereserveerd' ? 'bg-amber-50 text-amber-800 border-amber-300' :
-                    'bg-stone-100 text-stone-700 border-stone-300'
-                  }`}>
-                    {getLocalizedStatus(item.status, language)}
-                  </span>
-                </div>
+              <div className="detail-summary-price border-b border-[#D8CEB8]/70 pb-6">
+                <span className="text-[10px] font-mono font-bold text-[#666666] uppercase block">{t('item_detail.valuationPrice')}</span>
+                <ArtworkPriceStatus item={item} showAvailable priceClassName="text-3xl font-serif font-bold text-[#B8860B]" />
+                <PriceAssurance showDuties className="max-w-md" />
               </div>
 
               {/* Quick Bibliographic Specs Grid */}
@@ -569,9 +558,7 @@ export default function ItemDetailPage({ item, onNavigateBack, onRequestInquiry,
       <div className="md:hidden fixed bottom-0 inset-x-0 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#D8CEB8] p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] z-40 shadow-lg flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <span className="text-[10px] font-mono text-[#8E7035] font-bold uppercase tracking-wider block">{item.ref}</span>
-          <span className="text-base font-serif font-bold text-[#111111] block leading-tight truncate">
-            {getLocalizedPrice(item.price, language)}
-          </span>
+          <ArtworkPriceStatus item={item} priceClassName="text-base font-serif font-bold text-[#111111] leading-tight" />
           <span className="mt-0.5 block truncate font-sans text-[7px] font-bold uppercase tracking-[0.08em] text-[#6A6056]">{t('commerce.shippingIncluded')}</span>
         </div>
 

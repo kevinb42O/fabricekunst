@@ -1,8 +1,9 @@
 import React from 'react';
+import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCategory, getLocalizedPrice } from '../utils/translationService';
+import { getItemField, getLocalizedCategory } from '../utils/translationService';
 import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
 import { rememberImagePresentation } from '../utils/imagePresentation';
@@ -149,7 +150,7 @@ export default function TopstukkenShowcase({
               )}
 
               <div className="mobile-spotlight-details border-t border-[#D8CEB8]/60 pt-6">
-                <span className="text-2xl sm:text-3xl font-serif font-bold text-[#111111]">{getLocalizedPrice(spotlightItem.price, language)}</span>
+                <ArtworkPriceStatus item={spotlightItem} priceClassName="text-2xl sm:text-3xl font-serif font-bold text-[#111111]" />
               </div>
             </div>
           </motion.div>
@@ -259,9 +260,7 @@ export default function TopstukkenShowcase({
 
                   {/* Pinned Bottom Details Bar */}
                   <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-auto">
-                    <span className="text-lg sm:text-xl font-serif font-bold text-[#111111]">
-                      {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
-                    </span>
+                    <ArtworkPriceStatus item={item} priceClassName="text-lg sm:text-xl font-serif font-bold text-[#111111]" />
                   </div>
                 </motion.div>
               );

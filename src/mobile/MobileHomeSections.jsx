@@ -1,7 +1,8 @@
 import React, { useId, useState } from 'react';
+import ArtworkPriceStatus from '../components/ArtworkPriceStatus';
 import { ArrowRight, BookOpenCheck, ChevronDown, FileCheck2, ShieldCheck, Truck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getItemField, getLocalizedCategory, getLocalizedPrice, getLocalizedStatus } from '../utils/translationService';
+import { getItemField, getLocalizedCategory } from '../utils/translationService';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
 import CollectorListSection from '../components/CollectorListSection';
@@ -89,8 +90,6 @@ export default function MobileHomeSections({
 
           <div className="mt-8 space-y-12 min-[600px]:grid min-[600px]:grid-cols-2 min-[600px]:gap-x-6 min-[600px]:gap-y-10 min-[600px]:space-y-0">
             {selected.map((item, index) => {
-              const status = getLocalizedStatus(item.status, language);
-              const isAvailable = String(item.status || '').toLowerCase() === 'beschikbaar';
               return (
                 <a
                   key={item.id}
@@ -128,13 +127,8 @@ export default function MobileHomeSections({
                     <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-[#8E7035]" aria-hidden="true" />
                   </span>
 
-                  <span className="mt-5 flex items-start justify-between gap-4 border-t border-[#E8DFCF] pt-4">
-                    <span>
-                      <strong className="font-serif text-lg text-[#111111]">{getLocalizedPrice(item.price, language)}</strong>
-                    </span>
-                    {!isAvailable && (
-                      <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6D5A3A]">{status}</span>
-                    )}
+                  <span className="mt-5 block border-t border-[#E8DFCF] pt-4">
+                    <ArtworkPriceStatus item={item} priceClassName="font-serif text-lg font-bold text-[#111111]" />
                   </span>
                 </a>
               );

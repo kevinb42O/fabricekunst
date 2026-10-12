@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -23,7 +24,6 @@ import {
   getItemField,
   getLocalizedCategory,
   getLocalizedCentury,
-  getLocalizedPrice,
   getLocalizedStatus
 } from '../utils/translationService';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
@@ -183,7 +183,7 @@ function getStatusTone(status) {
     case 'Verkocht':
       return {
         text: 'text-stone-500',
-        dot: 'bg-stone-400'
+        dot: 'bg-red-500'
       };
     default:
       return {
@@ -839,7 +839,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                         {/* Status Badge (if reserved or sold) */}
                         {item.status !== 'Beschikbaar' && (
                           <div className="absolute top-3 right-3 z-10">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.16em] bg-[#111111]/85 text-[#FBFBFA] backdrop-blur-sm shadow-sm">
+                            <span className="inline-flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] bg-[#111111]/85 text-[#FBFBFA] backdrop-blur-sm shadow-sm">
                               <span className={`h-1.5 w-1.5 rounded-full ${statusTone.dot}`} />
                               <span>{getLocalizedStatus(item.status, language)}</span>
                             </span>
@@ -875,11 +875,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
 
                         {/* Bottom Row - Pinned to bottom of card */}
                         <div className="mt-auto pt-3.5 flex items-center justify-between border-t border-[#E8DFCF]/40">
-                          <div>
-                            <span className="text-sm font-serif font-bold text-[#111111]">
-                              {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
-                            </span>
-                          </div>
+                          <ArtworkPriceStatus item={item} />
 
                         </div>
                       </div>
@@ -893,7 +889,6 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                 {filteredItems.map((item, index) => {
                   const primaryMeta = getPrimaryMeta(item);
                   const secondaryMeta = getSecondaryMeta(item, language);
-                  const statusTone = getStatusTone(item.status);
                   const mediaOnRight = index % 2 === 1;
 
                   return (
@@ -971,16 +966,7 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
                           </p>
 
                           <div className="mt-6 flex flex-col gap-4 border-t border-[#E8DFCF]/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-4">
-                              <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] ${statusTone.text}`}>
-                                <span className={`h-1.5 w-1.5 rounded-full ${statusTone.dot}`} />
-                                <span>{getLocalizedStatus(item.status, language)}</span>
-                              </span>
-                              <span className="text-[#E8DFCF]">|</span>
-                              <span className="text-lg font-serif font-bold text-[#111111] lg:text-xl">
-                                {getLocalizedPrice(item.price, language) || t('topstukken.priceOnRequest')}
-                              </span>
-                            </div>
+                            <ArtworkPriceStatus item={item} showAvailable priceClassName="text-lg font-serif font-bold text-[#111111] lg:text-xl" />
 
                             <div className="flex items-center gap-x-6">
                               <a

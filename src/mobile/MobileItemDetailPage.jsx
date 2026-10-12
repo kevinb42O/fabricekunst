@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ArtworkPriceStatus from '../components/ArtworkPriceStatus';
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,8 +22,7 @@ import {
   getItemField,
   getLocalizedCategory,
   getLocalizedCentury,
-  getLocalizedPrice,
-  getLocalizedStatus
+  getLocalizedPrice
 } from '../utils/translationService';
 import { trackItemViewed } from '../hooks/useAnalytics';
 import PriceAssurance from '../components/PriceAssurance';
@@ -74,12 +74,6 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
   const currentIndex = catalog.findIndex((candidate) => candidate.id === item.id);
   const previousItem = currentIndex > 0 ? catalog[currentIndex - 1] : null;
   const nextItem = currentIndex >= 0 && currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : null;
-  const normalizedStatus = String(item.status || '').toLowerCase();
-  const statusClass = normalizedStatus.includes('reserv')
-    ? 'border-amber-300 bg-amber-50 text-amber-900'
-    : (normalizedStatus.includes('verkocht') || normalizedStatus.includes('sold') || normalizedStatus.includes('vendu'))
-      ? 'border-stone-300 bg-stone-100 text-stone-700'
-      : 'border-emerald-300 bg-emerald-50 text-emerald-800';
 
   const handleInquiryClick = () => {
     onRequestInquiry?.(item);
@@ -283,18 +277,10 @@ export default function MobileItemDetailPage({ item, onNavigateBack, onRequestIn
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 border-b border-[#D8CEB8] py-5">
-            <div>
-              <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6A6056]">{t('item_detail.valuationPrice')}</span>
-              <strong className="mt-1 block font-serif text-2xl text-[#8E7035]">{getLocalizedPrice(item.price, language)}</strong>
-              <PriceAssurance compact className="col-span-2 max-w-[18rem]" />
-            </div>
-            <div className="text-right">
-              <span className="font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6A6056]">{t('item_detail.status')}</span>
-              <span className={`mt-2 inline-flex min-h-8 items-center rounded-full border px-3 font-sans text-[10px] font-bold uppercase tracking-wider ${statusClass}`}>
-                {getLocalizedStatus(item.status, language)}
-              </span>
-            </div>
+          <div className="border-b border-[#D8CEB8] py-5">
+            <span className="block font-sans text-[10px] font-bold uppercase tracking-[0.14em] text-[#6A6056]">{t('item_detail.valuationPrice')}</span>
+            <ArtworkPriceStatus item={item} showAvailable className="mt-1" priceClassName="font-serif text-2xl font-bold text-[#8E7035]" />
+            <PriceAssurance compact className="max-w-[18rem]" />
           </div>
 
           <section aria-labelledby="mobile-artwork-contact" className="mt-8 border-y border-[#D8CEB8] py-6">

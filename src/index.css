@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  --color-artwork-unavailable: #8B3434;
+  --color-artwork-reserved: #B45309;
+  --color-artwork-sold-price: #666666;
   /* Fluid Typography Scale Tokens (Claude Fable 5 & Awwwards Luxury Standard) */
   --text-hero: clamp(2.75rem, 6.5vw, 6.5rem);
   --text-hero-sub: clamp(1.75rem, 4.2vw, 4.25rem);
@@ -23,6 +26,25 @@
   --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-reveal: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-architectural: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.artwork-status--unavailable {
+  color: var(--color-artwork-unavailable);
+}
+
+.artwork-status--reserved {
+  color: var(--color-artwork-reserved);
+}
+
+.artwork-price-status .artwork-price--sold {
+  color: var(--color-artwork-sold-price);
+}
+
+.artwork-price--struck {
+  white-space: nowrap;
+  text-decoration-line: line-through;
+  text-decoration-color: var(--color-artwork-unavailable);
+  text-decoration-thickness: 1px;
 }
 
 @media (min-width: 64rem) {
