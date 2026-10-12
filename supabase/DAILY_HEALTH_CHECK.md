@@ -29,6 +29,12 @@ returns 503. Responses cannot be cached or indexed.
 
 ## Verification and operation
 
+Implementation validation: the full 103-test suite and production build pass.
+The deployed preview returns 200 with all three checks healthy, 401 without
+authorization and 405 for POST. Preview's existing R2 configuration differs
+from Production, so validate public content in a staged Production deployment
+before assigning the live domains.
+
 After deployment, verify the task appears under Project Settings → Cron Jobs
 and use its Run control. Check the matching production log entry: all three
 checks must report `ok: true`. Confirm an unauthenticated HTTP request returns
