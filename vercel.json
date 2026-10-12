@@ -1,5 +1,16 @@
 {
   "cleanUrls": true,
+  "functions": {
+    "api/supabase-health.js": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/supabase-health",
+      "schedule": "0 6 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
