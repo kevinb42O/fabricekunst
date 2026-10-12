@@ -1,3 +1,4 @@
+import { isCatalogItemPublished, mergeCatalogItemExtension } from "../../src/utils/catalogPublication.js";
 import {
   DeleteObjectsCommand,
   HeadObjectCommand,
@@ -69,11 +70,9 @@ export const buildPublicContentSnapshot = async (supabase) => {
       console.warn("Dedicated provenance publication could not be read:", error.message);
     }
   }
-  const catalog = (items || []).map((item) => {
+  const catalog = (items || []).filter(isCatalogItemPublished).map((item) => {
     const extension = parseSetting(byKey.get(`item_ext_${item.id}`));
-    return extension && typeof extension === "object"
-      ? { ...item, ...extension }
-      : item;
+    return mergeCatalogItemExtension(item, extension);
   });
   const snapshot = {
     schemaVersion: 2,

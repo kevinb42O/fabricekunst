@@ -1,3 +1,4 @@
+import { isCatalogItemPublished } from "../../src/utils/catalogPublication.js";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import {
   getR2Client,
@@ -43,5 +44,6 @@ export async function readPublicContentSnapshot() {
   if (snapshot?.schemaVersion !== 2 || !Array.isArray(snapshot.catalog)) {
     throw new Error("Invalid R2 public content snapshot");
   }
-  return { pointer, snapshot, serialized };
+  snapshot.catalog = snapshot.catalog.filter(isCatalogItemPublished);
+  return { pointer, snapshot, serialized: JSON.stringify(snapshot) };
 }

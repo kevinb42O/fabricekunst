@@ -10,8 +10,8 @@ const getTooltipTarget = (node) => {
 
 const prepareTooltipTarget = (target) => {
   const nativeTitle = target.getAttribute('title');
-  if (nativeTitle && !target.dataset.adminTooltip) {
-    target.dataset.adminTooltip = nativeTitle;
+  if (nativeTitle) {
+    if (!target.dataset.adminTooltip) target.dataset.adminTooltip = nativeTitle;
     target.removeAttribute('title');
   }
 
@@ -25,7 +25,7 @@ const prepareTooltipTarget = (target) => {
 
 const getPointerPosition = (clientX, clientY) => {
   const estimatedWidth = 260;
-  const estimatedHeight = 48;
+  const estimatedHeight = 90;
   const edge = 12;
   const offset = 16;
   const alignEnd = clientX + offset + estimatedWidth > window.innerWidth - edge;
@@ -47,6 +47,7 @@ export default function AdminTooltip() {
   const inputMode = useRef('pointer');
   const pointerPosition = useRef({ x: 0, y: 0 });
   const animationFrame = useRef(null);
+  const hoverTimer = useRef(null);
 
   useEffect(() => {
     const disconnectDescription = () => {
@@ -73,18 +74,31 @@ export default function AdminTooltip() {
     };
 
     const hideTooltip = () => {
+      window.clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
       disconnectDescription();
       activeTarget.current = null;
       setTooltip(null);
     };
 
+    const getDetails = (target) => ({
+      description: target.dataset.adminTooltipDescription || '',
+      tone: target.dataset.adminTooltipTone === 'danger' ? 'danger' : 'default',
+    });
+
     const showPointerTooltip = (target, event) => {
       const text = prepareTooltipTarget(target);
       if (!text) return;
-      disconnectDescription();
+      hideTooltip();
       activeTarget.current = target;
       pointerPosition.current = { x: event.clientX, y: event.clientY };
-      setTooltip({ text, mode: 'pointer', ...getPointerPosition(event.clientX, event.clientY) });
+      hoverTimer.current = window.setTimeout(() => {
+        hoverTimer.current = null;
+        if (activeTarget.current !== target || !target.isConnected) return;
+        const { x, y } = pointerPosition.current;
+        connectDescription(target);
+        setTooltip({ text, ...getDetails(target), mode: 'pointer', ...getPointerPosition(x, y) });
+      }, 180);
     };
 
     const handlePointerOver = (event) => {
@@ -140,14 +154,17 @@ export default function AdminTooltip() {
       const text = prepareTooltipTarget(target);
       if (!text) return;
 
+      window.clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
       const rect = target.getBoundingClientRect();
-      const placeAbove = rect.bottom + 58 > window.innerHeight;
+      const placeAbove = rect.bottom + 100 > window.innerHeight;
       activeTarget.current = target;
       connectDescription(target);
       setTooltip({
         text,
+        ...getDetails(target),
         mode: 'focus',
-        x: Math.min(Math.max(rect.left + rect.width / 2, 24), window.innerWidth - 24),
+        x: Math.min(Math.max(rect.left + rect.width / 2, 142), Math.max(142, window.innerWidth - 142)),
         y: placeAbove ? rect.top - 10 : rect.bottom + 10,
         vertical: placeAbove ? 'above' : 'below',
         align: 'center'
@@ -186,6 +203,7 @@ export default function AdminTooltip() {
       document.removeEventListener('focusout', handleFocusOut, true);
       window.removeEventListener('scroll', hideTooltip, true);
       window.removeEventListener('blur', hideTooltip);
+      window.clearTimeout(hoverTimer.current);
       disconnectDescription();
       if (animationFrame.current) window.cancelAnimationFrame(animationFrame.current);
     };
@@ -200,8 +218,9 @@ export default function AdminTooltip() {
       style={{ left: tooltip.x, top: tooltip.y }}
       role="tooltip"
     >
-      <div className="admin-tooltip">
-        {tooltip.text}
+      <div className={`admin-tooltip ${tooltip.description ? 'admin-tooltip--explained' : ''} is-${tooltip.tone}`}>
+        <span className="admin-tooltip__title">{tooltip.text}</span>
+        {tooltip.description && <span className="admin-tooltip__description">{tooltip.description}</span>}
       </div>
     </div>,
     document.body

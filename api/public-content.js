@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       res.setHeader('Allow', 'GET, HEAD');
       return res.status(405).send('Method Not Allowed');
     }
-    let catalogItems = [];
+    let catalogItems = INITIAL_CATALOG;
     let rembrandtProject = null;
     if (!getR2ConfigurationError()) {
       try {
@@ -36,7 +36,6 @@ export default async function handler(req, res) {
         console.error('Sitemap snapshot read failed:', error.message);
       }
     }
-    if (!catalogItems.length) catalogItems = INITIAL_CATALOG;
     const sitemap = buildSitemapXml(catalogItems, { rembrandtProject });
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60');

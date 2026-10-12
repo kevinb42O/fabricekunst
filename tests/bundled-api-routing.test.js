@@ -41,10 +41,12 @@ test('catalog mutations still require administrator authorization after bundling
   assert.match(res.headers['Cache-Control'], /no-store/);
 });
 
-test('catalog reads cannot trigger a mutation through the compatibility URL', async () => {
+test('private catalog reads require administrator authorization through the compatibility URL', async () => {
   const res = response();
   await publishHandler(rewriteRequest('/api/catalog-items', 'GET'), res);
-  assert.equal(res.statusCode, 405);
+  assert.ok([401, 503].includes(res.statusCode));
+  assert.match(res.body.error, /bearer token|configuration is incomplete/);
+  assert.match(res.headers['Cache-Control'], /no-store/);
 });
 
 test('LLMs aliases retain their GET/HEAD method policy inside the public function', async () => {

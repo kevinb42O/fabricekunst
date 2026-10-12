@@ -1,3 +1,4 @@
+import { isCatalogItemPublished, mergeCatalogItemExtension } from "../../src/utils/catalogPublication.js";
 import { getServerSupabase, requireActiveAdmin, sendJson } from './adminAuth.js';
 import { getR2ConfigurationError } from './r2.js';
 import { publishPublicContentSnapshot } from './publicContent.js';
@@ -28,19 +29,50 @@ export const parseCatalogMutation = (body) => {
 // mapper, while item_ext_* retains every editor field for public publication.
 export const toStoredCatalogItem = (item) => ({
   ...item,
+  ...(typeof item.isPublished === 'boolean' || typeof item.is_published === 'boolean' ? {
+    isPublished: isCatalogItemPublished(item),
+    is_published: isCatalogItemPublished(item),
+  } : {}),
   category: getCategorySlug(item.category),
   collectionGroup: getCollectionGroupForItem(item),
 });
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method Not Allowed' });
+export const createCatalogItemsHandler = ({
+  getSupabase = getServerSupabase, authorize = requireActiveAdmin,
+  publish = publishPublicContentSnapshot,
+} = {}) => async function handler(req, res) {
+  if (!['GET', 'POST'].includes(req.method)) return sendJson(res, 405, { error: 'Method Not Allowed' });
   const contentLength = Number.parseInt(req.headers['content-length'] || '0', 10);
   if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
     return sendJson(res, 413, { error: 'De cataloguswijziging is te groot.' });
   }
-  const supabase = getServerSupabase();
-  const authorization = await requireActiveAdmin(req, supabase);
+  const supabase = getSupabase();
+  const authorization = await authorize(req, supabase);
   if (!authorization.ok) return sendJson(res, authorization.status, { error: authorization.error });
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  if (req.method === 'GET') {
+    try {
+      const [{ data: items, error: itemsError }, { data: settings, error: settingsError }] = await Promise.all([
+        supabase.from('items').select('*').order('created_at', { ascending: false }),
+        supabase.from('admin_settings').select('key,value').like('key', 'item_ext_%'),
+      ]);
+      if (itemsError) throw itemsError;
+      if (settingsError) throw settingsError;
+      const extensions = new Map((settings || []).map((row) => {
+        let value = row.value;
+        if (typeof value === 'string') {
+          try { value = JSON.parse(value); } catch { value = null; }
+        }
+        return [row.key, value];
+      }));
+      return sendJson(res, 200, { ok: true, catalog: (items || []).map((item) =>
+        mergeCatalogItemExtension(item, extensions.get(`item_ext_${item.id}`))) });
+    } catch (error) {
+      console.error('[catalog-items] Admin read failed:', error.message);
+      return sendJson(res, 503, { error: 'De beheercatalogus kon niet worden geladen. Probeer opnieuw.' });
+    }
+  }
   const mutation = parseCatalogMutation(req.body);
   if (!mutation) return sendJson(res, 400, { error: 'Ongeldige cataloguswijziging.' });
   try {
@@ -58,10 +90,12 @@ export default async function handler(req, res) {
         saved: true,
       });
     }
-    await publishPublicContentSnapshot(supabase);
+    await publish(supabase);
     return sendJson(res, 200, { ok: true });
   } catch (error) {
     console.error('[catalog-items] Mutation failed:', error?.message || error);
     return sendJson(res, 503, { error: 'De cataloguswijziging kon niet veilig worden opgeslagen.' });
   }
-}
+};
+
+export default createCatalogItemsHandler();

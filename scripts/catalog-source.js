@@ -1,3 +1,4 @@
+import { isCatalogItemPublished } from "../src/utils/catalogPublication.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -60,8 +61,7 @@ export async function loadCatalogForBuild() {
       const snapshot = await snapshotResponse.json();
       if (
         snapshot?.schemaVersion === 2 &&
-        Array.isArray(snapshot?.catalog) &&
-        snapshot.catalog.length
+        Array.isArray(snapshot?.catalog)
       ) {
         let provenanceData = snapshot.provenanceData || null;
         try {
@@ -82,7 +82,7 @@ export async function loadCatalogForBuild() {
           console.warn(`R2 provenance fetch warning: ${error.message}`);
         }
         return {
-          items: snapshot.catalog,
+          items: snapshot.catalog.filter(isCatalogItemPublished),
           project: access?.schemaVersion === 1 && access?.enabled === true
             ? snapshot.rembrandtProject || null
             : { isEnabled: false },

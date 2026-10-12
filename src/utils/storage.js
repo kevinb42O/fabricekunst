@@ -1,3 +1,4 @@
+import { isCatalogItemPublished } from "./catalogPublication.js";
 import { INITIAL_CATALOG } from "../data/initialCatalog";
 import {
   getCategorySlug,
@@ -449,6 +450,7 @@ const mapDbItemToFrontend = (dbItem) => {
     category: getCategorySlug(dbItem.category || ""),
     price: dbItem.price || "",
     status: dbItem.status || "Beschikbaar",
+    isPublished: typeof dbItem.is_published === "boolean" ? dbItem.is_published : dbItem.isPublished !== false,
     featured: Boolean(dbItem.featured),
     condition: dbItem.condition || "",
     binding: dbItem.binding || "",
@@ -592,8 +594,8 @@ export const fetchCatalogAsync = async () => {
   if (isSupabaseConfigured()) {
     try {
       const snapshot = await fetchPublicContentSnapshot();
-      if (Array.isArray(snapshot.catalog) && snapshot.catalog.length > 0) {
-        const mapped = snapshot.catalog.map(mapDbItemToFrontend);
+      if (Array.isArray(snapshot.catalog)) {
+        const mapped = snapshot.catalog.filter(isCatalogItemPublished).map(mapDbItemToFrontend);
         clearCatalogBrowserCache();
         return mapped;
       }
@@ -601,7 +603,20 @@ export const fetchCatalogAsync = async () => {
       console.error("R2 catalog fetch failed, falling back to bundled data", e);
     }
   }
-  return getCatalog();
+  return getCatalog().filter(isCatalogItemPublished);
+};
+
+export const fetchAdminCatalogAsync = async () => {
+  if (!isSupabaseConfigured() || !supabase) return getCatalog();
+  const response = await authenticatedAdminFetch("/api/catalog-items", {
+    method: "GET", credentials: "same-origin", cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok || !body?.ok || !Array.isArray(body.catalog)) {
+    throw new Error(body?.error || "De beheercatalogus kon niet worden geladen.");
+  }
+  return body.catalog.map(mapDbItemToFrontend);
 };
 
 export const saveCatalog = (items) => {

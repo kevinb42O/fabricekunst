@@ -634,20 +634,45 @@
 }
 
 .admin-tooltip {
-  padding: 7px 9px;
-  border: 1px solid #d4d4d4;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.97);
-  color: #262626;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.11), 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 8px 11px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 9px;
+  background: rgba(40, 38, 35, 0.98);
+  color: #faf9f6;
+  box-shadow: 0 8px 24px rgb(25 22 18 / 18%), 0 2px 5px rgb(25 22 18 / 10%);
   font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 550;
-  letter-spacing: -0.005em;
-  line-height: 1.35;
+  line-height: 1.4;
   white-space: normal;
-  animation: admin-tooltip-in 110ms ease-out both;
-  backdrop-filter: blur(10px);
+  animation: admin-tooltip-in 130ms ease-out both;
+  backdrop-filter: blur(12px);
+}
+
+.admin-tooltip--explained {
+  width: 248px;
+  max-width: calc(100vw - 24px);
+  padding: 11px 13px;
+}
+
+.admin-tooltip__title {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin-tooltip__description {
+  display: block;
+  margin-top: 4px;
+  color: #cecac2;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.admin-tooltip.is-danger .admin-tooltip__title {
+  color: #ffb8b2;
 }
 
 @keyframes admin-tooltip-in {
@@ -713,10 +738,152 @@
   background: var(--admin-subtle) !important;
 }
 
-.admin-item-editor__header button:last-child {
+.admin-item-editor__header > div:last-child > button:last-child {
   border-color: var(--admin-action-border) !important;
   background: var(--admin-primary) !important;
   color: var(--admin-primary-text) !important;
+}
+
+.admin-item-photo {
+  width: 100%;
+  height: 100%;
+}
+
+.admin-item-photo__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  background: #f5f5f3;
+  color: #706e68;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.admin-item-photo__placeholder svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 1.25;
+}
+
+.admin-item-photo--compact .admin-item-photo__placeholder svg {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-item-editor__header .admin-item-editor__secondary-action {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #73716b !important;
+  padding: 8px 10px;
+}
+
+.admin-item-editor__header .admin-item-editor__secondary-action:hover {
+  background: #f4f4f2 !important;
+  color: #2b2824 !important;
+}
+
+.admin-item-editor__field-header {
+  gap: 12px;
+}
+
+.admin-item-editor .admin-item-editor__nvt {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 3px 5px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #73716b;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-item-editor .admin-item-editor__nvt:hover {
+  background: #f1f0ed;
+  color: #57534e;
+}
+
+.admin-item-editor .admin-item-editor__nvt[aria-pressed="true"] {
+  background: #f0ede5;
+  color: #756443;
+}
+
+.admin-item-editor .admin-item-editor__nvt:focus-visible,
+.admin-item-editor__header .admin-item-editor__secondary-action:focus-visible {
+  outline: 2px solid #9b8b6c;
+  outline-offset: 2px;
+}
+
+.admin-item-editor__languages {
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #e9e8e5;
+  border-radius: 10px;
+  background: #f4f4f2;
+}
+
+.admin-item-editor__header .admin-item-editor__language {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 116px;
+  height: 36px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent !important;
+  color: #73716b !important;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.admin-item-editor__header .admin-item-editor__language:hover {
+  background: #eeedea !important;
+  color: #2b2824 !important;
+}
+
+.admin-item-editor__header .admin-item-editor__language[aria-pressed="true"] {
+  background: #fff !important;
+  color: #2b2824 !important;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%) !important;
+}
+
+.admin-item-editor__header .admin-item-editor__language:focus-visible {
+  outline: 2px solid #9b8b6c;
+  outline-offset: 2px;
+}
+
+.admin-item-editor__header .admin-item-editor__language-count {
+  display: flex;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  color: #9a7843 !important;
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-item-editor__header .admin-item-editor__language-count[data-complete="true"] {
+  color: #67816c !important;
 }
 
 .admin-item-editor__header h3,

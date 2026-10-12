@@ -1,3 +1,4 @@
+import { isCatalogItemPublished } from "./catalogPublication.js";
 import { getItemSlug } from "./itemSlug.js";
 import { REMBRANDT_PROJECT_ROUTE } from "./rembrandtProject.js";
 import { DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_URL } from "./seo.js";
@@ -69,7 +70,7 @@ export function buildSitemapXml(
   { rembrandtProject = null } = {},
 ) {
   const seen = new Set();
-  const uniqueItems = catalogItems.filter((item) => {
+  const uniqueItems = catalogItems.filter(isCatalogItemPublished).filter((item) => {
     const slug = getItemSlug(item);
     if (!slug || seen.has(slug)) return false;
     seen.add(slug);

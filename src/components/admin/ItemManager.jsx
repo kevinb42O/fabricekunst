@@ -1,3 +1,4 @@
+import { getCatalogItemStatus, withCatalogItemStatus, isCatalogItemPublished, needsCatalogPublication, hasCatalogPhoto } from "../../utils/catalogPublication.js";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -58,6 +59,26 @@ import {
   copyTextToClipboard,
   parseAiJsonTranslation,
 } from "../../utils/translationService";
+
+function ItemPhoto({ item, compact = false, imageClassName = "" }) {
+  const src = (Array.isArray(item.images) ? item.images.find((image) => image?.url && !image.__ext__)?.url : null) || item.image;
+  const [failedSrc, setFailedSrc] = useState(null);
+  const hasImage = src && failedSrc !== src;
+  const placeholder = src ? "Foto niet beschikbaar" : "Nog geen foto";
+
+  return (
+    <div className={`admin-item-photo ${compact ? "admin-item-photo--compact" : ""}`}>
+      {hasImage ? (
+        <img src={src} alt={item.title || ""} onError={() => setFailedSrc(src)} className={`w-full h-full object-cover ${imageClassName}`} />
+      ) : (
+        <div className="admin-item-photo__placeholder" role="img" aria-label={`${placeholder}: ${item.title || "object"}`} title={placeholder}>
+          <ImageIcon aria-hidden="true" />
+          <span className={compact ? "sr-only" : ""}>{placeholder}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const createComparableSale = () => ({
   id: `sale-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -367,6 +388,7 @@ export default function ItemManager({
     category: "literature-philosophy",
     price: "Prijs op aanvraag",
     status: "Beschikbaar",
+    isPublished: false,
     featured: false,
     condition:
       "Excellente antiquarische staat. Originele band met goudstempels.",
@@ -518,7 +540,7 @@ export default function ItemManager({
   const renderFieldHeader = (label, field, required = false) => {
     const isNvt = isFieldNvt(field, formLang);
     return (
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="admin-item-editor__field-header flex items-center justify-between mb-1.5">
         <label className="block text-xs font-mono font-bold text-[#111111] uppercase tracking-wider">
           {label} {required && <span className="text-rose-500">*</span>}
           <span className="text-[#B8860B] text-[10px] ml-1 font-mono">
@@ -528,18 +550,17 @@ export default function ItemManager({
         <button
           type="button"
           onClick={() => toggleFieldNvt(field, formLang)}
-          className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center space-x-1 cursor-pointer border ${
-            isNvt
-              ? "bg-amber-100 text-amber-900 border-amber-400 font-bold shadow-xs"
-              : "bg-stone-100 hover:bg-stone-200 text-stone-600 border-stone-300"
-          }`}
+          className="admin-item-editor__nvt"
+          aria-pressed={isNvt}
+          aria-label={`${label}: ${isNvt ? "niet van toepassing, klik om weer in te vullen" : "markeer als niet van toepassing"}`}
           title={
             isNvt
               ? "Klik om weer in te vullen"
               : "Markeer dit veld als N.v.t. / Bewust leeg"
           }
         >
-          <span>{isNvt ? "✓ Bewust Leeg (N.v.t.)" : "+ Markeer N.v.t."}</span>
+          {isNvt && <Check className="w-3 h-3" aria-hidden="true" />}
+          <span>N.v.t.</span>
         </button>
       </div>
     );
@@ -742,7 +763,7 @@ export default function ItemManager({
     if (onShowToast) onShowToast(`${count} vertaalvelden zijn geïmporteerd.`);
   };
 
-  const handleDuplicate = (item) => {
+  const handleDuplicate = async (item) => {
     let newRef = `FB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
     while (items.some((i) => i.ref === newRef)) {
       newRef = `FB-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
@@ -753,16 +774,33 @@ export default function ItemManager({
       id: `item-${Date.now()}`,
       ref: newRef,
       title: `${item.title} (Kopie)`,
+      isPublished: false,
+      is_published: false,
     };
-    onSaveItem(duplicatedItem);
-    if (onShowToast) onShowToast(`Gedupliceerd: "${duplicatedItem.title}"`);
+    try {
+      const result = await onSaveItem(duplicatedItem);
+      if (!result || result.success === false || result.error) throw new Error(result?.error || "Dupliceren mislukt.");
+      onShowToast?.(`Kopie als concept opgeslagen: "${duplicatedItem.title}"`);
+    } catch (error) {
+      onShowToast?.(error.message, "error");
+    }
   };
 
-  const handleStatusChange = (item, newStatus) => {
-    const updated = { ...item, status: newStatus };
-    onSaveItem(updated);
-    if (onShowToast)
-      onShowToast(`Status van "${item.title}" gewijzigd naar ${newStatus}`);
+  const handleStatusChange = async (item, newStatus) => {
+    const updated = withCatalogItemStatus(item, newStatus);
+    // Publishing a draft always goes through the editor's explicit save action.
+    if (needsCatalogPublication(updated, item)) {
+      handleEdit(item);
+      setEditingItem(updated);
+      return;
+    }
+    try {
+      const result = await onSaveItem(updated);
+      if (!result || result.success === false || result.error) throw new Error(result?.error || "Opslaan mislukt.");
+      onShowToast?.(newStatus === "Concept" ? `"${item.title}" is als concept opgeslagen en staat niet online.` : `Status van "${item.title}" gewijzigd naar ${newStatus}`);
+    } catch (error) {
+      onShowToast?.(error.message, "error");
+    }
   };
 
   const handleBatchStatusChange = async (newStatus) => {
@@ -772,11 +810,16 @@ export default function ItemManager({
     );
     try {
       await Promise.all(
-        selectedItems.map((item) => onSaveItem({ ...item, status: newStatus })),
+        selectedItems.map(async (item) => {
+          const updated = { ...item, status: newStatus };
+          const result = await onSaveItem(updated);
+          if (!result || result.success === false || result.error) throw new Error(result?.error || "Opslaan mislukt.");
+          return result;
+        }),
       );
       if (onShowToast)
         onShowToast(
-          `Status van ${selectedItems.length} objecten gewijzigd naar "${newStatus}"`,
+          `Verkoopstatus van ${selectedItems.length} objecten gewijzigd naar "${newStatus}". Concepten blijven offline.`,
         );
       setSelectedItemIds([]);
     } catch (error) {
@@ -813,6 +856,12 @@ export default function ItemManager({
       return;
     }
 
+    if (needsCatalogPublication(editingItem, items.find((item) => item.id === editingItem.id)) && !hasCatalogPhoto(editingItem)) {
+      onShowToast?.("Voeg minstens één foto toe voordat u dit item publiceert. U kunt het wel als concept opslaan.", "error");
+      setEditorTab("specs");
+      return;
+    }
+
     if (isUploading) {
       if (onShowToast)
         onShowToast(
@@ -834,7 +883,7 @@ export default function ItemManager({
     const invalidPublishedSaleIndex = (
       editingItem.comparableSales || []
     ).findIndex((sale) => sale.published && !isComparableSaleComplete(sale));
-    if (invalidPublishedSaleIndex !== -1) {
+    if (isCatalogItemPublished(editingItem) && invalidPublishedSaleIndex !== -1) {
       if (onShowToast)
         onShowToast(
           `Comparable sale ${invalidPublishedSaleIndex + 1} is onvolledig of bevat een ongeldige URL of datum.`,
@@ -904,7 +953,7 @@ export default function ItemManager({
           "info",
         );
     }
-    if (onShowToast) onShowToast(`"${editingItem.title}" is opgeslagen.`);
+    if (onShowToast) onShowToast(isCatalogItemPublished(editingItem) ? `"${editingItem.title}" is opgeslagen en staat online.` : `"${editingItem.title}" is als concept opgeslagen. Het staat niet online.`);
     setEditingItem(null);
   };
   handleSaveFormRef.current = handleSaveForm;
@@ -1134,7 +1183,7 @@ export default function ItemManager({
     const itemTypeVal = item.itemType || "book";
     const matchesType = typeFilter === "Alle" || itemTypeVal === typeFilter;
     const matchesStatus =
-      statusFilter === "Alle" || item.status === statusFilter;
+      statusFilter === "Alle" || getCatalogItemStatus(item) === statusFilter;
     const matchesCategory =
       categoryFilter === "Alle" ||
       getCategorySlug(item.category) === categoryFilter;
@@ -1168,7 +1217,7 @@ export default function ItemManager({
         return Number.isFinite(century) ? century * 100 : item.century || "";
       }
       case "status":
-        return item.status || "";
+        return getCatalogItemStatus(item);
       case "price": {
         return parsePriceForSort(item.price);
       }
@@ -1244,9 +1293,9 @@ export default function ItemManager({
     );
   };
 
-  const availableCount = items.filter((i) => i.status === "Beschikbaar").length;
-  const reservedCount = items.filter((i) => i.status === "Gereserveerd").length;
-  const soldCount = items.filter((i) => i.status === "Verkocht").length;
+  const availableCount = items.filter((i) => isCatalogItemPublished(i) && i.status === "Beschikbaar").length;
+  const reservedCount = items.filter((i) => isCatalogItemPublished(i) && i.status === "Gereserveerd").length;
+  const soldCount = items.filter((i) => isCatalogItemPublished(i) && i.status === "Verkocht").length;
   const groupCounts = COLLECTION_GROUPS.reduce(
     (counts, group) => ({
       ...counts,
@@ -1329,6 +1378,7 @@ export default function ItemManager({
             className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-gray-400 cursor-pointer"
           >
             <option value="Alle">Status: Alle</option>
+            <option value="Concept">Concepten</option>
             <option value="Beschikbaar">Beschikbaar</option>
             <option value="Gereserveerd">Gereserveerd</option>
             <option value="Verkocht">Verkocht</option>
@@ -1478,10 +1528,6 @@ export default function ItemManager({
               </thead>
               <tbody className="divide-y divide-[#EAE4D8]">
                 {sortedItems.map((item) => {
-                  const img =
-                    item.images?.[0]?.url ||
-                    item.image ||
-                    "/images/scarron-spines-white-bg.jpg";
                   const isSelected = selectedItemIds.includes(item.id);
                   const translationStatus = getItemTranslationStatus(item);
 
@@ -1507,11 +1553,7 @@ export default function ItemManager({
 
                       <td className="p-3.5">
                         <div className="w-11 h-11 rounded-xl bg-stone-100 border border-[#D8CEB8] overflow-hidden shrink-0">
-                          <img
-                            src={img}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
+                          <ItemPhoto item={item} compact />
                         </div>
                       </td>
 
@@ -1574,14 +1616,16 @@ export default function ItemManager({
                       <td className="p-3.5 whitespace-nowrap">
                         <span
                           className={`px-3 py-1 rounded-full text-[11px] font-serif font-bold ${
-                            item.status === "Beschikbaar"
+                            !isCatalogItemPublished(item)
+                              ? "bg-slate-100 text-slate-700 border border-slate-300"
+                              : item.status === "Beschikbaar"
                               ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                               : item.status === "Gereserveerd"
                                 ? "bg-amber-100 text-amber-800 border border-amber-300"
                                 : "bg-stone-200 text-stone-700 border border-stone-300"
                           }`}
                         >
-                          {item.status}
+                          {getCatalogItemStatus(item)}
                         </span>
                       </td>
 
@@ -1599,6 +1643,7 @@ export default function ItemManager({
                             className="p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-[#B8860B] hover:bg-[#B8860B] hover:text-white transition-colors"
                             aria-label="Certificaat maken"
                             data-admin-tooltip="Certificaat maken"
+                            data-admin-tooltip-description="Maak een echtheidscertificaat voor dit object."
                           >
                             <Award className="w-3.5 h-3.5" />
                           </button>
@@ -1609,20 +1654,22 @@ export default function ItemManager({
                             className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
                             aria-label="Object bewerken"
                             data-admin-tooltip="Bewerken"
+                            data-admin-tooltip-description="Open dit object om gegevens en foto’s aan te passen."
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
 
-                          <a
+                          {isCatalogItemPublished(item) && (<a
                             href={`/collectie/${item.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 rounded-lg bg-[#FAF7F2] border border-[#D8CEB8] text-[#111111] hover:bg-[#111111] hover:text-white transition-colors"
                             aria-label="Object op de website bekijken"
                             data-admin-tooltip="Bekijken op de website"
+                            data-admin-tooltip-description="Open de gepubliceerde pagina in een nieuw tabblad."
                           >
                             <ImageIcon className="w-3.5 h-3.5" />
-                          </a>
+                          </a>)}
 
                           <button
                             type="button"
@@ -1633,6 +1680,8 @@ export default function ItemManager({
                             className="p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
                             aria-label="Object verwijderen"
                             data-admin-tooltip="Verwijderen"
+                            data-admin-tooltip-description="Open de bevestiging om dit object te verwijderen."
+                            data-admin-tooltip-tone="danger"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1655,6 +1704,7 @@ export default function ItemManager({
                                 ? "Topstukmarkering verwijderen"
                                 : "Als topstuk markeren"
                             }
+                            data-admin-tooltip-description={item.featured ? "Haal dit object uit de selectie topstukken." : isCatalogItemPublished(item) ? "Neem dit object op in de selectie topstukken." : "Markeer als topstuk. Het concept blijft offline tot u publiceert."}
                           >
                             <Star
                               className={`w-3.5 h-3.5 ${item.featured ? "fill-current" : ""}`}
@@ -1722,10 +1772,6 @@ export default function ItemManager({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((item) => {
             const translationStatus = getItemTranslationStatus(item);
-            const mainImgUrl =
-              item.images && item.images[0]?.url
-                ? item.images[0].url
-                : item.image || "/images/scarron-spines-white-bg.jpg";
             const isMenuOpen = openMenuId === item.id;
 
             return (
@@ -1737,11 +1783,7 @@ export default function ItemManager({
               >
                 {/* Top Hero Image Showcase */}
                 <div className="relative aspect-[4/3] w-full bg-[#FAF7F2] overflow-hidden border-b border-[#EAE4D8]">
-                  <img
-                    src={mainImgUrl}
-                    alt={item.title || ""}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-1000 ease-out"
-                  />
+                  <ItemPhoto item={item} imageClassName="group-hover:scale-108 transition-transform duration-1000 ease-out" />
 
                   {/* Subtle Dark Vignette Overlay on Hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -1773,7 +1815,8 @@ export default function ItemManager({
 
                     {/* Quick Status Select Pill */}
                     <select
-                      value={item.status}
+                      aria-label={`Status van ${item.title}`}
+                      value={getCatalogItemStatus(item)}
                       onChange={(e) => handleStatusChange(item, e.target.value)}
                       className={`text-[10px] font-bold px-3 py-1 rounded-full cursor-pointer focus:outline-none shadow-sm border transition-all duration-300 ${
                         item.status === "Beschikbaar"
@@ -1783,6 +1826,7 @@ export default function ItemManager({
                             : "bg-stone-900/95 text-white border-stone-800 hover:bg-black"
                       }`}
                     >
+                      <option value="Concept" className="bg-white text-stone-900 font-sans">Concept — niet online</option>
                       <option
                         value="Beschikbaar"
                         className="bg-white text-stone-900 font-sans"
@@ -1806,7 +1850,7 @@ export default function ItemManager({
 
                   {/* Hover Quick Action Overlay on Image Bottom */}
                   <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center justify-between z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
-                    <a
+                    {isCatalogItemPublished(item) && (<a
                       href={`/collectie/${item.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1814,7 +1858,7 @@ export default function ItemManager({
                     >
                       <ExternalLink className="w-3 h-3" />
                       <span>Bekijk op site</span>
-                    </a>
+                    </a>)}
 
                     <button
                       type="button"
@@ -1971,7 +2015,7 @@ export default function ItemManager({
                               <span>Dupliceer item</span>
                             </button>
 
-                            <a
+                            {isCatalogItemPublished(item) && (<a
                               href={`/collectie/${item.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -1980,7 +2024,7 @@ export default function ItemManager({
                             >
                               <ExternalLink className="w-4 h-4 shrink-0 text-stone-500" />
                               <span>Bekijk op site</span>
-                            </a>
+                            </a>)}
 
                             <div className="my-1 border-t border-stone-100" />
 
@@ -2044,46 +2088,36 @@ export default function ItemManager({
               </div>
 
               {/* Center section: Multi-language status indicators */}
-              <div className="hidden lg:flex items-center space-x-1.5 bg-[#23201D] p-1.5 rounded-xl border border-[#332F2B]">
+              <div className="admin-item-editor__languages hidden lg:flex" aria-label="Invoertaal">
                 {[
-                  { id: "nl", label: "Nederlands" },
-                  { id: "en", label: "English" },
-                  { id: "fr", label: "Français" },
+                  { id: "nl", label: "Nederlands", adjective: "Nederlandse" },
+                  { id: "en", label: "English", adjective: "Engelse" },
+                  { id: "fr", label: "Français", adjective: "Franse" },
                 ].map((lang) => {
                   const status =
                     getItemTranslationStatus(editingItem).details[lang.id];
                   const isMissing = status?.missing?.length > 0;
                   const isActive = formLang === lang.id;
+                  const missing = status?.missing || [];
+                  const missingPreview = missing.slice(0, 4).join(", ");
+                  const remaining = missing.length - 4;
+                  const tooltipTitle = `${lang.label} · ${isMissing ? `${missing.length} ${missing.length === 1 ? "veld ontbreekt" : "velden ontbreken"}` : "compleet"}`;
+                  const tooltipDescription = `${isActive ? `U bewerkt de ${lang.adjective} teksten.` : `Klik om de ${lang.adjective} teksten te bewerken.`}\n${isMissing ? `Nog aan te vullen: ${missingPreview}${remaining > 0 ? ` en ${remaining} ${remaining === 1 ? "ander veld" : "andere velden"}` : ""}.` : "Alle gecontroleerde velden zijn ingevuld of gemarkeerd als N.v.t."}`;
 
                   return (
                     <button
                       key={lang.id}
                       type="button"
                       onClick={() => setFormLang(lang.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
-                        isActive
-                          ? "bg-[#C5A059] text-black font-bold shadow-xs"
-                          : "text-stone-300 hover:text-white hover:bg-white/5"
-                      }`}
+                      className="admin-item-editor__language"
+                      aria-pressed={isActive}
+                      aria-label={tooltipTitle}
+                      data-admin-tooltip={tooltipTitle}
+                      data-admin-tooltip-description={tooltipDescription}
                     >
                       <span>{lang.label}</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                          isActive
-                            ? "bg-black/20 text-black"
-                            : isMissing
-                              ? "bg-amber-500/20 text-amber-300"
-                              : "bg-emerald-500/20 text-emerald-300"
-                        }`}
-                      >
-                        {isMissing ? (
-                          `${status.missing.length} open`
-                        ) : (
-                          <>
-                            <Check className="w-3 h-3" aria-hidden="true" />
-                            <span className="sr-only">Compleet</span>
-                          </>
-                        )}
+                      <span className="admin-item-editor__language-count" data-complete={!isMissing} aria-hidden="true">
+                        {isMissing ? status.missing.length : <Check className="w-3.5 h-3.5" />}
                       </span>
                     </button>
                   );
@@ -2095,12 +2129,13 @@ export default function ItemManager({
                 <button
                   type="button"
                   onClick={handleCopyAiPrompt}
-                  className="px-3.5 py-2 rounded-xl bg-[#25221F] hover:bg-[#332F2B] text-stone-200 hover:text-white text-xs font-mono font-semibold transition-all border border-[#3A3530] flex items-center space-x-1.5 cursor-pointer"
-                  title="Kopieer gegevens van actieve taal als prompt voor ChatGPT / Claude"
+                  className="admin-item-editor__secondary-action px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 cursor-pointer"
+                  aria-label="Prompt kopiëren"
+                  title={`Kopieer AI-prompt voor ${formLang.toUpperCase()}`}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
                   <span className="hidden xl:inline">
-                    1. Kopieer AI Prompt ({formLang.toUpperCase()})
+                    Prompt kopiëren
                   </span>
                   <span className="xl:hidden">Prompt</span>
                 </button>
@@ -2108,12 +2143,13 @@ export default function ItemManager({
                 <button
                   type="button"
                   onClick={() => setShowAiImportModal(true)}
-                  className="px-3.5 py-2 rounded-xl bg-[#25221F] hover:bg-[#332F2B] text-stone-200 hover:text-white text-xs font-mono font-semibold transition-all border border-[#3A3530] flex items-center space-x-1.5 cursor-pointer"
-                  title="Plak JSON van ChatGPT of Claude"
+                  className="admin-item-editor__secondary-action px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 cursor-pointer"
+                  aria-label="Vertaling importeren"
+                  title="Importeer een vertaling van ChatGPT of Claude"
                 >
                   <Download className="w-3.5 h-3.5 text-[#C5A059]" />
                   <span className="hidden xl:inline">
-                    2. Importeer Vertaling
+                    Vertaling importeren
                   </span>
                   <span className="xl:hidden">Importeer</span>
                 </button>
@@ -2124,10 +2160,7 @@ export default function ItemManager({
                   className="px-5 py-2 rounded-xl bg-[#C5A059] hover:bg-[#B8860B] text-black font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center space-x-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <CheckCircle2 className="w-4 h-4 text-black" />
-                  <span>Opslaan</span>
-                  <span className="text-[10px] opacity-70 font-mono hidden sm:inline">
-                    (Cmd+S)
-                  </span>
+                  <span>{!isCatalogItemPublished(editingItem) ? "Concept opslaan" : needsCatalogPublication(editingItem, items.find((item) => item.id === editingItem.id)) ? "Opslaan en publiceren" : "Opslaan"}</span>
                 </button>
               </div>
             </header>
@@ -2271,22 +2304,24 @@ export default function ItemManager({
 
                     <div>
                       <label className="block text-[10px] font-mono font-bold text-[#666666] uppercase tracking-wider mb-1">
-                        Status *
+                        Status / publicatie *
                       </label>
                       <select
-                        value={editingItem.status}
+                        aria-label="Status / publicatie"
+                        value={getCatalogItemStatus(editingItem)}
                         onChange={(e) =>
-                          setEditingItem({
-                            ...editingItem,
-                            status: e.target.value,
-                          })
+                          setEditingItem(withCatalogItemStatus(editingItem, e.target.value))
                         }
                         className="w-full px-3.5 py-2.5 rounded-xl bg-[#F9F7F2] border border-[#E0D9CC] text-xs text-[#1C1A18] font-semibold focus:outline-none focus:border-[#1C1A18]"
                       >
+                        <option value="Concept">Concept — niet online</option>
                         <option value="Beschikbaar">Beschikbaar</option>
                         <option value="Gereserveerd">Gereserveerd</option>
                         <option value="Verkocht">Verkocht (Archief)</option>
                       </select>
+                      <p className="mt-1.5 text-[11px] text-[#666666]" aria-live="polite">
+                        {!isCatalogItemPublished(editingItem) ? "Alleen zichtbaar in het beheer. U kunt later verderwerken." : needsCatalogPublication(editingItem, items.find((item) => item.id === editingItem.id)) ? "Komt online zodra u opslaat en publiceert." : "Dit item staat online."}
+                      </p>
                     </div>
 
                     <div>

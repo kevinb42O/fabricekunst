@@ -1,3 +1,4 @@
+import { isCatalogItemPublished } from "./utils/catalogPublication.js";
 import React, { Suspense, lazy, useState, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { motion, useScroll, useSpring } from "framer-motion";
@@ -50,6 +51,7 @@ const REMBRANDT_PREVIEW_SESSION_KEY = 'atelier_rembrandt_private_preview_token';
 import {
   getCatalog,
   fetchCatalogAsync,
+  fetchAdminCatalogAsync,
   saveCatalogAsync,
   saveItemAsync,
   deleteItemAsync,
@@ -77,7 +79,10 @@ export default function App() {
   useAnalytics();
   const { isMobile } = useResponsiveMode();
   const { language } = useLanguage();
-  const [catalog, setCatalog] = useState(getCatalog());
+  const [catalog, setCatalog] = useState(() => getCatalog().filter(isCatalogItemPublished));
+  const [adminCatalog, setAdminCatalog] = useState(null);
+  const [adminCatalogError, setAdminCatalogError] = useState("");
+  const [adminCatalogReload, setAdminCatalogReload] = useState(0);
   const [inquiries, setInquiries] = useState([]);
   const [heroImage, setHeroImage] = useState(getHeroImage());
   const [mobileHeroImage, setMobileHeroImage] = useState(getMobileHeroImage());
@@ -97,6 +102,20 @@ export default function App() {
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAdminCatalog(null);
+    setAdminCatalogError("");
+    if (adminLoggedIn) {
+      fetchAdminCatalogAsync().then((items) => {
+        if (!cancelled) setAdminCatalog(items);
+      }).catch((error) => {
+        if (!cancelled) setAdminCatalogError(error.message);
+      });
+    }
+    return () => { cancelled = true; };
+  }, [adminLoggedIn, adminCatalogReload]);
 
   const handleSaveHeroImage = async (updatedImage) => {
     await saveHeroImageAsync(updatedImage);
@@ -131,7 +150,7 @@ export default function App() {
     let handlePreviewVisibility = null;
     // Initial fetch from Supabase (with fallback to local storage)
     fetchCatalogAsync().then((items) => {
-      if (items && items.length > 0) setCatalog(items);
+      if (items) setCatalog(items);
     });
 
     fetchHeroImageAsync().then((img) => {
@@ -538,15 +557,14 @@ export default function App() {
   const handleSaveItem = async (itemToSave) => {
     const res = await saveItemAsync(itemToSave);
     if (res && res.success !== false) {
-      setCatalog((currentCatalog) => {
-        const index = currentCatalog.findIndex(
-          (item) => item.id === itemToSave.id,
-        );
-        if (index === -1) return [itemToSave, ...currentCatalog];
-        const updatedCatalog = [...currentCatalog];
-        updatedCatalog[index] = itemToSave;
-        return updatedCatalog;
-      });
+      const upsert = (items) => {
+        const current = items || [];
+        const index = current.findIndex((item) => item.id === itemToSave.id);
+        if (index === -1) return [itemToSave, ...current];
+        return current.map((item) => item.id === itemToSave.id ? itemToSave : item);
+      };
+      setAdminCatalog(upsert);
+      setCatalog((items) => upsert(items).filter(isCatalogItemPublished));
     }
     return res;
   };
@@ -554,9 +572,8 @@ export default function App() {
   const handleDeleteItem = async (idToDelete) => {
     const res = await deleteItemAsync(idToDelete);
     if (res && res.success !== false) {
-      setCatalog((currentCatalog) =>
-        currentCatalog.filter((item) => item.id !== idToDelete),
-      );
+      setCatalog((items) => items.filter((item) => item.id !== idToDelete));
+      setAdminCatalog((items) => (items || []).filter((item) => item.id !== idToDelete));
     }
     return res;
   };
@@ -617,6 +634,16 @@ export default function App() {
   };
 
   // Dedicated Admin Screen Mode
+  if (adminLoggedIn && adminCatalog === null) {
+    return (
+      <div className="min-h-screen bg-[#F9F7F2] flex flex-col items-center justify-center gap-4 p-6" role="status">
+        <p>{adminCatalogError || "Beheercatalogus laden…"}</p>
+        {adminCatalogError && <button onClick={() => setAdminCatalogReload((value) => value + 1)} className="px-4 py-2 bg-[#1C1A18] text-white rounded-xl">Opnieuw proberen</button>}
+        <button onClick={handleCloseAdmin} className="text-sm underline">Terug naar de site</button>
+      </div>
+    );
+  }
+
   if (adminLoggedIn) {
     return (
       <Suspense
@@ -628,8 +655,8 @@ export default function App() {
         }
       >
         <AdminDashboard
-          items={catalog}
-          catalog={catalog}
+          items={adminCatalog}
+          catalog={adminCatalog}
           inquiries={inquiries}
           heroImage={heroImage}
           mobileHeroImage={mobileHeroImage}
@@ -668,9 +695,6 @@ export default function App() {
             setAdminUser(user);
             setAdminLoggedIn(true);
             refreshInquiries();
-            fetchCatalogAsync().then((items) => {
-              if (items) setCatalog(items);
-            });
           }}
         />
       </Suspense>

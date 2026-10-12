@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     res.setHeader("Allow", "GET, HEAD");
     return res.status(405).send("Method Not Allowed");
   }
-  let catalogItems = [];
+  let catalogItems = INITIAL_CATALOG;
   let rembrandtProject = null;
 
   if (!getR2ConfigurationError()) {
@@ -25,7 +25,6 @@ export default async function handler(req, res) {
     }
   }
 
-  if (!catalogItems.length) catalogItems = INITIAL_CATALOG;
 
   const itemsMarkdown = catalogItems
     .map((item, index) => {
