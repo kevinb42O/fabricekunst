@@ -108,7 +108,7 @@ export default function TopstukkenShowcase({
                       {item.author && <p className="text-sm sm:text-base font-serif italic text-[#555555]">{item.author} {item.year ? `(${item.year})` : ''}</p>}
                       {getItemField(item, 'subtitle', language) && <p className="text-sm font-serif text-[#666666] leading-relaxed">{getItemField(item, 'subtitle', language)}</p>}
                     </div>
-                    {index === 0 && getItemField(item, 'provenance', language) && (
+                    {getItemField(item, 'provenance', language) && (
                       <div className="border-l border-[#8E7035] pl-4 py-2 space-y-1.5 bg-neutral-50">
                         <span className="text-xs font-serif tracking-[0.16em] text-[#8E7035] uppercase font-semibold block">{t('topstukken.provenanceBadge')}</span>
                         <p className="text-sm font-serif text-[#333333] leading-relaxed">{getItemField(item, 'provenance', language)}</p>
