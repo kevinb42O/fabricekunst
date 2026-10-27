@@ -215,14 +215,15 @@
   text-wrap: balance;
 }
 
-/* Topstukken follow the source photo's proportions. Contain also protects
-   the full image when the safety height limit is reached; never crop or zoom. */
+/* Fit the image itself within both limits, preserving its intrinsic ratio.
+   Portraits stay complete without letterboxing inside a forced-width box. */
 .featured-artwork-image {
   display: block;
-  width: 100%;
+  width: auto;
   max-width: 100%;
   height: auto;
   max-height: 48rem;
+  margin-inline: auto;
   object-fit: contain;
   object-position: center;
 }

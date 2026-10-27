@@ -98,7 +98,7 @@ export default function TopstukkenShowcase({
           >
             {/* Spotlight Photography (Frameless, Pristine Edge-to-Edge) */}
             <div className="lg:col-span-7 min-w-0">
-              <div className="relative w-full min-w-0 overflow-hidden bg-neutral-50">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <img
                   src={spotlightItem.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                   alt={getItemField(spotlightItem, 'title', language)}
@@ -203,7 +203,7 @@ export default function TopstukkenShowcase({
                 >
                   <div className="space-y-4">
                     {/* Image Showcase (High-Fashion Editorial Frameless) */}
-                    <div className="w-full min-w-0 bg-neutral-50 overflow-hidden relative group/img">
+                    <div className="w-full min-w-0 overflow-hidden relative">
                       <img
                         src={mainImage}
                         alt={itemTitle}
@@ -214,7 +214,6 @@ export default function TopstukkenShowcase({
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
                         className="featured-artwork-image"
                       />
-                      <div className="absolute inset-0 bg-[#111111]/0 group-hover:bg-[#111111]/5 transition-colors duration-500 pointer-events-none" />
                     </div>
 
                     {/* Body Content */}

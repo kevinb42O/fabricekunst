@@ -101,7 +101,7 @@ export default function MobileHomeSections({
                   }}
                   className={`block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80 ${index === 0 ? 'min-[600px]:col-span-2' : ''}`}
                 >
-                  <span className="block w-full min-w-0 overflow-hidden bg-[#F1ECE3]">
+                  <span className="block w-full min-w-0 overflow-hidden">
                     <img
                       src={item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                       alt={getItemField(item, 'title', language)}
