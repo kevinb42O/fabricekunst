@@ -21,20 +21,26 @@ const works = Array.from({ length: 4 }, (_, index) => ({
   images: [{ url: `/image-${index}.jpg` }], price: index === 3 ? '€ 250.000' : 'Prijs op aanvraag',
 }));
 
-test('each gallery position becomes a full portrait row with the price beside its description', async () => {
+test('four full rows alternate text right, left, right, left before and after image loads', async () => {
   let renderer;
-  await act(async () => { renderer = create(React.createElement(Showcase, { items: works })); });
-  for (let index = 1; index < 4; index++) {
-    const image = renderer.root.findByProps({ src: `/image-${index}.jpg` });
-    await act(async () => image.props.onLoad({ currentTarget: { currentSrc: `/image-${index}.jpg`, naturalWidth: 900, naturalHeight: 1200 } }));
+  const extra = { ...works[0], id: 'extra', title: 'Fifth work', featuredOrder: 4 };
+  await act(async () => { renderer = create(React.createElement(Showcase, { items: [...works, extra] })); });
+  assert.equal(renderer.root.findAllByProps({ className: 'featured-work__layout' }).length, 4);
+  assert.equal(renderer.root.findAllByProps({ 'aria-label': 'Fifth work' }).length, 0);
+  for (let index = 0; index < 4; index++) {
     const card = renderer.root.findByProps({ role: 'link', 'aria-label': `Work ${index}` });
-    assert.match(card.props.className, /featured-work--portrait md:col-span-12/);
-    const content = card.findByProps({ className: 'featured-work__content min-w-0' });
+    const expected = index % 2 === 0 ? 'featured-work--text-right' : 'featured-work--text-left';
+    assert.ok(card.props.className.includes(expected));
+    const image = card.findByType('img');
+    await act(async () => image.props.onLoad({ currentTarget: { currentSrc: `/image-${index}.jpg`, naturalWidth: index % 2 ? 1600 : 900, naturalHeight: 1200 } }));
+    assert.ok(card.props.className.includes(expected));
+    const content = card.findByProps({ className: 'featured-work__content min-w-0 space-y-6' });
     assert.equal(content.findByProps({ 'data-price-for': `work-${index}` }).children[0], works[index].price);
   }
-  // Replacing the photo must recalculate its layout using the new source.
-  const changed = works.map(item => item.id === 'work-3' ? { ...item, images: [{ url: '/replacement-landscape.jpg' }] } : item);
-  await act(async () => renderer.update(React.createElement(Showcase, { items: changed })));
-  assert.doesNotMatch(renderer.root.findByProps({ role: 'link', 'aria-label': 'Work 3' }).props.className, /featured-work--portrait/);
+  // Alternation follows the chosen order, never a work's identity or image ratio.
+  const reordered = [...works].reverse().map((item, index) => ({ ...item, featuredOrder: index }));
+  await act(async () => renderer.update(React.createElement(Showcase, { items: reordered })));
+  assert.match(renderer.root.findByProps({ role: 'link', 'aria-label': 'Work 3' }).props.className, /featured-work--text-right/);
+  assert.match(renderer.root.findByProps({ role: 'link', 'aria-label': 'Work 0' }).props.className, /featured-work--text-left/);
   await act(async () => renderer.unmount());
 });

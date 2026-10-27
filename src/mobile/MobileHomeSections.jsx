@@ -77,7 +77,7 @@ export default function MobileHomeSections({
   const { language } = useLanguage();
   const labels = COPY[language] || COPY.en;
   const featured = getFeaturedItems(items);
-  const selected = featured.slice(0, 3);
+  const selected = featured.slice(0, 4);
   const questions = Array.isArray(faqItems) ? faqItems : [];
   const [openFaq, setOpenFaq] = useState(null);
   const faqBaseId = useId();
@@ -90,8 +90,8 @@ export default function MobileHomeSections({
             {labels.selected}
           </h2>
 
-          <div className="mt-8 space-y-12 min-[600px]:grid min-[600px]:grid-cols-2 min-[600px]:gap-x-6 min-[600px]:gap-y-10 min-[600px]:space-y-0">
-            {selected.map((item, index) => {
+          <div className="mt-8 space-y-12">
+            {selected.map((item) => {
               return (
                 <a
                   key={item.id}
@@ -100,7 +100,7 @@ export default function MobileHomeSections({
                     event.preventDefault();
                     onOpenItemDetail(item, 'mobile_home_featured');
                   }}
-                  className={`block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80 ${index === 0 ? 'min-[600px]:col-span-2' : ''}`}
+                  className="block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80"
                 >
                   <span className="block w-full min-w-0 overflow-hidden">
                     <img

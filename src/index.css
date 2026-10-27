@@ -228,27 +228,46 @@
   object-position: center;
 }
 
-/* Each portrait is an editorial row: the image and its complete caption
-   share the same row, independent of its position in the curated order. */
+/* Four full-width rows alternate captions independently of photo orientation. */
+.featured-works-list {
+  display: grid;
+  gap: clamp(3.5rem, 7vw, 7rem);
+}
+
 .featured-work__layout {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
   min-width: 0;
 }
 
 @media (min-width: 48rem) {
-  .featured-work--portrait .featured-work__layout {
+  .featured-work__layout {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
     column-gap: clamp(2rem, 4vw, 5rem);
   }
 
-  .featured-work--portrait .featured-work__image .featured-artwork-image {
+  .featured-work__content {
+    max-width: 34rem;
+  }
+
+  .featured-work--text-right .featured-artwork-image {
     margin-inline: auto 0;
   }
 
-  .featured-work--portrait .featured-work__content {
-    max-width: 34rem;
+  .featured-work--text-left .featured-work__image {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .featured-work--text-left .featured-work__content {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .featured-work--text-left .featured-artwork-image {
+    margin-inline: 0 auto;
   }
 }
 

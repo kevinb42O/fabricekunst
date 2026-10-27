@@ -1,5 +1,5 @@
 import { getFeaturedItems } from '../utils/featuredOrder.js';
-import React, { useState } from 'react';
+import React from 'react';
 import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -7,56 +7,23 @@ import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCategory } from '../utils/translationService';
 import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
-import { getImagePresentation, rememberImagePresentation } from '../utils/imagePresentation';
+import { rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
 
-export default function TopstukkenShowcase({ 
-  items = [], 
+export default function TopstukkenShowcase({
+  items = [],
   transitionItemId,
-  onOpenFullCatalog = () => {}, 
+  onOpenFullCatalog = () => {},
   onOpenItemDetail = () => {}
 }) {
   const { t, language } = useLanguage();
-  const [photoRatios, setPhotoRatios] = useState({});
-  const handlePhotoLoad = (event, source) => {
-    const image = event.currentTarget;
-    const presentation = rememberImagePresentation(image.currentSrc, image);
-    setPhotoRatios((previous) => previous[source] === presentation.ratio
-      ? previous : { ...previous, [source]: presentation.ratio });
-  };
-  // Filter items marked as featured (Op Homepage Tonen)
-  const featuredItems = getFeaturedItems(items);
-  
-  const displayItems = featuredItems;
-
-  const spotlightItem = displayItems[0];
-  const gridItems = displayItems.slice(1, 4);
-
+  const displayItems = getFeaturedItems(items).slice(0, 4);
   if (displayItems.length === 0) return null;
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.14, delayChildren: 0.1 }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 32 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.95, ease: LUXURY_EASE }
-    }
-  };
 
   return (
     <section id="topstukken" className="masterpieces-showcase py-28 sm:py-36 lg:py-40 bg-white relative overflow-hidden">
-
       <div className="page-shell-wide relative z-10 space-y-12 sm:space-y-20">
-        
         {/* Section Header (Sotheby's / Christie's Gallery Style) */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-[#D8CEB8] pb-10">
           <div className="space-y-4 max-w-3xl">
@@ -80,199 +47,82 @@ export default function TopstukkenShowcase({
         </div>
 
 
-
-        {/* ------------------------------------------------------------- */}
-        {/* FEATURED SPOTLIGHT ITEM (EDITED MAISON HERITAGE PRESENTATION)  */}
-        {/* ------------------------------------------------------------- */}
-        {spotlightItem && (
-          <motion.div
-            key={spotlightItem.id}
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.0, ease: LUXURY_EASE }}
-            onClick={() => onOpenItemDetail(spotlightItem, 'home_spotlight')}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                onOpenItemDetail(spotlightItem, 'home_spotlight');
-              }
-            }}
-            role="link"
-            tabIndex={0}
-            aria-label={getItemField(spotlightItem, 'title', language)}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center group cursor-pointer py-6"
-          >
-            {/* Spotlight Photography (Frameless, Pristine Edge-to-Edge) */}
-            <div className="lg:col-span-7 min-w-0">
-              <div className="relative w-full min-w-0 overflow-hidden">
-                <img
-                  src={spotlightItem.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
-                  alt={getItemField(spotlightItem, 'title', language)}
-                  loading="lazy"
-                  decoding="async"
-                  draggable="false"
-                  onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
-                  style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkImageTransitionName(spotlightItem.id) : 'none' }}
-                  className="featured-artwork-image"
-                />
-              </div>
-            </div>
-
-            {/* Spotlight Content Column (Pure Editorial Typography - Edited Harder) */}
-            <div className="lg:col-span-5 min-w-0 break-words space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3 text-xs sm:text-sm font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
-                  <span>{getLocalizedCategory(spotlightItem.category, language)}</span>
-                </div>
-
-                <h3
-                  style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkTitleTransitionName(spotlightItem.id) : 'none' }}
-                  className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
-                >
-                  <a
-                    href={localizePath(`/collectie/${getItemSlug(spotlightItem)}`, language)}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onOpenItemDetail(spotlightItem, 'home_spotlight_title');
-                    }}
-                  >
-                    {getItemField(spotlightItem, 'title', language)}
-                  </a>
-                </h3>
-
-                {spotlightItem.author && (
-                  <p className="text-sm sm:text-base font-serif italic text-[#555555]">
-                    {spotlightItem.author} {spotlightItem.year ? `(${spotlightItem.year})` : ''}
-                  </p>
-                )}
-              </div>
-
-              {/* Localized Provenance Highlight Quote (Fixed Localization Bug) */}
-              {getItemField(spotlightItem, 'provenance', language) && (
-                <div className="border-l border-[#8E7035] pl-4 py-2 space-y-1.5 bg-neutral-50 my-3">
-                  <span className="text-xs font-serif tracking-[0.16em] text-[#8E7035] uppercase font-semibold block">{t('topstukken.provenanceBadge')}</span>
-                  <p className="text-sm font-serif text-[#333333] leading-relaxed">{getItemField(spotlightItem, 'provenance', language)}</p>
-                </div>
-              )}
-
-              <div className="mobile-spotlight-details border-t border-[#D8CEB8]/60 pt-6">
-                <ArtworkPriceStatus item={spotlightItem} priceClassName="text-2xl sm:text-3xl font-serif font-bold text-[#111111]" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ------------------------------------------------------------- */}
-        {/* ASYMMETRIC HIGH-FASHION MAGAZINE GALLERY (#2, #3, #4)          */}
-        {/* ------------------------------------------------------------- */}
-        {gridItems.length > 0 && (
-          <motion.div
-            key="homepage-grid"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-40px" }}
-            className="mobile-featured-rail grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 pt-8 md:pt-12 items-start"
-          >
-            {gridItems.map((item, idx) => {
-              const itemTitle = getItemField(item, 'title', language);
-              const mainImage = item.images && item.images.length > 0 ? item.images[0]?.url : '/images/scarron-spines-white-bg.jpg';
-              
-              const isPortrait = (photoRatios[mainImage] ?? getImagePresentation(mainImage).ratio) < 1;
-
-              // Portraits receive a full row with their description beside the image.
-              let colSpan = "md:col-span-5 lg:col-span-5";
-              let staggeredClass = "md:mt-0";
-
-              if (idx % 3 === 1) {
-                colSpan = "md:col-span-7 lg:col-span-7";
-                staggeredClass = "md:mt-16 lg:mt-24";
-              } else if (idx % 3 === 2) {
-                colSpan = "md:col-span-12 lg:col-span-12";
-                staggeredClass = "md:mt-8 lg:mt-12";
-              }
-
-              return (
-                <motion.div
-                  key={item.id}
-                  variants={cardVariants}
-                  onClick={() => onOpenItemDetail(item, 'home_featured_grid')}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      onOpenItemDetail(item, 'home_featured_grid');
-                    }
-                  }}
-                  role="link"
-                  tabIndex={0}
-                  aria-label={itemTitle}
-                  className={`featured-work ${isPortrait ? "featured-work--portrait md:col-span-12" : `${colSpan} ${staggeredClass}`} min-w-0 break-words group cursor-pointer`}
-                >
-                  <div className="featured-work__layout">
-                    {/* Image Showcase (High-Fashion Editorial Frameless) */}
-                    <div className="featured-work__image w-full min-w-0 overflow-hidden relative">
-                      <img
-                        src={mainImage}
-                        alt={itemTitle}
-                        loading="lazy"
-                        decoding="async"
-                        draggable="false"
-                        onLoad={(event) => handlePhotoLoad(event, mainImage)}
-                        style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
-                        className="featured-artwork-image"
-                      />
-                    </div>
-
-                    <div className="featured-work__content min-w-0">
-                      {/* Body Content */}
-                      <div className="space-y-2.5">
-                        <div className="flex items-center text-xs font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
-                          <span>{getLocalizedCategory(item.category, language)}</span>
-                        </div>
-
-                        <h3
-                          style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
-                          className="display-editorial-card-wide text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
+        <div className="featured-works-list">
+          {displayItems.map((item, index) => {
+            const title = getItemField(item, 'title', language);
+            const mainImage = item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg';
+            const placement = index === 0 ? 'home_spotlight' : 'home_featured_grid';
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.8, ease: LUXURY_EASE }}
+                onClick={() => onOpenItemDetail(item, placement)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onOpenItemDetail(item, placement);
+                  }
+                }}
+                role="link"
+                tabIndex={0}
+                aria-label={title}
+                className={`featured-work ${index % 2 === 1 ? 'featured-work--text-left' : 'featured-work--text-right'} min-w-0 break-words group cursor-pointer`}
+              >
+                <div className="featured-work__layout">
+                  <div className="featured-work__image min-w-0 overflow-hidden">
+                    <img
+                      src={mainImage}
+                      alt={title}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                      onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
+                      style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
+                      className="featured-artwork-image"
+                    />
+                  </div>
+                  <div className="featured-work__content min-w-0 space-y-6">
+                    <div className="space-y-3">
+                      <p className="text-xs sm:text-sm font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
+                        {getLocalizedCategory(item.category, language)}
+                      </p>
+                      <h3
+                        style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
+                        className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
+                      >
+                        <a
+                          href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            onOpenItemDetail(item, `${placement}_title`);
+                          }}
                         >
-                          <a
-                            href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              onOpenItemDetail(item, 'home_featured_grid_title');
-                            }}
-                          >
-                            {itemTitle}
-                          </a>
-                        </h3>
-
-                        {item.author && (
-                          <p className="text-xs sm:text-sm text-[#555555] font-serif italic">
-                            {item.author} {item.year ? `(${item.year})` : ''}
-                          </p>
-                        )}
-
-                        {item.subtitle && (
-                          <p className="text-xs text-[#666666] font-serif line-clamp-2 leading-relaxed pt-1">
-                            {getItemField(item, 'subtitle', language)}
-                          </p>
-                        )}
+                          {title}
+                        </a>
+                      </h3>
+                      {item.author && <p className="text-sm sm:text-base font-serif italic text-[#555555]">{item.author} {item.year ? `(${item.year})` : ''}</p>}
+                      {getItemField(item, 'subtitle', language) && <p className="text-sm font-serif text-[#666666] leading-relaxed">{getItemField(item, 'subtitle', language)}</p>}
+                    </div>
+                    {index === 0 && getItemField(item, 'provenance', language) && (
+                      <div className="border-l border-[#8E7035] pl-4 py-2 space-y-1.5 bg-neutral-50">
+                        <span className="text-xs font-serif tracking-[0.16em] text-[#8E7035] uppercase font-semibold block">{t('topstukken.provenanceBadge')}</span>
+                        <p className="text-sm font-serif text-[#333333] leading-relaxed">{getItemField(item, 'provenance', language)}</p>
                       </div>
-
-                      {/* Price stays with the description, including for portrait rows. */}
-                      <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-5">
-                        <ArtworkPriceStatus item={item} priceClassName="text-lg sm:text-xl font-serif font-bold text-[#111111]" />
-                      </div>
+                    )}
+                    <div className="border-t border-[#D8CEB8]/60 pt-6">
+                      <ArtworkPriceStatus item={item} priceClassName="text-2xl sm:text-3xl font-serif font-bold text-[#111111]" />
                     </div>
                   </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
