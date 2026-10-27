@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Phone } from 'lucide-react';
 import FacebookIcon from '../components/FacebookIcon';
+import WebsiteCredit from '../components/WebsiteCredit';
 import { useLanguage } from '../context/LanguageContext';
 import { localizePath } from '../utils/locales';
 import { REMBRANDT_PROJECT_ROUTE } from '../utils/rembrandtProject';
@@ -67,6 +68,7 @@ export default function MobileFooter({ onNavigate, showRembrandtProject = true }
             <a href={localizePath('/voorwaarden', language)} onClick={(event) => { event.preventDefault(); onNavigate('voorwaarden'); }} className="flex min-h-11 items-center">{t('footer.terms')}</a>
           </div>
         </div>
+        <WebsiteCredit />
       </div>
     </footer>
   );

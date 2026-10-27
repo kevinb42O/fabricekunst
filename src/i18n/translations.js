@@ -382,6 +382,7 @@ export const translations = {
       addressHeader: 'Locatie & bezichtiging',
       addressText: 'Privé-bezichtiging en consultatie enkel op afspraak.',
       facebook: 'Volg ons op Facebook',
+      websiteCredit: 'Ontwerp & realisatie door',
       rights: 'Alle rechten voorbehouden.',
       adminLink: 'CMS Beheer'
     },
@@ -777,6 +778,7 @@ export const translations = {
       addressHeader: 'Location & viewings',
       addressText: 'Private viewings and consultations strictly by appointment.',
       facebook: 'Follow us on Facebook',
+      websiteCredit: 'Designed & built by',
       rights: 'All rights reserved.',
       adminLink: 'CMS Admin'
     },
@@ -1172,6 +1174,7 @@ export const translations = {
       addressHeader: 'Emplacement & visites',
       addressText: 'Présentations et consultations uniquement sur rendez-vous.',
       facebook: 'Suivez-nous sur Facebook',
+      websiteCredit: 'Conception & réalisation par',
       rights: 'Tous droits réservés.',
       adminLink: 'Administration CMS'
     },

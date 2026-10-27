@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone } from 'lucide-react';
 import FacebookIcon from './FacebookIcon';
+import WebsiteCredit from './WebsiteCredit';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 import { localizePath } from '../utils/locales';
@@ -147,6 +148,7 @@ export default function Footer({ onNavigate, showRembrandtProject = true }) {
           </div>
         </div>
 
+        <WebsiteCredit />
       </motion.div>
     </footer>
   );
