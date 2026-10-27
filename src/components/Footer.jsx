@@ -124,12 +124,13 @@ export default function Footer({ onNavigate, showRembrandtProject = true }) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 sm:pt-8 flex flex-col items-center justify-center text-center sm:flex-row sm:justify-between text-xs text-[#666666] space-y-3 sm:space-y-0 font-serif">
+        <div className="pt-6 sm:pt-8 flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:justify-between text-xs text-[#666666] font-serif">
           <div className="flex flex-col sm:flex-row items-center space-y-1.5 sm:space-y-0 sm:space-x-3">
             <p>© {new Date().getFullYear()} Atelier Rembrandt (Andor Comm V.). {t('footer.rights')}</p>
             <img src="/images/andor.jpeg" alt="Andor Comm V." loading="lazy" decoding="async" className="h-5 w-auto object-contain opacity-75 filter contrast-105" />
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-serif">
+          <WebsiteCredit inline />
+          <div className="flex shrink-0 flex-wrap items-center justify-center gap-4 text-xs font-serif">
             <a
               href={localizePath('/privacy', language)}
               onClick={(event) => { event.preventDefault(); onNavigate('privacy'); }}
@@ -148,7 +149,6 @@ export default function Footer({ onNavigate, showRembrandtProject = true }) {
           </div>
         </div>
 
-        <WebsiteCredit />
       </motion.div>
     </footer>
   );
