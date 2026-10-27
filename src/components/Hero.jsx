@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
-import HeroVideo from './HeroVideo';
 
 export default function Hero({ heroImage, onExploreCatalog }) {
   const { t } = useLanguage();
@@ -81,7 +80,6 @@ export default function Hero({ heroImage, onExploreCatalog }) {
         />
       </div>
 
-      <HeroVideo />
 
       {/* ------------------------------------------------------------- */}
       {/* ------------------------------------------------------------- */}

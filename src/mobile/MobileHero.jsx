@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import HeroVideo from '../components/HeroVideo';
 
 const MOBILE_COPY = {
   nl: 'Zeldzame boeken, Oude Meesters en historische objecten, geselecteerd op kwaliteit en bewezen herkomst.',
@@ -39,7 +38,6 @@ export default function MobileHero({ heroImage, mobileHeroImage, onExploreCatalo
             className="h-full w-full object-cover object-center"
           />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#FFFEFC]/80 to-transparent" />
-          <HeroVideo compact />
         </motion.div>
 
         <motion.div

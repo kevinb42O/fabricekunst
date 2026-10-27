@@ -7,6 +7,7 @@ import { getItemField, getLocalizedCategory } from '../utils/translationService'
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
 import CollectorListSection from '../components/CollectorListSection';
+import ResearchVideo from '../components/ResearchVideo';
 
 const COPY = {
   nl: {
@@ -177,6 +178,10 @@ export default function MobileHomeSections({
             {labels.provenance}
             <ArrowRight className="h-4 w-4 text-[#8E7035]" aria-hidden="true" />
           </button>
+
+          <div className="mt-10">
+            <ResearchVideo />
+          </div>
         </div>
       </section>
 

@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import './HeroVideo.css';
+import './ResearchVideo.css';
 
 const LABELS = {
-  nl: { video: 'Atelier Rembrandt in beeld', play: 'Video afspelen', pause: 'Video pauzeren' },
-  en: { video: 'A glimpse of Atelier Rembrandt', play: 'Play video', pause: 'Pause video' },
-  fr: { video: 'Atelier Rembrandt en images', play: 'Lire la vidéo', pause: 'Mettre en pause' }
+  nl: { video: 'Onderzoek bij Atelier Rembrandt', play: 'Video afspelen', pause: 'Video pauzeren' },
+  en: { video: 'Research at Atelier Rembrandt', play: 'Play video', pause: 'Pause video' },
+  fr: { video: 'La recherche chez Atelier Rembrandt', play: 'Lire la vidéo', pause: 'Mettre en pause' }
 };
 
-export default function HeroVideo({ compact = false }) {
+export default function ResearchVideo() {
   const { language } = useLanguage();
   const labels = LABELS[language] || LABELS.nl;
   const videoRef = useRef(null);
@@ -34,7 +34,7 @@ export default function HeroVideo({ compact = false }) {
       }
     };
     const onPause = () => {
-      // A user pause persists when the hero leaves and re-enters the viewport.
+      // A user pause persists when the video leaves and re-enters the viewport.
       if (visible && !document.hidden && !preference.matches) manuallyPaused = true;
     };
     const onPlay = () => { manuallyPaused = false; };
@@ -58,7 +58,7 @@ export default function HeroVideo({ compact = false }) {
   }, []);
 
   return (
-    <div className={`hero-video${compact ? ' hero-video--compact' : ''}`} role="group" aria-label={labels.video}>
+    <div className="research-video" role="group" aria-label={labels.video}>
       <video
         ref={videoRef}
         src="/videos/atelier-rembrandt-hero.mp4"
@@ -81,7 +81,7 @@ export default function HeroVideo({ compact = false }) {
         onError={() => setFailed(true)}
       />
       {!failed && (
-        <div className="hero-video__controls">
+        <div className="research-video__controls">
           <button
             type="button"
             aria-label={playing ? labels.pause : labels.play}

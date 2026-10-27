@@ -1,5 +1,5 @@
 import { getFeaturedItems } from '../utils/featuredOrder.js';
-import React from 'react';
+import React, { useState } from 'react';
 import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -7,7 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { getItemField, getLocalizedCategory } from '../utils/translationService';
 import { LUXURY_EASE } from '../utils/motion';
 import { getArtworkImageTransitionName, getArtworkTitleTransitionName } from '../utils/viewTransitions';
-import { rememberImagePresentation } from '../utils/imagePresentation';
+import { getImagePresentation, rememberImagePresentation } from '../utils/imagePresentation';
 import { getItemSlug } from '../utils/itemSlug';
 import { localizePath } from '../utils/locales';
 
@@ -18,6 +18,13 @@ export default function TopstukkenShowcase({
   onOpenItemDetail = () => {}
 }) {
   const { t, language } = useLanguage();
+  const [photoRatios, setPhotoRatios] = useState({});
+  const handlePhotoLoad = (event, source) => {
+    const image = event.currentTarget;
+    const presentation = rememberImagePresentation(image.currentSrc, image);
+    setPhotoRatios((previous) => previous[source] === presentation.ratio
+      ? previous : { ...previous, [source]: presentation.ratio });
+  };
   // Filter items marked as featured (Op Homepage Tonen)
   const featuredItems = getFeaturedItems(items);
   
@@ -173,7 +180,9 @@ export default function TopstukkenShowcase({
               const itemTitle = getItemField(item, 'title', language);
               const mainImage = item.images && item.images.length > 0 ? item.images[0]?.url : '/images/scarron-spines-white-bg.jpg';
               
-              // Preserve the editorial columns while letting each photo determine its height.
+              const isPortrait = (photoRatios[mainImage] ?? getImagePresentation(mainImage).ratio) < 1;
+
+              // Portraits receive a full row with their description beside the image.
               let colSpan = "md:col-span-5 lg:col-span-5";
               let staggeredClass = "md:mt-0";
 
@@ -199,62 +208,64 @@ export default function TopstukkenShowcase({
                   role="link"
                   tabIndex={0}
                   aria-label={itemTitle}
-                  className={`${colSpan} ${staggeredClass} min-w-0 break-words flex flex-col justify-between group cursor-pointer space-y-5`}
+                  className={`featured-work ${isPortrait ? "featured-work--portrait md:col-span-12" : `${colSpan} ${staggeredClass}`} min-w-0 break-words group cursor-pointer`}
                 >
-                  <div className="space-y-4">
+                  <div className="featured-work__layout">
                     {/* Image Showcase (High-Fashion Editorial Frameless) */}
-                    <div className="w-full min-w-0 overflow-hidden relative">
+                    <div className="featured-work__image w-full min-w-0 overflow-hidden relative">
                       <img
                         src={mainImage}
                         alt={itemTitle}
                         loading="lazy"
                         decoding="async"
                         draggable="false"
-                        onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
+                        onLoad={(event) => handlePhotoLoad(event, mainImage)}
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
                         className="featured-artwork-image"
                       />
                     </div>
 
-                    {/* Body Content */}
-                    <div className="space-y-2.5">
-                      <div className="flex items-center text-xs font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
-                        <span>{getLocalizedCategory(item.category, language)}</span>
+                    <div className="featured-work__content min-w-0">
+                      {/* Body Content */}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center text-xs font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
+                          <span>{getLocalizedCategory(item.category, language)}</span>
+                        </div>
+
+                        <h3
+                          style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
+                          className="display-editorial-card-wide text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
+                        >
+                          <a
+                            href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              onOpenItemDetail(item, 'home_featured_grid_title');
+                            }}
+                          >
+                            {itemTitle}
+                          </a>
+                        </h3>
+
+                        {item.author && (
+                          <p className="text-xs sm:text-sm text-[#555555] font-serif italic">
+                            {item.author} {item.year ? `(${item.year})` : ''}
+                          </p>
+                        )}
+
+                        {item.subtitle && (
+                          <p className="text-xs text-[#666666] font-serif line-clamp-2 leading-relaxed pt-1">
+                            {getItemField(item, 'subtitle', language)}
+                          </p>
+                        )}
                       </div>
 
-                      <h3
-                        style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
-                        className="display-editorial-card-wide text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#111111] leading-snug group-hover:text-[#B8860B] transition-colors duration-300"
-                      >
-                        <a
-                          href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            onOpenItemDetail(item, 'home_featured_grid_title');
-                          }}
-                        >
-                          {itemTitle}
-                        </a>
-                      </h3>
-
-                      {item.author && (
-                        <p className="text-xs sm:text-sm text-[#555555] font-serif italic">
-                          {item.author} {item.year ? `(${item.year})` : ''}
-                        </p>
-                      )}
-
-                      {item.subtitle && (
-                        <p className="text-xs text-[#666666] font-serif line-clamp-2 leading-relaxed pt-1">
-                          {getItemField(item, 'subtitle', language)}
-                        </p>
-                      )}
+                      {/* Price stays with the description, including for portrait rows. */}
+                      <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-5">
+                        <ArtworkPriceStatus item={item} priceClassName="text-lg sm:text-xl font-serif font-bold text-[#111111]" />
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Pinned Bottom Details Bar */}
-                  <div className="pt-4 border-t border-[#D8CEB8]/60 flex items-center justify-between gap-4 mt-auto">
-                    <ArtworkPriceStatus item={item} priceClassName="text-lg sm:text-xl font-serif font-bold text-[#111111]" />
                   </div>
                 </motion.div>
               );

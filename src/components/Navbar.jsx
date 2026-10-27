@@ -91,7 +91,6 @@ export default function Navbar({
           {/* LEFT ZONE: Navigation Links */}
           <div className="hidden xl:flex items-center gap-7 2xl:gap-10 min-w-0">
             {navLinks.map((link) => {
-              const isProjectLink = link.id === "rembrandt-project";
               return (
                 <a
                   key={link.id}
@@ -100,7 +99,7 @@ export default function Navbar({
                     event.preventDefault();
                     handleNavClick(link.id);
                   }}
-                  className={`${isProjectLink ? "text-[11px] 2xl:text-xs tracking-[0.1em] whitespace-nowrap" : "text-xs sm:text-sm tracking-[0.14em]"} font-serif font-medium uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
+                  className={`text-xs sm:text-sm tracking-[0.14em] whitespace-nowrap font-serif font-medium uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
                     activeTab === link.id
                       ? "text-[#111111] font-semibold"
                       : "text-[#111111]/90 hover:text-[#111111]"

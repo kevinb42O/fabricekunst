@@ -1,32 +1,23 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LUXURY_EASE } from '../utils/motion';
 import { localizePath } from '../utils/locales';
 import { defaultProvenance } from '../data/defaultProvenance';
 import { localized, migrateProvenance } from '../utils/provenance';
+import ResearchVideo from './ResearchVideo';
 
 export default function AboutProvenance({ provenanceData }) {
   const { t, language } = useLanguage();
   const published = migrateProvenance(provenanceData, defaultProvenance());
   const homepageTeaser = published.homepageTeaser;
-  const teaserAsset = published.assets.find(asset => asset.id === homepageTeaser.assetId && asset.url);
-
-  const sectionRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"]
-  });
-
-  const imageY = useTransform(scrollYProgress, [0, 1], ["-5%", "5%"]);
   if (!homepageTeaser.enabled) return null;
 
   return (
     <section 
-      ref={sectionRef} 
       id="herkomst" 
-      className="editorial-readable relative bg-white text-[#111111] py-28 sm:py-40 lg:py-48 overflow-hidden"
+      className="editorial-readable relative bg-[#F7F3EC] text-[#111111] py-20 lg:py-24 overflow-hidden"
     >
 
       <motion.div 
@@ -34,46 +25,23 @@ export default function AboutProvenance({ provenanceData }) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 1.0, ease: LUXURY_EASE }}
-        className="page-shell-wide relative z-10 space-y-16"
+        className="page-shell-wide relative z-10"
       >
         
-        {/* SECOND HERO HEADER BAR */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-[#D8CEB8] pb-10 gap-8">
-          <div className="space-y-4 max-w-3xl">
-            <span className="text-xs sm:text-sm font-serif tracking-[0.2em] text-[#8E7035] uppercase font-semibold block">
-              {t('provenance.heroBadge')}
-            </span>
-            
-            <h2 className="display-section-wide text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-[#111111] tracking-tight leading-[1.08]">
-              {localized(homepageTeaser.title, language) || t('provenance.heroTitle')}
-            </h2>
-          </div>
-
-          <p className="text-[#444444] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed">
-            {localized(homepageTeaser.description, language) || t('provenance.sectionDesc')}
-          </p>
-        </div>
-
         {/* MAIN EDITORIAL FEATURE STAGE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* Frameless Master Photography (White Gloves Conservator) */}
-          <div className="lg:col-span-7">
-            <div className="relative aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-neutral-50">
-              {teaserAsset?.url ? <img
-                  src={teaserAsset.url}
-                  srcSet={teaserAsset.srcSet || undefined}
-                  alt={localized(teaserAsset.alt, language)}
-                  loading="lazy"
-                  decoding="async"
-                  draggable="false"
-                  className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.02]"
-                /> : <div aria-label="R2-afbeelding wordt geladen" className="h-full w-full bg-[#eee8dd]" />}
-            </div>
-          </div>
-
           {/* Editorial Content & Provenance Pillars */}
-          <div className="lg:col-span-5 space-y-8">
+          <div className="lg:col-span-7 space-y-8">
+
+            <div className="space-y-5">
+              <h2 className="text-4xl sm:text-5xl font-serif font-bold text-[#111111] tracking-tight leading-[1.08]">
+                {localized(homepageTeaser.title, language) || t('provenance.heroTitle')}
+              </h2>
+              <p className="text-[#444444] font-serif font-light text-base sm:text-lg max-w-xl leading-relaxed">
+                {localized(homepageTeaser.description, language) || t('provenance.sectionDesc')}
+              </p>
+            </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
@@ -115,6 +83,10 @@ export default function AboutProvenance({ provenanceData }) {
               </a>
             </div>
 
+          </div>
+
+          <div className="lg:col-span-5">
+            <ResearchVideo />
           </div>
 
         </div>
