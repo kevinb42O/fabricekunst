@@ -5,6 +5,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { LUXURY_EASE } from "../utils/motion";
 import { localizePath } from "../utils/locales";
 import { buildDesktopPrimaryNavigation } from "../utils/navigation";
+import "../styles/navbar.css";
 
 export default function Navbar({
   onNavigate,
@@ -99,20 +100,14 @@ export default function Navbar({
                     event.preventDefault();
                     handleNavClick(link.id);
                   }}
-                  className={`text-xs sm:text-sm tracking-[0.14em] whitespace-nowrap font-serif font-medium uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
+                  aria-current={activeTab === link.id ? "page" : undefined}
+                  className={`navbar-link text-xs sm:text-sm tracking-[0.14em] whitespace-nowrap font-serif font-medium uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
                     activeTab === link.id
                       ? "text-[#111111] font-semibold"
                       : "text-[#111111]/90 hover:text-[#111111]"
                   }`}
                 >
                   {link.label}
-                  {activeTab === link.id && (
-                    <motion.span
-                      layoutId="activeTabUnderline"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#111111]"
-                    />
-                  )}
                 </a>
               );
             })}
@@ -143,7 +138,8 @@ export default function Navbar({
           <div className="hidden xl:flex items-center justify-end gap-10 2xl:gap-12 min-w-0">
             <button
               onClick={() => handleNavClick("contact")}
-              className={`text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
+              aria-current={activeTab === "contact" ? "page" : undefined}
+              className={`navbar-link text-xs sm:text-sm font-serif font-medium tracking-[0.14em] uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
                 activeTab === "contact"
                   ? "text-[#111111] font-semibold"
                   : "text-[#111111]/90 hover:text-[#111111]"
