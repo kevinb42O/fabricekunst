@@ -45,6 +45,8 @@ export default function Navbar({
     showRembrandtProject,
   });
 
+  const activeNavTab = activeTab === "home" ? "topstukken" : activeTab;
+
   const languages = [
     { code: "nl", label: "NL" },
     { code: "en", label: "EN" },
@@ -100,9 +102,9 @@ export default function Navbar({
                     event.preventDefault();
                     handleNavClick(link.id);
                   }}
-                  aria-current={activeTab === link.id ? "page" : undefined}
+                  aria-current={activeNavTab === link.id ? "page" : undefined}
                   className={`navbar-link text-xs sm:text-sm tracking-[0.14em] whitespace-nowrap font-serif font-medium uppercase transition-colors relative py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#541520] focus-visible:ring-offset-2 focus-visible:ring-offset-white cursor-pointer ${transparentHeaderText} ${
-                    activeTab === link.id
+                    activeNavTab === link.id
                       ? "text-[#111111] font-semibold"
                       : "text-[#111111]/90 hover:text-[#111111]"
                   }`}
@@ -229,7 +231,7 @@ export default function Navbar({
                     setMobileMenuOpen(false);
                   }}
                   className={`block w-full text-left px-4 py-3 min-h-[48px] text-sm font-serif tracking-wider uppercase transition-colors rounded-lg ${
-                    activeTab === link.id
+                    activeNavTab === link.id
                       ? "text-[#8E7557] font-semibold bg-[#EBE2D0]/40"
                       : "text-[#231A14] hover:text-[#8E7557] active:bg-[#EBE2D0]"
                   }`}
