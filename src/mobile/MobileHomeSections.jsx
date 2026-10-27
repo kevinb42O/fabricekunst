@@ -100,7 +100,7 @@ export default function MobileHomeSections({
                     event.preventDefault();
                     onOpenItemDetail(item, 'mobile_home_featured');
                   }}
-                  className="block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80"
+                  className="group block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80"
                 >
                   <span className="block w-full min-w-0 overflow-hidden">
                     <img
@@ -117,7 +117,7 @@ export default function MobileHomeSections({
                       <span className="block font-sans text-[10px] font-bold uppercase tracking-[0.16em] text-[#8E7035]">
                         {getLocalizedCategory(item.category, language)}
                       </span>
-                      <span className="mt-2 block break-words font-serif text-[1.65rem] font-bold leading-[1.08] tracking-[-0.02em] text-[#111111]">
+                      <span className="mt-2 block break-words font-serif text-[1.65rem] font-bold leading-[1.08] tracking-[-0.02em] text-[color:#B8860B] group-hover:text-[#111111] transition-colors duration-300">
                         {getItemField(item, 'title', language)}
                       </span>
                       {(item.author || item.year) && (

@@ -92,7 +92,7 @@ export default function TopstukkenShowcase({
                       </p>
                       <h3
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkTitleTransitionName(item.id) : 'none' }}
-                        className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[#111111] leading-[1.15] group-hover:text-[#B8860B] transition-colors duration-300"
+                        className="display-feature-wide text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-[color:#B8860B] leading-[1.15] group-hover:text-[#111111] transition-colors duration-300"
                       >
                         <a
                           href={localizePath(`/collectie/${getItemSlug(item)}`, language)}
