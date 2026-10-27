@@ -1,3 +1,4 @@
+import { compareFeaturedItems } from '../utils/featuredOrder.js';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
@@ -386,6 +387,10 @@ export default function CatalogPage({ items, transitionItemId, onNavigateHome, o
 
       const featuredDelta = Number(Boolean(right.featured)) - Number(Boolean(left.featured));
       if (featuredDelta !== 0) return featuredDelta;
+      if (left.featured && right.featured) {
+        const orderDelta = compareFeaturedItems(left, right);
+        if (orderDelta !== 0) return orderDelta;
+      }
 
       const statusDelta = getStatusOrderIndex(left.status) - getStatusOrderIndex(right.status);
       if (statusDelta !== 0) return statusDelta;

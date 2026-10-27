@@ -1,3 +1,4 @@
+import { getFeaturedItems } from '../utils/featuredOrder.js';
 import React, { useId, useState } from 'react';
 import ArtworkPriceStatus from '../components/ArtworkPriceStatus';
 import { ArrowRight, BookOpenCheck, ChevronDown, FileCheck2, ShieldCheck, Truck } from 'lucide-react';
@@ -74,7 +75,7 @@ export default function MobileHomeSections({
 }) {
   const { language } = useLanguage();
   const labels = COPY[language] || COPY.en;
-  const featured = items.filter((item) => item?.featured);
+  const featured = getFeaturedItems(items);
   const selected = featured.slice(0, 3);
   const questions = Array.isArray(faqItems) ? faqItems : [];
   const [openFaq, setOpenFaq] = useState(null);
@@ -100,13 +101,13 @@ export default function MobileHomeSections({
                   }}
                   className={`block w-full min-w-0 overflow-hidden border-b border-[#D8CEB8] pb-10 text-left active:opacity-80 ${index === 0 ? 'min-[600px]:col-span-2' : ''}`}
                 >
-                  <span className="block aspect-[4/3] w-full overflow-hidden bg-[#F1ECE3]">
+                  <span className="block w-full min-w-0 overflow-hidden bg-[#F1ECE3]">
                     <img
                       src={item.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                       alt={getItemField(item, 'title', language)}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full max-w-full object-cover"
+                      className="featured-artwork-image"
                     />
                   </span>
 

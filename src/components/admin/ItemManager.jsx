@@ -53,6 +53,7 @@ import {
 } from "../../utils/storage";
 import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
 import MediaPicker from "./MediaPicker";
+import FeaturedOrderManager from "./FeaturedOrderManager";
 import {
   isPriceOnRequest,
   isFieldMarkedEmpty,
@@ -96,15 +97,6 @@ const createComparableSale = () => ({
   saleUrl: "",
 });
 
-const isSafeHttpUrl = (value) => {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-};
-
 const parsePriceForSort = (value) => {
   const formattedPrice = String(value || "").replace(/[^\d,.-]/g, "");
   if (!/\d/.test(formattedPrice)) return null;
@@ -128,8 +120,6 @@ const parsePriceForSort = (value) => {
 
   return Number.isFinite(numericPrice) ? numericPrice : null;
 };
-
-const isComparableSaleComplete = (sale) => isSafeHttpUrl(sale?.imageUrl);
 
 const getItemTypeIcon = (type) => {
   if (type === "book") return BookOpen;
@@ -325,6 +315,7 @@ const getTranslationTooltip = (translationStatus) => {
 export default function ItemManager({
   items,
   onSaveItem,
+  onSaveFeaturedOrder,
   onDeleteItem,
   onShowToast,
   onOpenCertificate,
@@ -834,15 +825,15 @@ export default function ItemManager({
     setItemToDelete({ isBatch: true, count: selectedItemIds.length });
   };
 
-  const handleToggleFeatured = (item) => {
+  const handleToggleFeatured = async (item) => {
     const updated = { ...item, featured: !item.featured };
-    onSaveItem(updated);
-    if (onShowToast)
-      onShowToast(
-        updated.featured
-          ? `Gemarkeerd als Topstuk!`
-          : `Topstuk markering verwijderd.`,
-      );
+    try {
+      const result = await onSaveItem(updated);
+      if (!result || result.success === false || result.error) throw new Error(result?.error || "Opslaan mislukt. Probeer opnieuw.");
+      onShowToast?.(updated.featured ? "Gemarkeerd als topstuk." : "Topstukmarkering verwijderd.");
+    } catch (error) {
+      onShowToast?.(error.message, "error");
+    }
   };
 
   const handleSaveForm = async (e) => {
@@ -877,19 +868,6 @@ export default function ItemManager({
           "Minstens één afbeelding kon niet worden geüpload. Probeer die afbeelding opnieuw voordat u opslaat.",
           "error",
         );
-      return;
-    }
-
-    const invalidPublishedSaleIndex = (
-      editingItem.comparableSales || []
-    ).findIndex((sale) => sale.published && !isComparableSaleComplete(sale));
-    if (isCatalogItemPublished(editingItem) && invalidPublishedSaleIndex !== -1) {
-      if (onShowToast)
-        onShowToast(
-          `Comparable sale ${invalidPublishedSaleIndex + 1} is onvolledig of bevat een ongeldige URL of datum.`,
-          "error",
-        );
-      setEditorTab("comparable-sales");
       return;
     }
 
@@ -1417,6 +1395,8 @@ export default function ItemManager({
           </div>
         </div>
       </div>
+
+      <FeaturedOrderManager items={items} onSave={onSaveFeaturedOrder} onShowToast={onShowToast} />
 
       {/* Collection Sub-header & Metrics Summary */}
       <div className="admin-items__summary flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
@@ -3092,9 +3072,9 @@ export default function ItemManager({
                             Comparable Sales
                           </h4>
                           <p className="text-[11px] text-stone-400 font-serif mt-1">
-                            Voeg vergelijkbare verkopen toe. Een afbeelding is
-                            het enige verplichte veld; zet “Tonen op website”
-                            aan om de referentie publiek te tonen.
+                            Voeg vergelijkbare verkopen toe. Alle velden zijn
+                            optioneel. Zet “Tonen op website” aan om de
+                            referentie publiek te tonen.
                           </p>
                         </div>
                       </div>
@@ -3125,7 +3105,6 @@ export default function ItemManager({
                         formLang === "nl"
                           ? "description"
                           : `description_${formLang}`;
-                      const isComplete = isComparableSaleComplete(sale);
 
                       return (
                         <section
@@ -3143,11 +3122,11 @@ export default function ItemManager({
                                     `Comparable Sale ${index + 1}`}
                                 </h4>
                                 <span
-                                  className={`text-[10px] font-mono font-bold uppercase ${isComplete ? "text-emerald-700" : "text-amber-700"}`}
+                                  className={`text-[10px] font-mono font-bold uppercase ${sale.published ? "text-emerald-700" : "text-stone-600"}`}
                                 >
-                                  {isComplete
-                                    ? "Klaar om te tonen"
-                                    : "Concept — afbeelding vereist"}
+                                  {sale.published
+                                    ? "Tonen op website ingeschakeld"
+                                    : "Concept"}
                                 </span>
                               </div>
                             </div>

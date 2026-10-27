@@ -656,9 +656,9 @@ export const formatSupabaseErrorMessage = (error) => {
   return "Cloud-synchronisatie kon niet worden afgerond op de server.";
 };
 
-export const saveCatalogAsync = async (items) => {
+export const saveCatalogAsync = async (items, { changedItems = items } = {}) => {
   try {
-    items.forEach(validateCatalogImageReferences);
+    changedItems.forEach(validateCatalogImageReferences);
   } catch (error) {
     return {
       catalog: items,
@@ -678,7 +678,7 @@ export const saveCatalogAsync = async (items) => {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ action: "save-many", items }),
+        body: JSON.stringify({ action: "save-many", items: changedItems }),
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok || !body?.ok) {

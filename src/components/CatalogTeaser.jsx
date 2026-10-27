@@ -1,3 +1,4 @@
+import { getFeaturedItems } from '../utils/featuredOrder.js';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Award, BookOpen } from 'lucide-react';
@@ -18,7 +19,7 @@ export default function CatalogTeaser({ items, onOpenFullCatalog, onOpenItemDeta
   };
 
   // Show up to 3 curated teaser items
-  const featured = items.filter(i => i.featured);
+  const featured = getFeaturedItems(items);
   const nonFeatured = items.filter(i => !i.featured);
   const teaserItems = [...featured, ...nonFeatured].slice(0, 3);
 

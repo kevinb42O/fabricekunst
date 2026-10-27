@@ -569,6 +569,18 @@ export default function App() {
     return res;
   };
 
+  const handleSaveFeaturedOrder = async (orderedItems) => {
+    // Save the entire local catalog; the cloud only needs the changed works.
+    const updates = new Map(orderedItems.map((item) => [item.id, item]));
+    const merged = (adminCatalog || []).map((item) => updates.get(item.id) || item);
+    const res = await saveCatalogAsync(merged, { changedItems: orderedItems });
+    if (res?.success !== false && !res?.error) {
+      setAdminCatalog(merged);
+      setCatalog(merged.filter(isCatalogItemPublished));
+    }
+    return res;
+  };
+
   const handleDeleteItem = async (idToDelete) => {
     const res = await deleteItemAsync(idToDelete);
     if (res && res.success !== false) {
@@ -664,6 +676,7 @@ export default function App() {
           faqItems={faqItems}
           currentUser={adminUser}
           onSaveItem={handleSaveItem}
+          onSaveFeaturedOrder={handleSaveFeaturedOrder}
           onDeleteItem={handleDeleteItem}
           onUpdateInquiries={handleUpdateInquiries}
           onSaveHeroImage={handleSaveHeroImage}

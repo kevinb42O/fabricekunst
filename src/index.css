@@ -215,6 +215,18 @@
   text-wrap: balance;
 }
 
+/* Topstukken follow the source photo's proportions. Contain also protects
+   the full image when the safety height limit is reached; never crop or zoom. */
+.featured-artwork-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 48rem;
+  object-fit: contain;
+  object-position: center;
+}
+
 .detail-image-stage {
   width: 100%;
   max-width: 120rem;

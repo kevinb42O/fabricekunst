@@ -1,3 +1,4 @@
+import { getFeaturedItems } from '../utils/featuredOrder.js';
 import React from 'react';
 import ArtworkPriceStatus from './ArtworkPriceStatus';
 import { motion } from 'framer-motion';
@@ -18,7 +19,7 @@ export default function TopstukkenShowcase({
 }) {
   const { t, language } = useLanguage();
   // Filter items marked as featured (Op Homepage Tonen)
-  const featuredItems = items.filter(item => item && item.featured);
+  const featuredItems = getFeaturedItems(items);
   
   const displayItems = featuredItems;
 
@@ -96,8 +97,8 @@ export default function TopstukkenShowcase({
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center group cursor-pointer py-6"
           >
             {/* Spotlight Photography (Frameless, Pristine Edge-to-Edge) */}
-            <div className="lg:col-span-7">
-              <div className="relative overflow-hidden bg-neutral-50 aspect-[4/3] sm:aspect-[16/11]">
+            <div className="lg:col-span-7 min-w-0">
+              <div className="relative w-full min-w-0 overflow-hidden bg-neutral-50">
                 <img
                   src={spotlightItem.images?.[0]?.url || '/images/scarron-spines-white-bg.jpg'}
                   alt={getItemField(spotlightItem, 'title', language)}
@@ -106,13 +107,13 @@ export default function TopstukkenShowcase({
                   draggable="false"
                   onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
                   style={{ viewTransitionName: transitionItemId === spotlightItem.id ? getArtworkImageTransitionName(spotlightItem.id) : 'none' }}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
+                  className="featured-artwork-image"
                 />
               </div>
             </div>
 
             {/* Spotlight Content Column (Pure Editorial Typography - Edited Harder) */}
-            <div className="lg:col-span-5 space-y-6">
+            <div className="lg:col-span-5 min-w-0 break-words space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center space-x-3 text-xs sm:text-sm font-serif tracking-[0.18em] text-[#8E7035] uppercase font-semibold">
                   <span>{getLocalizedCategory(spotlightItem.category, language)}</span>
@@ -172,21 +173,15 @@ export default function TopstukkenShowcase({
               const itemTitle = getItemField(item, 'title', language);
               const mainImage = item.images && item.images.length > 0 ? item.images[0]?.url : '/images/scarron-spines-white-bg.jpg';
               
-              // High-fashion editorial magazine layout logic:
-              // Index 0 (Left): 5 columns, portrait vertical (aspect-4/5), top-aligned
-              // Index 1 (Right): 7 columns, landscape (aspect-16/11), staggered top margin (md:mt-16 lg:mt-24) to balance height & eliminate whitespace
-              // Index 2+ (Wide): 12 columns, wide cinematic editorial feature
+              // Preserve the editorial columns while letting each photo determine its height.
               let colSpan = "md:col-span-5 lg:col-span-5";
-              let aspect = "aspect-[4/5] sm:aspect-[3/4]";
               let staggeredClass = "md:mt-0";
 
               if (idx % 3 === 1) {
                 colSpan = "md:col-span-7 lg:col-span-7";
-                aspect = "aspect-[4/3] sm:aspect-[16/11]";
                 staggeredClass = "md:mt-16 lg:mt-24";
               } else if (idx % 3 === 2) {
                 colSpan = "md:col-span-12 lg:col-span-12";
-                aspect = "aspect-[16/9] sm:aspect-[21/9]";
                 staggeredClass = "md:mt-8 lg:mt-12";
               }
 
@@ -204,11 +199,11 @@ export default function TopstukkenShowcase({
                   role="link"
                   tabIndex={0}
                   aria-label={itemTitle}
-                  className={`${colSpan} ${staggeredClass} flex flex-col justify-between group cursor-pointer space-y-5`}
+                  className={`${colSpan} ${staggeredClass} min-w-0 break-words flex flex-col justify-between group cursor-pointer space-y-5`}
                 >
                   <div className="space-y-4">
                     {/* Image Showcase (High-Fashion Editorial Frameless) */}
-                    <div className={`${aspect} bg-neutral-50 overflow-hidden relative group/img`}>
+                    <div className="w-full min-w-0 bg-neutral-50 overflow-hidden relative group/img">
                       <img
                         src={mainImage}
                         alt={itemTitle}
@@ -217,7 +212,7 @@ export default function TopstukkenShowcase({
                         draggable="false"
                         onLoad={(event) => rememberImagePresentation(event.currentTarget.currentSrc, event.currentTarget)}
                         style={{ viewTransitionName: transitionItemId === item.id ? getArtworkImageTransitionName(item.id) : 'none' }}
-                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000 ease-out"
+                        className="featured-artwork-image"
                       />
                       <div className="absolute inset-0 bg-[#111111]/0 group-hover:bg-[#111111]/5 transition-colors duration-500 pointer-events-none" />
                     </div>

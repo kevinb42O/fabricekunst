@@ -18,15 +18,10 @@ const isSafeUrl = (value) => {
   }
 };
 
-const isPublishedSaleWithImage = (sale) => (
-  sale?.published === true
-  && isSafeUrl(sale.imageUrl)
-);
-
 export default function ComparableSalesSection({ sales = [], compact = false }) {
   const { t, language } = useLanguage();
   const [zoomIndex, setZoomIndex] = useState(null);
-  const visibleSales = Array.isArray(sales) ? sales.filter(isPublishedSaleWithImage) : [];
+  const visibleSales = Array.isArray(sales) ? sales.filter((sale) => sale?.published === true) : [];
 
   if (visibleSales.length === 0) return null;
 
@@ -37,7 +32,8 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
     return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(parsedDate);
   };
 
-  const zoomImages = visibleSales.map((sale) => {
+  const imageSales = visibleSales.filter((sale) => isSafeUrl(sale.imageUrl));
+  const zoomImages = imageSales.map((sale) => {
     const desc = getLocalizedDescription(sale, language);
     const details = [
       sale.seller,
@@ -68,18 +64,19 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
             : sale.priceType === 'including-premium'
               ? 'comparableSalePremium'
               : null;
-          const hasDetails = Boolean(description || sale.lotNumber || sale.seller || sale.saleDate || sale.realizedPrice);
+          const hasImage = isSafeUrl(sale.imageUrl);
+          const hasDetails = Boolean(description || sale.lotNumber || sale.seller || sale.saleDate || sale.realizedPrice || isSafeUrl(sale.saleUrl) || (!hasImage && sale.imageCaption));
 
           return (
             <article
               key={sale.id || index}
               className={`grid grid-cols-1 bg-white border border-[#D8CEB8] overflow-hidden shadow-xs ${
-                hasDetails ? (compact ? 'md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]' : 'sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]') : ''
+                hasImage && hasDetails ? (compact ? 'md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]' : 'sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]') : ''
               } ${compact ? 'rounded-xl' : 'rounded-2xl'}`}
             >
-              <button
+              {hasImage && <button
                 type="button"
-                onClick={() => setZoomIndex(index)}
+                onClick={() => setZoomIndex(imageSales.indexOf(sale))}
                 aria-label={`${t('item_detail.comparableSaleZoom')} - ${sale.seller || description || t('item_detail.comparableSaleTitle')}`}
                 className={`group relative w-full bg-[#F4F1EA] overflow-hidden text-left focus:outline-none focus:ring-2 focus:ring-[#B8860B] focus:ring-inset cursor-pointer ${
                   compact ? 'min-h-52' : 'min-h-64'
@@ -110,11 +107,16 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
                     {sale.imageCaption}
                   </span>
                 )}
-              </button>
+              </button>}
 
-              {hasDetails && (
+              {(hasDetails || !hasImage) && (
                 <div className={`flex flex-col justify-center ${compact ? 'p-4 sm:p-5' : 'p-5 sm:p-7'}`}>
                   <div className="space-y-4">
+                  {!hasImage && !description && (
+                    <p className="font-serif font-bold text-[#111111]">
+                      {sale.imageCaption || t('item_detail.comparableSaleTitle')}
+                    </p>
+                  )}
                   <div>
                     {sale.lotNumber && (
                       <span className="text-[10px] font-mono font-bold text-[#B8860B] uppercase tracking-wider">
@@ -186,8 +188,8 @@ export default function ComparableSalesSection({ sales = [], compact = false }) 
         <ImageZoomModal
           images={zoomImages}
           initialIndex={zoomIndex}
-          title={visibleSales[zoomIndex]?.seller
-            ? `${t('item_detail.comparableSaleTitle')} — ${visibleSales[zoomIndex].seller}`
+          title={imageSales[zoomIndex]?.seller
+            ? `${t('item_detail.comparableSaleTitle')} — ${imageSales[zoomIndex].seller}`
             : t('item_detail.comparableSaleTitle')
           }
           onClose={() => setZoomIndex(null)}

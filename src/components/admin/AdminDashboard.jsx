@@ -64,6 +64,7 @@ export default function AdminDashboard({
   provenanceData = null,
   currentUser = null,
   onSaveItem = () => {},
+  onSaveFeaturedOrder,
   onDeleteItem = () => {},
   onUpdateInquiries = () => {},
   onSaveHeroImage = () => {},
@@ -372,6 +373,7 @@ export default function AdminDashboard({
                 <ItemManager
                   items={activeItems}
                   onSaveItem={onSaveItem}
+                  onSaveFeaturedOrder={onSaveFeaturedOrder}
                   onDeleteItem={onDeleteItem}
                   onShowToast={showToast}
                   createRequestKey={createItemRequest}
