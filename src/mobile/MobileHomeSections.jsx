@@ -117,8 +117,8 @@ export default function MobileHomeSections({
                       <span className="block font-sans text-[10px] font-bold uppercase tracking-[0.16em] text-[#8E7035]">
                         {getLocalizedCategory(item.category, language)}
                       </span>
-                      <span className="mt-2 block break-words font-serif text-[1.65rem] font-bold leading-[1.08] tracking-[-0.02em] text-[color:#B8860B] group-hover:text-[#111111] transition-colors duration-300">
-                        {getItemField(item, 'title', language)}
+                      <span className="mt-2 block break-words font-serif text-[1.65rem] font-bold leading-[1.08] tracking-[-0.02em] text-[color:#B8860B]">
+                        <span className="hover:text-[#111111] transition-colors duration-300">{getItemField(item, 'title', language)}</span>
                       </span>
                       {(item.author || item.year) && (
                         <span className="mt-2 block font-serif text-sm italic leading-relaxed text-[#655B50]">
