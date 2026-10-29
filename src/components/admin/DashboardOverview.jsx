@@ -14,6 +14,7 @@ export default function DashboardOverview({
   inquiries = [],
   currentUser = null,
   metricsData = null,
+  updates = null,
   onNavigateTab = () => {},
   onCreateNewItem = () => {},
   onOpenLiveSite = () => {}
@@ -99,6 +100,8 @@ export default function DashboardOverview({
           </div>
         </div>
       )}
+
+      {updates}
 
       <div className="admin-overview-grid">
         <section className="admin-panel" aria-labelledby="inquiries-title">

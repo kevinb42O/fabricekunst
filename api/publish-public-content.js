@@ -5,8 +5,12 @@ import rembrandtProjectHandler from './_lib/rembrandtProjectEndpoint.js';
 import rembrandtProjectPreviewLinksHandler from './_lib/rembrandtProjectPreviewLinksEndpoint.js';
 import catalogItemsHandler from './_lib/catalogItemsEndpoint.js';
 import certificateDraftsHandler from './_lib/certificateDraftsEndpoint.js';
+import dashboardUpdatesHandler from './_lib/dashboardUpdatesEndpoint.js';
 
 export default async function handler(req, res) {
+  if (req.query?.resource === 'dashboard-updates') {
+    return dashboardUpdatesHandler(req, res);
+  }
   if (req.query?.resource === 'certificate-drafts') {
     return certificateDraftsHandler(req, res);
   }

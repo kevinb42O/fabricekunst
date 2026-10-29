@@ -10,6 +10,7 @@ import {
   Mail,
   ListPlus,
   Menu,
+  Newspaper,
   Settings,
   ShieldCheck,
   Users,
@@ -24,6 +25,8 @@ import {
 } from 'lucide-react';
 import ToastNotification from './ToastNotification';
 import AdminTooltip from './AdminTooltip';
+import DashboardUpdates, { LatestDashboardUpdate } from './DashboardUpdates';
+import useDashboardUpdates from '../../hooks/useDashboardUpdates';
 import { authenticatedAdminFetch } from '../../utils/adminApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/admin.css';
@@ -45,7 +48,7 @@ const MediaLibraryManager = React.lazy(() => import('./MediaLibraryManager'));
 
 const VALID_TABS = new Set([
   'dashboard', 'analytics-overview', 'analytics-acquisition', 'analytics-behavior', 'items', 'certificates', 'hero', 'provenance', 'faq',
-  'inquiries', 'customers', 'collectors', 'rembrandt-project', 'media-library', 'settings', 'tokens'
+  'inquiries', 'customers', 'collectors', 'rembrandt-project', 'media-library', 'settings', 'tokens', 'updates'
 ]);
 
 const getTabFromHash = () => {
@@ -93,6 +96,8 @@ export default function AdminDashboard({
     return initial;
   });
   const toastTimer = useRef(null);
+  const updatesState = useDashboardUpdates();
+  const hasNewUpdates = updatesState.updates.some(update => !updatesState.viewed.includes(update.id));
 
   useEffect(() => {
     let cancelled = false;
@@ -191,6 +196,7 @@ export default function AdminDashboard({
     { id: 'inquiries', label: 'Berichten', icon: Mail, count: newInquiriesCount || undefined },
     { id: 'customers', label: 'Klanten', icon: Users },
     { id: 'collectors', label: 'Collector’s List', icon: ListPlus },
+    { id: 'updates', label: 'Updates', icon: Newspaper, count: hasNewUpdates ? 'Nieuw' : undefined },
     { id: 'tokens', label: 'Tokens', icon: Award, alert: hasExceededLimits },
     { id: 'settings', label: 'Account', icon: Settings }
   ];
@@ -209,6 +215,7 @@ export default function AdminDashboard({
     inquiries: 'Berichten',
     customers: 'Klanten',
     collectors: 'Collector’s List',
+    updates: 'Updates',
     tokens: 'Hosting & Tokens',
     settings: 'Account'
   };
@@ -366,6 +373,7 @@ export default function AdminDashboard({
                   onNavigateTab={navigateTo}
                   onCreateNewItem={handleCreateItem}
                   onOpenLiveSite={handleClose}
+                  updates={<LatestDashboardUpdate state={updatesState} onOpen={() => navigateTo('updates')} />}
                 />
               )}
               {activeTab.startsWith('analytics-') && <AnalyticsManager isPro={isPro} activeTab={activeTab.replace('analytics-', '')} />}
@@ -405,6 +413,7 @@ export default function AdminDashboard({
                 />
               )}
               {activeTab === 'media-library' && <MediaLibraryManager onShowToast={showToast} />}
+              {activeTab === 'updates' && <DashboardUpdates state={updatesState} onNavigate={navigateTo} />}
               {activeTab === 'provenance' && (
                 <ProvenanceManager provenanceData={provenanceData} onSaveProvenance={onSaveProvenance} showToast={showToast} onOpenMediaLibrary={() => navigateTo('media-library')} />
               )}

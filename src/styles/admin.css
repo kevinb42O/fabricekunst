@@ -1205,6 +1205,44 @@
   border-color: var(--admin-border-strong);
 }
 
+.admin-latest-update {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+}
+
+.admin-latest-update h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.admin-latest-update p { margin: 8px 0 0; font-weight: 550; }
+.admin-latest-update > .admin-text-button { flex-shrink: 0; min-height: 44px; }
+.admin-update-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--admin-muted-strong); font-size: 12px; }
+.admin-update-kind, .admin-update-new { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+.admin-update-kind--page { color: #344b3d; background: #e8efe9; }
+.admin-update-kind--feature { color: #59442c; background: #f2ece3; }
+.admin-update-kind--fix { color: var(--admin-muted-strong); background: var(--admin-subtle); }
+.admin-update-new { color: var(--admin-success); background: #ecfdf3; }
+.admin-update-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-update-filters .admin-button { min-height: 44px; }
+.admin-update-explainer { margin: -12px 0 0; max-width: 75ch; color: var(--admin-muted-strong); font-size: 13px; }
+.admin-update-list { border-top: 1px solid var(--admin-border); }
+.admin-update-entry { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 32px; padding: 32px 0; border-bottom: 1px solid var(--admin-border); }
+.admin-update-entry > .admin-update-meta { align-content: start; justify-content: flex-start; }
+.admin-update-entry time { flex-basis: 100%; margin-bottom: 4px; }
+.admin-update-copy { max-width: 70ch; min-width: 0; overflow-wrap: break-word; }
+.admin-update-copy h2 { margin: 0 0 12px; font-size: 20px; line-height: 1.35; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.admin-update-copy p { margin: 0 0 12px; line-height: 1.75; color: var(--admin-muted-strong); }
+.admin-update-copy .admin-text-button { min-height: 44px; margin-top: 2px; }
+
+@media (max-width: 700px) {
+  .admin-latest-update { align-items: flex-start; flex-direction: column; gap: 12px; padding: 20px; }
+  .admin-update-entry { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 24px 0; }
+  .admin-update-entry time { flex-basis: auto; margin: 0; }
+}
+
 .admin-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

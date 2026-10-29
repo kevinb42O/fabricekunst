@@ -2,12 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULT_REMBRANDT_PROJECT } from "../src/data/defaultRembrandtProject.js";
+import { dashboardUpdates } from "../api/_lib/dashboardUpdates.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const assetsDirectory = path.join(root, "dist", "assets");
 const sentinels = [
   DEFAULT_REMBRANDT_PROJECT.settings.summary.nl,
   ...DEFAULT_REMBRANDT_PROJECT.updates.slice(0, 3).map((update) => update.title.nl),
+  ...dashboardUpdates.map((update) => update.title),
 ];
 
 const leakingFiles = fs.readdirSync(assetsDirectory)
@@ -18,7 +20,7 @@ const leakingFiles = fs.readdirSync(assetsDirectory)
   });
 
 if (leakingFiles.length) {
-  throw new Error(`Private Rembrandt Project seed leaked into browser bundles: ${leakingFiles.join(", ")}`);
+  throw new Error(`Private project or dashboard update content leaked into browser bundles: ${leakingFiles.join(", ")}`);
 }
 
-console.log("Verified: private Rembrandt Project seed is absent from browser bundles.");
+console.log("Verified: private project seed and dashboard update content are absent from browser bundles.");
