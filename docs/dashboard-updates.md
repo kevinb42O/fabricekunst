@@ -1,6 +1,6 @@
 # Updates in het dashboard
 
-De menukeuze **Updates** opent **Nieuw voor jou**. Het overzicht verwijst naar het nieuwste bericht. De eerste reeks bevat 51 Nederlandstalige berichten, afgeleid van de volledige Git-geschiedenis vanaf de eerste vastgelegde projectversie op 25 juli tot 27 oktober 2026. De lokale geschiedenis is op 29 oktober met `origin/main` vergeleken; beide eindigden op `e6dc535`.
+De menukeuze **Updates** opent **Nieuw voor jou**. Het overzicht verwijst naar het nieuwste bericht. De reeks bevat 52 Nederlandstalige berichten: 51 berichten over de projectgeschiedenis vanaf de eerste vastgelegde versie op 25 juli tot 27 oktober 2026, plus de toevoeging van de Updates-pagina op 29 oktober. Voor de oorspronkelijke reeks is de lokale geschiedenis op 29 oktober met `origin/main` vergeleken; beide eindigden toen op `e6dc535`.
 
 De begindatum is gebaseerd op de eerste commit (`189bf08`). Oudere aangeleverde foto’s bewijzen geen eerdere aanmaakdatum van de website. De eerste versie bevatte al de homepage, collectie, objectpagina’s, herkomstpagina en een eerste beheeromgeving; latere uitbreidingen worden op hun eigen datum beschreven. De tijdlijn bundelt de 243 commits tot begrijpelijke berichten en maakt geen aparte melding voor elke technische tussenstap.
 
@@ -24,6 +24,7 @@ Gebruik de Git-geschiedenis als bron en controleer de uiteindelijke code voordat
 
 | Bericht-ID | Broncommits |
 | --- | --- |
+| 2026-10-29-dashboard-updates | 2d88d66, 3e5c723 |
 | 2026-10-27-topstukken | d08b59a, 4628141, 9fdc2bf, 5352495, 0532d8c |
 | 2026-10-27-onderzoek-video | d08b59a, 9fdc2bf, ac09745, 3f14ca8 |
 | 2026-10-27-vergelijkbare-verkopen | d08b59a |

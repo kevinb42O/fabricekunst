@@ -2,6 +2,11 @@
 // Keep content on the server, IDs stable, and newest entries first.
 export const dashboardUpdates = [
   {
+    id: "2026-10-29-dashboard-updates", category: "page", date: "2026-10-29",
+    title: "Alle vernieuwingen teruglezen in je dashboard",
+    body: ["Je dashboard heeft nu een eigen Updates-pagina. Hier lees je in gewone taal wat er aan je website en werkruimte is toegevoegd of verbeterd, vanaf de eerste websiteversie tot vandaag.", "Met de filters maak je onderscheid tussen nieuwe pagina’s, grote updates en verbeteringen of oplossingen. Het label ‘Nieuw’ laat zien welke berichten je op dit toestel nog niet hebt bekeken. Via ‘Naar de start van het project’ spring je rechtstreeks naar het begin van de tijdlijn."],
+  },
+  {
     id: "2026-10-27-topstukken", category: "feature", date: "2026-10-27",
     title: "Je topstukken krijgen meer ruimte",
     body: ["De topstukken op de homepage staan nu afwisselend met hun foto links en rechts. Ook hoge portretfoto’s blijven volledig in beeld. De informatie over de herkomst wordt bij elk werk op dezelfde manier getoond.","In Collectie kun je zelf de volgorde van je topstukken bepalen. Zo kies je welke werken bezoekers als eerste ontdekken."],
