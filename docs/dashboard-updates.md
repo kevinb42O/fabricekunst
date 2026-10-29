@@ -10,6 +10,8 @@ De begindatum is gebaseerd op de eerste commit (`189bf08`). Oudere aangeleverde 
 - **Grote update** (`feature`): een nieuwe mogelijkheid of een substantiële uitbreiding, zoals collectieconcepten of bewaarde certificaatteksten.
 - **Verbetering & oplossing** (`fix`): herstel of verfijning van bestaande functies, zoals prijslabels of foto’s selecteren.
 
+De projectstart sluit de tijdlijn altijd af, ook wanneer andere berichten dezelfde datum hebben. Bovenaan staat de knop **Naar de start van het project**; die herstelt het filter Alles en brengt de lezer rechtstreeks naar het startbericht. Een regressiecontrole bewaakt dat dit bericht het laatste blijft.
+
 De filters laten deze categorieën afzonderlijk zien. Berichten vertellen wat de gebruiker kan doen en wat er verbeterd is. Samenhangende commits worden gebundeld; infrastructuurwijzigingen, interne details en toekomstige plannen worden niet automatisch overgenomen. Een nieuwe sectie op een bestaande pagina is een grote update, niet automatisch een nieuwe pagina.
 
 ## Inhoud aanvullen

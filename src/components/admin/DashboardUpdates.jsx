@@ -24,9 +24,18 @@ export function LatestDashboardUpdate({ state, onOpen }) {
 
 export default function DashboardUpdates({ state, onNavigate }) {
   const [filter, setFilter] = useState('all');
+  const [showStart, setShowStart] = useState(false);
+  const startHeading = useRef(null);
   const arrival = useRef(null);
   const { updates, viewed, loading, error, markViewed } = state;
   const visible = updates.filter(update => filter === 'all' || update.category === filter);
+  const projectStart = updates.find(update => update.id === '2026-07-25-projectstart');
+  useEffect(() => {
+    if (!showStart || loading || error) return;
+    startHeading.current?.scrollIntoView({ block: 'center' });
+    startHeading.current?.focus({ preventScroll: true });
+    setShowStart(false);
+  }, [showStart, filter, loading, error]);
   // Remember only entries actually displayed. Filters must not mark hidden
   // improvements as read. Preserve the arrival labels until this visit ends.
   useEffect(() => {
@@ -40,7 +49,7 @@ export default function DashboardUpdates({ state, onNavigate }) {
     <section className="admin-page-heading" aria-labelledby="updates-title"><div>
       <h1 id="updates-title">Nieuw voor jou</h1>
       <p>Hier lees je wat er aan je website en werkruimte is verbeterd.</p>
-    </div></section>
+    </div>{projectStart && !loading && !error && <button type="button" className="admin-button admin-button--secondary" onClick={() => { setFilter('all'); setShowStart(true); }}>Naar de start van het project <ArrowRight aria-hidden="true" /></button>}</section>
     <div className="admin-update-filters" role="group" aria-label="Soort update">
       {[['all', 'Alles'], ...Object.entries(UPDATE_CATEGORIES)].map(([id, label]) => <button type="button" key={id} aria-pressed={filter === id} className={`admin-button ${filter === id ? 'admin-button--primary' : 'admin-button--secondary'}`} onClick={() => setFilter(id)}>{label}</button>)}
     </div>
@@ -48,7 +57,7 @@ export default function DashboardUpdates({ state, onNavigate }) {
     {loading ? <p role="status">Updates laden…</p> : error ? <div role="alert"><p>De updates konden niet worden geladen.</p><button type="button" className="admin-button admin-button--secondary" onClick={() => void state.reload()}>Opnieuw proberen</button></div> : !visible.length ? <p>Er zijn nog geen updates in deze categorie.</p> : <div className="admin-update-list">
       {visible.map(update => <article className="admin-update-entry" key={update.id} aria-labelledby={`update-${update.id}`}>
         <div className="admin-update-meta"><time dateTime={update.date}>{formatUpdateDate(update.date)}</time><UpdateLabels update={update} fresh={fresh.includes(update.id)} /></div>
-        <div className="admin-update-copy"><h2 id={`update-${update.id}`}>{update.title}</h2>{update.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{update.action && <button type="button" className="admin-text-button" onClick={() => onNavigate(update.action.target)}>{update.action.label} <ArrowRight aria-hidden="true" /></button>}</div>
+        <div className="admin-update-copy"><h2 id={`update-${update.id}`} ref={update.id === projectStart?.id ? startHeading : undefined} tabIndex={update.id === projectStart?.id ? -1 : undefined}>{update.title}</h2>{update.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{update.action && <button type="button" className="admin-text-button" onClick={() => onNavigate(update.action.target)}>{update.action.label} <ArrowRight aria-hidden="true" /></button>}</div>
       </article>)}
     </div>}
     <p className="admin-update-explainer">Het label ‘Nieuw’ wordt op dit toestel onthouden zodra je een update bekijkt. Alle berichten blijven hier terug te lezen.</p>

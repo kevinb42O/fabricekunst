@@ -43,6 +43,7 @@ test('only an authorized GET receives updates; failures and other methods never 
 test('updates are categorized, newest first, and link only to existing dashboard sections', () => {
   assert.ok(dashboardUpdates.length >= 51);
   assert.equal(dashboardUpdates.at(-1).date, '2026-07-25');
+  assert.equal(dashboardUpdates.at(-1).id, '2026-07-25-projectstart', 'The project start must close the timeline, including same-day updates');
   for (const id of ['2026-07-25-projectstart', '2026-07-25-collectiepagina', '2026-07-25-herkomstpagina', '2026-07-25-dashboard', '2026-07-27-drie-talen', '2026-07-28-certificatenstudio', '2026-08-28-rembrandt-project']) {
     assert.ok(dashboardUpdates.some(update => update.id === id), `Missing project milestone: ${id}`);
   }

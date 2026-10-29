@@ -257,11 +257,6 @@ export const dashboardUpdates = [
     body: ["Het mobiele menu en de indeling voor kleine schermen zijn verbeterd. Ook het flikkeren van afbeeldingen bij het scrollen is aangepakt, zodat de werken rustiger in beeld blijven."],
   },
   {
-    id: "2026-07-25-projectstart", category: "feature", date: "2026-07-25",
-    title: "De start van je website",
-    body: ["De eerste versie van je website is opgebouwd rond bijzondere boeken en kunst. De homepage brengt de collectie in beeld, met ruimte voor topstukken en verhalen rond onder meer Voltaire en Scarron.","Dit is het begin van de projectgeschiedenis. Vanuit deze basis zijn de website en je werkruimte verder uitgebouwd."],
-  },
-  {
     id: "2026-07-25-collectiepagina", category: "page", date: "2026-07-25",
     title: "Een eigen collectiepagina en een pagina per object",
     body: ["Bezoekers kunnen de collectie op een aparte pagina ontdekken en doorklikken naar een boek of kunstwerk. Elk object krijgt ruimte voor foto’s, beschrijving en verdere gegevens."],
@@ -296,5 +291,10 @@ export const dashboardUpdates = [
     title: "Zelf de openingsbeelden van je website beheren",
     body: ["In het dashboard komt een onderdeel om de grote openingsbeelden van de homepage te beheren. Zo kun je de eerste indruk van de website aanpassen vanuit je eigen werkruimte."],
     action: {"target":"hero","label":"Openingsbeelden beheren"},
+  },
+  {
+    id: "2026-07-25-projectstart", category: "feature", date: "2026-07-25",
+    title: "Start van het project: de eerste websiteversie",
+    body: ["De eerste versie van je website is opgebouwd rond bijzondere boeken en kunst. De homepage brengt de collectie in beeld, met ruimte voor topstukken en verhalen rond onder meer Voltaire en Scarron.","Dit is het begin van de projectgeschiedenis. Vanuit deze basis zijn de website en je werkruimte verder uitgebouwd."],
   },
 ];
