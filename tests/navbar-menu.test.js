@@ -14,7 +14,7 @@ const Navbar = new Function('React', 'useState', 'useEffect', 'motion', 'Animate
 test('crossing the desktop breakpoint closes the menu and restores the previous scroll setting', () => {
   let mediaChange;
   const media = { matches: false, addEventListener(_event, callback) { mediaChange = callback; }, removeEventListener() {} };
-  globalThis.window = { matchMedia: () => media, addEventListener() {}, removeEventListener() {}, scrollY: 0 };
+  globalThis.window = { matchMedia: query => { assert.equal(query, '(min-width: 1280px)'); return media; }, addEventListener() {}, removeEventListener() {}, scrollY: 0 };
   globalThis.document = { body: { style: { overflow: 'scroll' } } };
   let renderer;
   act(() => { renderer = create(React.createElement(Navbar, { onNavigate() {} })); });
