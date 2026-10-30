@@ -29,14 +29,31 @@ export default function Navbar({
 
   // Lock body scroll on mobile when menu drawer is active
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1536px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setMobileMenuOpen(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    closeOnDesktop();
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
   }, [mobileMenuOpen]);
 
   const navLinks = buildDesktopPrimaryNavigation({
@@ -90,9 +107,9 @@ export default function Navbar({
       }`}
     >
       <div className="nav-shell relative">
-        <div className="flex xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-between gap-4 xl:gap-12 min-h-[76px] sm:min-h-[88px] py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] 2xl:grid-cols-[minmax(max-content,1fr)_auto_minmax(max-content,1fr)] items-center gap-4 2xl:gap-8 min-h-[76px] sm:min-h-[88px] py-3">
           {/* LEFT ZONE: Navigation Links */}
-          <div className="hidden xl:flex items-center gap-7 2xl:gap-10 min-w-0">
+          <div className="hidden 2xl:flex items-center gap-6 min-w-0">
             {navLinks.map((link) => {
               return (
                 <a
@@ -116,7 +133,7 @@ export default function Navbar({
           </div>
 
           {/* CENTER ZONE: Brand Logo - DEAD CENTER (Louis Vuitton Architecture) */}
-          <div className="flex-1 xl:flex-initial flex justify-center text-center">
+          <div className="col-start-2 flex justify-center text-center">
             <motion.a
               href={localizePath("/", language)}
               whileHover={{ scale: 1.015 }}
@@ -137,7 +154,7 @@ export default function Navbar({
           </div>
 
           {/* RIGHT ZONE: Contact Link & Ultra-Sleek Language Switcher */}
-          <div className="hidden xl:flex items-center justify-end gap-10 2xl:gap-12 min-w-0">
+          <div className="hidden 2xl:flex items-center justify-end gap-8 min-w-0">
             <button
               onClick={() => handleNavClick("contact")}
               aria-current={activeTab === "contact" ? "page" : undefined}
@@ -178,7 +195,7 @@ export default function Navbar({
           </div>
 
           {/* Mobile menu button */}
-          <div className="xl:hidden flex items-center">
+          <div className="2xl:hidden flex items-center justify-end">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? "Menu sluiten" : "Menu openen"}
@@ -204,7 +221,7 @@ export default function Navbar({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="xl:hidden fixed inset-0 top-[72px] bg-black/30 backdrop-blur-sm z-30"
+            className="2xl:hidden fixed inset-0 top-[72px] bg-black/30 backdrop-blur-sm z-30"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
@@ -219,7 +236,7 @@ export default function Navbar({
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.3, ease: LUXURY_EASE }}
             id="desktop-responsive-menu"
-            className="xl:hidden bg-white border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
+            className="2xl:hidden bg-white border-b border-[#D8CEB8] px-5 pt-4 pb-8 space-y-4 shadow-lg relative z-40"
           >
             {/* Navigation links */}
             <div className="space-y-1">
@@ -239,6 +256,15 @@ export default function Navbar({
                   {link.label}
                 </button>
               ))}
+              <button
+                onClick={() => {
+                  handleNavClick("contact");
+                  setMobileMenuOpen(false);
+                }}
+                className="block w-full text-left px-4 py-3 min-h-[48px] text-sm font-serif tracking-wider uppercase text-[#231A14] hover:text-[#8E7557] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#541520]"
+              >
+                {t("nav.contact") || "Contact"}
+              </button>
             </div>
 
             {/* Divider */}

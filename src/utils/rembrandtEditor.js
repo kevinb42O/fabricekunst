@@ -1,6 +1,19 @@
 export const imageDescriptionFieldId = (kind, ownerId = "", imageId = "") =>
   `rp-description-${kind}-${ownerId}-${imageId}`;
 
+export const isProjectVersionConflict = (error) =>
+  error?.status === 409 || /andere sessie|gelijktijdige wijziging|\b409\b/i.test(error?.message || "");
+
+/** An earlier server response must never replace a newer local edit. */
+export function reconcileSavedProject(current, submitted, saved, preserveDraft = false) {
+  if (!preserveDraft && JSON.stringify(current) === JSON.stringify(submitted)) return saved;
+  return {
+    ...current,
+    isEnabled: saved.isEnabled,
+    ...(saved.updatedAt ? { updatedAt: saved.updatedAt } : {}),
+  };
+}
+
 /** Use editorial descriptions only; a file name is not an image description. */
 export function fillMediaText(current, metadataText) {
   const result = { ...(current || {}) };

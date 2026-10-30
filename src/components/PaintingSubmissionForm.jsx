@@ -1,6 +1,7 @@
 import React, { useId, useMemo, useState } from "react";
 import {
   CheckCircle2,
+  ChevronDown,
   FileCheck2,
   Loader2,
   LockKeyhole,
@@ -24,6 +25,15 @@ const ACCEPTED_TYPES = new Set([
 
 const COPY = {
   nl: {
+    firstTitle: "Voor een eerste beoordeling",
+    firstText: "Uw naam en e-mailadres, een korte omschrijving, de afmetingen, de drager en minstens één foto of document volstaan. De overige gegevens zijn optioneel.",
+    nextTitle: "Na uw inzending",
+    optional: "Aanvullende gegevens",
+    optionalHint: "Optioneel · vul aan wat u al weet",
+    checklistTitle: "Welke extra beelden en documenten helpen?",
+    checklistHint: "Voeg toe wat u al heeft. U hoeft niet over alle onderstaande informatie te beschikken.",
+    documentsHint: "Voeg minstens één foto of document toe. Een duidelijke overzichtsfoto van het schilderij helpt bij de eerste beoordeling.",
+    requiredLabel: "verplicht",
     contact: "Uw contactgegevens",
     painting: "Over het schilderij",
     documents: "Foto’s en documenten",
@@ -51,12 +61,21 @@ const COPY = {
     successText: "We beoordelen de beschikbare informatie vertrouwelijk en nemen contact op wanneer er voldoende aanwijzingen zijn voor een volgende stap.",
     reference: "Referentie",
     another: "Nog een schilderij indienen",
-    required: "Vul alle verplichte velden in en bevestig de toestemming.",
+    required: "Vul de verplichte velden in, voeg minstens één foto of document toe en bevestig de toestemming.",
     fileError: "Gebruik uitsluitend JPG, PNG, WebP of PDF binnen de vermelde limieten.",
     removeFile: "verwijderen",
     privacy: "Lees het privacybeleid",
   },
   en: {
+    firstTitle: "For an initial assessment",
+    firstText: "Your name and email address, a short description, dimensions, support and at least one photograph or document are enough. The remaining details are optional.",
+    nextTitle: "After you submit",
+    optional: "Additional details",
+    optionalHint: "Optional · share what you already know",
+    checklistTitle: "Which extra images and documents help?",
+    checklistHint: "Include what you already have. You do not need all the information listed below.",
+    documentsHint: "Add at least one photograph or document. A clear photograph of the whole painting helps with the initial assessment.",
+    requiredLabel: "required",
     contact: "Your contact details",
     painting: "About the painting",
     documents: "Photographs and documents",
@@ -84,12 +103,21 @@ const COPY = {
     successText: "We will review the available information confidentially and contact you if there are sufficient indications for a next step.",
     reference: "Reference",
     another: "Submit another painting",
-    required: "Complete all required fields and confirm your consent.",
+    required: "Complete the required fields, add at least one photograph or document and confirm your consent.",
     fileError: "Please use only JPG, PNG, WebP or PDF files within the stated limits.",
     removeFile: "remove",
     privacy: "Read the privacy notice",
   },
   fr: {
+    firstTitle: "Pour une première évaluation",
+    firstText: "Votre nom et votre e-mail, une courte description, les dimensions, le support et au moins une photo ou un document suffisent. Les autres renseignements sont facultatifs.",
+    nextTitle: "Après votre envoi",
+    optional: "Informations complémentaires",
+    optionalHint: "Facultatif · indiquez ce que vous savez déjà",
+    checklistTitle: "Quels autres visuels et documents sont utiles ?",
+    checklistHint: "Joignez ce que vous possédez déjà. Il n’est pas nécessaire de disposer de tous les éléments ci-dessous.",
+    documentsHint: "Joignez au moins une photo ou un document. Une photo nette de l’ensemble du tableau facilite la première évaluation.",
+    requiredLabel: "obligatoire",
     contact: "Vos coordonnées",
     painting: "À propos du tableau",
     documents: "Photographies et documents",
@@ -117,7 +145,7 @@ const COPY = {
     successText: "Nous examinerons les informations disponibles en toute confidentialité et vous contacterons si les indices justifient une étape suivante.",
     reference: "Référence",
     another: "Soumettre un autre tableau",
-    required: "Complétez tous les champs obligatoires et confirmez votre consentement.",
+    required: "Complétez les champs obligatoires, joignez au moins une photo ou un document et confirmez votre consentement.",
     fileError: "Utilisez uniquement des fichiers JPG, PNG, WebP ou PDF respectant les limites indiquées.",
     removeFile: "supprimer",
     privacy: "Lire la politique de confidentialité",
@@ -139,13 +167,13 @@ const INITIAL_FORM = {
   consent: false,
 };
 
-function InputField({ label, required = false, hint, children }) {
+function InputField({ label, required = false, requiredLabel, wide = false, hint, children }) {
   return (
-    <label className="lost-submission__field">
+    <label className={`lost-submission__field${wide ? " lost-submission__field--wide" : ""}`}>
       <span>
         {label}
         {required && <b aria-hidden="true">*</b>}
-        {required && <span className="sr-only"> (required)</span>}
+        {required && <span className="sr-only"> ({requiredLabel})</span>}
       </span>
       {hint && <small>{hint}</small>}
       {children}
@@ -234,6 +262,11 @@ export default function PaintingSubmissionForm({ language = "en", settings = {} 
 
   return (
     <form className="lost-submission" onSubmit={submit} noValidate>
+      <header className="lost-submission__intro">
+        <h3>{labels.firstTitle}</h3>
+        <p>{labels.firstText}</p>
+        <p><strong>{labels.nextTitle}. </strong>{labels.successText}</p>
+      </header>
       <div className="lost-submission__trust">
         <LockKeyhole aria-hidden="true" />
         <div>
@@ -243,59 +276,36 @@ export default function PaintingSubmissionForm({ language = "en", settings = {} 
       </div>
 
       <fieldset>
-        <legend><span>01</span>{labels.contact}</legend>
+        <legend>{labels.contact}</legend>
         <div className="lost-submission__grid">
-          <InputField label={labels.name} required>
+          <InputField label={labels.name} required requiredLabel={labels.requiredLabel}>
             <input value={form.name} onChange={(event) => update("name", event.target.value)} autoComplete="name" required />
           </InputField>
-          <InputField label={labels.email} required>
+          <InputField label={labels.email} required requiredLabel={labels.requiredLabel}>
             <input type="email" value={form.email} onChange={(event) => update("email", event.target.value)} autoComplete="email" required />
           </InputField>
-          <InputField label={labels.phone}>
-            <input type="tel" value={form.phone} onChange={(event) => update("phone", event.target.value)} autoComplete="tel" />
-          </InputField>
-          <InputField label={labels.country}>
-            <input value={form.country} onChange={(event) => update("country", event.target.value)} autoComplete="country-name" />
-          </InputField>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend><span>02</span>{labels.painting}</legend>
+        <legend>{labels.painting}</legend>
         <div className="lost-submission__grid">
-          <InputField label={labels.title} required>
+          <InputField label={labels.title} wide required requiredLabel={labels.requiredLabel}>
             <input value={form.paintingTitle} onChange={(event) => update("paintingTitle", event.target.value)} required />
           </InputField>
-          <InputField label={labels.estimatedDate}>
-            <input value={form.estimatedDate} onChange={(event) => update("estimatedDate", event.target.value)} />
-          </InputField>
-          <InputField label={labels.dimensions} required>
+          <InputField label={labels.dimensions} required requiredLabel={labels.requiredLabel}>
             <input value={form.dimensions} onChange={(event) => update("dimensions", event.target.value)} placeholder="H × W × D" required />
           </InputField>
-          <InputField label={labels.support} required>
+          <InputField label={labels.support} required requiredLabel={labels.requiredLabel}>
             <input value={form.support} onChange={(event) => update("support", event.target.value)} placeholder={labels.supportPlaceholder} required />
           </InputField>
-          <InputField label={labels.provenance} hint={labels.provenanceHint}>
-            <textarea rows="5" value={form.provenance} onChange={(event) => update("provenance", event.target.value)} />
-          </InputField>
-          <InputField label={labels.signature}>
-            <textarea rows="5" value={form.signature} onChange={(event) => update("signature", event.target.value)} />
-          </InputField>
-          <InputField label={labels.notes}>
-            <textarea rows="5" value={form.notes} onChange={(event) => update("notes", event.target.value)} />
-          </InputField>
+
         </div>
       </fieldset>
 
       <fieldset>
-        <legend><span>03</span>{labels.documents}</legend>
-        {Array.isArray(checklist) && checklist.length > 0 && (
-          <ul className="lost-submission__checklist">
-            {checklist.filter(Boolean).map((item) => (
-              <li key={item}><FileCheck2 aria-hidden="true" />{item}</li>
-            ))}
-          </ul>
-        )}
+        <legend>{labels.documents}</legend>
+        <p className="lost-submission__hint">{labels.documentsHint}</p>
         <label className="lost-submission__drop" htmlFor={inputId}>
           <Upload aria-hidden="true" />
           <strong>{labels.files}<b aria-hidden="true">*</b></strong>
@@ -316,7 +326,42 @@ export default function PaintingSubmissionForm({ language = "en", settings = {} 
             <small>{(totalBytes / 1024 / 1024).toFixed(1)} MB</small>
           </div>
         )}
+        {Array.isArray(checklist) && checklist.some(Boolean) && (
+          <details className="lost-submission__guidance">
+            <summary>{labels.checklistTitle}<ChevronDown aria-hidden="true" /></summary>
+            <p className="lost-submission__hint">{labels.checklistHint}</p>
+            <ul className="lost-submission__checklist">
+              {checklist.filter(Boolean).map((item) => (
+                <li key={item}><FileCheck2 aria-hidden="true" />{item}</li>
+              ))}
+            </ul>
+          </details>
+        )}
       </fieldset>
+
+      <details className="lost-submission__optional">
+        <summary><span>{labels.optional}<small>{labels.optionalHint}</small></span><ChevronDown aria-hidden="true" /></summary>
+        <div className="lost-submission__grid">
+          <InputField label={labels.phone}>
+            <input type="tel" value={form.phone} onChange={(event) => update("phone", event.target.value)} autoComplete="tel" />
+          </InputField>
+          <InputField label={labels.country}>
+            <input value={form.country} onChange={(event) => update("country", event.target.value)} autoComplete="country-name" />
+          </InputField>
+          <InputField label={labels.estimatedDate}>
+            <input value={form.estimatedDate} onChange={(event) => update("estimatedDate", event.target.value)} />
+          </InputField>
+          <InputField label={labels.provenance} hint={labels.provenanceHint}>
+            <textarea rows="3" value={form.provenance} onChange={(event) => update("provenance", event.target.value)} />
+          </InputField>
+          <InputField label={labels.signature}>
+            <textarea rows="3" value={form.signature} onChange={(event) => update("signature", event.target.value)} />
+          </InputField>
+          <InputField label={labels.notes}>
+            <textarea rows="3" value={form.notes} onChange={(event) => update("notes", event.target.value)} />
+          </InputField>
+        </div>
+      </details>
 
       <p className="lost-submission__notice"><ShieldCheck aria-hidden="true" />{localizedProjectValue(settings.submissionNotice, language)}</p>
       <label className="lost-submission__consent">

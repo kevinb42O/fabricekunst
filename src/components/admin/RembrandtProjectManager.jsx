@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useId } from "react";
+import React, { useEffect, useMemo, useState, useId, useRef } from "react";
 import {
   Archive,
   ArrowLeft,
@@ -33,6 +33,7 @@ import {
   createProjectInvestigation,
   createResearchStep,
   createProjectUpdate,
+  featuredProjectStory,
   getRembrandtProjectIntegrityIssues,
   normalizeRembrandtProject,
 } from "../../utils/rembrandtProject";
@@ -47,9 +48,12 @@ import {
   setRembrandtProjectAccessAsync,
 } from "../../utils/storage";
 import { localizePath } from "../../utils/locales";
+import { researchAreaForStep } from "../../utils/rembrandtResearch";
 import { preferredMediaVariantUrl } from "../../utils/mediaSearch";
 import {
   fillMediaText,
+  isProjectVersionConflict,
+  reconcileSavedProject,
   getProjectImageDescriptionIssues,
   imageDescriptionFieldId,
 } from "../../utils/rembrandtEditor";
@@ -330,6 +334,11 @@ export default function RembrandtProjectManager({
   const [confirmRevoke, setConfirmRevoke] = useState(false);
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [pendingFieldFocus, setPendingFieldFocus] = useState(null);
+  const [saveConflict, setSaveConflict] = useState(false);
+  const [conflictReloading, setConflictReloading] = useState(false);
+  const operationInFlight = useRef(false);
+  const projectRef = useRef(project);
+  projectRef.current = project;
 
   const loadProject = () => {
     let active = true;
@@ -353,6 +362,7 @@ export default function RembrandtProjectManager({
           setSavedSnapshot(JSON.stringify(normalized));
           setIntegrityIssues(detectedIssues);
           setNeedsRepair(detectedIssues.length > 0);
+          setSaveConflict(false);
           setSelectedId(normalized.updates?.[0]?.id || null);
           setSelectedInvestigationId(
             normalized.investigations?.[0]?.id || null,
@@ -394,11 +404,12 @@ export default function RembrandtProjectManager({
   }, [savedSnapshot]);
 
   useEffect(() => {
-    if (!isActive || dirty || loading) return;
+    if (!isActive || dirty || loading || saving || accessSaving || saveConflict) return;
     let cancelled = false;
+    const requestedSnapshot = JSON.stringify(projectRef.current);
     fetchRembrandtProjectAdminAsync()
       .then(({ project: loaded, version, revisions: loadedRevisions }) => {
-        if (cancelled) return;
+        if (cancelled || operationInFlight.current || JSON.stringify(projectRef.current) !== requestedSnapshot) return;
         const normalized = normalizeRembrandtProject(loaded);
         setSavedVersion(version ?? null);
         setSavedSnapshot(JSON.stringify(normalized));
@@ -409,7 +420,7 @@ export default function RembrandtProjectManager({
     return () => {
       cancelled = true;
     };
-  }, [isActive, dirty]);
+  }, [isActive, dirty, loading, saving, accessSaving, saveConflict]);
 
   const createPreviewLink = async () => {
     setPreviewBusy(true);
@@ -461,6 +472,22 @@ export default function RembrandtProjectManager({
     project.investigations.find(
       (entry) => entry.id === selectedInvestigationId,
     ) || null;
+  const overviewInvestigations = [...project.investigations].sort(
+    (a, b) => Number(a.sortOrder) - Number(b.sortOrder),
+  );
+  const overviewInvestigation =
+    overviewInvestigations.find((entry) => entry.featured) ||
+    overviewInvestigations.find((entry) => entry.visible !== false) ||
+    overviewInvestigations[0];
+  const overviewUpdates = project.updates
+    .filter((entry) => entry.investigationId === overviewInvestigation?.id)
+    .sort((a, b) =>
+      new Date(b.publishedAt || b.eventDate || 0) - new Date(a.publishedAt || a.eventDate || 0) ||
+      Number(b.sequence) - Number(a.sequence),
+    );
+  const overviewSelectedUpdate = overviewUpdates.find((entry) => entry.featured === true);
+  const overviewStory = featuredProjectStory(project);
+  const overviewUpdate = overviewSelectedUpdate || (overviewStory?.investigation.id === overviewInvestigation?.id ? overviewStory?.update : null);
   const filteredUpdates = project.updates
     .filter((update) => {
       const query = searchQuery.trim().toLowerCase();
@@ -686,7 +713,7 @@ export default function RembrandtProjectManager({
                 ? { ...(entry[field] || {}), [language]: value }
                 : value,
             }
-          : entry,
+          : field === "featured" && value === true ? { ...entry, featured: false } : entry,
       ),
     }));
 
@@ -720,46 +747,63 @@ export default function RembrandtProjectManager({
       ),
     }));
 
+  const reportSaveError = (error) => {
+    if (isProjectVersionConflict(error)) {
+      setSaveConflict(true);
+      onShowToast("Een andere sessie heeft dit project gewijzigd. Uw invoer is behouden; laad eerst de nieuwste versie.", "error");
+    } else {
+      onShowToast(error.message, "error");
+    }
+  };
+
+  const downloadLocalChanges = () => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(projectRef.current, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `lost-rembrandt-eigen-wijzigingen-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const reloadAfterConflict = async () => {
+    if (operationInFlight.current || !window.confirm("De nieuwste serverversie vervangt uw lokale invoer. Download eerst uw eigen wijzigingen als u die wilt bewaren. Doorgaan?")) return;
+    operationInFlight.current = true;
+    setConflictReloading(true);
+    try {
+      const loaded = await fetchRembrandtProjectAdminAsync();
+      const normalized = normalizeRembrandtProject(loaded.project);
+      const issues = loaded.integrityIssues?.length ? loaded.integrityIssues : getRembrandtProjectIntegrityIssues(loaded.project);
+      setProject(normalized);
+      setSavedVersion(loaded.version ?? null);
+      setSavedSnapshot(JSON.stringify(normalized));
+      setIntegrityIssues(issues);
+      setNeedsRepair(issues.length > 0);
+      setRevisions(loaded.revisions || []);
+      setSelectedId(normalized.updates[0]?.id || null);
+      setSelectedInvestigationId(normalized.investigations[0]?.id || null);
+      setSaveConflict(false);
+      onShowToast("De nieuwste versie is geladen. U kunt uw wijzigingen opnieuw verwerken.", "info");
+    } catch (error) {
+      onShowToast(error.message, "error");
+    } finally {
+      operationInFlight.current = false;
+      setConflictReloading(false);
+    }
+  };
+
   const save = async ({ publish = false } = {}) => {
-    if (saving || loadError) return;
+    if (operationInFlight.current || loadError || saveConflict) return;
     if ((publish || savedPublicEnabled) && publicationIssues.length) {
       showPublicationIssue(publicationIssues[0]);
       return;
     }
+    const submitted = project;
+    operationInFlight.current = true;
     setSaving(true);
     try {
-      let currentExpectedVersion = savedVersion;
-      let result;
-      try {
-        result = await saveRembrandtProjectDataAsync(
-          project,
-          currentExpectedVersion,
-          {
-            publish,
-          },
-        );
-      } catch (firstError) {
-        const isConflict =
-          firstError?.status === 409 ||
-          (typeof firstError?.message === "string" &&
-            (firstError.message.includes("andere sessie") ||
-              firstError.message.includes("409")));
-        if (!isConflict) throw firstError;
-
-        // Auto-recovery: refresh the database version in background and retry save once
-        const fresh = await fetchRembrandtProjectAdminAsync();
-        if (!fresh?.version) throw firstError;
-        currentExpectedVersion = fresh.version;
-        result = await saveRembrandtProjectDataAsync(
-          project,
-          currentExpectedVersion,
-          {
-            publish,
-          },
-        );
-      }
-
-      setProject(result.project);
+      const result = await saveRembrandtProjectDataAsync(submitted, savedVersion, { publish });
+      const newerEdits = JSON.stringify(projectRef.current) !== JSON.stringify(submitted);
+      setProject((current) => reconcileSavedProject(current, submitted, result.project));
       setSavedVersion(result.version);
       setSavedSnapshot(JSON.stringify(result.project));
       setIntegrityIssues([]);
@@ -767,19 +811,22 @@ export default function RembrandtProjectManager({
       setValidationAttempted(false);
       onPublished(result.project);
       onShowToast(
-        result.project.isEnabled
-          ? "The Lost Rembrandt Project is veilig opgeslagen en bijgewerkt op de website."
-          : "The Lost Rembrandt Project is veilig opgeslagen en blijft verborgen voor bezoekers.",
+        newerEdits
+          ? "Opgeslagen. Uw nieuwere wijzigingen staan nog klaar om op te slaan."
+          : result.project.isEnabled
+            ? "The Lost Rembrandt Project is veilig opgeslagen en bijgewerkt op de website."
+            : "The Lost Rembrandt Project is veilig opgeslagen en blijft verborgen voor bezoekers.",
       );
     } catch (error) {
-      onShowToast(error.message, "error");
+      reportSaveError(error);
     } finally {
+      operationInFlight.current = false;
       setSaving(false);
     }
   };
 
   const changePublicAccess = async (enabled) => {
-    if (accessSaving || saving) return;
+    if (operationInFlight.current || saveConflict) return;
     if (enabled && dirty) {
       onShowToast(
         "Sla uw inhoudswijzigingen eerst op voordat u de publieke toegang verandert.",
@@ -791,36 +838,12 @@ export default function RembrandtProjectManager({
       showPublicationIssue(publicationIssues[0]);
       return;
     }
+    const submitted = project;
+    operationInFlight.current = true;
     setAccessSaving(true);
     try {
-      let currentExpectedVersion = savedVersion;
-      let result;
-      try {
-        result = await setRembrandtProjectAccessAsync(
-          enabled,
-          currentExpectedVersion,
-        );
-      } catch (firstError) {
-        const isConflict =
-          firstError?.status === 409 ||
-          (typeof firstError?.message === "string" &&
-            (firstError.message.includes("andere sessie") ||
-              firstError.message.includes("409")));
-        if (!isConflict) throw firstError;
-
-        // Auto-recovery: refresh the database version in background and retry once
-        const fresh = await fetchRembrandtProjectAdminAsync();
-        if (!fresh?.version) throw firstError;
-        currentExpectedVersion = fresh.version;
-        result = await setRembrandtProjectAccessAsync(
-          enabled,
-          currentExpectedVersion,
-        );
-      }
-
-      setProject((current) =>
-        !enabled && dirty ? { ...current, isEnabled: false } : result.project,
-      );
+      const result = await setRembrandtProjectAccessAsync(enabled, savedVersion);
+      setProject((current) => reconcileSavedProject(current, submitted, result.project, dirty));
       setSavedVersion(result.version);
       setSavedSnapshot(JSON.stringify(result.project));
       onPublished(result.project);
@@ -830,8 +853,9 @@ export default function RembrandtProjectManager({
           : "The Lost Rembrandt Project is niet meer openbaar.",
       );
     } catch (error) {
-      onShowToast(error.message, "error");
+      reportSaveError(error);
     } finally {
+      operationInFlight.current = false;
       setAccessSaving(false);
     }
   };
@@ -1331,7 +1355,7 @@ export default function RembrandtProjectManager({
             type="button"
             className="admin-button admin-button--primary"
             onClick={save}
-            disabled={saving}
+            disabled={saving || accessSaving || saveConflict}
           >
             {saving ? (
               <Loader2 className="is-spinning" aria-hidden="true" />
@@ -1346,6 +1370,20 @@ export default function RembrandtProjectManager({
           </button>
         </div>
       </header>
+
+      {saveConflict && (
+        <aside className="rp-admin-data-alert" role="alert">
+          <AlertTriangle aria-hidden="true" />
+          <div>
+            <strong>Niet opgeslagen: dit project is in een andere sessie gewijzigd</strong>
+            <p>Uw invoer is behouden. Download uw eigen wijzigingen voordat u de nieuwste serverversie laadt. Verwerk daarna uw wijzigingen in die versie.</p>
+            <div className="rp-admin-conflict-actions">
+              <button type="button" className="admin-button admin-button--secondary" onClick={downloadLocalChanges} disabled={conflictReloading}>Eigen wijzigingen downloaden</button>
+              <button type="button" className="admin-button admin-button--secondary" onClick={reloadAfterConflict} disabled={conflictReloading}>{conflictReloading ? "Nieuwste versie laden…" : "Nieuwste versie laden"}</button>
+            </div>
+          </div>
+        </aside>
+      )}
 
       {validationAttempted && publicationIssues.length > 0 && (
         <aside className="rp-admin-data-alert" role="alert">
@@ -1570,7 +1608,7 @@ export default function RembrandtProjectManager({
                   }
                 />
               </Field>
-              <Field label="Inleiding">
+              <Field label="Inleiding" hint="Publieke inleiding bij de onderzoeken. Vertel wat bezoekers hier kunnen ontdekken.">
                 <textarea
                   rows="3"
                   value={valueFor(
@@ -1593,6 +1631,7 @@ export default function RembrandtProjectManager({
             onChange={setPageTab}
             items={[
               { id: "0", label: "Introductie" },
+              { id: "featured", label: "Uitgelicht onderzoek" },
               { id: "1", label: "Status" },
               { id: "2", label: "Hoofdbeeld" },
               { id: "3", label: "Onderzoeksfases" },
@@ -1632,6 +1671,123 @@ export default function RembrandtProjectManager({
             role="tabpanel"
             aria-labelledby="rp-tab-page"
           >
+            <section hidden={pageTab !== "featured"} className="rp-admin-card">
+              <div className="rp-admin-card__heading">
+                <h2>Uitgelicht onderzoek</h2>
+              </div>
+              <p>
+                Direct na de opening zien bezoekers dit dossier met een onderzoeksstap en beeld.
+                Titel, samenvatting, datum, bewijsstatus en bijschriften komen uit de bestaande dossier- en updatevelden.
+              </p>
+              <div className="rp-admin-form-grid">
+                <Field
+                  label="Dossier bovenaan"
+                  hint="Een verborgen dossier verschijnt niet op de website; dan wordt het eerste zichtbare dossier gebruikt."
+                >
+                  <select
+                    value={overviewInvestigation?.id || ""}
+                    onChange={(event) => setProject((current) => ({
+                      ...current,
+                      investigations: current.investigations.map((entry) => ({
+                        ...entry,
+                        featured: entry.id === event.target.value,
+                      })),
+                    }))}
+                  >
+                    {project.investigations.length === 0 && <option value="">Nog geen dossiers</option>}
+                    {overviewInvestigations.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.reference} — {entry.subtitle?.nl || entry.title?.nl}
+                        {entry.visible === false ? " (verborgen)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field
+                  label="Uitgelichte onderzoeksstap"
+                  hint="Alleen gepubliceerde updates binnen een zichtbare fase worden getoond. Bij een concept, verborgen fase of verwijderde update gebruikt de website de nieuwste publieke update van dit dossier."
+                >
+                  <select
+                    value={overviewSelectedUpdate?.id || ""}
+                    disabled={!overviewInvestigation}
+                    onChange={(event) => setProject((current) => ({
+                      ...current,
+                      updates: current.updates.map((entry) =>
+                        entry.investigationId === overviewInvestigation.id
+                          ? { ...entry, featured: entry.id === event.target.value }
+                          : entry,
+                      ),
+                    }))}
+                  >
+                    <option value="">Automatisch: nieuwste publieke update</option>
+                    {overviewUpdates.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.title?.nl || "Zonder titel"} ({entry.status === "published" ? "gepubliceerd" : entry.status === "archived" ? "gearchiveerd" : "concept"})
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                {overviewUpdate && (
+                  <Field
+                    label="Onderzoeksbeeld op het overzicht"
+                    hint="Bewerk de foto’s, beschrijvingen en bijschriften bij deze update onder Beelden. Als een gekozen beeld wordt verwijderd, gebruikt de website het hoofdbeeld of het eerste beschikbare galerijbeeld."
+                  >
+                    <select
+                      value={overviewUpdate.gallery?.some((image) => image.id === overviewUpdate.featuredImageId && image.url) ? overviewUpdate.featuredImageId : ""}
+                      onChange={(event) => setProject((current) => ({
+                        ...current,
+                        updates: current.updates.map((entry) =>
+                          entry.id === overviewUpdate.id
+                            ? { ...entry, featuredImageId: event.target.value }
+                            : entry,
+                        ),
+                      }))}
+                    >
+                      <option value="">Automatisch: hoofdbeeld, anders eerste galerijbeeld</option>
+                      {(overviewUpdate.gallery || []).filter((image) => image.url).map((image, index) => (
+                        <option key={image.id} value={image.id}>
+                          Galerijbeeld {index + 1} — {image.alt?.nl || image.caption?.nl || "Zonder beschrijving"}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </div>
+              <p className="rp-admin-media-help" role="status">
+                Overzicht na opslaan: {overviewStory ? `${overviewStory.investigation.reference} — ${overviewStory.update?.title?.nl || overviewStory.investigation.subtitle?.nl || overviewStory.investigation.title?.nl}` : "nog geen zichtbaar dossier"}.
+                Alleen zichtbaar als het project openbaar is. Zonder publieke update toont de website alleen het dossier.
+              </p>
+              <div className="rp-admin-form-grid rp-admin-form-grid--two">
+                {overviewInvestigation && (
+                  <button
+                    type="button"
+                    className="admin-button admin-button--secondary"
+                    onClick={() => {
+                      setSelectedInvestigationId(overviewInvestigation.id);
+                      setWorkspaceMode("edit");
+                      setDossierTab("text");
+                      setPanel("investigations");
+                    }}
+                  >
+                    Dossier bewerken<ArrowRight aria-hidden="true" />
+                  </button>
+                )}
+                {overviewUpdate && (
+                  <button
+                    type="button"
+                    className="admin-button admin-button--secondary"
+                    onClick={() => {
+                      setSelectedId(overviewUpdate.id);
+                      setUpdateInvestigationFilter(overviewUpdate.investigationId);
+                      setUpdateTab("text");
+                      setPanel("updates");
+                    }}
+                  >
+                    Onderzoeksstap bewerken<ArrowRight aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            </section>
             <section hidden={pageTab !== "0"} className="rp-admin-card">
               <div className="rp-admin-card__heading">
                 <div>
@@ -1665,7 +1821,7 @@ export default function RembrandtProjectManager({
                     }
                   />
                 </Field>
-                <Field label="Projectsamenvatting">
+                <Field label="Projectsamenvatting" hint="Verschijnt bij Over het project, na de onderzoeken.">
                   <textarea
                     rows="7"
                     value={valueFor(project.settings, "summary", language)}
@@ -1676,7 +1832,7 @@ export default function RembrandtProjectManager({
                 </Field>
                 <Field
                   label="Permanent voorbehoud"
-                  hint="Deze tekst bewaakt de zorgvuldige formulering rond de toeschrijving."
+                  hint="Verschijnt naast het uitgelichte onderzoek en in elk dossier. Deze tekst bewaakt de zorgvuldige formulering rond de toeschrijving."
                 >
                   <textarea
                     rows="4"
@@ -2223,7 +2379,7 @@ export default function RembrandtProjectManager({
                     <SwitchControl
                       checked={selectedInvestigation.featured === true}
                       label="Uitgelicht dossier"
-                      description="Plaats dit dossier prominent in het overzicht."
+                      description="Toon dit dossier als eerste, met de gekozen onderzoeksstap. De selectie vervangt het vorige uitgelichte dossier. Beheer de stap en het beeld bij Overzichtspagina → Uitgelicht onderzoek."
                       onChange={(event) =>
                         updateInvestigation(
                           selectedInvestigation.id,
@@ -2594,7 +2750,7 @@ export default function RembrandtProjectManager({
                     }
                   />
                 </Field>
-                <Field label="Inleiding">
+                <Field label="Inleiding" hint="Deze achtergrond verschijnt na de onderzoeken. De secties hieronder zijn op de website uitklapbaar; volgorde en zichtbaarheid blijven hier instelbaar.">
                   <textarea
                     rows="4"
                     value={valueFor(project.settings, "aboutIntro", language)}
@@ -2754,6 +2910,10 @@ export default function RembrandtProjectManager({
                   Stap
                 </button>
               </div>
+              <p className="rp-admin-media-help">
+                De website groepeert deze onderwerpen per onderzoeksgebied. Alle teksten blijven beschikbaar;
+                de volgorde hieronder bepaalt de volgorde binnen elk gebied. Nieuwe onderwerpen verschijnen onder Aanvullend onderzoek.
+              </p>
               <div className="rp-admin-form-grid">
                 <Field label="Sectietitel">
                   <input
@@ -2913,6 +3073,7 @@ export default function RembrandtProjectManager({
                           <Trash2 aria-hidden="true" />
                         </button>
                       </div>
+                      <p className="rp-admin-media-help">Onderzoeksgebied op de website: <strong>{researchAreaForStep(step).title.nl}</strong></p>
                       <Field label={`Stap ${step.sortOrder}`}>
                         <input
                           value={valueFor(step, "title", language)}
@@ -3738,7 +3899,7 @@ export default function RembrandtProjectManager({
                       <button
                         type="button"
                         className="admin-button admin-button--secondary"
-                        disabled={accessSaving || saving}
+                        disabled={accessSaving || saving || saveConflict}
                         onClick={() => setConfirmPublicDisable(true)}
                       >
                         <EyeOff aria-hidden="true" />
@@ -3748,7 +3909,7 @@ export default function RembrandtProjectManager({
                       <button
                         type="button"
                         className="admin-button admin-button--primary"
-                        disabled={saving || accessSaving}
+                        disabled={saving || accessSaving || saveConflict}
                         onClick={() => save({ publish: true })}
                       >
                         {saving ? (
@@ -3778,6 +3939,7 @@ export default function RembrandtProjectManager({
                       <button
                         type="button"
                         className="admin-button admin-button--danger"
+                        disabled={accessSaving || saving || saveConflict}
                         onClick={() => {
                           setConfirmPublicDisable(false);
                           changePublicAccess(false);
@@ -4013,7 +4175,7 @@ export default function RembrandtProjectManager({
                 type="button"
                 className="admin-button admin-button--primary rp-admin-publish-button"
                 onClick={() => save({ publish: !savedPublicEnabled })}
-                disabled={saving || accessSaving}
+                disabled={saving || accessSaving || saveConflict}
               >
                 {saving ? (
                   <Loader2 className="is-spinning" aria-hidden="true" />

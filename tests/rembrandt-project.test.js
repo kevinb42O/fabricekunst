@@ -5,6 +5,7 @@ import {
   createEmptyRembrandtProject,
   createProjectInvestigation,
   createProjectUpdate,
+  featuredProjectStory,
   getRembrandtProjectIntegrityIssues,
   latestProjectUpdate,
   localizedProjectValue,
@@ -50,6 +51,54 @@ test("latest update and progress follow publication time and visible phases", ()
   const latest = latestProjectUpdate(project);
   assert.equal(latest.id, "planned-research");
   assert.equal(projectProgress(project), 60);
+});
+
+test("overview follows the featured dossier and editorial update and image selections", async () => {
+  const project = cloneDefaultRembrandtProject();
+  const update = project.updates.find((entry) => entry.id === "xray-research");
+  project.updates.forEach((entry) => { entry.featured = entry.id === update.id; });
+  update.gallery = [{ id: "radiograph", url: "/images/lost-rembrandt/project-01-detail.jpeg", alt: { nl: "Röntgenbeeld" } }];
+  update.featuredImageId = "radiograph";
+  const saved = JSON.parse(await validateProject(project));
+  const story = featuredProjectStory(normalizeRembrandtProject(saved));
+  assert.equal(story.investigation.id, "project-01");
+  assert.equal(story.update.id, update.id);
+  assert.equal(story.image.alt.nl, "Röntgenbeeld");
+  assert.equal(publishedRembrandtProject(saved).updates.find((entry) => entry.id === update.id).featuredImageId, "radiograph");
+});
+
+test("overview never promotes drafts, archived or future updates, or hidden phases", () => {
+  for (const change of [
+    (project, update) => { update.status = "draft"; },
+    (project, update) => { update.status = "archived"; },
+    (project, update) => { update.publishedAt = "2999-01-01T00:00:00.000Z"; },
+    (project, update) => { project.phases.find((phase) => phase.id === update.phaseId).visible = false; },
+  ]) {
+    const project = cloneDefaultRembrandtProject();
+    const selected = project.updates.find((entry) => entry.featured);
+    change(project, selected);
+    const story = featuredProjectStory(project);
+    assert.notEqual(story.update?.id, selected.id);
+    assert.equal(story.update?.id, latestProjectUpdate(project).id);
+  }
+});
+
+test("overview falls back when its dossier, update or image is removed", () => {
+  const project = cloneDefaultRembrandtProject();
+  project.investigations[0].visible = false;
+  let story = featuredProjectStory(project);
+  assert.equal(story.investigation.id, "project-02");
+  assert.equal(story.update, null);
+  assert.equal(story.image, null);
+  project.investigations[0].visible = true;
+  const selected = project.updates.find((entry) => entry.featured);
+  selected.featuredImageId = "deleted-image";
+  selected.coverImage = "/images/lost-rembrandt/project-01-detail.jpeg";
+  assert.equal(featuredProjectStory(project).image.url, selected.coverImage);
+  project.updates = project.updates.filter((entry) => entry.id !== selected.id);
+  assert.equal(featuredProjectStory(project).update.id, latestProjectUpdate(project).id);
+  project.investigations.forEach((entry) => { entry.visible = false; });
+  assert.equal(featuredProjectStory(project), null);
 });
 
 test("the Lost Rembrandt seed passes strict server validation with bundled images", async () => {
@@ -270,11 +319,15 @@ test("isVersionMatch correctly matches timestamps regardless of timezone format 
   assert.equal(isVersionMatch(postgresUtc, isoUtc), true);
   assert.equal(isVersionMatch(isoUtc, isoUtc), true);
 
-  // Minor millisecond drift (<= 2s)
+  // Another revision must conflict even when saves happen close together.
   assert.equal(
     isVersionMatch("2026-09-10T21:32:39.000Z", "2026-09-10T21:32:40.500+00:00"),
-    true,
+    false,
   );
+
+  assert.equal(isVersionMatch("2026-09-10T21:32:39.409Z", "2026-09-10T21:32:39.410Z"), false);
+  assert.equal(isVersionMatch("2026-09-10T21:32:39.409001Z", "2026-09-10T21:32:39.409002Z"), false);
+  assert.equal(isVersionMatch(isoUtc, "2026-09-10T23:32:39.409000+02:00"), true);
 
   // Real conflict (> 2s)
   assert.equal(

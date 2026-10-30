@@ -13,18 +13,20 @@ import {
   FlaskConical,
   LockKeyhole,
   Microscope,
-  Search,
   ShieldCheck,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 import {
   latestProjectUpdate,
+  featuredProjectStory,
   localizedProjectValue,
   publishedRembrandtProject,
 } from "../utils/rembrandtProject";
 import { localizePath } from "../utils/locales";
 import { REMBRANDT_PROJECT_ROUTE } from "../utils/rembrandtProject";
 import { trackEvent } from "../hooks/useAnalytics";
+import { groupResearchSteps } from "../utils/rembrandtResearch";
+import { followProjectAnchor } from "../utils/projectNavigation";
 import PaintingSubmissionForm from "./PaintingSubmissionForm";
 import "../styles/rembrandt-project.css";
 
@@ -40,6 +42,7 @@ const UI = {
     explore: "Bekijk de onderzoeken",
     submit: "Dien uw schilderij in",
     viewCase: "Open het onderzoeksdossier",
+    viewFinding: "Bekijk het onderzoek",
     closeCase: "Sluit het onderzoeksdossier",
     privateSubmission: "Vertrouwelijke inzending",
     caseNumber: "Dossier",
@@ -72,6 +75,7 @@ const UI = {
     explore: "Explore the investigations",
     submit: "Submit your painting",
     viewCase: "Open the research case",
+    viewFinding: "Explore the research",
     closeCase: "Close the research case",
     privateSubmission: "Confidential submission",
     caseNumber: "Case",
@@ -104,6 +108,7 @@ const UI = {
     explore: "Découvrir les recherches",
     submit: "Soumettez votre tableau",
     viewCase: "Ouvrir le dossier de recherche",
+    viewFinding: "Découvrir la recherche",
     closeCase: "Fermer le dossier de recherche",
     privateSubmission: "Soumission confidentielle",
     caseNumber: "Dossier",
@@ -211,6 +216,32 @@ function Investigation({ investigation, language, labels, privatePreview }) {
   );
 }
 
+function FeaturedInvestigation({ story, language, labels, privatePreview, disclaimer }) {
+  const { investigation, update, image } = story;
+  const path = casePath(investigation, language, privatePreview);
+  const href = update ? `${path}#update-${update.slug}` : path;
+  const hasImages = Boolean(investigation.coverImage || image);
+  return (
+    <article id={`investigation-${investigation.slug}`} className={`lost-featured${hasImages ? "" : " is-text-only"}`}>
+      {hasImages && <div className={`lost-featured__images${image && investigation.coverImage ? " has-research-image" : ""}`}>
+        <ProjectImage language={language} image={{ url: investigation.coverImage, alt: investigation.coverAlt, caption: investigation.subtitle }} />
+        {image && <ProjectImage language={language} image={image} />}
+      </div>}
+      <div className="lost-featured__story">
+        <div className="lost-featured__meta">
+          <a href={path}>{labels.caseNumber} {investigation.reference}</a>
+          {update && <span className={`rembrandt-evidence rembrandt-evidence--${update.evidenceType}`}>{labels.evidence[update.evidenceType] || labels.evidence.observation}</span>}
+          {update?.eventDate && <time dateTime={update.eventDate}>{dateFormatter(language, update.eventDate)}</time>}
+        </div>
+        <h3>{localizedProjectValue(update?.title, language, "") || localizedProjectValue(investigation.subtitle, language, "") || localizedProjectValue(investigation.title, language)}</h3>
+        <p>{localizedProjectValue(update?.summary, language, "") || localizedProjectValue(investigation.summary, language)}</p>
+        <a className="lost-featured__link" href={href}>{update ? labels.viewFinding : labels.viewCase}<ArrowRight aria-hidden="true" /></a>
+        {localizedProjectValue(disclaimer, language, "") && <aside className="lost-featured__qualification"><ShieldCheck aria-hidden="true" /><p>{localizedProjectValue(disclaimer, language)}</p></aside>}
+      </div>
+    </article>
+  );
+}
+
 function DetailImage({ image, language, copy }) {
   const dialog = useRef(null);
   return <figure className="dossier-image">
@@ -258,8 +289,8 @@ function StickySubmissionIntro({ reveal, language, labels, settings }) {
       // fixed panel a stable visual column throughout the long form.
       rail.style.minHeight = `${form.offsetHeight}px`;
       const railBounds = rail.getBoundingClientRect();
-      const navHeight = navigation?.getBoundingClientRect().height || 59;
-      const top = navHeight + Math.min(Math.max(window.innerWidth * 0.02, 16), 28);
+      const navigationBottom = navigation?.getBoundingClientRect().bottom || 0;
+      const top = Math.max(0, navigationBottom) + Math.min(Math.max(window.innerWidth * 0.02, 16), 28);
       const contentHeight = content.offsetHeight;
 
       content.style.setProperty("--submission-intro-left", `${railBounds.left}px`);
@@ -280,6 +311,7 @@ function StickySubmissionIntro({ reveal, language, labels, settings }) {
     const observer = new ResizeObserver(update);
     observer.observe(form);
     observer.observe(content);
+    if (navigation) observer.observe(navigation);
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
     desktop.addEventListener("change", update);
@@ -298,7 +330,7 @@ function StickySubmissionIntro({ reveal, language, labels, settings }) {
     <div ref={railRef} className="lost-rembrandt__submit-sticky">
       <div className="lost-rembrandt__submit-intro">
         <motion.div ref={contentRef} {...reveal} className="lost-rembrandt__submit-intro-content">
-          <p>{labels.nav.submit}</p><h2>{localizedProjectValue(settings.submissionTitle, language)}</h2><span>{localizedProjectValue(settings.submissionIntro, language)}</span>
+          <h2>{localizedProjectValue(settings.submissionTitle, language)}</h2><span>{localizedProjectValue(settings.submissionIntro, language)}</span>
           <div><LockKeyhole aria-hidden="true" /><strong>{localizedProjectValue(settings.confidentialityTitle, language)}</strong><p>{localizedProjectValue(settings.confidentialityText, language)}</p></div>
         </motion.div>
       </div>
@@ -348,15 +380,13 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
   const project = useMemo(() => publishedRembrandtProject(projectData), [projectData]);
   const settings = project.settings;
   const latest = latestProjectUpdate(project);
+  const latestInvestigation = project.investigations.find((entry) => entry.id === latest?.investigationId);
+  const featuredStory = featuredProjectStory(project);
   const reveal = reduceMotion ? {} : { initial: { opacity: 0, y: 14 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-70px" }, transition: { duration: 0.5 } };
 
   useEffect(() => {
     if (loading || !projectData) return;
-    const frame = window.requestAnimationFrame(() => {
-      const anchor = window.location.hash.slice(1);
-      if (anchor) document.getElementById(anchor)?.scrollIntoView({ behavior: "instant", block: "start" });
-    });
-    return () => window.cancelAnimationFrame(frame);
+    return followProjectAnchor();
   }, [loading, projectData, investigationSlug]);
 
   if (loading) return <div className="rembrandt-project rembrandt-project__state" aria-live="polite"><span className="rembrandt-project__state-loader" /><p>{labels.loading}</p></div>;
@@ -372,11 +402,8 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
     <main className="rembrandt-project">
       {privatePreview && <div className="rembrandt-project__private-preview" role="status"><ShieldCheck aria-hidden="true" /><span>{labels.privatePreview}</span></div>}
       <header className={`rembrandt-project__hero ${settings.heroImage ? "has-image" : ""}`}>
-        {settings.heroImage && <img className="rembrandt-project__hero-image" src={settings.heroImage} alt={localizedProjectValue(settings.heroAlt, language)} fetchpriority="high" />}
-        <div className="rembrandt-project__hero-wash" aria-hidden="true" />
         <div className="rembrandt-project__shell rembrandt-project__hero-grid">
           <motion.div {...reveal} className="rembrandt-project__hero-copy">
-            <p className="rembrandt-project__eyebrow"><span />{localizedProjectValue(settings.eyebrow, language)}</p>
             <h1>{localizedProjectValue(settings.title, language)}</h1>
             <p className="rembrandt-project__lead">{localizedProjectValue(settings.intro, language)}</p>
             <div className="rembrandt-project__hero-actions">
@@ -384,66 +411,78 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
               <a className="is-secondary" href="#submit-a-painting">{labels.submit}<ArrowRight aria-hidden="true" /></a>
             </div>
           </motion.div>
-          <motion.aside {...reveal} className="lost-rembrandt__hero-note">
-            <Search aria-hidden="true" />
-            <span>{labels.current}</span>
-            <strong>{labels.status[settings.projectStatus] || labels.status["technical-research"]}</strong>
+          {settings.heroImage && (
+            <figure className="rembrandt-project__hero-art">
+              <img className="rembrandt-project__hero-image" src={settings.heroImage} alt={localizedProjectValue(settings.heroAlt, language)} fetchpriority="high" />
+            </figure>
+          )}
+          <aside className="lost-rembrandt__hero-note">
+            <div>
+              <span>{labels.current}</span>
+              <strong>{labels.status[settings.projectStatus] || labels.status["technical-research"]}</strong>
+            </div>
             <p>{localizedProjectValue(settings.currentStatus, language)}</p>
-            {latest && <a href={`${casePath(project.investigations.find((entry) => entry.id === latest.investigationId) || project.investigations[0], language, privatePreview)}#update-${latest.slug}`}>{labels.latest}<ArrowRight aria-hidden="true" /></a>}
-          </motion.aside>
+            {latest && latestInvestigation && <a href={`${casePath(latestInvestigation, language, privatePreview)}#update-${latest.slug}`}>{localizedProjectValue(latest.title, language)}<ArrowRight aria-hidden="true" /></a>}
+          </aside>
         </div>
       </header>
 
       <nav className="lost-rembrandt__nav" aria-label={localizedProjectValue(settings.title, language)}>
         <div className="rembrandt-project__shell">
-          <a href="#about-the-project">{labels.nav.about}</a><a href="#current-investigations">{labels.nav.investigations}</a><a href="#research-process">{labels.nav.process}</a><a href="#submit-a-painting">{labels.nav.submit}</a>
+          <a href="#current-investigations">{labels.nav.investigations}</a><a href="#about-the-project">{labels.nav.about}</a><a href="#research-process">{labels.nav.process}</a><a href="#submit-a-painting">{labels.nav.submit}</a>
         </div>
       </nav>
 
       <div className="rembrandt-project__content">
-        <section className="rembrandt-project__intro rembrandt-project__shell">
-          <motion.div {...reveal} className="rembrandt-project__intro-copy"><p>{localizedProjectValue(settings.summary, language)}</p></motion.div>
-          <motion.aside {...reveal} className="rembrandt-project__disclaimer"><ShieldCheck aria-hidden="true" /><p>{localizedProjectValue(settings.disclaimer, language)}</p></motion.aside>
-        </section>
-
-        <section id="about-the-project" className="lost-rembrandt__about rembrandt-project__shell">
-          <motion.div {...reveal} className="rembrandt-project__section-heading">
-            <p>{labels.nav.about}</p><h2>{localizedProjectValue(settings.aboutTitle, language)}</h2><span>{localizedProjectValue(settings.aboutIntro, language)}</span>
-          </motion.div>
-          <div className="lost-rembrandt__about-grid">
-            {project.aboutSections.map((section, index) => (
-              <motion.article {...reveal} key={section.id}>
-                <span>{String(index + 1).padStart(2, "0")}</span><h3>{localizedProjectValue(section.title, language)}</h3>
-                {paragraphs(section.body, language).map((text) => <p key={text}>{text}</p>)}
-              </motion.article>
-            ))}
-          </div>
-        </section>
-
         <section id="current-investigations" className="lost-rembrandt__investigations">
           <div className="rembrandt-project__shell">
             <motion.div {...reveal} className="rembrandt-project__section-heading is-light">
-              <p>{labels.nav.investigations}</p><h2>{localizedProjectValue(settings.investigationsTitle, language)}</h2><span>{localizedProjectValue(settings.investigationsIntro, language)}</span>
+              <h2>{localizedProjectValue(settings.investigationsTitle, language)}</h2><span>{localizedProjectValue(settings.investigationsIntro, language)}</span>
             </motion.div>
+            {featuredStory && <FeaturedInvestigation story={featuredStory} language={language} labels={labels} privatePreview={privatePreview} disclaimer={settings.disclaimer} />}
             <div className="lost-investigation__list">
-              {project.investigations.map((investigation) => (
+              {project.investigations.filter((investigation) => investigation.id !== featuredStory?.investigation.id).map((investigation) => (
                 <Investigation key={investigation.id} investigation={investigation} language={language} labels={labels} privatePreview={privatePreview} />
               ))}
             </div>
           </div>
         </section>
 
+        <section id="about-the-project" className="lost-rembrandt__about rembrandt-project__shell">
+          <div className="rembrandt-project__section-heading">
+            <h2>{localizedProjectValue(settings.aboutTitle, language)}</h2>
+            {paragraphs(settings.summary, language).map((text) => <p className="lost-rembrandt__background-copy" key={text}>{text}</p>)}
+            <span>{localizedProjectValue(settings.aboutIntro, language)}</span>
+          </div>
+          <div className="lost-rembrandt__background-topics">
+            {project.aboutSections.map((section) => (
+              <details key={section.id}>
+                <summary><h3>{localizedProjectValue(section.title, language)}</h3><ChevronDown aria-hidden="true" /></summary>
+                <div>{paragraphs(section.body, language).map((text) => <p key={text}>{text}</p>)}</div>
+              </details>
+            ))}
+          </div>
+        </section>
+
         <section id="research-process" className="lost-rembrandt__process rembrandt-project__shell">
           <motion.div {...reveal} className="rembrandt-project__section-heading">
-            <p>{labels.nav.process}</p><h2>{localizedProjectValue(settings.processTitle, language)}</h2><span>{localizedProjectValue(settings.processIntro, language)}</span>
+            <h2>{localizedProjectValue(settings.processTitle, language)}</h2><span>{localizedProjectValue(settings.processIntro, language)}</span>
           </motion.div>
           <div className="lost-process__layout">
             <div className="lost-process__steps">
-              {project.researchSteps.map((step, index) => (
-                <details key={step.id} className="lost-process__step" open={index === 0}>
-                  <summary><span>{String(index + 1).padStart(2, "0")}</span><strong>{localizedProjectValue(step.title, language)}</strong><ChevronDown aria-hidden="true" /></summary>
-                  <div>{paragraphs(step.body, language).map((text) => <p key={text}>{text}</p>)}</div>
-                </details>
+              {groupResearchSteps(project.researchSteps).map((area) => (
+                <section key={area.id} className="lost-process__area" aria-labelledby={`research-area-${area.id}`}>
+                  <header>
+                    <h3 id={`research-area-${area.id}`}>{localizedProjectValue(area.title, language)}</h3>
+                    <p>{localizedProjectValue(area.description, language)}</p>
+                  </header>
+                  {area.steps.map((step) => (
+                    <details key={step.id} id={`research-method-${step.id}`} className="lost-process__step">
+                      <summary><h4>{localizedProjectValue(step.title, language)}</h4><ChevronDown aria-hidden="true" /></summary>
+                      <div>{paragraphs(step.body, language).map((text, index) => <p key={`${step.id}-${index}`}>{text}</p>)}</div>
+                    </details>
+                  ))}
+                </section>
               ))}
             </div>
             <aside className="lost-process__visual">

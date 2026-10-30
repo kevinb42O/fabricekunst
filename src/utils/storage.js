@@ -1130,9 +1130,9 @@ export const setRembrandtProjectAccessAsync = async (
   );
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result.ok || !result.project)
-    throw new Error(
+    throw Object.assign(new Error(
       result.error || "De publieke toegang kon niet worden gewijzigd.",
-    );
+    ), { status: response.status });
   return {
     project: normalizeRembrandtProject(result.project),
     version: result.version || result.project.updatedAt || null,
@@ -1224,9 +1224,9 @@ export const saveRembrandtProjectDataAsync = async (
     );
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok)
-      throw new Error(
+      throw Object.assign(new Error(
         result.error || "Het project kon niet veilig worden gepubliceerd.",
-      );
+      ), { status: response.status });
     savedProject = normalizeRembrandtProject(result.project);
     savedVersion = result.version || savedProject.updatedAt || null;
     publicContentPromise = null;

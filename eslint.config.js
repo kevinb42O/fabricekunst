@@ -4,6 +4,7 @@ export default [
       'dist/**',
       '.vercel/**',
       'node_modules/**',
+      'scratch/**',
       'public/**',
       '.agents/**',
       'scripts/**'
@@ -39,7 +40,7 @@ export default [
       sourceType: 'module',
       globals: Object.fromEntries(
         [
-          'AbortController', 'Blob', 'Buffer', 'btoa', 'atob', 'console', 'crypto',
+          'AbortController', 'AbortSignal', 'Blob', 'Buffer', 'btoa', 'atob', 'console', 'crypto',
           'fetch', 'File', 'FormData', 'Headers', 'process', 'queueMicrotask',
           'ReadableStream', 'Request', 'Response', 'setInterval', 'setTimeout',
           'clearInterval', 'clearTimeout', 'structuredClone', 'TextDecoder',

@@ -63,7 +63,10 @@ export const isVersionMatch = (expected, current) => {
   const t1 = new Date(expected).getTime();
   const t2 = new Date(current).getTime();
   if (!Number.isNaN(t1) && !Number.isNaN(t2)) {
-    return Math.abs(t1 - t2) <= 2000;
+    // Equivalent UTC/offset representations are fine; a different instant,
+    // even within the same second, belongs to a different revision.
+    const fraction = (value) => (/T\d{2}:\d{2}:\d{2}(?:\.(\d+))?/.exec(value)?.[1] || "").padEnd(9, "0");
+    return t1 === t2 && fraction(expected) === fraction(current);
   }
   return false;
 };
@@ -515,7 +518,6 @@ async function writeProjectVisibility(
     const currentVersion = row?.updated_at || null;
     if (
       expectedVersion !== undefined &&
-      expectedVersion !== null &&
       !isVersionMatch(expectedVersion, currentVersion)
     ) {
       throw new RequestError(
@@ -735,10 +737,7 @@ export default async function handler(req, res) {
     const { row: previous } = await readProject(supabase);
     const expectedVersion = req.body?.expectedVersion ?? null;
     const currentVersion = previous?.updated_at || null;
-    if (
-      expectedVersion !== null &&
-      !isVersionMatch(expectedVersion, currentVersion)
-    ) {
+    if (!isVersionMatch(expectedVersion, currentVersion)) {
       throw new RequestError(
         "Deze pagina werd intussen in een andere sessie gewijzigd. Herlaad eerst om de nieuwste versie te bekijken.",
         409,

@@ -321,6 +321,34 @@ export function latestProjectUpdate(input) {
   );
 }
 
+/** Resolve the overview story from public content, including withdrawn selections. */
+export function featuredProjectStory(input) {
+  const project = publishedRembrandtProject(input);
+  const investigation =
+    project.investigations.find((entry) => entry.featured) ||
+    project.investigations[0];
+  if (!investigation) return null;
+  const updates = project.updates
+    .filter((entry) => entry.investigationId === investigation.id)
+    .sort((a, b) => {
+      const featuredDifference =
+        Number(b.featured === true) - Number(a.featured === true);
+      const dateDifference =
+        new Date(b.publishedAt || b.eventDate || 0) -
+        new Date(a.publishedAt || a.eventDate || 0);
+      return featuredDifference || dateDifference || Number(b.sequence) - Number(a.sequence);
+    });
+  const update = updates[0] || null;
+  const gallery = update?.gallery?.filter((image) => image.url) || [];
+  const image =
+    gallery.find((entry) => entry.id === update?.featuredImageId) ||
+    (update?.coverImage
+      ? { url: update.coverImage, alt: update.coverAlt, caption: update.coverCaption }
+      : gallery[0]) ||
+    null;
+  return { investigation, update, image };
+}
+
 export function projectProgress(input) {
   const project = publishedRembrandtProject(input);
   const currentIndex = project.phases.findIndex(

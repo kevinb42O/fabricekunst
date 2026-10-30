@@ -51,9 +51,9 @@ export const DEFAULT_REMBRANDT_PROJECT = {
     ),
     investigationsTitle: trilingual('Lopende onderzoeken', 'Current investigations', 'Recherches en cours'),
     investigationsIntro: trilingual(
-      'Drie dossiers vormen het begin van dit onderzoeksinitiatief. Ze worden als vertrouwelijke inzendingen gepresenteerd; de identiteit van de eigenaar wordt niet gepubliceerd.',
-      'Three cases mark the beginning of this research initiative. They are presented as confidential submissions; the owner’s identity is not published.',
-      'Trois dossiers constituent le point de départ de cette initiative. Ils sont présentés comme des soumissions confidentielles ; l’identité du propriétaire n’est pas publiée.'
+      'Ontdek de schilderijen die we onderzoeken. Bekijk de onderzoeksbeelden en volg wat we leren over hun herkomst, materialen en schildertechniek.',
+      'Explore the paintings under investigation. View the research images and follow what we learn about their provenance, materials and painting techniques.',
+      'Découvrez les tableaux à l’étude. Explorez les images de recherche et suivez ce que nous apprenons sur leur provenance, leurs matériaux et leur technique picturale.'
     ),
     processTitle: trilingual('Het onderzoeksproces', 'The research process', 'Le processus de recherche'),
     processIntro: trilingual(
