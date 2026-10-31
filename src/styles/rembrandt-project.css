@@ -932,37 +932,48 @@
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   align-items: center;
-  gap: clamp(2rem, 5vw, 4.5rem);
-  margin-top: 2.5rem;
-  padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  gap: clamp(2.5rem, 6vw, 6rem);
+  padding-block: clamp(2.5rem, 5vw, 4rem);
   border-bottom: 1px solid #625440;
 }
-.lost-featured__images { min-width: 0; }
 .lost-featured.is-text-only { grid-template-columns: 1fr; }
-.lost-featured__images.has-research-image { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: center; }
-.lost-featured .rembrandt-project__figure { margin: 0; min-width: 0; }
-.lost-featured .rembrandt-project__figure img { width: 100%; height: 27rem; object-fit: contain; background: #100e0c; }
-.lost-featured .rembrandt-project__figure figcaption { color: #c9c0b4; border-color: #625440; font-size: .75rem; line-height: 1.5; }
+.lost-featured.is-text-only .lost-featured__story { max-width: 45rem; }
+.lost-featured__art { min-width: 0; }
+.lost-featured__art .dossier-image > button > img { width: 100%; height: auto; }
+.lost-featured__art .dossier-image > button > span { right: 1rem; bottom: 1rem; min-height: 44px; font-size: .7rem; }
 .lost-featured__story { min-width: 0; }
-.lost-featured__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; color: #d9b86f; font-size: .75rem; }
-.lost-featured__meta a { text-decoration: underline; text-underline-offset: .25em; }
-.lost-featured__meta time { color: #c9c0b4; }
-.lost-featured h3 { margin: 1.5rem 0; color: #fffaf1; font: 500 clamp(2.4rem, 4vw, 4rem)/1.04 "Cormorant Garamond", Georgia, serif; letter-spacing: -.025em; text-wrap: balance; overflow-wrap: anywhere; }
-.lost-featured__story > p { max-width: 60ch; color: #c9c0b4; line-height: 1.75; }
-.lost-featured__link { display: inline-flex; align-items: center; gap: 2rem; min-height: 48px; margin-top: 1rem; border-bottom: 1px solid #c2a575; color: #ead5b0; font-size: .875rem; }
-.lost-featured__link svg { width: 1.2rem; }
-.lost-featured__qualification { display: flex; gap: .75rem; margin-top: 2rem; color: #c9c0b4; }
-.lost-featured__qualification svg { width: 1rem; flex: 0 0 auto; margin-top: .25rem; }
-.lost-featured__qualification p { margin: 0; font-size: .8rem; line-height: 1.7; }
-.lost-featured a:focus-visible { outline: 2px solid #ead5b0; outline-offset: 5px; }
+.lost-featured__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; color: #d9b86f; font-size: .75rem; line-height: 1.6; }
+.lost-featured__status { color: #c9c0b4; }
+.lost-featured h3 { max-width: 15ch; margin: 1.25rem 0 1.5rem; color: #fffaf1; font: 500 clamp(3.25rem, 4.5vw, 4rem)/1.03 "Cormorant Garamond", Georgia, serif; letter-spacing: -.025em; text-wrap: balance; overflow-wrap: anywhere; }
+.lost-featured__story > p { max-width: 46ch; margin: 0; color: #c9c0b4; font-size: 1rem; line-height: 1.8; }
+.lost-featured__link { display: inline-flex; align-items: center; justify-content: space-between; gap: 3rem; min-height: 52px; margin-top: 1.5rem; border-bottom: 1px solid #c2a575; color: #ead5b0; font-size: .875rem; }
+.lost-featured__link svg, .lost-featured__update-link svg { width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
+.lost-featured__update { margin-top: clamp(2.5rem, 4vw, 4rem); padding-top: 1.5rem; border-top: 1px solid #625440; }
+.lost-featured__update-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; margin-bottom: 1.25rem; color: #c9c0b4; font-size: .75rem; line-height: 1.6; }
+.lost-featured__update-meta > span { color: #ead5b0; }
+.lost-featured__update-content { display: grid; gap: 1.25rem; align-items: start; }
+.lost-featured__update-content.has-image { grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); }
+.lost-featured__update-image { display: block; }
+.lost-featured__update-image img { display: block; width: 100%; height: auto; }
+.lost-featured__update h4 { margin: 0; color: #fffaf1; font: 500 clamp(1.5rem, 2.2vw, 1.8rem)/1.15 "Cormorant Garamond", Georgia, serif; text-wrap: balance; overflow-wrap: anywhere; }
+.lost-featured__update-copy > p { margin: .75rem 0 0; color: #c9c0b4; font-size: .8125rem; line-height: 1.75; }
+.lost-featured__evidence { display: block; margin-top: .75rem; color: #d9b86f; font-size: .6875rem; line-height: 1.6; }
+.lost-featured__update-link { display: inline-flex; align-items: center; gap: 1rem; min-height: 44px; margin-top: .5rem; color: #ead5b0; font-size: .75rem; }
+.lost-featured :is(a, button):focus-visible { outline: 2px solid #ead5b0; outline-offset: 5px; }
+.lost-featured :is(h4 a, .lost-featured__update-link):hover { text-decoration: underline; text-underline-offset: .3em; }
+.lost-featured__link:hover { color: #fffaf1; border-color: currentColor; }
 @media (max-width: 63.99rem) {
   .rembrandt-project { --rp-site-header-offset: calc(4rem + env(safe-area-inset-top, 0px)); }
-  .lost-featured { grid-template-columns: 1fr; }
-  .lost-featured .rembrandt-project__figure img { height: 25rem; }
+  .lost-featured { gap: 2.5rem; align-items: start; }
+  .lost-featured h3 { font-size: 3.25rem; }
+  .lost-featured__update-content.has-image { grid-template-columns: 1fr; }
+  .lost-featured__update-image { max-width: 12rem; }
 }
 @media (max-width: 47.99rem) {
-  .lost-featured__images.has-research-image { gap: .75rem; }
-  .lost-featured .rembrandt-project__figure img { height: 17rem; }
+  .lost-featured { grid-template-columns: 1fr; gap: 2rem; }
+  .lost-featured h3 { font-size: clamp(2.75rem, 10vw, 3.5rem); }
+  .lost-featured__update-content.has-image { grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); gap: 1rem; }
+  .lost-featured__update { margin-top: 2.5rem; }
 }
 
 .lost-rembrandt__investigations {
@@ -970,7 +981,15 @@
   background: #171512;
   color: #f7f1e7;
 }
-.lost-rembrandt__investigations .rembrandt-project__section-heading { margin-bottom: 2rem; }
+.lost-rembrandt__investigations .rembrandt-project__section-heading { display: grid; grid-template-columns: 1.15fr 1fr; align-items: end; gap: 1rem clamp(2.5rem, 6vw, 6rem); max-width: none; margin-bottom: 0; padding-bottom: 2rem; border-bottom: 1px solid #625440; }
+.lost-rembrandt__investigations .rembrandt-project__section-heading h2 { max-width: 20ch; font-size: clamp(2.25rem, 3.2vw, 3rem); line-height: 1.05; text-wrap: balance; }
+.lost-rembrandt__investigations .rembrandt-project__section-heading > span { max-width: 52ch; margin: 0; color: #c9c0b4; font-size: .875rem; line-height: 1.75; }
+@media (max-width: 47.99rem) {
+  .lost-rembrandt__investigations .rembrandt-project__section-heading { grid-template-columns: 1fr; padding-bottom: 1.5rem; }
+}
+@media (max-width: 23rem) {
+  .lost-featured__update-content.has-image { grid-template-columns: 1fr; }
+}
 .lost-investigation__list { margin-top: 3rem; display: grid; gap: 1.5rem; }
 .lost-investigation {
   display: grid;

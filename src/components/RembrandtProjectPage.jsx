@@ -34,6 +34,7 @@ const UI = {
   nl: {
     nav: { about: "Over het project", investigations: "Onderzoeken", process: "Proces", submit: "Dien een werk in" },
     latest: "Nieuwste update",
+    researchUpdate: "Uit het onderzoek",
     timeline: "Publieke onderzoekstijdlijn",
     timelineIntro: "Alleen zorgvuldig gecontroleerde stappen worden hier gepubliceerd.",
     current: "Programmastatus",
@@ -67,6 +68,7 @@ const UI = {
   en: {
     nav: { about: "About the project", investigations: "Investigations", process: "Process", submit: "Submit a work" },
     latest: "Latest update",
+    researchUpdate: "Research update",
     timeline: "Public research timeline",
     timelineIntro: "Only carefully reviewed steps are published here.",
     current: "Programme status",
@@ -100,6 +102,7 @@ const UI = {
   fr: {
     nav: { about: "À propos", investigations: "Recherches", process: "Processus", submit: "Soumettre une œuvre" },
     latest: "Dernière mise à jour",
+    researchUpdate: "Point sur la recherche",
     timeline: "Chronologie publique de la recherche",
     timelineIntro: "Seules les étapes soigneusement vérifiées sont publiées ici.",
     current: "Statut du programme",
@@ -216,41 +219,55 @@ function Investigation({ investigation, language, labels, privatePreview }) {
   );
 }
 
-function FeaturedInvestigation({ story, language, labels, privatePreview, disclaimer }) {
+function FeaturedInvestigation({ story, language, labels, privatePreview }) {
   const { investigation, update, image } = story;
+  const copy = DOSSIER_UI[language] || DOSSIER_UI.nl;
   const path = casePath(investigation, language, privatePreview);
-  const href = update ? `${path}#update-${update.slug}` : path;
-  const hasImages = Boolean(investigation.coverImage || image);
+  const title = localizedProjectValue(investigation.subtitle, language, "") || localizedProjectValue(investigation.title, language);
   return (
-    <article id={`investigation-${investigation.slug}`} className={`lost-featured${hasImages ? "" : " is-text-only"}`}>
-      {hasImages && <div className={`lost-featured__images${image && investigation.coverImage ? " has-research-image" : ""}`}>
-        <ProjectImage language={language} image={{ url: investigation.coverImage, alt: investigation.coverAlt, caption: investigation.subtitle }} />
-        {image && <ProjectImage language={language} image={image} />}
+    <article id={`investigation-${investigation.slug}`} className={`lost-featured${investigation.coverImage ? "" : " is-text-only"}`} aria-labelledby={`featured-${investigation.slug}`}>
+      {investigation.coverImage && <div className="lost-featured__art">
+        <DetailImage language={language} copy={copy} showCaption={false} image={{ url: investigation.coverImage, alt: investigation.coverAlt, caption: investigation.subtitle }} />
       </div>}
       <div className="lost-featured__story">
         <div className="lost-featured__meta">
-          <a href={path}>{labels.caseNumber} {investigation.reference}</a>
-          {update && <span className={`rembrandt-evidence rembrandt-evidence--${update.evidenceType}`}>{labels.evidence[update.evidenceType] || labels.evidence.observation}</span>}
-          {update?.eventDate && <time dateTime={update.eventDate}>{dateFormatter(language, update.eventDate)}</time>}
+          <span>{labels.caseNumber} {investigation.reference}</span>
+          <span className="lost-featured__status">{localizedProjectValue(investigation.statusLabel, language, "") || labels.status[investigation.status]}</span>
         </div>
-        <h3>{localizedProjectValue(update?.title, language, "") || localizedProjectValue(investigation.subtitle, language, "") || localizedProjectValue(investigation.title, language)}</h3>
-        <p>{localizedProjectValue(update?.summary, language, "") || localizedProjectValue(investigation.summary, language)}</p>
-        <a className="lost-featured__link" href={href}>{update ? labels.viewFinding : labels.viewCase}<ArrowRight aria-hidden="true" /></a>
-        {localizedProjectValue(disclaimer, language, "") && <aside className="lost-featured__qualification"><ShieldCheck aria-hidden="true" /><p>{localizedProjectValue(disclaimer, language)}</p></aside>}
+        <h3 id={`featured-${investigation.slug}`}>{title}</h3>
+        <p>{localizedProjectValue(investigation.summary, language)}</p>
+        <a className="lost-featured__link" href={path}>{copy.view}<ArrowRight aria-hidden="true" /></a>
+        {update && <section className="lost-featured__update" aria-labelledby={`featured-update-${update.slug}`}>
+          <div className="lost-featured__update-meta">
+            <span>{labels.researchUpdate}</span>
+            {update.eventDate && <time dateTime={update.eventDate}>{dateFormatter(language, update.eventDate)}</time>}
+          </div>
+          <div className={`lost-featured__update-content${image ? " has-image" : ""}`}>
+            {image && <a className="lost-featured__update-image" href={`${path}#update-${update.slug}`} aria-label={`${labels.viewFinding}: ${localizedProjectValue(update.title, language)}`}>
+              <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} loading="lazy" decoding="async" />
+            </a>}
+            <div className="lost-featured__update-copy">
+              <h4 id={`featured-update-${update.slug}`}><a href={`${path}#update-${update.slug}`}>{localizedProjectValue(update.title, language)}</a></h4>
+              <p>{localizedProjectValue(update.summary, language)}</p>
+              <span className="lost-featured__evidence">{labels.evidence[update.evidenceType] || labels.evidence.observation}</span>
+              <a className="lost-featured__update-link" href={`${path}#update-${update.slug}`}>{labels.viewFinding}<ArrowRight aria-hidden="true" /></a>
+            </div>
+          </div>
+        </section>}
       </div>
     </article>
   );
 }
 
-function DetailImage({ image, language, copy }) {
+function DetailImage({ image, language, copy, showCaption = true }) {
   const dialog = useRef(null);
   return <figure className="dossier-image">
     <button type="button" onClick={() => dialog.current?.showModal()} aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, "")}`}>
       <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} loading="lazy" />
       <span><Expand aria-hidden="true" />{copy.enlarge}</span>
     </button>
-    <figcaption>{localizedProjectValue(image.caption, language, copy.imageNote)}</figcaption>
-    <dialog ref={dialog} className="dossier-lightbox" onClick={(event) => { if (event.target === event.currentTarget) dialog.current.close(); }}>
+    {showCaption && <figcaption>{localizedProjectValue(image.caption, language, copy.imageNote)}</figcaption>}
+    <dialog ref={dialog} className="dossier-lightbox" aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, "")}`} onClick={(event) => { if (event.target === event.currentTarget) dialog.current.close(); }}>
       <button type="button" autoFocus onClick={() => dialog.current.close()} aria-label={copy.close}><X /></button>
       <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} />
       <p>{localizedProjectValue(image.caption, language, "")}</p>
@@ -439,7 +456,7 @@ export default function RembrandtProjectPage({ projectData, loading = false, pri
             <motion.div {...reveal} className="rembrandt-project__section-heading is-light">
               <h2>{localizedProjectValue(settings.investigationsTitle, language)}</h2><span>{localizedProjectValue(settings.investigationsIntro, language)}</span>
             </motion.div>
-            {featuredStory && <FeaturedInvestigation story={featuredStory} language={language} labels={labels} privatePreview={privatePreview} disclaimer={settings.disclaimer} />}
+            {featuredStory && <FeaturedInvestigation story={featuredStory} language={language} labels={labels} privatePreview={privatePreview} />}
             <div className="lost-investigation__list">
               {project.investigations.filter((investigation) => investigation.id !== featuredStory?.investigation.id).map((investigation) => (
                 <Investigation key={investigation.id} investigation={investigation} language={language} labels={labels} privatePreview={privatePreview} />

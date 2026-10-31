@@ -1,6 +1,6 @@
 # Updates in het dashboard
 
-De menukeuze **Updates** opent **Nieuw voor jou**. Het overzicht verwijst naar het nieuwste bericht. De reeks bevat 58 Nederlandstalige berichten: 51 berichten over de projectgeschiedenis vanaf de eerste vastgelegde versie op 25 juli tot 27 oktober 2026, de toevoeging van de Updates-pagina op 29 oktober en zes berichten over de Rembrandt-verbeteringen van 30 en 31 oktober. Voor de oorspronkelijke reeks is de lokale geschiedenis op 29 oktober met `origin/main` vergeleken; beide eindigden toen op `e6dc535`. Bij de aanvulling op 31 oktober zijn de geschiedenis tot en met `f2e9e5d` en de nog te publiceren samenvatting onder het onderzoeksbeeld gecontroleerd; `origin/main` stond na ophalen eveneens op `f2e9e5d`.
+De menukeuze **Updates** opent **Nieuw voor jou**. Het overzicht verwijst naar het nieuwste bericht. De reeks bevat 59 Nederlandstalige berichten: 51 berichten over de projectgeschiedenis vanaf de eerste vastgelegde versie op 25 juli tot 27 oktober 2026, de toevoeging van de Updates-pagina op 29 oktober en zeven berichten over de Rembrandt-verbeteringen van 30 en 31 oktober. Voor de oorspronkelijke reeks is de lokale geschiedenis op 29 oktober met `origin/main` vergeleken; beide eindigden toen op `e6dc535`. Bij de laatste aanvulling op 31 oktober zijn de geschiedenis tot en met `b87848f` en de nieuwe dossieropmaak in `RembrandtProjectPage.jsx` en `rembrandt-project.css` gecontroleerd; `origin/main` stond na ophalen eveneens op `b87848f`. De veldhulp in het dashboard beschrijft nu de dossierpresentatie met een kleinere onderzoeksupdate, waarbij de samenvatting bij de update staat.
 
 De begindatum is gebaseerd op de eerste commit (`189bf08`). Oudere aangeleverde foto’s bewijzen geen eerdere aanmaakdatum van de website. De eerste versie bevatte al de homepage, collectie, objectpagina’s, herkomstpagina en een eerste beheeromgeving; latere uitbreidingen worden op hun eigen datum beschreven. De tijdlijn bundelt de 243 commits tot begrijpelijke berichten en maakt geen aparte melding voor elke technische tussenstap.
 
@@ -24,7 +24,8 @@ Gebruik de Git-geschiedenis als bron en controleer de uiteindelijke code voordat
 
 | Bericht-ID | Broncommits |
 | --- | --- |
-| 2026-10-31-rembrandt-onderzoeksbeeld | Samen gepubliceerd met de wijziging in `featuredProjectStory` in `src/utils/rembrandtProject.js`, de veldhulp in `RembrandtProjectManager.jsx` en de regressiecontrole in `tests/rembrandt-project.test.js` |
+| 2026-10-31-rembrandt-dossieropmaak | Samen gepubliceerd met de nieuwe dossieropmaak en beeldvergroting in `RembrandtProjectPage.jsx`, de stijlen in `rembrandt-project.css` en de bijgewerkte veldhulp in `RembrandtProjectManager.jsx` |
+| 2026-10-31-rembrandt-onderzoeksbeeld | b87848f |
 | 2026-10-30-rembrandt-uitgelicht-onderzoek | a1a02c9 |
 | 2026-10-30-rembrandt-onderzoeksgebieden | a1a02c9 |
 | 2026-10-30-rembrandt-opslaan | a1a02c9 |

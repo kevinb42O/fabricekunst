@@ -2,6 +2,12 @@
 // Keep content on the server, IDs stable, and newest entries first.
 export const dashboardUpdates = [
   {
+    id: "2026-10-31-rembrandt-dossieropmaak", category: "fix", date: "2026-10-31",
+    title: "Het schilderij staat centraal in het onderzoeksoverzicht",
+    body: ["Het uitgelichte dossier bij Lopende onderzoeken heeft een rustigere opmaak. Het schilderij staat groot in beeld en kan worden vergroot. Daarnaast staan de dossiertitel, onderzoeksstatus en korte introductie, met een rechtstreekse link naar het dossier.", "De gekozen onderzoeksupdate verschijnt als kleiner onderdeel met een eigen beeld, titel, datum, samenvatting en link. De samenvatting staat bij de update en wordt niet meer als fotobijschrift herhaald. Op een telefoon volgen het schilderij, de dossierintroductie en de update elkaar op. De toelichting over de toeschrijving is uit deze sectie verwijderd. De nieuwe opmaak werkt in Nederlands, Engels en Frans."],
+    action: {"target":"rembrandt-project","label":"Uitgelicht dossier beheren"},
+  },
+  {
     id: "2026-10-31-rembrandt-onderzoeksbeeld", category: "fix", date: "2026-10-31",
     title: "De korte samenvatting bij je uitgelichte onderzoeksbeeld",
     body: ["Onder het uitgelichte onderzoeksbeeld op het projectoverzicht staat nu de korte samenvatting van de gekozen update. Zo sluit de toelichting aan op de onderzoeksstap die je bezoekers wilt laten zien.", "Je past deze tekst aan bij de update onder Tekst → Korte samenvatting. Bij Overzichtspagina → Uitgelicht onderzoek staat nu ook uitgelegd waar de tekst vandaan komt. Dit werkt in Nederlands, Engels en Frans; de afzonderlijke fotobijschriften blijven bewaard in het dossier."],
