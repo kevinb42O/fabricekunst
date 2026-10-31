@@ -1677,7 +1677,8 @@ export default function RembrandtProjectManager({
               </div>
               <p>
                 Direct na de opening zien bezoekers dit dossier met een onderzoeksstap en beeld.
-                Titel, samenvatting, datum, bewijsstatus en bijschriften komen uit de bestaande dossier- en updatevelden.
+                Titel, samenvatting, datum en bewijsstatus komen uit de bestaande dossier- en updatevelden.
+                Onder het onderzoeksbeeld staat de korte samenvatting van de uitgelichte update.
               </p>
               <div className="rp-admin-form-grid">
                 <Field
@@ -1730,7 +1731,7 @@ export default function RembrandtProjectManager({
                 {overviewUpdate && (
                   <Field
                     label="Onderzoeksbeeld op het overzicht"
-                    hint="Bewerk de foto’s, beschrijvingen en bijschriften bij deze update onder Beelden. Als een gekozen beeld wordt verwijderd, gebruikt de website het hoofdbeeld of het eerste beschikbare galerijbeeld."
+                    hint="Bewerk de foto’s en beeldbeschrijvingen bij deze update onder Beelden. De tekst onder het onderzoeksbeeld komt uit Korte samenvatting onder Tekst. Als een gekozen beeld wordt verwijderd, gebruikt de website het hoofdbeeld of het eerste beschikbare galerijbeeld."
                   >
                     <select
                       value={overviewUpdate.gallery?.some((image) => image.id === overviewUpdate.featuredImageId && image.url) ? overviewUpdate.featuredImageId : ""}

@@ -67,6 +67,40 @@ test("overview follows the featured dossier and editorial update and image selec
   assert.equal(publishedRembrandtProject(saved).updates.find((entry) => entry.id === update.id).featuredImageId, "radiograph");
 });
 
+test("overview research images use the saved short summary in every language, preserving dossier captions", async () => {
+  const project = cloneDefaultRembrandtProject();
+  const update = project.updates.find((entry) => entry.id === "xray-research");
+  project.updates.forEach((entry) => { entry.featured = entry.id === update.id; });
+  update.summary = { nl: "Korte samenvatting.", en: "Short summary.", fr: "Résumé court." };
+  update.coverImage = "/images/lost-rembrandt/project-01-detail.jpeg";
+  update.coverCaption = { nl: "Lang fotobijschrift.", en: "Long photo caption.", fr: "Longue légende." };
+  update.gallery = [{
+    id: "radiograph", url: update.coverImage, alt: { nl: "Röntgenbeeld" },
+    caption: { nl: "Galerijbijschrift.", en: "Gallery caption.", fr: "Légende de galerie." },
+  }];
+  const saved = normalizeRembrandtProject(JSON.parse(await validateProject(project)));
+  const savedUpdate = saved.updates.find((entry) => entry.id === update.id);
+  for (const source of ["cover", "selected-gallery", "gallery-fallback"]) {
+    savedUpdate.featuredImageId = source === "selected-gallery" ? "radiograph" : "";
+    savedUpdate.coverImage = source === "gallery-fallback" ? "" : update.coverImage;
+    const before = structuredClone(saved);
+    const story = featuredProjectStory(saved);
+    for (const language of ["nl", "en", "fr"]) {
+      assert.equal(localizedProjectValue(story.image.caption, language), update.summary[language], source);
+    }
+    assert.deepEqual(saved, before);
+    assert.deepEqual(story.update.coverCaption, update.coverCaption);
+    assert.deepEqual(story.update.gallery[0].caption, update.gallery[0].caption);
+  }
+  savedUpdate.summary = { nl: "Gewijzigd in het dashboard.", en: "", fr: "" };
+  let story = featuredProjectStory(saved);
+  assert.equal(localizedProjectValue(story.image.caption, "en"), savedUpdate.summary.nl);
+  assert.equal(localizedProjectValue(story.image.caption, "fr"), savedUpdate.summary.nl);
+  savedUpdate.summary = { nl: "", en: "", fr: "" };
+  story = featuredProjectStory(saved);
+  assert.equal(localizedProjectValue(story.image.caption, "en"), "");
+});
+
 test("overview never promotes drafts, archived or future updates, or hidden phases", () => {
   for (const change of [
     (project, update) => { update.status = "draft"; },

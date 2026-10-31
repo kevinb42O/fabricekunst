@@ -340,12 +340,15 @@ export function featuredProjectStory(input) {
     });
   const update = updates[0] || null;
   const gallery = update?.gallery?.filter((image) => image.url) || [];
-  const image =
+  const selectedImage =
     gallery.find((entry) => entry.id === update?.featuredImageId) ||
     (update?.coverImage
       ? { url: update.coverImage, alt: update.coverAlt, caption: update.coverCaption }
       : gallery[0]) ||
     null;
+  // The overview uses the update's short summary below its research image.
+  // Keep photo captions for the full dossier, without changing saved media.
+  const image = selectedImage ? { ...selectedImage, caption: update.summary } : null;
   return { investigation, update, image };
 }
 

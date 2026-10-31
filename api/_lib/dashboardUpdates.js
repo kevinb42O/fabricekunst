@@ -2,6 +2,42 @@
 // Keep content on the server, IDs stable, and newest entries first.
 export const dashboardUpdates = [
   {
+    id: "2026-10-31-rembrandt-onderzoeksbeeld", category: "fix", date: "2026-10-31",
+    title: "De korte samenvatting bij je uitgelichte onderzoeksbeeld",
+    body: ["Onder het uitgelichte onderzoeksbeeld op het projectoverzicht staat nu de korte samenvatting van de gekozen update. Zo sluit de toelichting aan op de onderzoeksstap die je bezoekers wilt laten zien.", "Je past deze tekst aan bij de update onder Tekst → Korte samenvatting. Bij Overzichtspagina → Uitgelicht onderzoek staat nu ook uitgelegd waar de tekst vandaan komt. Dit werkt in Nederlands, Engels en Frans; de afzonderlijke fotobijschriften blijven bewaard in het dossier."],
+    action: {"target":"rembrandt-project","label":"Uitgelicht onderzoek beheren"},
+  },
+  {
+    id: "2026-10-30-rembrandt-uitgelicht-onderzoek", category: "feature", date: "2026-10-30",
+    title: "Kies welk onderzoek je projectoverzicht opent",
+    body: ["Bij Lost Rembrandt kies je onder Overzichtspagina → Uitgelicht onderzoek zelf het dossier, de onderzoeksstap en het beeld dat bezoekers direct na de opening zien. Vanuit hetzelfde scherm kun je door naar het dossier of de update om de teksten aan te passen.", "Laat je de onderzoeksstap op automatisch staan, dan verschijnt de nieuwste publieke update van het uitgelichte dossier. Concepten en verborgen onderdelen blijven buiten beeld. Via ‘Bekijk het onderzoek’ kunnen bezoekers rechtstreeks naar de bijbehorende update in het dossier."],
+    action: {"target":"rembrandt-project","label":"Uitgelicht onderzoek kiezen"},
+  },
+  {
+    id: "2026-10-30-rembrandt-onderzoeksgebieden", category: "feature", date: "2026-10-30",
+    title: "Het onderzoeksproces overzichtelijk per onderwerp",
+    body: ["Het onderzoeksproces is nu gegroepeerd in eerste beoordeling, herkomst en kunsthistorische context, technisch onderzoek en interpretatie en toeschrijving. Bezoekers kunnen de toelichting per onderwerp openklappen. De achtergrond over het project staat na de onderzoeken en is eveneens uitklapbaar.", "In het dashboard zie je bij elke onderzoeksstap in welk gebied die op de website verschijnt. Je blijft de teksten, zichtbaarheid en volgorde binnen elk gebied zelf beheren. Nieuwe onderwerpen komen bij Aanvullend onderzoek."],
+    action: {"target":"rembrandt-project","label":"Onderzoeksproces beheren"},
+  },
+  {
+    id: "2026-10-30-rembrandt-opslaan", category: "fix", date: "2026-10-30",
+    title: "Je projectwijzigingen blijven behouden tijdens het opslaan",
+    body: ["Als je verder typt terwijl een eerdere opslag nog loopt, blijft die nieuwe invoer nu staan en herkenbaar als nog niet opgeslagen. Dit geldt ook wanneer je het project offline haalt.", "Is het project ondertussen in een andere sessie gewijzigd, dan krijg je een blijvende melding. Je kunt je eigen invoer downloaden en daarna bewust de nieuwste versie laden. Zo worden wijzigingen uit een andere sessie niet automatisch overschreven."],
+    action: {"target":"rembrandt-project","label":"Project bewerken"},
+  },
+  {
+    id: "2026-10-30-rembrandt-navigatie", category: "fix", date: "2026-10-30",
+    title: "Makkelijker door het project en de dossiers navigeren",
+    body: ["Een rechtstreekse link naar een onderzoeksupdate blijft nu op de juiste plek staan wanneer foto’s en lettertypen laden. De vaste projectnavigatie houdt ook de toelichting bij het inzendformulier en het onderzoeksproces beter vrij.", "Vergroot je het venster met het menu open, dan sluit het menu zodra de brede navigatie verschijnt en kun je gewoon verder scrollen. Bij het wisselen van taal blijft de verwijzing naar het dossier en de onderzoeksupdate behouden."],
+    action: {"target":"rembrandt-project","label":"Lost Rembrandt openen"},
+  },
+  {
+    id: "2026-10-30-rembrandt-inzendformulier", category: "fix", date: "2026-10-30",
+    title: "Duidelijker wat nodig is om een schilderij in te dienen",
+    body: ["Het inzendformulier maakt duidelijker welke gegevens nodig zijn voor een eerste beoordeling: naam, e-mailadres, een korte omschrijving, afmetingen, de drager en minstens één foto of document. Aanvullende gegevens staan in een apart uitklapbaar gedeelte.", "Bezoekers krijgen ook uitleg over nuttige extra beelden en documenten en over de volgende stap na hun inzending. Die uitleg is beschikbaar in Nederlands, Engels en Frans."],
+    action: {"target":"rembrandt-project","label":"Project openen"},
+  },
+  {
     id: "2026-10-29-dashboard-updates", category: "page", date: "2026-10-29",
     title: "Alle vernieuwingen teruglezen in je dashboard",
     body: ["Je dashboard heeft nu een eigen Updates-pagina. Hier lees je in gewone taal wat er aan je website en werkruimte is toegevoegd of verbeterd, vanaf de eerste websiteversie tot vandaag.", "Met de filters maak je onderscheid tussen nieuwe pagina’s, grote updates en verbeteringen of oplossingen. Het label ‘Nieuw’ laat zien welke berichten je op dit toestel nog niet hebt bekeken. Via ‘Naar de start van het project’ spring je rechtstreeks naar het begin van de tijdlijn."],
