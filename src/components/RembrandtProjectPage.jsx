@@ -3,8 +3,6 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowDown,
   ArrowLeft,
-  Expand,
-  X,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
@@ -28,6 +26,7 @@ import { trackEvent } from "../hooks/useAnalytics";
 import { groupResearchSteps } from "../utils/rembrandtResearch";
 import { followProjectAnchor } from "../utils/projectNavigation";
 import PaintingSubmissionForm from "./PaintingSubmissionForm";
+import ResearchGallery, { DetailImage } from "./ResearchGallery";
 import "../styles/rembrandt-project.css";
 
 const UI = {
@@ -177,7 +176,7 @@ function ProjectUpdate({ update, index, language, labels }) {
           <p className="rembrandt-update__summary">{localizedProjectValue(update.summary, language)}</p>
         </header>
         {update.coverImage && <ProjectImage language={language} image={{ url: update.coverImage, alt: update.coverAlt, caption: update.coverCaption }} />}
-        {update.gallery?.length > 0 && <div className="dossier-update-gallery">{update.gallery.filter((image) => image.url).map((image) => <DetailImage key={image.id || image.url} image={image} language={language} copy={DOSSIER_UI[language] || DOSSIER_UI.nl} />)}</div>}
+        {update.gallery?.length > 0 && <ResearchGallery className="dossier-update-gallery" images={update.gallery} language={language} copy={DOSSIER_UI[language] || DOSSIER_UI.nl} />}
         <div className="rembrandt-update__body">{paragraphs(update.body, language).map((text) => <p key={text}>{text}</p>)}</div>
         {Array.isArray(findings) && findings.length > 0 && (
           <section className="rembrandt-findings" aria-labelledby={`${update.id}-findings`}>
@@ -257,22 +256,6 @@ function FeaturedInvestigation({ story, language, labels, privatePreview }) {
       </div>
     </article>
   );
-}
-
-function DetailImage({ image, language, copy, showCaption = true }) {
-  const dialog = useRef(null);
-  return <figure className="dossier-image">
-    <button type="button" onClick={() => dialog.current?.showModal()} aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, "")}`}>
-      <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} loading="lazy" />
-      <span><Expand aria-hidden="true" />{copy.enlarge}</span>
-    </button>
-    {showCaption && <figcaption>{localizedProjectValue(image.caption, language, copy.imageNote)}</figcaption>}
-    <dialog ref={dialog} className="dossier-lightbox" aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, "")}`} onClick={(event) => { if (event.target === event.currentTarget) dialog.current.close(); }}>
-      <button type="button" autoFocus onClick={() => dialog.current.close()} aria-label={copy.close}><X aria-hidden="true" /><span>{copy.close}</span></button>
-      <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} />
-      <p>{localizedProjectValue(image.caption, language, "")}</p>
-    </dialog>
-  </figure>;
 }
 
 function StickySubmissionIntro({ reveal, language, labels, settings }) {
@@ -381,7 +364,7 @@ function InvestigationPage({ investigation, project, language, labels, privatePr
       <div><p className="dossier-eyebrow">01 / {copy.story}</p><h2>{localizedProjectValue(investigation.subtitle, language)}</h2></div>
       <div className="dossier-story__body">{paragraphs(investigation.description, language).map((text) => <p key={text}>{text}</p>)}<aside><ShieldCheck aria-hidden="true" /><p>{localizedProjectValue(project.settings.disclaimer, language)}</p></aside></div>
     </section>
-    {gallery.length > 0 && <section id="dossier-images" className="dossier-gallery"><div className="rembrandt-project__shell"><div className="dossier-section-heading"><p className="dossier-eyebrow">02 / {copy.imageNote}</p><h2>{copy.images}</h2></div><div className={`dossier-gallery__grid ${gallery.length === 1 ? "is-single" : ""}`}>{gallery.map((image) => <DetailImage key={image.id || image.url} image={image} language={language} copy={copy} />)}</div></div></section>}
+    {gallery.length > 0 && <section id="dossier-images" className="dossier-gallery"><div className="rembrandt-project__shell"><div className="dossier-section-heading"><p className="dossier-eyebrow">02 / {copy.imageNote}</p><h2>{copy.images}</h2></div><ResearchGallery images={gallery} language={language} copy={copy} /></div></section>}
     <section id="dossier-timeline" className="dossier-research rembrandt-project__shell">
       <div className="dossier-section-heading"><p className="dossier-eyebrow">{gallery.length ? "03" : "02"} / {labels.timeline}</p><h2>{copy.chronology}</h2><p>{labels.timelineIntro}</p></div>
       {updates.length > 0 ? <div className="dossier-research__layout"><aside className="dossier-index"><span>{copy.contents}</span>{updates.map((update, index) => <a key={update.id} href={`#update-${update.slug}`}><span>{String(index + 1).padStart(2, "0")}</span>{localizedProjectValue(update.title, language)}</a>)}</aside><div>{updates.map((update, index) => <ProjectUpdate key={update.id} update={update} index={index} language={language} labels={labels} />)}</div></div> : <div className="dossier-pending"><Microscope aria-hidden="true" /><div><h3>{localizedProjectValue(investigation.statusLabel, language, labels.status[investigation.status])}</h3><p>{copy.pending}</p></div></div>}

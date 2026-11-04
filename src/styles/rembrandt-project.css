@@ -939,8 +939,9 @@
 .lost-featured.is-text-only { grid-template-columns: 1fr; }
 .lost-featured.is-text-only .lost-featured__story { max-width: 45rem; }
 .lost-featured__art { min-width: 0; }
-.lost-featured__art .dossier-image > button > img { width: 100%; height: min(65dvh, 34rem); object-fit: contain; }
-.lost-featured__art .dossier-image > button > span { right: 1rem; bottom: 1rem; min-height: 44px; font-size: .7rem; }
+.lost-featured__art .dossier-image { width: 100%; }
+.lost-featured__art .dossier-image__surface img { width: 100%; height: min(65dvh, 34rem); object-fit: contain; }
+.lost-featured__art .dossier-image__action { color: #ead5b0; border-color: #625440; }
 .lost-featured__story { min-width: 0; }
 .lost-featured__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; color: #d9b86f; font-size: .75rem; line-height: 1.6; }
 .lost-featured__status { color: #c9c0b4; }
@@ -1333,26 +1334,33 @@
 .dossier-story__body aside { display: flex; gap: 1rem; margin-top: 2rem; padding: 1.5rem 0 0; border-top: 1px solid #d8cdbb; }
 .dossier-story__body aside svg { flex: 0 0 20px; color: #8c734c; }
 .dossier-story__body aside p { margin: 0; color: #736653; font-size: .78rem; line-height: 1.8; }
-.dossier-gallery { padding: 5rem 0; background: #ece5d9; }
+.dossier-gallery { padding: 5rem 0; background: #f5f1e9; }
 .dossier-section-heading { margin-bottom: 3rem; }
 .dossier-section-heading > p:last-child:not(.dossier-eyebrow) { margin-top: 1.2rem; color: #756853; font-size: .85rem; line-height: 1.7; }
-.dossier-gallery__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; align-items: start; }
-.dossier-gallery__grid > :first-child:nth-last-child(3) { grid-column: 1 / -1; }
-.dossier-gallery__grid.is-single { grid-template-columns: minmax(0, 1fr); max-width: 58rem; margin-inline: auto; }
-.dossier-image { margin: 0; min-width: 0; }
-.dossier-image > button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
-.dossier-image > button > img { display: block; width: 100%; height: min(55dvh, 28rem); object-fit: contain; }
-.dossier-image > button > span { position: absolute; right: 1rem; bottom: 1rem; display: flex; gap: .5rem; align-items: center; background: #211d18ed; color: #fff6e7; padding: .65rem .8rem; font-size: .65rem; }
-.dossier-image svg { width: 15px; height: 15px; }
-.dossier-image figcaption { padding: 1rem 0; color: #6c5e4a; font-size: .75rem; border-bottom: 1px solid #cfc1ab; }
-.dossier-lightbox { width: fit-content; max-width: 94vw; max-height: 94dvh; padding: 0; border: 0; background: transparent; color: #f7eddd; }
-.dossier-lightbox::backdrop { background: #100e0bf2; }
-.dossier-lightbox > img { display: block; width: auto; max-width: 94vw; height: auto; max-height: 94dvh; }
-.dossier-lightbox > button { position: fixed; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right)); z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: .6rem; width: auto; height: auto; min-width: 44px; min-height: 48px; white-space: nowrap; padding: .75rem 1rem; border: 1px solid #fff; border-radius: .35rem; background: #fbf8f2; color: #211d18; font: 600 .875rem/1.2 'Plus Jakarta Sans', sans-serif; cursor: pointer; }
-.dossier-lightbox > button:hover { background: #ead5b0; }
-.dossier-lightbox > button:focus-visible { outline: 3px solid #ead5b0; outline-offset: 4px; }
-.dossier-lightbox > button > svg { width: 20px; height: 20px; flex-shrink: 0; }
-.dossier-lightbox > p { position: absolute; right: 1rem; bottom: .5rem; left: 1rem; margin: 0; color: #fff6e7; font-size: .8rem; text-align: center; text-shadow: 0 1px 3px #000; }
+/* Research plates: image, control and caption share the same measured width. */
+.dossier-image { width: 100%; margin: 0; min-width: 0; }
+.dossier-image__open { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: zoom-in; }
+.dossier-image__surface { display: block; overflow: hidden; }
+.dossier-image__surface img { display: block; width: 100%; height: auto; }
+.dossier-image__action { display: flex; align-items: center; gap: .5rem; min-height: 44px; border-bottom: 1px solid #c7b9a5; color: #675038; font-size: .7rem; line-height: 1.4; }
+.dossier-image__action > span:first-child { flex: 1; font-variant-numeric: tabular-nums; }
+.dossier-image__action svg { width: 18px; height: 18px; flex-shrink: 0; transition: transform .25s ease; }
+.dossier-image__open:hover .dossier-image__action svg { transform: translate(2px, -2px); }
+.dossier-image__open:focus-visible { outline: 2px solid #8b693e; outline-offset: 6px; }
+.dossier-image figcaption { padding-top: .75rem; color: #655747; font-size: .75rem; line-height: 1.75; text-wrap: pretty; }
+.research-viewer { --yarl__color_backdrop: #f5f1e9; --yarl__color_button: #675138; --yarl__color_button_active: #211b14; --yarl__color_button_disabled: #b3a58e; --yarl__button_filter: none; --yarl__container_background_color: #f5f1e9; font-family: 'Plus Jakarta Sans', sans-serif; }
+.research-viewer .yarl__toolbar { align-items: center; gap: .75rem; padding: max(1.25rem, env(safe-area-inset-top)) max(1.5rem, env(safe-area-inset-right)); }
+.research-viewer__close, .research-viewer-loading { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; padding: .65rem 1rem; border: 1px solid #baaa92; border-radius: 2px; background: #fbf8f2; color: #392c1c; font: 500 .75rem/1.4 'Plus Jakarta Sans', sans-serif; cursor: pointer; }
+.research-viewer__close:hover { background: #e9dfcf; border-color: #81643d; }
+.research-viewer__close svg { width: 19px; height: 19px; }
+.research-viewer button:focus-visible { outline: 2px solid #8b683c; outline-offset: 4px; }
+.research-viewer .yarl__slide { padding-top: 5rem; padding-bottom: 6rem; }
+.research-viewer .yarl__slide_captions_container { background: #f5f1e9; padding: 1.25rem max(1.5rem, 8vw); }
+.research-viewer .yarl__slide_description { color: #65523d; font-size: .8125rem; line-height: 1.7; }
+.research-viewer .yarl__counter { padding: 2rem; color: #796044; filter: none; text-shadow: none; font-size: .75rem; font-variant-numeric: tabular-nums; letter-spacing: .12em; }
+.research-viewer .yarl__navigation_prev, .research-viewer .yarl__navigation_next { padding: 1.25rem; }
+.research-viewer-loading-surface { position: fixed; inset: 0; z-index: 9999; background: #f5f1e9; }
+.research-viewer-loading { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 10000; }
 .dossier-research { padding-block: 6rem; }
 .dossier-research__layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 4rem; align-items: start; }
 .dossier-index { position: sticky; top: 11rem; display: grid; border-top: 1px solid #cdbb9f; }
@@ -1364,7 +1372,7 @@
 .dossier-page .rembrandt-update h4 { font-size: clamp(2rem, 3.3vw, 3rem); }
 .dossier-page .rembrandt-findings h5 { color: #59472e; }
 .dossier-page .rembrandt-next-step strong { color: #725831; }
-.dossier-update-gallery { display: grid; gap: 1rem; margin-top: 2rem; }
+
 .dossier-pending { padding: 2.5rem; border: 1px solid #d7c9b3; display: flex; align-items: start; gap: 1.5rem; background: #f4eee4; }
 .dossier-pending > svg { flex: 0 0 30px; color: #8a714d; }
 .dossier-pending h3 { margin: 0 0 .8rem; color: #463728; font: 500 2rem/1.2 'Cormorant Garamond', Georgia, serif; }
@@ -1393,8 +1401,10 @@
   .dossier-hero__art img { height: min(60dvh, 26rem); }
   .lost-investigation__image img,
   .lost-investigation__gallery img { height: 20rem; }
-  .dossier-image > button > img { height: min(50dvh, 20rem); }
-  .lost-featured__art .dossier-image > button > img { height: min(55dvh, 26rem); }
+  .research-viewer .yarl__toolbar { padding: 1rem; gap: .25rem; }
+  .research-viewer .yarl__counter { padding: 1.8rem 1rem; }
+  .research-viewer__close { font-size: .7rem; padding-inline: .75rem; }
+  .lost-featured__art .dossier-image__surface img { height: min(55dvh, 26rem); }
   .dossier-hero h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
   .dossier-hero__status { margin-top: 2rem; }
   .dossier-nav { top: 4rem; overflow-x: auto; }
@@ -1403,7 +1413,7 @@
   .dossier-nav__ref { display: none; }
   .dossier-story { grid-template-columns: 1fr; gap: 2rem; padding-block: 4rem; }
   .dossier-gallery, .dossier-research, .dossier-related { padding-block: 3.5rem; }
-  .dossier-gallery__grid, .dossier-related > div > div, .dossier-index { grid-template-columns: 1fr; }
+  .dossier-related > div > div, .dossier-index { grid-template-columns: 1fr; }
   .dossier-page .rembrandt-update { grid-template-columns: 1.7rem minmax(0, 1fr); gap: .8rem; }
   .dossier-pending { padding: 1.5rem; gap: 1rem; }
   .lost-investigation__meta { flex-wrap: wrap; }
@@ -1411,3 +1421,53 @@
 @media (prefers-reduced-motion: reduce) { .dossier-page *, .lost-investigation, .lost-investigation * { scroll-behavior: auto !important; transition: none !important; } }
 @media (min-width: 701px) { .dossier-nav { top: 88px; } }
 /* Bounded image frames keep the layout compact; contain preserves the entire photo. */
+
+/* A single research plate, accompanied by its annotation and contact strip. */
+.research-gallery { --stage-height: min(52dvh, 26rem); color: #31291f; }
+.research-gallery__plate { display: grid; grid-template-columns: minmax(0, min(58%, calc(var(--selected-image-ratio, .8) * var(--stage-height)))) minmax(0, 1fr); gap: clamp(2rem, 6vw, 6rem); max-width: 68rem; margin: 0; color: #31291f; }
+.research-gallery__image { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: var(--stage-height); padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.research-gallery__image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.research-gallery__expand { position: absolute; right: 1rem; bottom: 1rem; display: grid; place-items: center; width: 40px; height: 40px; color: #5d4528; background: #fbf8f2; border: 1px solid #c0ac90; transition: background .2s; }
+.research-gallery__expand svg { width: 17px; height: 17px; }
+.research-gallery__image:hover .research-gallery__expand { background: #e9ddca; }
+.research-gallery__details { display: flex; flex-direction: column; align-self: center; max-width: 25rem; padding: 0; }
+.research-gallery__navigation { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid #c7b9a5; }
+.research-gallery__counter { color: #6b4d28; font-size: .875rem; font-variant-numeric: tabular-nums; letter-spacing: .1em; white-space: nowrap; }
+.research-gallery__counter > span:last-child { color: #7b6b57; font-size: .7rem; }
+.research-gallery__arrows { display: flex; gap: .4rem; }
+.research-gallery__arrows button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #b8a68c; background: transparent; color: #5c4326; cursor: pointer; transition: background .2s; }
+.research-gallery__arrows button:hover:not(:disabled) { background: #e1d4bf; }
+.research-gallery__arrows button:disabled { opacity: .3; cursor: default; }
+.research-gallery__arrows svg { width: 19px; height: 19px; }
+.research-gallery__caption { margin: 1.75rem 0 2rem; color: #382b1e; font: 400 clamp(1.625rem, 2.4vw, 2.25rem)/1.3 'Cormorant Garamond', Georgia, serif; text-wrap: pretty; }
+.research-gallery__view { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 48px; margin-top: auto; padding: .75rem 0; border: 0; border-top: 1px solid #c7b9a5; background: transparent; color: #755128; font: 500 .75rem/1.6 'Plus Jakarta Sans', sans-serif; text-align: left; cursor: zoom-in; }
+.research-gallery__view svg { width: 20px; height: 20px; flex-shrink: 0; transition: transform .25s; }
+.research-gallery__view:hover svg { transform: translate(2px,-2px); }
+.research-gallery__sequence { position: relative; display: flex; gap: 1.25rem; overflow-x: auto; max-width: 68rem; margin-top: 1.5rem; padding: 1.5rem 0 1rem; border-top: 1px solid #c7b9a5; border-bottom: 1px solid #c7b9a5; scrollbar-width: thin; scrollbar-color: #9c815d transparent; }
+.research-gallery__thumbnail { position: relative; display: flex; flex: 0 0 auto; flex-direction: column; align-items: flex-start; gap: .75rem; width: 6rem; padding: 0 0 .75rem; border: 0; background: transparent; color: #75634a; cursor: pointer; font-size: .625rem; font-variant-numeric: tabular-nums; letter-spacing: .1em; }
+.research-gallery__thumbnail-image { display: flex; align-items: center; justify-content: center; width: 100%; height: 5rem; background: transparent; overflow: hidden; }
+.research-gallery__thumbnail img { display: block; max-width: 100%; width: auto; height: 100%; object-fit: contain; opacity: 1; transition: opacity .25s; }
+.research-gallery__thumbnail[aria-pressed="true"] img, .research-gallery__thumbnail:hover img { opacity: 1; }
+.research-gallery__thumbnail[aria-pressed="true"] { color: #4f3518; }
+.research-gallery__thumbnail[aria-pressed="true"]::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #896332; }
+.research-gallery button:focus-visible { outline: 2px solid #b39260; outline-offset: 4px; }
+.research-gallery__sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.research-gallery.dossier-update-gallery { margin-top: 2rem; }
+.dossier-update-gallery.research-gallery { --stage-height: 21rem; }
+.dossier-update-gallery .research-gallery__image { height: var(--stage-height); }
+.dossier-update-gallery .research-gallery__details { padding: 0; }
+@media (max-width: 900px) {
+  .research-gallery__plate { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; }
+  .research-gallery__details { padding: 0; }
+  .research-gallery__image { padding: 0; }
+}
+@media (max-width: 700px) {
+  .research-gallery__plate, .dossier-update-gallery .research-gallery__plate { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  .research-gallery__image, .dossier-update-gallery .research-gallery__image { height: min(44dvh, 22rem); padding: 0; }
+  .research-gallery__details { max-width: none; padding: 0; }
+  .research-gallery__navigation { padding-bottom: .75rem; }
+  .research-gallery__caption { margin: 1.25rem 0; font-size: 1.625rem; }
+  .research-gallery__sequence { gap: .75rem; padding-top: 1rem; }
+  .research-gallery__thumbnail { width: 4.5rem; }
+  .research-gallery__thumbnail-image { height: 4rem; }
+}

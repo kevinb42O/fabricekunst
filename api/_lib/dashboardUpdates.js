@@ -2,6 +2,12 @@
 // Keep content on the server, IDs stable, and newest entries first.
 export const dashboardUpdates = [
   {
+    id: "2026-11-04-rembrandt-onderzoeksgalerij", category: "feature", date: "2026-11-04",
+    title: "Een verfijnde fotogalerij voor je onderzoeksdossiers",
+    body: ["De onderzoeksfoto’s hebben een nieuwe presentatie: één geselecteerd beeld op een lichte, warme achtergrond, met de toelichting en bediening ernaast. Via de compacte beeldreeks eronder kies je een andere foto. Elk beeld blijft volledig zichtbaar. Op je telefoon staan beeld en toelichting onder elkaar.", "Klik op een foto om de reeks op groot formaat te bekijken. De vergrotingsweergave heeft eveneens een lichte achtergrond. Je kunt bladeren met de pijlen of het toetsenbord en inzoomen om details te onderzoeken. Op een aanraakscherm kun je swipen en met twee vingers zoomen. De fototeller, bijschriften en duidelijke sluitknop houden de bediening overzichtelijk."],
+    action: { target: "rembrandt-project", label: "Onderzoeksdossiers beheren" },
+  },
+  {
     id: "2026-11-04-rembrandt-volledige-fotos", category: "fix", date: "2026-11-04",
     title: "Foto’s bij Lost Rembrandt worden volledig getoond",
     body: ["De openingsfoto’s, dossierkaarten en galerijfoto’s bij Lost Rembrandt behouden nu hun oorspronkelijke verhouding. Ook de foto’s bij Zacharias worden volledig getoond, zonder afgesneden randen. Dit geldt automatisch voor nieuw toegevoegde foto’s en werkt op telefoon, tablet en computer.", "De foto’s passen binnen begrensde beeldvakken, zodat de dossierkaarten en galerijen compact blijven. Staande en liggende beelden worden volledig weergegeven. De openingsfoto is ook in hoogte begrensd; via de vergroting bekijk je galerijfoto’s op groot formaat. Een duidelijke knop ‘Afbeelding sluiten’ blijft daarbij rechtsboven in beeld, ook op je telefoon."],
