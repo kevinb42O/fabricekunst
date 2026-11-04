@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Expand } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { localizedProjectValue } from "../utils/rembrandtProject";
 
@@ -34,7 +34,6 @@ const galleryLabels = {
 export default function ResearchGallery({ images, language, copy, className = "" }) {
   const [index, setIndex] = useState(-1);
   const [selected, setSelected] = useState(0);
-  const [selectedRatio, setSelectedRatio] = useState(.8);
   const root = useRef(null);
   const trigger = useRef(null);
   const returnTo = useRef(null);
@@ -54,11 +53,10 @@ export default function ResearchGallery({ images, language, copy, className = ""
   const caption = localizedProjectValue(image.caption, language, "") || localizedProjectValue(image.alt, language, copy.imageNote);
   const close = () => { setIndex(-1); requestAnimationFrame(() => (returnTo.current || trigger.current)?.focus()); };
   const open = (event) => { returnTo.current = event?.currentTarget || trigger.current; setIndex(active); };
-  return <div ref={root} style={{ "--selected-image-ratio": selectedRatio }} className={`research-gallery ${visible.length === 1 ? "is-single" : ""} ${className}`}>
+  return <div ref={root} className={`research-gallery ${visible.length === 1 ? "is-single" : ""} ${className}`}>
     <figure className="research-gallery__plate">
       <button ref={trigger} className="research-gallery__image" type="button" onPointerEnter={loadViewer} onFocus={loadViewer} onClick={open} aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, caption)}`}>
-        <motion.img key={image.url} src={image.url} alt={localizedProjectValue(image.alt, language, "")} decoding="async" onLoad={(event) => { const img = event.currentTarget; if (img.naturalWidth && img.naturalHeight) setSelectedRatio(img.naturalWidth / img.naturalHeight); }} initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .3 }} />
-        <span className="research-gallery__expand"><Expand aria-hidden="true" /></span>
+        <motion.img key={image.url} src={image.url} alt={localizedProjectValue(image.alt, language, "")} decoding="async" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .3 }} />
       </button>
       <figcaption className="research-gallery__details">
         <div className="research-gallery__navigation">
