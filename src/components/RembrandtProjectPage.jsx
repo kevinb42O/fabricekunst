@@ -268,7 +268,7 @@ function DetailImage({ image, language, copy, showCaption = true }) {
     </button>
     {showCaption && <figcaption>{localizedProjectValue(image.caption, language, copy.imageNote)}</figcaption>}
     <dialog ref={dialog} className="dossier-lightbox" aria-label={`${copy.enlarge}: ${localizedProjectValue(image.alt, language, "")}`} onClick={(event) => { if (event.target === event.currentTarget) dialog.current.close(); }}>
-      <button type="button" autoFocus onClick={() => dialog.current.close()} aria-label={copy.close}><X /></button>
+      <button type="button" autoFocus onClick={() => dialog.current.close()} aria-label={copy.close}><X aria-hidden="true" /><span>{copy.close}</span></button>
       <img src={image.url} alt={localizedProjectValue(image.alt, language, "")} />
       <p>{localizedProjectValue(image.caption, language, "")}</p>
     </dialog>

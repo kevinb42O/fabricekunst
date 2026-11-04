@@ -4,7 +4,7 @@ export const dashboardUpdates = [
   {
     id: "2026-11-04-rembrandt-volledige-fotos", category: "fix", date: "2026-11-04",
     title: "Foto’s bij Lost Rembrandt worden volledig getoond",
-    body: ["De openingsfoto’s, dossierkaarten en galerijfoto’s bij Lost Rembrandt behouden nu hun oorspronkelijke verhouding. Ook de foto’s bij Zacharias worden volledig getoond, zonder afgesneden randen. Dit geldt automatisch voor nieuw toegevoegde foto’s en werkt op telefoon, tablet en computer.", "De foto’s passen binnen begrensde beeldvakken, zodat de dossierkaarten en galerijen compact blijven. Staande en liggende beelden worden volledig weergegeven. De openingsfoto is ook in hoogte begrensd; via de vergroting bekijk je galerijfoto’s op groot formaat."],
+    body: ["De openingsfoto’s, dossierkaarten en galerijfoto’s bij Lost Rembrandt behouden nu hun oorspronkelijke verhouding. Ook de foto’s bij Zacharias worden volledig getoond, zonder afgesneden randen. Dit geldt automatisch voor nieuw toegevoegde foto’s en werkt op telefoon, tablet en computer.", "De foto’s passen binnen begrensde beeldvakken, zodat de dossierkaarten en galerijen compact blijven. Staande en liggende beelden worden volledig weergegeven. De openingsfoto is ook in hoogte begrensd; via de vergroting bekijk je galerijfoto’s op groot formaat. Een duidelijke knop ‘Afbeelding sluiten’ blijft daarbij rechtsboven in beeld, ook op je telefoon."],
     action: { target: "rembrandt-project", label: "Lost Rembrandt beheren" },
   },
   {
