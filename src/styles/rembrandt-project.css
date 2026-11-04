@@ -997,8 +997,8 @@
   border: 1px solid rgba(216, 206, 184, 0.25);
   background: #201d19;
 }
-.lost-investigation__image { position: relative; min-height: 28rem; overflow: hidden; }
-.lost-investigation__image img { width: 100%; height: 100%; object-fit: cover; }
+.lost-investigation__image { position: relative; min-width: 0; align-self: start; overflow: hidden; }
+.lost-investigation__image img { display: block; width: 100%; height: auto; }
 .lost-investigation__image::after {
   content: "";
   position: absolute;
@@ -1057,7 +1057,7 @@
 .lost-investigation__detail-body > p { color: #c9c0b4; line-height: 1.78; }
 .lost-investigation__gallery { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; margin-top: 2rem; }
 .lost-investigation__gallery .rembrandt-project__figure { margin: 0; }
-.lost-investigation__gallery img { height: 24rem; object-fit: cover; background: #100e0c; }
+.lost-investigation__gallery img { display: block; width: 100%; height: auto; }
 .lost-investigation__gallery figcaption { border-color: rgba(216,206,184,.25); color: #aaa094; }
 .lost-investigation__timeline { margin-top: 3rem; padding-top: 3rem; border-top: 1px solid rgba(216,206,184,.25); }
 .lost-investigation__timeline .rembrandt-update__content { background: #fffefc; }
@@ -1247,7 +1247,6 @@
   }
   .lost-investigation,
   .lost-process__layout { grid-template-columns: 1fr; }
-  .lost-investigation__image { min-height: 24rem; }
   .lost-process__visual { position: static; }
   .lost-process__visual { display: grid; grid-template-columns: minmax(16rem,.7fr) 1fr; }
   .lost-process__visual > img { height: 100%; grid-row: span 2; }
@@ -1264,10 +1263,8 @@
   .lost-rembrandt__submit-layout { grid-template-columns: 1fr; }
   .lost-submission__field:has(textarea),
   .lost-submission__field--wide { grid-column: auto; }
-  .lost-investigation__image { min-height: 20rem; }
   .lost-investigation__copy { padding: 1.25rem; }
   .lost-investigation__copy > h3 { font-size: 3.25rem; }
-  .lost-investigation__gallery img { height: 19rem; }
   .lost-process__visual > img { height: 20rem; grid-row: auto; }
   .lost-rembrandt__submit-intro {
     position: static;
@@ -1294,7 +1291,6 @@
 .lost-investigation { text-decoration: none; transition: border-color .2s, background .2s; }
 .lost-investigation:hover { border-color: #c2a575; background: #302920; }
 .lost-investigation:focus-visible { outline: 3px solid #e7c68c; outline-offset: 6px; }
-.lost-investigation__image { height: 30rem; min-height: 0; }
 .lost-investigation__copy { display: flex; flex-direction: column; justify-content: center; }
 .lost-investigation__copy > h3 { font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.02; margin: 1.5rem 0; }
 .lost-investigation__link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; padding-top: 1.4rem; border-top: 1px solid #625440; color: #ead5b0; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
@@ -1321,7 +1317,16 @@
 .dossier-hero__status strong { display: flex; gap: .6rem; align-items: center; color: #eee2cf; font-size: .8rem; font-weight: 400; }
 .dossier-hero__status i { flex: 0 0 6px; height: 6px; border-radius: 50%; background: #cba56b; }
 .dossier-hero__art { margin: 0; min-width: 0; overflow: hidden; }
-.dossier-hero__art img { display: block; width: 100%; height: min(62vh, 42rem); min-height: 24rem; object-fit: cover; }
+.dossier-hero__art img { display: block; width: 100%; height: auto; }
+@media (min-width: 701px) {
+  .dossier-hero__art img {
+    width: auto;
+    max-width: 100%;
+    max-height: 75vh;
+    max-height: 75dvh;
+    margin-inline: auto;
+  }
+}
 .dossier-hero__art figcaption { display: flex; justify-content: space-between; margin-top: 1rem; color: #b9ab98; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
 .dossier-page--2 .dossier-hero__art { order: -1; }
 .dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr 1.25fr; }
@@ -1375,7 +1380,6 @@
 .dossier-related h2 { color: #fff3df; margin-bottom: 2.5rem; }
 .dossier-related > div > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
 .dossier-related .lost-investigation { display: block; }
-.dossier-related .lost-investigation__image { height: 23rem; }
 .dossier-related .lost-investigation__copy { padding: 2rem; }
 .dossier-related .lost-investigation__copy > h3 { font-size: 2.75rem; }
 @media (max-width: 1000px) {
@@ -1392,7 +1396,6 @@
   .dossier-hero__layout, .dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr; gap: 2.5rem; padding-top: 2.5rem; }
   .dossier-page--2 .dossier-hero__art { order: initial; }
   .dossier-hero h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
-  .dossier-hero__art img { height: 28rem; min-height: 0; }
   .dossier-hero__status { margin-top: 2rem; }
   .dossier-nav { top: 4rem; overflow-x: auto; }
   .dossier-nav > div { gap: 1.3rem; width: max-content !important; padding-inline: 1.25rem; }
@@ -1403,7 +1406,6 @@
   .dossier-gallery__grid, .dossier-related > div > div, .dossier-index { grid-template-columns: 1fr; }
   .dossier-page .rembrandt-update { grid-template-columns: 1.7rem minmax(0, 1fr); gap: .8rem; }
   .dossier-pending { padding: 1.5rem; gap: 1rem; }
-  .lost-investigation__image { height: 24rem; }
   .lost-investigation__meta { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .dossier-page *, .lost-investigation, .lost-investigation * { scroll-behavior: auto !important; transition: none !important; } }

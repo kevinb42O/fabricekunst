@@ -2,6 +2,12 @@
 // Keep content on the server, IDs stable, and newest entries first.
 export const dashboardUpdates = [
   {
+    id: "2026-11-04-rembrandt-volledige-fotos", category: "fix", date: "2026-11-04",
+    title: "Foto’s bij Lost Rembrandt worden volledig getoond",
+    body: ["De openingsfoto’s, dossierkaarten en galerijfoto’s bij Lost Rembrandt behouden nu hun oorspronkelijke verhouding. Ook de foto’s bij Zacharias worden volledig getoond, zonder afgesneden randen. Dit geldt automatisch voor nieuw toegevoegde foto’s en werkt op telefoon, tablet en computer.", "Op grotere schermen is de openingsfoto maximaal driekwart van de schermhoogte. De breedte schaalt mee, zodat staande foto’s volledig zichtbaar blijven zonder de pagina te overheersen."],
+    action: { target: "rembrandt-project", label: "Lost Rembrandt beheren" },
+  },
+  {
     id: "2026-10-31-rembrandt-dossieropmaak", category: "fix", date: "2026-10-31",
     title: "Het schilderij staat centraal in het onderzoeksoverzicht",
     body: ["Het uitgelichte dossier bij Lopende onderzoeken heeft een rustigere opmaak. Het schilderij staat groot in beeld en kan worden vergroot. Daarnaast staan de dossiertitel, onderzoeksstatus en korte introductie, met een rechtstreekse link naar het dossier.", "De gekozen onderzoeksupdate verschijnt als kleiner onderdeel met een eigen beeld, titel, datum, samenvatting en link. De samenvatting staat bij de update en wordt niet meer als fotobijschrift herhaald. Op een telefoon volgen het schilderij, de dossierintroductie en de update elkaar op. De toelichting over de toeschrijving is uit deze sectie verwijderd. De nieuwe opmaak werkt in Nederlands, Engels en Frans."],
