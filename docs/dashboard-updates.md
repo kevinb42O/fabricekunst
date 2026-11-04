@@ -1,6 +1,6 @@
 # Updates in het dashboard
 
-De menukeuze **Updates** opent **Nieuw voor jou**. Het overzicht verwijst naar het nieuwste bericht. De reeks bevat 60 Nederlandstalige berichten: 51 berichten over de projectgeschiedenis vanaf de eerste vastgelegde versie op 25 juli tot 27 oktober 2026, de toevoeging van de Updates-pagina op 29 oktober zeven berichten over de Rembrandt-verbeteringen van 30 en 31 oktober en de fotoweergavefix van 4 november. Voor de oorspronkelijke reeks is de lokale geschiedenis op 29 oktober met `origin/main` vergeleken; beide eindigden toen op `e6dc535`. Bij de laatste aanvulling op 31 oktober zijn de geschiedenis tot en met `b87848f` en de nieuwe dossieropmaak in `RembrandtProjectPage.jsx` en `rembrandt-project.css` gecontroleerd; `origin/main` stond na ophalen eveneens op `b87848f`. De veldhulp in het dashboard beschrijft nu de dossierpresentatie met een kleinere onderzoeksupdate, waarbij de samenvatting bij de update staat.
+De menukeuze **Updates** opent **Nieuw voor jou**. Het overzicht verwijst naar het nieuwste bericht. De reeks bevat 60 Nederlandstalige berichten: 51 berichten over de projectgeschiedenis vanaf de eerste vastgelegde versie op 25 juli tot 27 oktober 2026, de toevoeging van de Updates-pagina op 29 oktober, zeven berichten over de Rembrandt-verbeteringen van 30 en 31 oktober en de fotoweergavefix van 4 november. Voor de oorspronkelijke reeks is de lokale geschiedenis op 29 oktober met `origin/main` vergeleken; beide eindigden toen op `e6dc535`. Bij de laatste aanvulling op 31 oktober zijn de geschiedenis tot en met `b87848f` en de nieuwe dossieropmaak in `RembrandtProjectPage.jsx` en `rembrandt-project.css` gecontroleerd; `origin/main` stond na ophalen eveneens op `b87848f`. De veldhulp in het dashboard beschrijft nu de dossierpresentatie met een kleinere onderzoeksupdate, waarbij de samenvatting bij de update staat.
 
 De begindatum is gebaseerd op de eerste commit (`189bf08`). Oudere aangeleverde foto’s bewijzen geen eerdere aanmaakdatum van de website. De eerste versie bevatte al de homepage, collectie, objectpagina’s, herkomstpagina en een eerste beheeromgeving; latere uitbreidingen worden op hun eigen datum beschreven. De tijdlijn bundelt de 243 commits tot begrijpelijke berichten en maakt geen aparte melding voor elke technische tussenstap.
 
@@ -24,7 +24,7 @@ Gebruik de Git-geschiedenis als bron en controleer de uiteindelijke code voordat
 
 | Bericht-ID | Broncommits |
 | --- | --- |
-| 2026-11-04-rembrandt-volledige-fotos | Samen gepubliceerd met de volledige fotoweergave en de maximale desktophoogte van de openingsfoto in `rembrandt-project.css` |
+| 2026-11-04-rembrandt-volledige-fotos | Samen gepubliceerd met de volledige fotoweergave binnen compacte beeldvakken en de begrensde openingsfoto in `rembrandt-project.css` |
 | 2026-10-31-rembrandt-dossieropmaak | Samen gepubliceerd met de nieuwe dossieropmaak en beeldvergroting in `RembrandtProjectPage.jsx`, de stijlen in `rembrandt-project.css` en de bijgewerkte veldhulp in `RembrandtProjectManager.jsx` |
 | 2026-10-31-rembrandt-onderzoeksbeeld | b87848f |
 | 2026-10-30-rembrandt-uitgelicht-onderzoek | a1a02c9 |

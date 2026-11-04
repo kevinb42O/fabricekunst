@@ -939,7 +939,7 @@
 .lost-featured.is-text-only { grid-template-columns: 1fr; }
 .lost-featured.is-text-only .lost-featured__story { max-width: 45rem; }
 .lost-featured__art { min-width: 0; }
-.lost-featured__art .dossier-image > button > img { width: 100%; height: auto; }
+.lost-featured__art .dossier-image > button > img { width: 100%; height: min(65dvh, 34rem); object-fit: contain; }
 .lost-featured__art .dossier-image > button > span { right: 1rem; bottom: 1rem; min-height: 44px; font-size: .7rem; }
 .lost-featured__story { min-width: 0; }
 .lost-featured__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; color: #d9b86f; font-size: .75rem; line-height: 1.6; }
@@ -998,7 +998,7 @@
   background: #201d19;
 }
 .lost-investigation__image { position: relative; min-width: 0; align-self: start; overflow: hidden; }
-.lost-investigation__image img { display: block; width: 100%; height: auto; }
+.lost-investigation__image img { display: block; width: 100%; height: 26rem; object-fit: contain; }
 .lost-investigation__image::after {
   content: "";
   position: absolute;
@@ -1057,7 +1057,7 @@
 .lost-investigation__detail-body > p { color: #c9c0b4; line-height: 1.78; }
 .lost-investigation__gallery { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; margin-top: 2rem; }
 .lost-investigation__gallery .rembrandt-project__figure { margin: 0; }
-.lost-investigation__gallery img { display: block; width: 100%; height: auto; }
+.lost-investigation__gallery img { display: block; width: 100%; height: 24rem; object-fit: contain; }
 .lost-investigation__gallery figcaption { border-color: rgba(216,206,184,.25); color: #aaa094; }
 .lost-investigation__timeline { margin-top: 3rem; padding-top: 3rem; border-top: 1px solid rgba(216,206,184,.25); }
 .lost-investigation__timeline .rembrandt-update__content { background: #fffefc; }
@@ -1317,16 +1317,7 @@
 .dossier-hero__status strong { display: flex; gap: .6rem; align-items: center; color: #eee2cf; font-size: .8rem; font-weight: 400; }
 .dossier-hero__status i { flex: 0 0 6px; height: 6px; border-radius: 50%; background: #cba56b; }
 .dossier-hero__art { margin: 0; min-width: 0; overflow: hidden; }
-.dossier-hero__art img { display: block; width: 100%; height: auto; }
-@media (min-width: 701px) {
-  .dossier-hero__art img {
-    width: auto;
-    max-width: 100%;
-    max-height: 75vh;
-    max-height: 75dvh;
-    margin-inline: auto;
-  }
-}
+.dossier-hero__art img { display: block; width: 100%; height: min(75dvh, 36rem); object-fit: contain; }
 .dossier-hero__art figcaption { display: flex; justify-content: space-between; margin-top: 1rem; color: #b9ab98; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
 .dossier-page--2 .dossier-hero__art { order: -1; }
 .dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr 1.25fr; }
@@ -1350,7 +1341,7 @@
 .dossier-gallery__grid.is-single { grid-template-columns: minmax(0, 1fr); max-width: 58rem; margin-inline: auto; }
 .dossier-image { margin: 0; min-width: 0; }
 .dossier-image > button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
-.dossier-image > button > img { display: block; width: 100%; height: auto; }
+.dossier-image > button > img { display: block; width: 100%; height: min(55dvh, 28rem); object-fit: contain; }
 .dossier-image > button > span { position: absolute; right: 1rem; bottom: 1rem; display: flex; gap: .5rem; align-items: center; background: #211d18ed; color: #fff6e7; padding: .65rem .8rem; font-size: .65rem; }
 .dossier-image svg { width: 15px; height: 15px; }
 .dossier-image figcaption { padding: 1rem 0; color: #6c5e4a; font-size: .75rem; border-bottom: 1px solid #cfc1ab; }
@@ -1380,6 +1371,7 @@
 .dossier-related h2 { color: #fff3df; margin-bottom: 2.5rem; }
 .dossier-related > div > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
 .dossier-related .lost-investigation { display: block; }
+.dossier-related .lost-investigation__image img { height: 20rem; }
 .dossier-related .lost-investigation__copy { padding: 2rem; }
 .dossier-related .lost-investigation__copy > h3 { font-size: 2.75rem; }
 @media (max-width: 1000px) {
@@ -1395,6 +1387,11 @@
   .dossier-hero__top > span { display: none; }
   .dossier-hero__layout, .dossier-page--3 .dossier-hero__layout { grid-template-columns: 1fr; gap: 2.5rem; padding-top: 2.5rem; }
   .dossier-page--2 .dossier-hero__art { order: initial; }
+  .dossier-hero__art img { height: min(60dvh, 26rem); }
+  .lost-investigation__image img,
+  .lost-investigation__gallery img { height: 20rem; }
+  .dossier-image > button > img { height: min(50dvh, 20rem); }
+  .lost-featured__art .dossier-image > button > img { height: min(55dvh, 26rem); }
   .dossier-hero h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
   .dossier-hero__status { margin-top: 2rem; }
   .dossier-nav { top: 4rem; overflow-x: auto; }
@@ -1410,4 +1407,4 @@
 }
 @media (prefers-reduced-motion: reduce) { .dossier-page *, .lost-investigation, .lost-investigation * { scroll-behavior: auto !important; transition: none !important; } }
 @media (min-width: 701px) { .dossier-nav { top: 88px; } }
-/* Images retain their own proportions: no letterboxing for portrait, landscape, or square files. */
+/* Bounded image frames keep the layout compact; contain preserves the entire photo. */
