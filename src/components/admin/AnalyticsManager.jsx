@@ -33,6 +33,7 @@ import {
 } from 'recharts';
 import UpgradeModal from './UpgradeModal';
 import { authenticatedAdminFetch } from '../../utils/adminApi';
+import { LETTER_CAMPAIGN, LETTER_EN_PATH } from '../../utils/newsletter';
 
 const ANALYTICS_ENDPOINT = '/api/admin-analytics';
 const DEFAULT_RANGE = '7d';
@@ -61,6 +62,7 @@ const UTM_DESTINATIONS = [
   { value: '/', label: 'Homepagina' },
   { value: '/collectie', label: 'Catalogus' },
   { value: '/#contact', label: 'Contact' },
+  { value: LETTER_EN_PATH, label: 'The Collector’s Letter · november 2026 (EN)' },
 ];
 
 const EMPTY_METRIC = Object.freeze({ value: 0, previous: null });
@@ -144,6 +146,8 @@ const normaliseBreakdown = (items, nameKeys) => asArray(items).map((item, index)
     label: asString(item?.label, name),
     sessions: asNumber(item?.sessions ?? item?.value ?? item?.count),
     pageViews: asNumber(item?.pageViews ?? item?.views),
+    pdfClicks: asNumber(item?.pdfClicks),
+    linkClicks: asNumber(item?.linkClicks),
     inquiries: asNumber(item?.inquiries ?? item?.submittedInquiries),
     inquiryRate: asOptionalNumber(item?.inquiryRate ?? item?.conversionRate),
     share: asOptionalNumber(item?.share),
@@ -241,6 +245,7 @@ const normaliseReport = (payload, requestedRange) => {
     breakdowns: {
       sources: normaliseBreakdown(breakdowns.sources, ['name', 'source', 'label']),
       campaigns: normaliseBreakdown(breakdowns.campaigns, ['campaign', 'name', 'label']),
+      newsletterCampaigns: normaliseBreakdown(breakdowns.newsletterCampaigns, ['campaign']),
       pages: normaliseBreakdown(breakdowns.pages, ['label', 'path', 'name']),
       devices: normaliseBreakdown(breakdowns.devices, ['name', 'device', 'label']),
     },
@@ -522,6 +527,12 @@ function UtmLinkBuilder() {
   const timeoutRef = useRef(null);
   useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
 
+  const changeDestination = (nextDestination) => {
+    setDestination(nextDestination);
+    if (nextDestination === LETTER_EN_PATH) setCampaign(LETTER_CAMPAIGN);
+    else if (campaign === LETTER_CAMPAIGN) setCampaign('organisch');
+  };
+
   const buildUrl = useCallback((channel) => {
     const origin = typeof window === 'undefined' ? 'https://www.atelierrembrandt.com' : window.location.origin;
     const [pathname, fragment = ''] = destination.split('#');
@@ -548,7 +559,7 @@ function UtmLinkBuilder() {
   return (
     <Panel title="Trackinglinks maken" description="Gebruik één consistente campagnenaam per post of nieuwsbrief. De contactlink zet UTM-parameters vóór het anker, zodat de bron behouden blijft." icon={Link2}>
       <div className="analytics-utm-fields">
-        <div><label htmlFor="analytics-utm-destination">Bestemming</label><select id="analytics-utm-destination" value={destination} onChange={(event) => setDestination(event.target.value)}>{UTM_DESTINATIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
+        <div><label htmlFor="analytics-utm-destination">Bestemming</label><select id="analytics-utm-destination" value={destination} onChange={(event) => changeDestination(event.target.value)}>{UTM_DESTINATIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
         <div><label htmlFor="analytics-utm-campaign">Campagnenaam</label><input id="analytics-utm-campaign" value={campaign} onChange={(event) => setCampaign(event.target.value)} placeholder="bijv. herfst-aanwinst" /></div>
       </div>
       <div className="analytics-utm-list">
@@ -800,6 +811,14 @@ export default function AnalyticsManager({ isPro = false, activeTab = 'overview'
                   ]} />
                 </Panel>
               </div>
+              <Panel title="The Collector’s Letter · november 2026" description="Gemeten paginaweergaven en klikken per bron en campagne, met toestemming voor statistieken." icon={Mail}>
+                <DataTable caption="Nieuwsbriefprestaties" rows={report.breakdowns.newsletterCampaigns} emptyMessage="Er zijn nog geen gemeten nieuwsbriefweergaven of klikken in deze periode." columns={[
+                  { label: 'Campagne', render: (row) => <span className="analytics-table__primary">{row.name}<small>{[row.source, row.medium].filter(Boolean).join(' · ')}</small></span> },
+                  { label: 'Weergaven', align: 'end', render: (row) => formatNumber(row.pageViews) },
+                  { label: 'PDF-klikken', align: 'end', render: (row) => formatNumber(row.pdfClicks) },
+                  { label: 'Links in de brief', align: 'end', render: (row) => formatNumber(row.linkClicks) },
+                ]} />
+              </Panel>
               <Panel title="Apparaten" description="Gebruik dit om prioriteiten voor mobiele en desktopervaringen te bepalen." icon={MonitorSmartphone}>
                 {report.breakdowns.devices.length ? <ul className="analytics-segment-list">{report.breakdowns.devices.map((device) => {
                   const share = device.share === null ? ((device.sessions / Math.max(report.summary.sessions.value, 1)) * 100) : device.share;

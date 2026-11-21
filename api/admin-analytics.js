@@ -1,4 +1,5 @@
 import { getServerSupabase, requireActiveAdmin, sendJson } from './_lib/adminAuth.js';
+import { LETTER_PAGE_PATH, LETTER_PDF_TARGET, LETTER_PLACEMENT } from '../src/utils/newsletter.js';
 
 const TIMEZONE = 'Europe/Brussels';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -385,11 +386,21 @@ const incrementBreakdown = (map, key, initial) => {
 };
 
 const safePathLabel = (path) => {
+  if (path === LETTER_PAGE_PATH) return 'The Collector’s Letter · november 2026';
   if (isItemRoute(path)) return 'Objectpagina';
   if (path === '/') return 'Home';
   if (isCollectionRoute(path)) return 'Collectie';
   if (path === '/contact') return 'Contact';
   return path || 'Onbekend';
+};
+
+const newsletterMetric = (event) => {
+  if (event.page_path !== LETTER_PAGE_PATH) return null;
+  if (event.event_name === 'page_view') return 'pageViews';
+  if (event.event_name !== 'cta_clicked') return null;
+  const properties = propertyObject(event);
+  if (properties.placement !== LETTER_PLACEMENT) return null;
+  return properties.target === LETTER_PDF_TARGET ? 'pdfClicks' : 'linkClicks';
 };
 
 const safeLegacyPath = (value) => {
@@ -465,6 +476,7 @@ export const overviewFor = (events, range) => {
 
   const sourceMap = new Map();
   const campaignMap = new Map();
+  const newsletterCampaignMap = new Map();
   const deviceMap = new Map();
   const funnelCounts = new Map([
     ['site_visit', 0],
@@ -545,6 +557,20 @@ export const overviewFor = (events, range) => {
 
     let maxScrollDepth = 0;
     for (const event of sessionEvents) {
+      const metric = newsletterMetric(event);
+      if (metric) {
+        const { source: channel, medium, campaign } = sourceForSession([event]);
+        const key = [channel, medium || '', campaign || ''].join('|');
+        const row = incrementBreakdown(newsletterCampaignMap, key, () => ({
+          source: channel,
+          medium,
+          campaign,
+          pageViews: 0,
+          pdfClicks: 0,
+          linkClicks: 0,
+        }));
+        row[metric] += 1;
+      }
       if (event.event_name === 'scroll_depth') {
         const depth = propertyObject(event).depth;
         if ([25, 50, 75, 100].includes(depth)) maxScrollDepth = Math.max(maxScrollDepth, depth);
@@ -639,6 +665,8 @@ export const overviewFor = (events, range) => {
     breakdowns: {
       sources: sortedSources,
       campaigns: sortedCampaigns,
+      newsletterCampaigns: [...newsletterCampaignMap.values()]
+        .sort((left, right) => right.pageViews - left.pageViews || right.pdfClicks - left.pdfClicks),
       pages: sortedPages,
       devices,
       // Country is intentionally not inferred from browser timezone or IP.
@@ -786,6 +814,13 @@ const eventDetail = (event) => {
   return safePathLabel(event.page_path);
 };
 
+const eventLabel = (event) => {
+  const metric = newsletterMetric(event);
+  if (metric === 'pdfClicks') return 'Nieuwsbrief-PDF aangeklikt';
+  if (metric === 'linkClicks') return 'Nieuwsbrieflink aangeklikt';
+  return EVENT_LABELS[event.event_name] || 'Activiteit geregistreerd';
+};
+
 const RECENT_ACTIVITY_WINDOW_HOURS = 24;
 const RECENT_ACTIVITY_LIMIT = 20;
 
@@ -849,7 +884,7 @@ const liveFor = (recentV2, recentLegacy) => {
       id: `v2-${event.id}`,
       occurredAt: event.received_at,
       type: event.event_name,
-      label: EVENT_LABELS[event.event_name] || 'Activiteit geregistreerd',
+      label: eventLabel(event),
       detail: eventDetail(event),
       sessionId: event.visit_id,
     });
@@ -909,7 +944,7 @@ const sessionDetail = async (supabase, sessionId) => {
       id: String(event.id),
       occurredAt: event.occurred_at,
       type: event.event_name,
-      label: EVENT_LABELS[event.event_name] || 'Activiteit geregistreerd',
+      label: eventLabel(event),
       detail: eventDetail(event),
     })),
   };

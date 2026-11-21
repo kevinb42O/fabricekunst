@@ -1,0 +1,111 @@
+body.letter-body {
+  margin: 0;
+  background: #13201b;
+  color: #f6f1e5;
+}
+
+.letter {
+  width: min(100%, 52rem);
+  margin-inline: auto;
+}
+
+.letter-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.125rem 1rem;
+  font: 0.875rem/1.5 system-ui, sans-serif;
+}
+
+.letter-tools :is(a, label) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+}
+
+.letter-tools a {
+  margin-inline-start: auto;
+}
+
+.letter :is(a, input):focus-visible {
+  outline: 2px solid #e6c588;
+  outline-offset: 3px;
+}
+
+.letter-tools a,
+.letter-transcript a {
+  color: #e6c588;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.letter-tools label {
+  cursor: pointer;
+}
+
+.letter-text-mode {
+  accent-color: #e6c588;
+  margin: 0;
+}
+
+.letter-sheet {
+  position: relative;
+}
+
+.letter-sheet img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.letter-hotspot {
+  position: absolute;
+  display: block;
+  min-height: 24px;
+}
+
+.letter-transcript {
+  display: none;
+  max-width: 65ch;
+  padding: clamp(1.25rem, 5vw, 3rem);
+  margin-inline: auto;
+  font: 1.0625rem/1.65 system-ui, sans-serif;
+}
+
+.letter:has(.letter-text-mode:checked) #letter-layout {
+  display: none;
+}
+
+.letter:has(.letter-text-mode:checked) .letter-transcript {
+  display: block;
+}
+
+.letter-transcript :is(h1, h2, h3) {
+  margin: 1.25em 0 0.5em;
+  font: normal 1.45em/1.2 Georgia, serif;
+}
+
+.letter-transcript h1 {
+  margin-top: 0;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+}
+
+.letter-transcript h2 {
+  font-size: 1.7em;
+}
+
+.letter-transcript :is(p, dl) {
+  margin-block: 0 1em;
+}
+
+.letter-transcript dd {
+  margin: 0 0 0.85em;
+}
+
+.letter-transcript section + section {
+  border-top: 1px solid #8e816a;
+  margin-top: 2em;
+}

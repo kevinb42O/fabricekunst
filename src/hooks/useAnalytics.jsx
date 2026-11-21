@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { LETTER_PAGE_PATH } from '../utils/newsletter';
 
 // Analytics is deliberately first-party, consent-gated and event-limited. The
 // browser never reads or writes analytics tables directly: only the collector
@@ -311,6 +312,7 @@ function getLocale() {
 }
 
 function getPageType(pagePath) {
+  if (pagePath === LETTER_PAGE_PATH) return 'newsletter';
   if (pagePath === '/collectie' || pagePath === '/catalogus') return 'catalog';
   if (pagePath.startsWith('/collectie/') || pagePath.startsWith('/item/')) return 'item_detail';
   if (pagePath === '/herkomst') return 'provenance';

@@ -7,6 +7,9 @@ import {
   legacyOverviewFor,
   overviewFor,
 } from '../api/admin-analytics.js';
+import {
+  LETTER_CAMPAIGN, LETTER_PAGE_PATH, LETTER_PDF_TARGET, LETTER_PLACEMENT,
+} from '../src/utils/newsletter.js';
 
 const event = ({ id, visitId, receivedAt, eventName = 'page_view', pagePath = '/' }) => ({
   id,
@@ -55,4 +58,34 @@ test('overview combines the non-overlapping legacy and current tracker periods',
   assert.equal(combined.breakdowns.pages[0].sessions, 2);
   assert.equal(combined.breakdowns.pages[0].pageViews, 2);
   assert.equal(combined.series.reduce((sum, row) => sum + row.sessions, 0), 2);
+});
+
+test('newsletter views and clicks use their own campaign attribution within a visit', () => {
+  const receivedAt = '2026-11-21T17:00:00.000Z';
+  const range = buildRange('24h', new Date('2026-11-21T18:00:00.000Z'), null);
+  const visitId = 'reused-visit';
+  const newsletterEvent = (id, target) => ({
+    ...event({
+      id, visitId, receivedAt, pagePath: LETTER_PAGE_PATH,
+      eventName: target ? 'cta_clicked' : 'page_view',
+    }),
+    utm_source: 'facebook',
+    utm_medium: 'social',
+    utm_campaign: LETTER_CAMPAIGN,
+    properties: target ? { placement: LETTER_PLACEMENT, target } : { pageType: 'newsletter' },
+  });
+  const report = overviewFor([
+    { ...event({ id: 1, visitId, receivedAt }), utm_source: 'email' },
+    newsletterEvent(2),
+    newsletterEvent(3),
+    newsletterEvent(4, LETTER_PDF_TARGET),
+    newsletterEvent(5, 'portret-van-aechje'),
+    { ...newsletterEvent(6, LETTER_PDF_TARGET), page_path: '/andere-pagina' },
+    { ...newsletterEvent(7, LETTER_PDF_TARGET), properties: { placement: 'legal_document' } },
+  ], range);
+
+  assert.deepEqual(report.breakdowns.newsletterCampaigns, [{
+    source: 'facebook', medium: 'social', campaign: LETTER_CAMPAIGN,
+    pageViews: 2, pdfClicks: 1, linkClicks: 1,
+  }]);
 });
