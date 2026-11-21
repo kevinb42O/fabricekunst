@@ -55,9 +55,26 @@ test('updates are categorized, newest first, and link only to existing dashboard
     assert.match(update.date, /^\d{4}-\d{2}-\d{2}$/);
     assert.ok(update.title && update.body.length);
     if (update.action) assert.ok(dashboard.includes(`'${update.action.target}'`));
-    assert.deepEqual(Object.keys(update).sort(), ['id', 'date', 'category', 'title', 'body', ...(update.action ? ['action'] : [])].sort());
+    if (update.link) {
+      const url = new URL(update.link.href);
+      assert.equal(url.origin, 'https://www.atelierrembrandt.com');
+      assert.ok(update.link.label);
+    }
+    assert.deepEqual(Object.keys(update).sort(), ['id', 'date', 'category', 'title', 'body', ...(update.action ? ['action'] : []), ...(update.link ? ['link'] : [])].sort());
   }
   assert.doesNotMatch(JSON.stringify(dashboardUpdates), /github|commit|supabase|vercel|\bR2\b/i);
+});
+
+test('the November newsletter update links to its Facebook campaign and traffic report', () => {
+  const update = dashboardUpdates.find(({ id }) => id === '2026-11-21-collectors-letter');
+  const url = new URL(update.link.href);
+  assert.equal(url.pathname, '/en/collectors-letter/november-2026');
+  assert.deepEqual(Object.fromEntries(url.searchParams), {
+    utm_source: 'facebook',
+    utm_medium: 'social',
+    utm_campaign: 'collectors-letter-2026-11-en',
+  });
+  assert.equal(update.action.target, 'analytics-acquisition');
 });
 
 const browserStorage = () => {

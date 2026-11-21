@@ -57,7 +57,12 @@ export default function DashboardUpdates({ state, onNavigate }) {
     {loading ? <p role="status">Updates laden…</p> : error ? <div role="alert"><p>De updates konden niet worden geladen.</p><button type="button" className="admin-button admin-button--secondary" onClick={() => void state.reload()}>Opnieuw proberen</button></div> : !visible.length ? <p>Er zijn nog geen updates in deze categorie.</p> : <div className="admin-update-list">
       {visible.map(update => <article className="admin-update-entry" key={update.id} aria-labelledby={`update-${update.id}`}>
         <div className="admin-update-meta"><time dateTime={update.date}>{formatUpdateDate(update.date)}</time><UpdateLabels update={update} fresh={fresh.includes(update.id)} /></div>
-        <div className="admin-update-copy"><h2 id={`update-${update.id}`} ref={update.id === projectStart?.id ? startHeading : undefined} tabIndex={update.id === projectStart?.id ? -1 : undefined}>{update.title}</h2>{update.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{update.action && <button type="button" className="admin-text-button" onClick={() => onNavigate(update.action.target)}>{update.action.label} <ArrowRight aria-hidden="true" /></button>}</div>
+        <div className="admin-update-copy">
+          <h2 id={`update-${update.id}`} ref={update.id === projectStart?.id ? startHeading : undefined} tabIndex={update.id === projectStart?.id ? -1 : undefined}>{update.title}</h2>
+          {update.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          {update.link && <p><a className="admin-text-button" href={update.link.href} target="_blank" rel="noopener noreferrer">{update.link.label} <ArrowRight aria-hidden="true" /></a></p>}
+          {update.action && <button type="button" className="admin-text-button" onClick={() => onNavigate(update.action.target)}>{update.action.label} <ArrowRight aria-hidden="true" /></button>}
+        </div>
       </article>)}
     </div>}
     <p className="admin-update-explainer">Het label ‘Nieuw’ wordt op dit toestel onthouden zodra je een update bekijkt. Alle berichten blijven hier terug te lezen.</p>

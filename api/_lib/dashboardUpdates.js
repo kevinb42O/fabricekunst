@@ -1,6 +1,22 @@
 // Curated from the full project history, starting with its first recorded version.
 // Keep content on the server, IDs stable, and newest entries first.
+import { LETTER_CAMPAIGN, LETTER_EN_PATH } from "../../src/utils/newsletter.js";
+
 export const dashboardUpdates = [
+  {
+    id: "2026-11-21-collectors-letter", category: "page", date: "2026-11-21",
+    title: "De Engelse novemberbrief staat online",
+    body: [
+      "De vijf pagina’s van The Collector’s Letter staan in hun originele opmaak op één doorlopende pagina. Iedereen kan de brief openen zonder in te loggen. Bovenaan vind je Text view voor grotere tekst op je telefoon en Download PDF voor het originele bestand.",
+      "Plaats de voorpagina als afbeelding in je Facebookbericht en zet de volledige Facebooklink hieronder in de berichttekst. Kopieer het linkadres inclusief alles vanaf het vraagteken. Zo worden gemeten bezoeken aan dit bericht gekoppeld.",
+      "Open in het dashboard Verkeer & Marketing en zoek The Collector’s Letter · november 2026. Daar zie je per campagne hoeveel keer de brief werd bekeken, hoe vaak iemand op Download PDF klikte en hoeveel klikken er waren op links in de brief. De cijfers tellen alleen bezoeken van lezers die toestemming geven voor statistieken.",
+    ],
+    link: {
+      href: `https://www.atelierrembrandt.com${LETTER_EN_PATH}?utm_source=facebook&utm_medium=social&utm_campaign=${LETTER_CAMPAIGN}`,
+      label: "Facebooklink voor de novemberbrief",
+    },
+    action: { target: "analytics-acquisition", label: "Bekijk de nieuwsbriefstatistieken" },
+  },
   {
     id: "2026-11-04-rembrandt-onderzoeksgalerij", category: "feature", date: "2026-11-04",
     title: "Een verfijnde fotogalerij voor je onderzoeksdossiers",
